@@ -167,7 +167,7 @@ const seedData = async () => {
       department: 'Computer Science',
       yearOfPassing: '2027',
       gender: 'Male',
-      skills: ['HTML', 'CSS', 'JavaScript', 'React'],
+      skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Frontend Development'],
       bio: 'Enthusiastic developer looking for frontend engineering roles.',
       linkedin: 'https://linkedin.com/in/johndoe',
       github: 'https://github.com/johndoe',

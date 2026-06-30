@@ -1,148 +1,77 @@
 @import "tailwindcss";
 
-/* 2026 Google Stitch Platform Design System */
 @theme {
-  --color-primary: #4648d4;       /* Stitch Primary Accent */
-  --color-secondary: #6b38d4;     /* Stitch Secondary Accent */
-  --color-success: #006b2d;       /* Stitch Success Tertiary */
-  --color-warning: #f59e0b;
-  --color-danger: #ba1a1a;        /* Stitch Error */
-  --color-background: #f9f9ff;    /* Stitch Surface Bright Background */
-  --color-card: #ffffff;
-  --color-border: #c7c4d7;        /* Stitch Outline Variant */
+  --color-primary: #6366f1;       /* Indigo 500 */
+  --color-primary-hover: #4f46e5; /* Indigo 600 */
+  --color-secondary: #8b5cf6;     /* Violet 500 */
+  --color-success: #10b981;       /* Emerald 500 */
+  --color-warning: #f59e0b;       /* Amber 500 */
+  --color-danger: #ef4444;        /* Red 500 */
+  --color-info: #06b6d4;          /* Cyan 500 */
   
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;              /* Stitch Button radius */
-  --radius-lg: 16px;              /* Stitch Card radius */
-  --radius-xl: 16px;
-  --radius-2xl: 16px;
-  --radius-3xl: 16px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
 }
 
 @layer base {
   body {
     font-family: var(--font-sans);
-    font-size: 14px;
-    background-color: #f9f9ff !important;
-    color: #111c2d;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-slate-50 text-slate-900 transition-colors duration-300 antialiased;
   }
   
-  /* Stitch Headings */
-  h1 {
-    font-size: 32px !important; /* Stitch display-lg/headline-lg size */
-    font-weight: 600 !important;
-    color: #4648d4 !important;
-    letter-spacing: -0.01em !important;
-    background-clip: unset !important;
-    -webkit-text-fill-color: unset !important;
-    background-image: none !important;
+  .dark body {
+    @apply bg-[#090a0f] text-slate-100;
   }
   
-  h2 {
-    font-size: 24px !important; /* Stitch headline-md size */
-    font-weight: 600 !important;
-    color: #4648d4 !important;
+  /* Headings with premium look */
+  h1, .h1 {
+    @apply font-bold text-3xl tracking-tight text-slate-900 dark:text-white transition-colors;
   }
   
-  h3 {
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    color: #111c2d !important;
+  h2, .h2 {
+    @apply font-bold text-2xl tracking-tight text-slate-800 dark:text-slate-100 transition-colors;
   }
   
-  /* Stitch Buttons */
-  button, .btn {
-    height: 42px !important;
-    border-radius: 12px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    padding-left: 18px !important;
-    padding-right: 18px !important;
-    transition: all 0.2s ease-in-out !important;
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) !important;
-    background-image: none !important;
-    background-color: #4648d4 !important; /* Stitch primary */
-    color: #ffffff !important;
+  h3, .h3 {
+    @apply font-semibold text-lg text-slate-800 dark:text-slate-200 transition-colors;
   }
   
-  button:hover, .btn:hover {
-    opacity: 0.9 !important;
-    transform: translateY(-0.5px);
-  }
-
-  button:active, .btn:active {
-    transform: translateY(0);
-  }
-
-  /* Form Labels */
-  label {
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #464554 !important;
-    margin-bottom: 6px !important;
-    display: inline-block !important;
-  }
-
-  /* Stitch inputs */
+  /* Form Inputs styling defaults - note that these do not use !important so they can be overridden easily */
   input, select, textarea {
-    height: 42px !important;
-    border-radius: 12px !important;
-    font-size: 14px !important;
-    border: 1px solid #c7c4d7 !important;
-    background-color: #ffffff !important;
-    padding: 8px 14px;
-    color: #111c2d !important;
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.15s ease !important;
+    @apply px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] text-slate-900 dark:text-slate-100 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500;
   }
-
-  input:focus, select:focus, textarea:focus {
-    border-color: #4648d4 !important;
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(70, 72, 212, 0.15) !important;
+  
+  label {
+    @apply text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 inline-block;
   }
 }
 
-/* Force light surface layout */
-.min-h-screen {
-  background-color: #f9f9ff !important;
+/* Custom Premium Utilities */
+.glassmorphism {
+  @apply bg-white/80 dark:bg-[#11131c]/80 backdrop-blur-xl border border-slate-200/55 dark:border-slate-800/60 shadow-xl shadow-slate-100/45 dark:shadow-none;
 }
 
-/* Stitch Card Elements */
-.bg-white, .bg-white\/70, .bg-white\/60, .glassmorphism {
-  background-color: #ffffff !important;
-  border: 1px solid #c7c4d7 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05), 0px 10px 15px -5px rgba(0, 0, 0, 0.03) !important; /* ambient-shadow */
-  border-radius: 16px !important;
-}
-
-/* Custom Shadows matching Stitch specifications */
 .ambient-shadow {
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05), 0px 10px 15px -5px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.05), 0 2px 10px -1px rgba(99, 102, 241, 0.02);
 }
 
 .floating-shadow {
-  box-shadow: 0px 20px 25px -5px rgba(0, 0, 0, 0.05), 0px 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
-}
-
-.level-1-shadow {
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05), 0px 10px 15px -5px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.1), 0 10px 20px -10px rgba(99, 102, 241, 0.05);
 }
 
 .scanner-glow {
-  box-shadow: 0 0 40px rgba(70, 72, 212, 0.15);
+  box-shadow: 0 0 50px rgba(99, 102, 241, 0.25);
 }
 
 .scanning-line {
   height: 2px;
-  background: linear-gradient(90deg, transparent, #4648d4, transparent);
+  background: linear-gradient(90deg, transparent, #6366f1, transparent);
   animation: scan 3s ease-in-out infinite;
   position: absolute;
   width: 100%;
@@ -155,160 +84,63 @@
   50% { top: 100%; }
 }
 
-/* Borders */
-.border, .border-gray-200, .border-gray-255, .border-gray-250, .border-gray-300, .border-gray-800 {
-  border-color: #c7c4d7 !important;
-}
-
-/* Wiped dark theme variables to enforce light theme */
-.dark body, .dark .min-h-screen {
-  background-color: #f9f9ff !important;
-  color: #111c2d !important;
-}
-
-.dark h1, .dark h2, .dark h3 {
-  color: #4648d4 !important;
-}
-
-.dark .bg-white, .dark .bg-white\/70, .dark .bg-white\/60, .dark .glassmorphism, .dark .bg-\[\#12131a\]\/80, .dark .bg-\[\#12131a\]\/60 {
-  background-color: #ffffff !important;
-  border-color: #c7c4d7 !important;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05), 0px 10px 15px -5px rgba(0, 0, 0, 0.03) !important;
-  border-radius: 16px !important;
-}
-
-/* Stitch light Sidebar (bg-surface-container-low: #f0f3ff, width: 280px) */
-aside {
-  width: 280px !important;
-  background-color: #f0f3ff !important;
-  color: #464554 !important;
-  border-right: 1px solid #c7c4d7 !important;
-}
-
-aside a {
-  font-size: 14px !important;
-  color: #464554 !important;
-  border-radius: 0 12px 12px 0 !important; /* rounded-r-xl matching Stitch nav */
-  padding: 12px 16px !important;
-  font-weight: 600 !important;
-}
-
-aside a:hover {
-  color: #4648d4 !important;
-  background-color: rgba(216, 227, 251, 0.5) !important; /* bg-surface-variant/50 hover */
-}
-
-/* Active sidebar item (bg-white text-primary border-l-4 border-primary rounded-r-xl) */
-aside a.bg-indigo-600\/15 {
-  color: #4648d4 !important;
-  background-color: #ffffff !important;
-  border-left: 4px solid #4648d4 !important;
-  border-left-width: 4px !important;
-  transform: translateX(4px) !important;
-}
-
-/* Stitch Header (Height: 72px) */
-header {
-  height: 72px !important;
-  background-color: #f9f9ff !important;
-  border-bottom: 1px solid #c7c4d7 !important;
-  color: #111c2d !important;
-}
-
-/* Force light colors on elements matching primary/secondary */
-.text-indigo-650, .text-indigo-600, .text-indigo-500 {
-  color: #4648d4 !important;
-}
-
-.bg-indigo-650, .bg-indigo-600, .bg-indigo-500 {
-  background-color: #4648d4 !important;
-}
-
-.hover\:bg-indigo-700:hover, .hover\:bg-indigo-550:hover, .hover\:bg-indigo-500:hover {
-  background-color: #3b3cbd !important;
-}
-
-.border-indigo-600, .border-indigo-500 {
-  border-color: #4648d4 !important;
-}
-
-.bg-indigo-600\/15, .bg-indigo-500\/20 {
-  background-color: rgba(70, 72, 212, 0.08) !important;
-}
-
-.bg-gradient-to-r, .bg-gradient-to-t {
-  background-image: none !important;
-  background-color: #ffffff !important;
-}
-
-/* Welcoming header card */
-.bg-gradient-to-r.from-indigo-600.to-purple-600 {
-  background-color: #4648d4 !important;
-  color: #ffffff !important;
-  background-image: none !important;
-  border-radius: 24px !important;
-  box-shadow: 0px 20px 25px -5px rgba(0, 0, 0, 0.05), 0px 10px 10px -5px rgba(0, 0, 0, 0.02) !important; /* floating-shadow */
-}
-.bg-gradient-to-r.from-indigo-600.to-purple-600 * {
-  color: #ffffff !important;
-}
-
-/* Clean educational tables */
-table {
-  font-size: 13px !important;
-}
-
-th {
-  background-color: #f9f9ff !important;
-  color: #464554 !important;
-  font-weight: 600 !important;
-  padding: 12px 18px !important;
-  border-bottom: 2px solid #c7c4d7 !important;
-}
-
-td {
-  padding: 12px 18px !important;
-  color: #111c2d !important;
-  border-bottom: 1px solid #c7c4d7 !important;
-}
-
-tr:hover td {
-  background-color: rgba(216, 227, 251, 0.2) !important;
-}
-
-/* Custom scrollbars styling */
+/* Premium Scrollbars styling */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  @apply bg-transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
-  border-radius: 9999px;
+  @apply bg-slate-200 dark:bg-slate-800 rounded-full hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.5);
+/* Clean educational tables */
+.table-container {
+  @apply overflow-x-auto rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-[#11131c] shadow-sm;
 }
 
-/* Smooth input transitions */
-input, select, textarea {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+table {
+  @apply w-full border-collapse text-sm text-left;
 }
 
-/* Custom Overrides for Login Page */
-.login-page-bg {
-  background-color: #ffffff !important;
+th {
+  @apply bg-slate-50/80 dark:bg-[#151722] text-slate-600 dark:text-slate-400 font-semibold px-5 py-3 border-b border-slate-200/80 dark:border-slate-800/80;
 }
 
-.dark .login-page-bg {
-  background-color: #0d0e12 !important;
+td {
+  @apply px-5 py-3.5 text-slate-800 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/60;
 }
 
+tr:last-child td {
+  @apply border-b-0;
+}
+
+tr:hover td {
+  @apply bg-slate-50/50 dark:bg-slate-800/20 transition-colors;
+}
+
+/* Badge tags states */
+.badge-success {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30;
+}
+
+.badge-warning {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 border border-amber-100/50 dark:border-amber-900/30;
+}
+
+.badge-danger {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 dark:bg-rose-950/20 dark:text-rose-400 border border-rose-100/50 dark:border-rose-900/30;
+}
+
+.badge-info {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-600 dark:bg-sky-950/20 dark:text-sky-400 border border-sky-100/50 dark:border-sky-900/30;
+}
+
+/* Input with icons utility overrides */
 .input-with-icon-left {
   padding-left: 42px !important;
 }

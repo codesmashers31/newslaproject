@@ -33,17 +33,26 @@ const DashboardLayout = ({ children }) => {
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') return true;
+    if (savedTheme === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
   const [notifications, setNotifications] = useState([]);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Force light mode permanently
+  // Sync theme with document class
   useEffect(() => {
-    setDarkMode(false);
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }, []);
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   // Fetch student notifications if role is student
   useEffect(() => {
@@ -77,8 +86,8 @@ const DashboardLayout = ({ children }) => {
   // Role based navigation links
   const getNavLinks = () => {
     const baseClass = "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium ";
-    const activeClass = "bg-indigo-600/15 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 border-l-4 border-indigo-600 dark:border-indigo-400";
-    const inactiveClass = "text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-gray-800/40";
+    const activeClass = "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/25 dark:text-indigo-400 border-l-4 border-indigo-600 dark:border-indigo-400 shadow-sm";
+    const inactiveClass = "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/40 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-gray-800/30";
 
     const makeLink = (path, icon, label) => {
       const isActive = location.pathname === path;
@@ -266,6 +275,15 @@ const DashboardLayout = ({ children }) => {
           </div>
 
           <div className="flex items-center space-x-4">
+
+            {/* Dark Mode Toggle */}
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 hover:text-indigo-650 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors cursor-pointer"
+              aria-label="Toggle theme"
+            >
+              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
             {/* Notifications Dropdown (Student only) */}
             {user?.role === 'Student' && (

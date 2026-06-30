@@ -579,7 +579,7 @@ const StudentDashboard = () => {
                 <div className="p-4 border border-[#c7c4d7] rounded-2xl bg-white space-y-2">
                   <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Technology Stack</h5>
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {['React', 'Node.js', 'Express', 'MongoDB', 'Python', 'TailwindCSS', 'Git'].map((tech, i) => (
+                    {['React', 'Node.js', 'Express', 'MongoDB', 'Python', 'TailwindCSS', 'Git', 'Frontend Development'].map((tech, i) => (
                       <span key={i} className="px-2.5 py-1 bg-indigo-50 text-[#4648d4] text-[10px] font-bold rounded-lg border border-indigo-100">
                         {tech}
                       </span>

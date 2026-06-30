@@ -99,14 +99,14 @@ const Login = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full input-with-icon-left rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                    className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     placeholder="name@institute.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-2">Password</label>
+                <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-2">Password</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Lock size={18} />
@@ -116,7 +116,7 @@ const Login = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full input-with-icon-both rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                    className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                     placeholder="••••••••"
                   />
                   <span
@@ -124,7 +124,7 @@ const Login = () => {
                     tabIndex={0}
                     onClick={() => setShowPassword(!showPassword)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPassword(!showPassword); }}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-250 cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </span>
@@ -134,7 +134,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 dark:shadow-none flex items-center justify-center space-x-2 transition-all duration-300 disabled:opacity-50"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 dark:shadow-none flex items-center justify-center space-x-2 transition-all duration-300 disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />

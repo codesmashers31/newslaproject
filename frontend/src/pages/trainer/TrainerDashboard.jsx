@@ -15,17 +15,30 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const TrainerDashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [students, setStudents] = useState([]);
   const [batches, setBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Mode select
-  const [activeTab, setActiveTab] = useState('attendance'); // 'attendance' | 'grading'
+  const [activeTab, setActiveTab] = useState(() => {
+    if (window.location.pathname === '/trainer/scores') return 'grading';
+    return 'attendance';
+  });
+
+  useEffect(() => {
+    if (location.pathname === '/trainer/scores') {
+      setActiveTab('grading');
+    } else if (location.pathname === '/trainer/attendance' || location.pathname === '/trainer') {
+      setActiveTab('attendance');
+    }
+  }, [location.pathname]);
 
   // Attendance states
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);

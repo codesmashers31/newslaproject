@@ -187,7 +187,7 @@ const Register = () => {
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full input-with-icon-left rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                         placeholder="John Doe"
                       />
                     </div>
@@ -202,7 +202,7 @@ const Register = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full input-with-icon-left rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                         placeholder="john@example.com"
                       />
                     </div>
@@ -218,7 +218,7 @@ const Register = () => {
                           required
                           value={mobile}
                           onChange={(e) => setMobile(e.target.value)}
-                          className="w-full input-with-icon-left rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                          className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                           placeholder="9876543210"
                         />
                       </div>
@@ -229,7 +229,7 @@ const Register = () => {
                       <select
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        className="w-full px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                        className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                       >
                         <option value="Student">Student</option>
                         <option value="Admin">Admin</option>
@@ -250,7 +250,7 @@ const Register = () => {
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="w-full input-with-icon-both rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                          className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                           placeholder="••••••••"
                         />
                         <span
@@ -274,7 +274,7 @@ const Register = () => {
                           required
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full input-with-icon-both rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                          className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                           placeholder="••••••••"
                         />
                         <span
@@ -304,7 +304,7 @@ const Register = () => {
                         required
                         value={collegeName}
                         onChange={(e) => setCollegeName(e.target.value)}
-                        className="w-full input-with-icon-left rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                         placeholder="Harvard University / IIT Madras"
                       />
                     </div>
@@ -318,7 +318,7 @@ const Register = () => {
                         required
                         value={degree}
                         onChange={(e) => setDegree(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                         placeholder="B.E. Computer Science"
                       />
                     </div>
@@ -330,7 +330,7 @@ const Register = () => {
                         required
                         value={yearOfPassing}
                         onChange={(e) => setYearOfPassing(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                         placeholder="2026"
                       />
                     </div>
