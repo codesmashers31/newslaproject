@@ -1061,7 +1061,7 @@ const TrainerDashboard = () => {
                         onClick={submitAttendance}
                         className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
                       >
-                        Submit Register
+                        Mark Attendance
                       </button>
                     </div>
                   </div>
@@ -1085,42 +1085,22 @@ const TrainerDashboard = () => {
                             <th className="px-5 py-3">Student ID</th>
                             <th className="px-5 py-3">Student Name</th>
                             <th className="px-5 py-3">Batch</th>
-                            <th className="px-5 py-3">Date</th>
-                            <th className="px-5 py-3">Check In</th>
-                            <th className="px-5 py-3">Check Out</th>
                             <th className="px-5 py-3 text-center">Attendance Status</th>
+                            <th className="px-5 py-3">Check In Time</th>
                             <th className="px-5 py-3">Remarks</th>
                             <th className="px-5 py-3 text-right">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
+                        <tbody className="divide-y divide-gray-150 dark:divide-gray-855 text-xs">
                           {paginatedAttendanceStudents.map(student => {
                             const currentStatus = attendanceState[student._id] || 'Present';
                             const checkInVal = checkInTimes[student._id] || '09:00 AM';
-                            const checkOutVal = checkOutTimes[student._id] || '05:00 PM';
                             return (
                               <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
                                 <td className="px-5 py-3 font-semibold text-gray-405">STU-{student._id.slice(-5).toUpperCase()}</td>
                                 <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
                                 <td className="px-5 py-3 text-gray-550">
                                   {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                                </td>
-                                <td className="px-5 py-3 text-gray-400 font-medium">{attendanceDate}</td>
-                                <td className="px-5 py-3">
-                                  <input
-                                    type="text"
-                                    value={checkInVal}
-                                    onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                    className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
-                                  />
-                                </td>
-                                <td className="px-5 py-3">
-                                  <input
-                                    type="text"
-                                    value={checkOutVal}
-                                    onChange={(e) => setCheckOutTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                    className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
-                                  />
                                 </td>
                                 <td className="px-5 py-3 text-center">
                                   {/* status checklist switches directly inline */}
@@ -1139,6 +1119,14 @@ const TrainerDashboard = () => {
                                     <option value="Absent">Absent</option>
                                     <option value="Late">Late</option>
                                   </select>
+                                </td>
+                                <td className="px-5 py-3">
+                                  <input
+                                    type="text"
+                                    value={checkInVal}
+                                    onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                    className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
+                                  />
                                 </td>
                                 <td className="px-5 py-3">
                                   <input
@@ -1162,7 +1150,7 @@ const TrainerDashboard = () => {
                                         setDetailStudent(student);
                                         setDetailsModalOpen(true);
                                       }}
-                                      className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                      className="px-2.5 py-1 bg-gray-55 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
                                     >
                                       View Details
                                     </button>
