@@ -190,7 +190,7 @@ const TrainerDashboard = () => {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">{user?.role} Hub</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Communication Trainer Hub</h1>
           <p className="text-sm text-gray-500 mt-1">Manage class rosters, mark attendance checklists, and submit grades</p>
         </div>
 
@@ -209,71 +209,91 @@ const TrainerDashboard = () => {
         </div>
       </div>
 
-      {/* KPI metrics and Daily Class schedule */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* KPI Stats */}
-        <div className="space-y-4">
-          <h4 className="font-bold text-sm text-[#111c2d]"> Roster Summary</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-white border border-[#c7c4d7] rounded-2xl">
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Assigned Batches</span>
-              <span className="text-xl font-extrabold text-gray-800 mt-1 block">{batches.length}</span>
+      {/* Conditionally render stats cards only on Dashboard path */}
+      {(location.pathname === '/trainer' || location.pathname === '/trainer/') && (
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { transition: { staggerChildren: 0.1 } }
+          }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6"
+        >
+          {/* Card 1: Total Students */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 15 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-br from-blue-500/10 to-indigo-500/10 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-500/20 dark:border-blue-900/30 p-6 rounded-[20px] shadow-md flex items-center justify-between hover:shadow-lg transition-all duration-300 h-32"
+          >
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Students</span>
+              <h3 className="text-3xl font-extrabold text-gray-900 dark:text-white">{students.length}</h3>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400">Students assigned to selected trainer</p>
             </div>
-            <div className="p-4 bg-white border border-[#c7c4d7] rounded-2xl">
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Active Students</span>
-              <span className="text-xl font-extrabold text-[#4648d4] mt-1 block">{students.length}</span>
+            <div className="p-3.5 bg-blue-500/25 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-2xl">
+              <Users size={24} />
             </div>
-            <div className="p-4 bg-white border border-[#c7c4d7] rounded-2xl">
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Pending Roll Call</span>
-              <span className="text-xl font-extrabold text-amber-600 mt-1 block">1 Class</span>
-            </div>
-            <div className="p-4 bg-white border border-[#c7c4d7] rounded-2xl">
-              <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Avg. Attendance</span>
-              <span className="text-xl font-extrabold text-emerald-600 mt-1 block">91.8%</span>
-            </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* Today's Schedules */}
-        <div className="p-5 bg-white border border-[#c7c4d7] rounded-3xl space-y-4">
-          <h4 className="font-bold text-sm text-[#111c2d]">Today's Class Schedule</h4>
-          <div className="space-y-2.5">
-            {[
-              { time: '09:00 AM', topic: 'Core Concepts Lecture', status: 'Completed', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-              { time: '02:00 PM', topic: 'Hands-on Coding Lab', status: 'Pending Roster', color: 'bg-amber-50 text-amber-600 border-amber-100' }
-            ].map((cls, i) => (
-              <div key={i} className="flex justify-between items-center text-xs p-2 border border-[#c7c4d7] rounded-xl bg-gray-50/50">
-                <div>
-                  <p className="font-bold text-gray-800">{cls.topic}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{cls.time}</p>
-                </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${cls.color}`}>
-                  {cls.status}
-                </span>
+          {/* Card 2: Total Batches */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 15 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 dark:from-purple-950/20 dark:to-pink-950/20 border border-purple-500/20 dark:border-purple-900/30 p-6 rounded-[20px] shadow-md flex items-center justify-between hover:shadow-lg transition-all duration-300 h-32"
+          >
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Total Batches</span>
+              <h3 className="text-3xl font-extrabold text-gray-900 dark:text-white">{batches.length}</h3>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400">Assigned batches</p>
+            </div>
+            <div className="p-3.5 bg-purple-500/25 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-2xl">
+              <BookOpen size={24} />
+            </div>
+          </motion.div>
+
+          {/* Card 3: Today's Attendance */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 15 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-500/20 dark:border-emerald-900/30 p-6 rounded-[20px] shadow-md flex items-center justify-between hover:shadow-lg transition-all duration-300 h-32"
+          >
+            <div className="space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Today's Attendance</span>
+              <div className="space-y-0.5 text-xs text-gray-600 dark:text-gray-300 font-semibold">
+                <p>Present: <span className="text-emerald-600">{PresentCount}</span></p>
+                <p>Absent: <span className="text-rose-600">{AbsentCount}</span> • Late: <span className="text-amber-500">{LateCount}</span></p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Performers Panel */}
-        <div className="p-5 bg-white border border-[#c7c4d7] rounded-3xl space-y-4">
-          <h4 className="font-bold text-sm text-[#111c2d]">Class Support Roster</h4>
-          <div className="grid grid-cols-2 gap-4 text-[10px]">
-            <div className="space-y-2">
-              <span className="font-bold text-emerald-600 uppercase tracking-wider block border-b border-emerald-100 pb-1">Top Performers</span>
-              <p className="font-medium text-gray-700">Kenji Yamamoto (9.4)</p>
-              <p className="font-medium text-gray-700">Elena Rodriguez (9.2)</p>
             </div>
-            <div className="space-y-2 border-l border-[#c7c4d7] pl-3">
-              <span className="font-bold text-rose-600 uppercase tracking-wider block border-b border-rose-100 pb-1">Needs Assistance</span>
-              <p className="font-medium text-gray-700">Sarah Miller (6.8)</p>
-              <p className="font-medium text-gray-700">Julian Reed (7.0)</p>
+            {/* SVG Circular Progress Loader */}
+            <div className="relative h-14 w-14 flex items-center justify-center flex-shrink-0">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="3.5" fill="transparent" className="text-emerald-100 dark:text-emerald-950/30" />
+                <circle 
+                  cx="28" 
+                  cy="28" 
+                  r="22" 
+                  stroke="#10B981" 
+                  strokeWidth="3.5" 
+                  fill="transparent" 
+                  strokeDasharray="138.2"
+                  strokeDashoffset={138.2 - (138.2 * todayPercentage) / 100}
+                  className="transition-all duration-500"
+                />
+              </svg>
+              <span className="absolute text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400">{todayPercentage}%</span>
             </div>
-          </div>
-        </div>
-
-      </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-[#c7c4d7] bg-[#f0f3ff] rounded-t-2xl overflow-hidden border">
@@ -336,12 +356,13 @@ const TrainerDashboard = () => {
               </div>
 
               {/* Roster list */}
-              <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
+              <div className="bg-white/60 dark:bg-[#12131a]/60 border border-[#c7c4d7] rounded-3xl overflow-hidden shadow-sm">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-xs font-semibold uppercase tracking-wider bg-gray-50/50 dark:bg-gray-900/30">
                       <th className="px-6 py-4">Student</th>
                       <th className="px-6 py-4">Mobile</th>
+                      <th className="px-6 py-4">Batches</th>
                       <th className="px-6 py-4 text-center">Status Checked</th>
                     </tr>
                   </thead>
@@ -350,6 +371,9 @@ const TrainerDashboard = () => {
                       <tr key={student._id} className="hover:bg-gray-50/20 dark:hover:bg-gray-900/10 transition-colors">
                         <td className="px-6 py-4 font-semibold">{student.name}</td>
                         <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{student.mobile}</td>
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                          {student.batches?.map(b => b.name).join(', ') || '—'}
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex justify-center items-center space-x-2">
                             {['Present', 'Absent', 'Late'].map(status => (
