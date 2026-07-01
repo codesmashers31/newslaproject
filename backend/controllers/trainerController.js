@@ -106,6 +106,7 @@ export const markAttendance = async (req, res) => {
         { student: rec.studentId, batch: batchId, date: formattedDate },
         { 
           status: rec.status, 
+          remarks: rec.remarks || '',
           markedBy: req.user._id 
         },
         { new: true, upsert: true }
@@ -230,6 +231,200 @@ export const getQRToken = async (req, res) => {
     );
 
     res.json({ token, expiresAt: Date.now() + 2 * 60 * 1000 });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get dashboard statistics for a trainer
+// @route   GET /api/trainer/dashboard-stats
+// @access  Private (Trainer only)
+export const getTrainerDashboardStats = async (req, res) => {
+  try {
+    const trainerId = req.user._id;
+
+    // Find batches where this trainer is assigned
+    const batches = await Batch.find({ trainers: trainerId }).lean();
+    const batchIds = batches.map(b => b._id);
+
+    if (batches.length === 0) {
+      return res.json({
+        cards: {
+          totalStudents: 0,
+          totalBatches: 0,
+          attendancePercentage: 0,
+          presentToday: 0,
+          absentToday: 0,
+          lateToday: 0,
+        },
+        weeklyAttendance: [],
+        monthlyAttendance: [],
+        recentAttendance: [],
+      });
+    }
+
+    // Filter by specific batch if passed in query
+    const selectedBatchId = req.query.batchId;
+    const targetBatchIds = selectedBatchId && batchIds.some(id => id.toString() === selectedBatchId.toString())
+      ? [selectedBatchId]
+      : batchIds;
+
+    // Fetch batches populated with students
+    const activeBatches = await Batch.find({ _id: { $in: targetBatchIds } })
+      .populate('students', 'name email mobile status')
+      .lean();
+
+    // Collect all students (unique)
+    const studentMap = {};
+    activeBatches.forEach(b => {
+      if (b.students) {
+        b.students.forEach(s => {
+          studentMap[s._id.toString()] = {
+            _id: s._id,
+            name: s.name,
+            email: s.email,
+            mobile: s.mobile,
+            status: s.status,
+            batchName: b.name,
+          };
+        });
+      }
+    });
+    const studentsInBatches = Object.values(studentMap);
+    const studentIds = Object.keys(studentMap);
+
+    // Total counts
+    const totalStudents = studentsInBatches.length;
+    const totalBatches = batches.length;
+
+    // Attendance stats
+    const attendanceRecords = await Attendance.find({ 
+      batch: { $in: targetBatchIds },
+      student: { $in: studentIds }
+    }).lean();
+
+    const totalAttendanceCount = attendanceRecords.length;
+    const presentRecordsCount = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
+    const attendancePercentage = totalAttendanceCount > 0 
+      ? Math.round((presentRecordsCount / totalAttendanceCount) * 100) 
+      : 100;
+
+    // Present / Absent Today
+    // Match today's records (normalized to midnight in local time context of database)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayRecords = await Attendance.find({
+      batch: { $in: targetBatchIds },
+      student: { $in: studentIds },
+      date: today
+    })
+    .populate('student', 'name email')
+    .populate('batch', 'name')
+    .populate('markedBy', 'name')
+    .lean();
+
+    const presentToday = todayRecords.filter(a => a.status === 'Present').length;
+    const absentToday = todayRecords.filter(a => a.status === 'Absent').length;
+    const lateToday = todayRecords.filter(a => a.status === 'Late').length;
+
+    // Weekly Attendance (last 7 days counts)
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weeklyData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+
+      const dayRecords = attendanceRecords.filter(rec => {
+        const recDate = new Date(rec.date);
+        recDate.setHours(0, 0, 0, 0);
+        return recDate.getTime() === d.getTime();
+      });
+
+      const dayPresent = dayRecords.filter(r => r.status === 'Present').length;
+      const dayLate = dayRecords.filter(r => r.status === 'Late').length;
+      const dayAbsent = dayRecords.filter(r => r.status === 'Absent').length;
+
+      weeklyData.push({
+        day: daysOfWeek[d.getDay()],
+        date: d.toISOString().split('T')[0],
+        Present: dayPresent,
+        Late: dayLate,
+        Absent: dayAbsent,
+      });
+    }
+
+    // Monthly Attendance (last 6 months counts)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyData = [];
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    for (let i = 5; i >= 0; i--) {
+      const m = (currentMonth - i + 12) % 12;
+      const y = currentMonth - i < 0 ? currentYear - 1 : currentYear;
+      monthlyData.push({
+        month: months[m],
+        year: y,
+        monthIndex: m,
+        Present: 0,
+        Late: 0,
+        Absent: 0,
+        total: 0
+      });
+    }
+
+    attendanceRecords.forEach(rec => {
+      if (rec.date) {
+        const recDate = new Date(rec.date);
+        const recMonth = recDate.getMonth();
+        const recYear = recDate.getFullYear();
+
+        const bucket = monthlyData.find(b => b.monthIndex === recMonth && b.year === recYear);
+        if (bucket) {
+          bucket.total += 1;
+          if (rec.status === 'Present') bucket.Present += 1;
+          if (rec.status === 'Late') bucket.Late += 1;
+          if (rec.status === 'Absent') bucket.Absent += 1;
+        }
+      }
+    });
+
+    const monthlyBreakdown = monthlyData.map(b => ({
+      month: b.month,
+      Present: b.Present,
+      Late: b.Late,
+      Absent: b.Absent,
+    }));
+
+    // Today's detailed records for the Recent Attendance table
+    const recentAttendance = todayRecords.map(rec => ({
+      _id: rec._id,
+      studentId: rec.student?._id || '—',
+      studentName: rec.student?.name || '—',
+      batchName: rec.batch?.name || '—',
+      attendanceStatus: rec.status,
+      checkInTime: rec.createdAt 
+        ? new Date(rec.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        : '—',
+      trainer: rec.markedBy?.name || '—',
+      remarks: rec.remarks || '—',
+    }));
+
+    res.json({
+      cards: {
+        totalStudents,
+        totalBatches,
+        attendancePercentage,
+        presentToday: presentToday + lateToday,
+        absentToday,
+        lateToday,
+      },
+      weeklyAttendance: weeklyData,
+      monthlyAttendance: monthlyBreakdown,
+      recentAttendance,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
