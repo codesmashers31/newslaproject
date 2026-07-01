@@ -75,7 +75,6 @@ const TrainerDashboard = () => {
   // Search, Filter, Pagination
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [moduleFilter, setModuleFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -322,6 +321,29 @@ const TrainerDashboard = () => {
     : '0.0';
   const completedModulesCount = students.reduce((acc, s) => acc + (s.scores?.filter(sc => sc.status === 'Completed').length || 0), 0);
 
+  // Filter & Paginate Student List for Mark Attendance
+  const filteredAttendanceStudents = batchStudents.filter(s => {
+    const matchSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        `STU-${s._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = statusFilter === 'All' || attendanceState[s._id] === statusFilter;
+    return matchSearch && matchStatus;
+  });
+  const attendanceTotalPages = Math.ceil(filteredAttendanceStudents.length / itemsPerPage);
+  const attendanceIndexOfLastItem = currentPage * itemsPerPage;
+  const attendanceIndexOfFirstItem = attendanceIndexOfLastItem - itemsPerPage;
+  const paginatedAttendanceStudents = filteredAttendanceStudents.slice(attendanceIndexOfFirstItem, attendanceIndexOfLastItem);
+
+  // Filter & Paginate Grading List for Grade Scorecard
+  const filteredGradingStudents = batchStudents.filter(s => {
+    const matchSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        `STU-${s._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchSearch;
+  });
+  const gradingTotalPages = Math.ceil(filteredGradingStudents.length / itemsPerPage);
+  const gradingIndexOfLastItem = currentPage * itemsPerPage;
+  const gradingIndexOfFirstItem = gradingIndexOfLastItem - itemsPerPage;
+  const paginatedGradingStudents = filteredGradingStudents.slice(gradingIndexOfFirstItem, gradingIndexOfLastItem);
+
   // Renders loading skeletons
   if (statsLoading && isDashboard) {
     return (
@@ -463,7 +485,7 @@ const TrainerDashboard = () => {
             </div>
 
             {/* Attendance Status Summary list */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-850">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-850">
               <div className="space-y-1">
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Checked Students</span>
                 <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{batchStudents.length}</p>
@@ -478,7 +500,11 @@ const TrainerDashboard = () => {
               </div>
               <div className="space-y-1">
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Late Today</span>
-                <p className="text-xl font-bold text-orange-500">{stats?.cards?.lateToday ?? 0}</p>
+                <p className="text-xl font-bold text-orange-550">{stats?.cards?.lateToday ?? 0}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Attendance Rate</span>
+                <p className="text-xl font-bold text-[#4F46E5]">{stats?.cards?.attendancePercentage ?? 92}%</p>
               </div>
             </div>
 
@@ -562,7 +588,7 @@ const TrainerDashboard = () => {
                     const isSelected = selectedBatchId === b._id;
                     return (
                       <tr key={b._id} className={`transition-colors ${isSelected ? 'bg-indigo-50/20 dark:bg-indigo-950/10' : 'hover:bg-gray-50/25'}`}>
-                        <td className="px-6 py-3.5 font-semibold text-gray-500 uppercase">B-{b._id.slice(-4).toUpperCase()}</td>
+                        <td className="px-6 py-3.5 font-semibold text-gray-550 uppercase">B-{b._id.slice(-4).toUpperCase()}</td>
                         <td className="px-6 py-3.5 font-bold text-gray-800 dark:text-white">{b.name}</td>
                         <td className="px-6 py-3.5 font-medium text-gray-500">{b.course || 'Communication'}</td>
                         <td className="px-6 py-3.5 text-gray-650 dark:text-gray-400 font-semibold">{user?.name}</td>
@@ -615,12 +641,12 @@ const TrainerDashboard = () => {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="pl-9 pr-4 py-1.5 border border-gray-250 dark:border-gray-805 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-48"
+                    className="pl-9 pr-4 py-1.5 border border-gray-255 dark:border-gray-805 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-48"
                   />
                 </div>
 
                 {/* Status Filter */}
-                <div className="flex items-center space-x-1 border border-gray-250 dark:border-gray-805 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                <div className="flex items-center space-x-1 border border-gray-255 dark:border-gray-805 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
                   <Filter size={12} />
                   <select
                     value={statusFilter}
@@ -628,7 +654,7 @@ const TrainerDashboard = () => {
                       setStatusFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="bg-transparent focus:outline-none text-[11px] font-semibold cursor-pointer text-gray-650 dark:text-gray-400"
+                    className="bg-transparent focus:outline-none text-[11px] font-semibold cursor-pointer text-gray-655 dark:text-gray-400"
                   >
                     <option value="All">All Statuses</option>
                     <option value="Present">Present</option>
@@ -654,11 +680,11 @@ const TrainerDashboard = () => {
               </div>
             </div>
 
-            {/* Student table */}
-            <div className="overflow-x-auto">
+            {/* Student table with Sticky Header */}
+            <div className="overflow-x-auto max-h-[400px]">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-150 dark:border-gray-850 text-gray-555 text-[10px] font-bold uppercase bg-gray-50/50">
+                <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                  <tr className="border-b border-gray-150 dark:border-gray-850 text-gray-555 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
                     <th className="px-6 py-3.5">Student ID</th>
                     <th className="px-6 py-3.5">Student Name</th>
                     <th className="px-6 py-3.5">Batch</th>
@@ -669,83 +695,101 @@ const TrainerDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
-                  {batchStudents.length === 0 ? (
+                  {paginatedAttendanceStudents.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="px-6 py-10 text-center text-gray-400 italic">
-                        No students enrolled in this batch.
+                        No students found matching your criteria.
                       </td>
                     </tr>
                   ) : (
-                    batchStudents
-                      .filter(s => {
-                        const matchSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s._id.toLowerCase().includes(searchQuery.toLowerCase());
-                        const matchStatus = statusFilter === 'All' || attendanceState[s._id] === statusFilter;
-                        return matchSearch && matchStatus;
-                      })
-                      .map(student => (
-                        <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-gray-550">STU-{student._id.slice(-5).toUpperCase()}</td>
-                          <td className="px-6 py-4 font-bold text-gray-850 dark:text-white text-sm">{student.name}</td>
-                          <td className="px-6 py-4 text-gray-550 font-medium">
-                            {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                              attendanceState[student._id] === 'Present'
-                                ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/25 dark:border-emerald-900'
-                                : attendanceState[student._id] === 'Late'
-                                ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/25 dark:border-orange-900'
-                                : 'bg-rose-50 border-rose-250 text-rose-700 dark:bg-rose-950/25 dark:border-rose-900'
-                            }`}>
-                              {attendanceState[student._id]}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              value={checkInTimes[student._id] || '09:00 AM'}
-                              onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                              className="px-2 py-1 border rounded-lg bg-transparent text-[11px] focus:outline-none w-20 text-center font-bold"
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              placeholder="Enter remarks..."
-                              value={attendanceRemarks[student._id] || ''}
-                              onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
-                              className="px-2.5 py-1.5 border border-gray-250 dark:border-gray-800 bg-transparent rounded-xl text-xs w-full focus:outline-none max-w-[150px]"
-                            />
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end items-center space-x-1.5">
-                              {['Present', 'Absent', 'Late'].map(status => (
-                                <button
-                                  key={status}
-                                  onClick={() => handleAttendanceChange(student._id, status)}
-                                  className={`px-3 py-1 rounded-lg text-[9px] font-extrabold border cursor-pointer transition-all ${
-                                    attendanceState[student._id] === status
-                                      ? status === 'Present'
-                                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/20'
-                                        : status === 'Late'
-                                        ? 'bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-950/20'
-                                        : 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/20'
-                                      : 'border-gray-200 text-gray-400 dark:border-gray-800 hover:bg-gray-50'
-                                  }`}
-                                >
-                                  {status}
-                                </button>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                    paginatedAttendanceStudents.map(student => (
+                      <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
+                        <td className="px-6 py-4 font-semibold text-gray-555">STU-{student._id.slice(-5).toUpperCase()}</td>
+                        <td className="px-6 py-4 font-bold text-gray-850 dark:text-white text-sm">{student.name}</td>
+                        <td className="px-6 py-4 text-gray-550 font-medium">
+                          {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                            attendanceState[student._id] === 'Present'
+                              ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/25 dark:border-emerald-900'
+                              : attendanceState[student._id] === 'Late'
+                              ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/25 dark:border-orange-900'
+                              : 'bg-rose-50 border-rose-250 text-rose-700 dark:bg-rose-950/25 dark:border-rose-900'
+                          }`}>
+                            {attendanceState[student._id] || 'Present'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <input
+                            type="text"
+                            value={checkInTimes[student._id] || '09:00 AM'}
+                            onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
+                            className="px-2 py-1 border rounded-lg bg-transparent text-[11px] focus:outline-none w-20 text-center font-bold"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <input
+                            type="text"
+                            placeholder="Enter remarks..."
+                            value={attendanceRemarks[student._id] || ''}
+                            onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
+                            className="px-2.5 py-1.5 border border-gray-250 dark:border-gray-800 bg-transparent rounded-xl text-xs w-full focus:outline-none max-w-[150px]"
+                          />
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end items-center space-x-1.5">
+                            {['Present', 'Absent', 'Late'].map(status => (
+                              <button
+                                key={status}
+                                onClick={() => handleAttendanceChange(student._id, status)}
+                                className={`px-3 py-1 rounded-lg text-[9px] font-extrabold border cursor-pointer transition-all ${
+                                  attendanceState[student._id] === status
+                                    ? status === 'Present'
+                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/20'
+                                      : status === 'Late'
+                                      ? 'bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-950/20'
+                                      : 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/20'
+                                    : 'border-gray-200 text-gray-400 dark:border-gray-800 hover:bg-gray-50'
+                                }`}
+                              >
+                                {status}
+                              </button>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
 
+            {/* Pagination Controls */}
+            {filteredAttendanceStudents.length > itemsPerPage && (
+              <div className="flex items-center justify-between border-t border-gray-150 dark:border-gray-850 pt-4 text-[10px] text-gray-500 font-semibold">
+                <span>
+                  Showing {attendanceIndexOfFirstItem + 1} to {Math.min(attendanceIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} student records
+                </span>
+                <div className="flex space-x-1.5">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1 border border-gray-250 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, attendanceTotalPages))}
+                    disabled={currentPage === attendanceTotalPages}
+                    className="p-1 border border-gray-250 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -757,7 +801,7 @@ const TrainerDashboard = () => {
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm flex items-center justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
-                <h3 className="text-2xl font-black">{totalStudentsCount}</h3>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">{totalStudentsCount}</h3>
               </div>
               <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
                 <Users size={20} />
@@ -766,8 +810,10 @@ const TrainerDashboard = () => {
             
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm flex items-center justify-between">
               <div className="space-y-1">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Score</span>
-                <h3 className="text-2xl font-black">{avgGradeScore}/10</h3>
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Grade</span>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                  {getLetterGrade(Math.round(parseFloat(avgGradeScore))).letter} <span className="text-xs font-normal text-gray-500">({avgGradeScore}/10)</span>
+                </h3>
               </div>
               <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
                 <Award size={20} />
@@ -776,8 +822,8 @@ const TrainerDashboard = () => {
 
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm flex items-center justify-between">
               <div className="space-y-1">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Avg Attendance</span>
-                <h3 className="text-2xl font-black">{stats?.cards?.attendancePercentage ?? 92}%</h3>
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Attendance</span>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">{stats?.cards?.attendancePercentage ?? 92}%</h3>
               </div>
               <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
                 <CheckCircle size={20} />
@@ -787,7 +833,7 @@ const TrainerDashboard = () => {
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-150 dark:border-gray-800 shadow-sm flex items-center justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Completed Modules</span>
-                <h3 className="text-2xl font-black">{completedModulesCount}</h3>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">{completedModulesCount}</h3>
               </div>
               <div className="p-3 bg-orange-50 dark:bg-[#453015]/30 text-orange-600 rounded-xl">
                 <BookOpenCheck size={20} />
@@ -802,7 +848,7 @@ const TrainerDashboard = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-md font-bold text-gray-800 dark:text-white">Daily Attendance & Grade</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Evaluate modules progress and grade student capabilities</p>
+                <p className="text-xs text-gray-500 mt-0.5">Evaluate modules progress, update attendance, and grade students</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
@@ -814,12 +860,12 @@ const TrainerDashboard = () => {
                     placeholder="Search name..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-1.5 border border-gray-250 dark:border-gray-855 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44"
+                    className="pl-9 pr-4 py-1.5 border border-gray-255 dark:border-gray-855 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44"
                   />
                 </div>
 
                 {/* Module Selector Filter */}
-                <div className="flex items-center space-x-1 border border-gray-250 dark:border-gray-805 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-550">
+                <div className="flex items-center space-x-1 border border-gray-255 dark:border-gray-805 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-550">
                   <Filter size={12} />
                   <select
                     value={selectedModule}
@@ -851,7 +897,7 @@ const TrainerDashboard = () => {
                     });
                     downloadCSV(data, `Grades_Report_${selectedModule}.csv`, ['Student ID', 'Student Name', 'Batch', 'Daily Attendance', 'Module', 'Grade', 'Marks', 'Remarks']);
                   }}
-                  className="p-2 border border-gray-250 dark:border-gray-805 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-emerald-600 transition-colors cursor-pointer"
+                  className="p-2 border border-gray-255 dark:border-gray-805 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-emerald-600 transition-colors cursor-pointer"
                   title="Export to Excel"
                 >
                   <FileSpreadsheet size={15} />
@@ -875,7 +921,7 @@ const TrainerDashboard = () => {
                     });
                     downloadPDF(`Grades Report - ${selectedModule}`, headers, rows, `Grades_Report_${selectedModule}.pdf`);
                   }}
-                  className="p-2 border border-gray-250 dark:border-gray-805 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-rose-600 transition-colors cursor-pointer"
+                  className="p-2 border border-gray-255 dark:border-gray-805 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-rose-600 transition-colors cursor-pointer"
                   title="Export to PDF"
                 >
                   <FileDown size={15} />
@@ -884,11 +930,11 @@ const TrainerDashboard = () => {
               </div>
             </div>
 
-            {/* Grading Table */}
-            <div className="overflow-x-auto">
+            {/* Grading Table with Sticky Header */}
+            <div className="overflow-x-auto max-h-[400px]">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-150 dark:border-gray-855 text-gray-555 text-[10px] font-bold uppercase bg-gray-50/50">
+                <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                  <tr className="border-b border-gray-150 dark:border-gray-855 text-gray-555 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
                     <th className="px-6 py-3.5">Student ID</th>
                     <th className="px-6 py-3.5">Student Name</th>
                     <th className="px-6 py-3.5">Batch</th>
@@ -901,68 +947,117 @@ const TrainerDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
-                  {batchStudents.length === 0 ? (
+                  {paginatedGradingStudents.length === 0 ? (
                     <tr>
                       <td colSpan="9" className="px-6 py-10 text-center text-gray-400 italic">
-                        No students enrolled in this batch.
+                        No students found matching search.
                       </td>
                     </tr>
                   ) : (
-                    batchStudents
-                      .filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                      .map(student => {
-                        const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
-                        const grade = getLetterGrade(score.marks || 0);
-                        const updatedDate = score.updatedAt 
-                          ? new Date(score.updatedAt).toLocaleDateString()
-                          : '—';
-                        return (
-                          <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
-                            <td className="px-6 py-4 font-semibold text-gray-500">STU-{student._id.slice(-5).toUpperCase()}</td>
-                            <td className="px-6 py-4 font-bold text-gray-850 dark:text-white text-sm">{student.name}</td>
-                            <td className="px-6 py-4 text-gray-500 font-medium">
-                              {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                attendanceState[student._id] === 'Present'
-                                  ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/25 dark:border-emerald-900'
-                                  : attendanceState[student._id] === 'Late'
-                                  ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/25 dark:border-orange-900'
-                                  : 'bg-rose-50 border-rose-250 text-rose-700 dark:bg-rose-950/25 dark:border-rose-900'
-                              }`}>
-                                {attendanceState[student._id] || 'Present'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-gray-600 font-semibold">{selectedModule}</td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${grade.color}`}>
-                                {score.marks ? grade.letter : 'N/A'}
-                              </span>
-                              {score.marks ? (
-                                <p className="text-[9px] text-gray-400 mt-0.5 font-bold">Marks: {score.marks}/10</p>
-                              ) : null}
-                            </td>
-                            <td className="px-6 py-4 text-gray-500 italic max-w-[150px] truncate" title={score.remarks}>
-                              {score.remarks || '—'}
-                            </td>
-                            <td className="px-6 py-4 text-gray-505">{updatedDate}</td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => openGradingPanel(student, selectedModule)}
-                                className="px-3 py-1.5 bg-indigo-55 hover:bg-indigo-100 dark:bg-indigo-950/30 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                              >
-                                <Edit3 size={11} />
-                                <span>Edit Grade</span>
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
+                    paginatedGradingStudents.map(student => {
+                      const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
+                      const grade = getLetterGrade(score.marks || 0);
+                      const updatedDate = score.updatedAt 
+                        ? new Date(score.updatedAt).toLocaleDateString()
+                        : '—';
+                      return (
+                        <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
+                          <td className="px-6 py-4 font-semibold text-gray-555">STU-{student._id.slice(-5).toUpperCase()}</td>
+                          <td className="px-6 py-4 font-bold text-gray-855 dark:text-white text-sm">{student.name}</td>
+                          <td className="px-6 py-4 text-gray-500 font-medium">
+                            {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
+                          </td>
+                          {/* Interactive Attendance Dropdown to Update Attendance directly! */}
+                          <td className="px-6 py-4">
+                            <select
+                              value={attendanceState[student._id] || 'Present'}
+                              onChange={async (e) => {
+                                const newStatus = e.target.value;
+                                handleAttendanceChange(student._id, newStatus);
+                                try {
+                                  await API.post('/trainer/attendance', {
+                                    batchId: selectedBatchId,
+                                    date: attendanceDate,
+                                    records: [{
+                                      studentId: student._id,
+                                      status: newStatus,
+                                      remarks: attendanceRemarks[student._id] || '',
+                                      timeIn: checkInTimes[student._id] || '09:00 AM'
+                                    }]
+                                  });
+                                  toast.success(`Attendance updated to ${newStatus}`);
+                                  loadStats(selectedBatchId);
+                                } catch (error) {
+                                  toast.error('Failed to update attendance');
+                                }
+                              }}
+                              className={`px-2 py-1 rounded-lg text-[10px] font-extrabold border bg-white dark:bg-gray-900 cursor-pointer ${
+                                (attendanceState[student._id] || 'Present') === 'Present'
+                                  ? 'border-emerald-300 text-emerald-700'
+                                  : (attendanceState[student._id] || 'Present') === 'Late'
+                                  ? 'border-orange-300 text-orange-700'
+                                  : 'border-rose-300 text-rose-700'
+                              }`}
+                            >
+                              <option value="Present">Present</option>
+                              <option value="Absent">Absent</option>
+                              <option value="Late">Late</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600 font-semibold">{selectedModule}</td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${grade.color}`}>
+                              {score.marks !== undefined ? grade.letter : 'N/A'}
+                            </span>
+                            {score.marks !== undefined ? (
+                              <p className="text-[9px] text-gray-400 mt-0.5 font-bold">Marks: {score.marks}/10</p>
+                            ) : null}
+                          </td>
+                          <td className="px-6 py-4 text-gray-500 italic max-w-[150px] truncate" title={score.remarks}>
+                            {score.remarks || '—'}
+                          </td>
+                          <td className="px-6 py-4 text-gray-500">{updatedDate}</td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => openGradingPanel(student, selectedModule)}
+                              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/30 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <Edit3 size={11} />
+                              <span>Edit Grade</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {filteredGradingStudents.length > itemsPerPage && (
+              <div className="flex items-center justify-between border-t border-gray-150 dark:border-gray-855 pt-4 text-[10px] text-gray-500 font-semibold">
+                <span>
+                  Showing {gradingIndexOfFirstItem + 1} to {Math.min(gradingIndexOfLastItem, filteredGradingStudents.length)} of {filteredGradingStudents.length} student records
+                </span>
+                <div className="flex space-x-1.5">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1 border border-gray-250 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradingTotalPages))}
+                    disabled={currentPage === gradingTotalPages}
+                    className="p-1 border border-gray-250 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
         </div>
