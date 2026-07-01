@@ -536,9 +536,9 @@ const TrainerDashboard = () => {
     const pendingGradesCount = totalStudentsInBatch - completedGradedCount;
 
     // -------------------------------------------------------------
-    // FILTERED & PAGINATED STUDENTS FOR BOTH TABS
+    // FILTERED & PAGINATED STUDENTS FOR TABLES
     // -------------------------------------------------------------
-    // Tab 1: Attendance filtering
+    // Tab 1 & Checklist: Attendance filtering
     const filteredAttendanceStudents = batchStudents.filter(student => {
       const nameMatch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
       const idMatch = `stu-${student._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
@@ -555,7 +555,7 @@ const TrainerDashboard = () => {
     const paginatedAttendanceStudents = filteredAttendanceStudents.slice(attIndexOfFirstItem, attIndexOfLastItem);
     const attTotalPages = Math.ceil(filteredAttendanceStudents.length / itemsPerPage);
 
-    // Tab 2: Grading filtering
+    // Tab 2 & Ledger: Grading filtering
     const filteredGradingStudents = batchStudents.filter(student => {
       const nameMatch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
       const idMatch = `stu-${student._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
@@ -579,12 +579,14 @@ const TrainerDashboard = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-              Communication Trainer Hub
+              {isDashboard ? 'Communication Trainer Hub' : isAttendance ? 'Mark Attendance' : 'Grade Scorecard'}
             </h1>
-            <p className="text-xs text-gray-505 dark:text-gray-400 mt-1">
-              {activeTab === 'attendance'
-                ? 'Record, track, and update daily roll call books.'
-                : 'Evaluate module submissions, input grades, and track cohorts performance.'}
+            <p className="text-xs text-gray-500 mt-1">
+              {isDashboard 
+                ? 'Institutional Overview: Monitor student directories, batches list, and daily attendance records.' 
+                : isAttendance 
+                ? 'Record and update daily roll call sheets. Filter by active batches directory.' 
+                : 'Evaluate student scorecards, record comments, and export performance indices.'}
             </p>
           </div>
 
@@ -620,101 +622,138 @@ const TrainerDashboard = () => {
           </div>
         </div>
 
-        {/* TWO TABS BELOW HEADER */}
-        <div className="flex border-b border-gray-205 dark:border-gray-800 bg-white dark:bg-[#12131a] rounded-[16px] overflow-hidden shadow-sm p-1.5 gap-2">
-          <button
-            onClick={() => {
-              setActiveTab('attendance');
-              setCurrentPage(1);
-              navigate('/trainer/attendance');
-            }}
-            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'attendance'
-                ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
-            }`}
-          >
-            <CalendarCheck size={16} />
-            <span>Daily Attendance Roll</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('grading');
-              setCurrentPage(1);
-              navigate('/trainer/scores');
-            }}
-            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'grading'
-                ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
-            }`}
-          >
-            <Award size={16} />
-            <span>Module Grading Sheet</span>
-          </button>
-        </div>
-
-        {/* -------------------------------------------------------------
-            TAB 1 CONTENT : DAILY ATTENDANCE ROLL
-            ------------------------------------------------------------- */}
-        {activeTab === 'attendance' && (
+        {/* 1. DASHBOARD PAGE VIEW */}
+        {isDashboard && (
           <div className="space-y-6">
-            {/* Attendance Summary Cards */}
+            {/* 3 KPI CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Card 1: Total Students */}
               <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-gradient-to-br from-blue-500/15 to-indigo-500/5 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-500/20 dark:border-blue-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
               >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Students</span>
                   <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
-                  <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Active enrollments in batch</p>
                 </div>
-                <div className="p-3 bg-blue-500/20 dark:bg-blue-950/40 text-blue-600 rounded-xl">
-                  <Users size={22} />
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
+                  <Users size={20} />
                 </div>
               </motion.div>
 
+              {/* Card 2: Total Batches */}
               <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-gradient-to-br from-purple-500/15 to-pink-500/5 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-500/20 dark:border-purple-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
               >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Batches</span>
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Batches</span>
                   <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalBatchesCount}</h3>
-                  <p className="text-[9px] text-gray-500">Assigned classes portfolio</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Assigned training batches</p>
                 </div>
-                <div className="p-3 bg-purple-500/20 dark:bg-purple-950/40 text-purple-600 rounded-xl">
-                  <BookOpen size={22} />
+                <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
+                  <BookOpen size={20} />
                 </div>
               </motion.div>
 
+              {/* Card 3: Overall Attendance */}
               <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-gradient-to-br from-emerald-500/15 to-teal-500/5 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-500/20 dark:border-emerald-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
               >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Overall Attendance %</span>
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Overall Attendance</span>
                   <h3 className="text-3xl font-black text-gray-900 dark:text-white">{batchAttendancePct}%</h3>
-                  <p className="text-[9px] text-gray-500">Rolling attendance average</p>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Average student check-in rate</p>
                 </div>
-                <div className="p-3 bg-emerald-500/20 dark:bg-emerald-950/40 text-emerald-600 rounded-xl">
-                  <CheckCircle size={22} />
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
+                  <CheckCircle size={20} />
                 </div>
               </motion.div>
             </div>
 
-            {/* Attendance Filters and Table */}
+            {/* Spacious welcome guide panel */}
+            <div className="bg-white dark:bg-[#12131a] p-8 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm text-center space-y-4">
+              <BookOpen className="h-10 w-10 text-[#4F46E5] mx-auto animate-pulse" />
+              <h2 className="text-lg font-bold text-gray-850 dark:text-white font-sans font-extrabold">Welcome to Communication Trainer Hub</h2>
+              <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
+                Use the sidebar or links to record daily attendance, search cohorts database, grade scores across multiple modules, or generate QR scanners.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 2. MARK ATTENDANCE PAGE VIEW */}
+        {isAttendance && (
+          <div className="space-y-6">
+            {/* Table 1: Batch List */}
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans font-extrabold">Batches Directory</h2>
+                <p className="text-xs text-gray-505 mt-0.5 font-sans">List of assigned active batches and training schedules</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-555 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
+                      <th className="px-6 py-3.5">Batch ID</th>
+                      <th className="px-6 py-3.5">Batch Name</th>
+                      <th className="px-6 py-3.5">Trainer</th>
+                      <th className="px-6 py-3.5 text-center">Total Students</th>
+                      <th className="px-6 py-3.5">Schedule</th>
+                      <th className="px-6 py-3.5">Status</th>
+                      <th className="px-6 py-3.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
+                    {batches.map(b => {
+                      const batchStudentsCount = students.filter(s => s.batches.some(bt => bt._id === b._id)).length;
+                      const isActive = b._id === selectedBatchId;
+                      return (
+                        <tr key={b._id} className={`hover:bg-gray-50/20 transition-colors ${isActive ? 'bg-indigo-50/10' : ''}`}>
+                          <td className="px-6 py-3.5 font-semibold text-gray-505 font-mono">BAT-{b._id.slice(-5).toUpperCase()}</td>
+                          <td className="px-6 py-3.5 font-bold text-gray-800 dark:text-white">{b.name}</td>
+                          <td className="px-6 py-3.5 text-gray-500 font-semibold">{user?.name}</td>
+                          <td className="px-6 py-3.5 text-center font-bold text-gray-700 dark:text-gray-300">{batchStudentsCount} Students</td>
+                          <td className="px-6 py-3.5 text-gray-500 font-medium">{b.schedule || 'Mon-Fri (09:00 AM - 12:00 PM)'}</td>
+                          <td className="px-6 py-3.5 text-center">
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 border border-emerald-200 text-emerald-700">
+                              Active
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedBatchId(b._id);
+                                toast.success(`Selected cohort: ${b.name}`);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
+                                isActive 
+                                  ? 'bg-[#4F46E5] text-white shadow-sm'
+                                  : 'border border-gray-200 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {isActive ? 'Active Batch' : 'Open Attendance'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Table 2: Student List */}
+            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Daily Attendance Roll</h2>
-                  <p className="text-[11px] text-gray-505">Track, edit, and mark student checklists for active cohorts</p>
+                  <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Student Attendance List</h2>
+                  <p className="text-xs text-gray-505 mt-0.5 font-sans">Record checks and submit roll checklist for the active batch</p>
                 </div>
 
-                {/* Filters Row */}
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Search Student */}
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
                     <input
@@ -729,53 +768,16 @@ const TrainerDashboard = () => {
                     />
                   </div>
 
-                  {/* Batch Filter */}
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                    <Filter size={12} />
-                    <select
-                      value={selectedBatchId}
-                      onChange={(e) => {
-                        setSelectedBatchId(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                    >
-                      {batches.map(b => (
-                        <option key={b._id} value={b._id}>{b.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Date Picker */}
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1 bg-transparent text-xs text-gray-500">
+                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1 bg-transparent text-xs text-[#4F46E5]">
                     <Calendar size={12} />
                     <input
                       type="date"
                       value={attendanceDate}
                       onChange={(e) => setAttendanceDate(e.target.value)}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400 py-0.5"
+                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-650 dark:text-gray-400 py-0.5"
                     />
                   </div>
 
-                  {/* Attendance Status Filter */}
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                    <Filter size={12} />
-                    <select
-                      value={attendanceStatusFilter}
-                      onChange={(e) => {
-                        setAttendanceStatusFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                    >
-                      <option value="All">All Statuses</option>
-                      <option value="Present">Present</option>
-                      <option value="Absent">Absent</option>
-                      <option value="Late">Late</option>
-                    </select>
-                  </div>
-
-                  {/* Global Submit Attendance */}
                   <button
                     onClick={submitAttendance}
                     className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
@@ -785,123 +787,100 @@ const TrainerDashboard = () => {
                 </div>
               </div>
 
-              {/* Attendance Table */}
-              {loading ? (
-                <div className="space-y-3 py-6">
-                  {[...Array(3)].map((_, idx) => (
-                    <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
-                  ))}
-                </div>
-              ) : paginatedAttendanceStudents.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 italic text-xs">
-                  No student attendance records matching current criteria.
-                </div>
-              ) : (
-                <div className="overflow-x-auto max-h-[420px]">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                      <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                        <th className="px-5 py-3">Student ID</th>
-                        <th className="px-5 py-3">Student Name</th>
-                        <th className="px-5 py-3">Batch</th>
-                        <th className="px-5 py-3">Date</th>
-                        <th className="px-5 py-3">Check In</th>
-                        <th className="px-5 py-3">Check Out</th>
-                        <th className="px-5 py-3 text-center">Attendance Status</th>
-                        <th className="px-5 py-3">Remarks</th>
-                        <th className="px-5 py-3 text-right">Action</th>
+              <div className="overflow-x-auto max-h-[400px]">
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
+                      <th className="px-6 py-3.5">Student ID</th>
+                      <th className="px-6 py-3.5">Student Name</th>
+                      <th className="px-6 py-3.5">Batch</th>
+                      <th className="px-6 py-3.5 text-center">Status</th>
+                      <th className="px-6 py-3.5">Check In Time</th>
+                      <th className="px-6 py-3.5">Remarks</th>
+                      <th className="px-6 py-3.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
+                    {paginatedAttendanceStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400 italic">
+                          No student records available.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
-                      {paginatedAttendanceStudents.map(student => {
+                    ) : (
+                      paginatedAttendanceStudents.map(student => {
                         const currentStatus = attendanceState[student._id] || 'Present';
-                        const checkInVal = checkInTimes[student._id] || '09:00 AM';
-                        const checkOutVal = checkOutTimes[student._id] || '05:00 PM';
+                        const checkInTimeVal = checkInTimes[student._id] || '09:00 AM';
+                        const remarksVal = attendanceRemarks[student._id] || '';
                         return (
-                          <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
-                            <td className="px-5 py-3 font-semibold text-gray-400">STU-{student._id.slice(-5).toUpperCase()}</td>
-                            <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
-                            <td className="px-5 py-3 text-gray-550">
-                              {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
+                          <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
+                            <td className="px-6 py-4 font-semibold text-gray-505 font-mono">STU-{student._id.slice(-5).toUpperCase()}</td>
+                            <td className="px-6 py-4 font-bold text-gray-850 dark:text-white text-sm">{student.name}</td>
+                            <td className="px-6 py-4 text-[#4F46E5] font-semibold">{batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}</td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                                currentStatus === 'Present'
+                                  ? 'bg-[#4F46E5]/10 border-[#4F46E5]/30 text-[#4F46E5]'
+                                  : currentStatus === 'Late'
+                                  ? 'bg-orange-50 border-orange-200 text-orange-700'
+                                  : 'bg-rose-50 border-rose-300 text-rose-700'
+                              }`}>
+                                {currentStatus}
+                              </span>
                             </td>
-                            <td className="px-5 py-3 text-gray-400 font-medium">{attendanceDate}</td>
-                            <td className="px-5 py-3">
+                            <td className="px-6 py-4">
                               <input
                                 type="text"
-                                value={checkInVal}
+                                value={checkInTimeVal}
                                 onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
+                                className="px-2.5 py-1 border border-gray-205 dark:border-gray-800 rounded bg-transparent focus:outline-none text-[10px] w-20 text-center font-bold text-gray-700 dark:text-gray-300"
                               />
                             </td>
-                            <td className="px-5 py-3">
+                            <td className="px-6 py-4">
                               <input
                                 type="text"
-                                value={checkOutVal}
-                                onChange={(e) => setCheckOutTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
-                              />
-                            </td>
-                            <td className="px-5 py-3 text-center">
-                              {/* status checklist switches directly inline */}
-                              <select
-                                value={currentStatus}
-                                onChange={(e) => handleAttendanceChange(student._id, e.target.value)}
-                                className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold border bg-white dark:bg-gray-900 cursor-pointer focus:outline-none ${
-                                  currentStatus === 'Present'
-                                    ? 'border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400'
-                                    : currentStatus === 'Late'
-                                    ? 'border-orange-300 text-orange-700 dark:border-orange-850 dark:text-orange-400'
-                                    : 'border-rose-300 text-rose-700 dark:border-rose-800 dark:text-rose-450'
-                                }`}
-                              >
-                                <option value="Present">Present</option>
-                                <option value="Absent">Absent</option>
-                                <option value="Late">Late</option>
-                              </select>
-                            </td>
-                            <td className="px-5 py-3">
-                              <input
-                                type="text"
-                                placeholder="Enter remarks..."
-                                value={attendanceRemarks[student._id] || ''}
+                                placeholder="Add observations..."
+                                value={remarksVal}
                                 onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                className="w-32 px-2 py-0.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-transparent focus:outline-none text-[10px] text-gray-700 dark:text-gray-300"
+                                className="px-2.5 py-1 border border-gray-205 dark:border-gray-800 rounded bg-transparent focus:outline-none text-[10px] w-32 text-gray-700 dark:text-gray-300"
                               />
                             </td>
-                            <td className="px-5 py-3 text-right">
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleSingleMarkAttendance(student._id)}
-                                  className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                >
-                                  {attendanceState[student._id] ? 'Edit Attendance' : 'Mark Attendance'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setDetailStudent(student);
-                                    setDetailsModalOpen(true);
-                                  }}
-                                  className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                >
-                                  View Details
-                                </button>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end space-x-1">
+                                {['Present', 'Absent', 'Late'].map(status => (
+                                  <button
+                                    key={status}
+                                    onClick={() => handleAttendanceChange(student._id, status)}
+                                    className={`px-2.5 py-1 rounded text-[9px] font-extrabold transition-all border cursor-pointer ${
+                                      currentStatus === status
+                                        ? status === 'Present'
+                                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                                          : status === 'Late'
+                                          ? 'bg-orange-50 border-orange-300 text-orange-700'
+                                          : 'bg-rose-50 border-rose-300 text-rose-700'
+                                        : 'border-gray-200 hover:bg-gray-55 text-gray-500'
+                                    }`}
+                                  >
+                                    {status}
+                                  </button>
+                                ))}
                               </div>
                             </td>
                           </tr>
                         );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Attendance Pagination */}
               {filteredAttendanceStudents.length > itemsPerPage && (
-                <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-505 font-semibold">
+                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-4 text-[10px] text-gray-550 font-semibold">
                   <span>
-                    Showing {attIndexOfFirstItem + 1} to {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} records
+                    Showing {attIndexOfFirstItem + 1} to {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} student records
                   </span>
-                  <div className="flex space-x-1">
+                  <div className="flex space-x-1.5">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
@@ -923,274 +902,576 @@ const TrainerDashboard = () => {
           </div>
         )}
 
-        {/* -------------------------------------------------------------
-            TAB 2 CONTENT : MODULE GRADING SHEET
-            ------------------------------------------------------------- */}
-        {activeTab === 'grading' && (
+        {/* 3. GRADE SCORECARD PAGE VIEW (TABS ACTIVE ONLY HERE) */}
+        {isGrading && (
           <div className="space-y-6">
-            {/* Grading Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+            {/* TWO TABS (ONLY VISIBLE ON GRADE SCORECARD ROUTE) */}
+            <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] rounded-[16px] overflow-hidden shadow-sm p-1.5 gap-2">
+              <button
+                onClick={() => {
+                  setActiveTab('attendance');
+                  setCurrentPage(1);
+                }}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
+                  activeTab === 'attendance'
+                    ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
+                    : 'text-gray-505 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
+                }`}
               >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
-                  <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
-                </div>
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
-                  <Users size={20} />
-                </div>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+                <CalendarCheck size={16} />
+                <span>Daily Attendance Roll</span>
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('grading');
+                  setCurrentPage(1);
+                }}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
+                  activeTab === 'grading'
+                    ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
+                    : 'text-gray-505 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
+                }`}
               >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Completed Modules</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{completedGradedCount}</h3>
-                  <p className="text-[9px] text-gray-500">Finished assessment records</p>
-                </div>
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-605 rounded-xl">
-                  <BookOpenCheck size={20} />
-                </div>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
-              >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Score</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {avgScoreGrading} <span className="text-xs font-normal text-gray-500">/10</span>
-                  </h3>
-                  <p className="text-[9px] text-gray-500">Average marks in batch</p>
-                </div>
-                <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
-                  <Award size={20} />
-                </div>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
-              >
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Pending Grades</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{pendingGradesCount}</h3>
-                  <p className="text-[9px] text-gray-500">Grades requiring entries</p>
-                </div>
-                <div className="p-3 bg-orange-50 dark:bg-[#453015]/30 text-orange-600 rounded-xl">
-                  <AlertCircle size={20} />
-                </div>
-              </motion.div>
+                <Award size={16} />
+                <span>Module Grading Sheet</span>
+              </button>
             </div>
 
-            {/* Grading Table and Filters */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Module Grading Sheet</h2>
-                  <p className="text-[11px] text-gray-505">Track, edit, and input assessment scores for students</p>
+            {/* TAB 1: DAILY ATTENDANCE ROLL */}
+            {activeTab === 'attendance' && (
+              <div className="space-y-6">
+                {/* Attendance Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-gradient-to-br from-blue-500/15 to-indigo-500/5 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-500/20 dark:border-blue-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
+                      <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
+                      <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
+                    </div>
+                    <div className="p-3 bg-blue-500/20 dark:bg-blue-950/40 text-blue-600 rounded-xl">
+                      <Users size={22} />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-gradient-to-br from-purple-500/15 to-pink-500/5 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-500/20 dark:border-purple-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Batches</span>
+                      <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalBatchesCount}</h3>
+                      <p className="text-[9px] text-gray-500">Assigned classes portfolio</p>
+                    </div>
+                    <div className="p-3 bg-purple-500/20 dark:bg-purple-950/40 text-purple-600 rounded-xl">
+                      <BookOpen size={22} />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-gradient-to-br from-emerald-500/15 to-teal-500/5 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-500/20 dark:border-emerald-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Overall Attendance %</span>
+                      <h3 className="text-3xl font-black text-gray-900 dark:text-white">{batchAttendancePct}%</h3>
+                      <p className="text-[9px] text-gray-500">Rolling attendance average</p>
+                    </div>
+                    <div className="p-3 bg-emerald-500/20 dark:bg-emerald-950/40 text-emerald-600 rounded-xl">
+                      <CheckCircle size={22} />
+                    </div>
+                  </motion.div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* Search Student */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search student..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
-                    />
+                {/* Attendance Filters and Table */}
+                <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                      <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold animate-pulse">Daily Attendance Book</h2>
+                      <p className="text-[11px] text-gray-500">View check-in logs, modify roll status, and submit daily registers</p>
+                    </div>
+
+                    {/* Filters Row */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Search Student */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search student..."
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
+                        />
+                      </div>
+
+                      {/* Batch Filter */}
+                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                        <Filter size={12} />
+                        <select
+                          value={selectedBatchId}
+                          onChange={(e) => {
+                            setSelectedBatchId(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                        >
+                          {batches.map(b => (
+                            <option key={b._id} value={b._id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Date Picker */}
+                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1 bg-transparent text-xs text-gray-500">
+                        <Calendar size={12} />
+                        <input
+                          type="date"
+                          value={attendanceDate}
+                          onChange={(e) => setAttendanceDate(e.target.value)}
+                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400 py-0.5"
+                        />
+                      </div>
+
+                      {/* Attendance Status Filter */}
+                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                        <Filter size={12} />
+                        <select
+                          value={attendanceStatusFilter}
+                          onChange={(e) => {
+                            setAttendanceStatusFilter(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                        >
+                          <option value="All">All Statuses</option>
+                          <option value="Present">Present</option>
+                          <option value="Absent">Absent</option>
+                          <option value="Late">Late</option>
+                        </select>
+                      </div>
+
+                      {/* Global Submit Attendance */}
+                      <button
+                        onClick={submitAttendance}
+                        className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
+                      >
+                        Submit Register
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Batch Filter */}
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                    <Filter size={12} />
-                    <select
-                      value={selectedBatchId}
-                      onChange={(e) => {
-                        setSelectedBatchId(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                    >
-                      {batches.map(b => (
-                        <option key={b._id} value={b._id}>{b.name}</option>
+                  {/* Attendance Table */}
+                  {loading ? (
+                    <div className="space-y-3 py-6">
+                      {[...Array(3)].map((_, idx) => (
+                        <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
                       ))}
-                    </select>
-                  </div>
+                    </div>
+                  ) : paginatedAttendanceStudents.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400 italic text-xs">
+                      No student attendance records matching filters.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto max-h-[420px]">
+                      <table className="w-full text-left border-collapse">
+                        <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                          <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
+                            <th className="px-5 py-3">Student ID</th>
+                            <th className="px-5 py-3">Student Name</th>
+                            <th className="px-5 py-3">Batch</th>
+                            <th className="px-5 py-3">Date</th>
+                            <th className="px-5 py-3">Check In</th>
+                            <th className="px-5 py-3">Check Out</th>
+                            <th className="px-5 py-3 text-center">Attendance Status</th>
+                            <th className="px-5 py-3">Remarks</th>
+                            <th className="px-5 py-3 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
+                          {paginatedAttendanceStudents.map(student => {
+                            const currentStatus = attendanceState[student._id] || 'Present';
+                            const checkInVal = checkInTimes[student._id] || '09:00 AM';
+                            const checkOutVal = checkOutTimes[student._id] || '05:00 PM';
+                            return (
+                              <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
+                                <td className="px-5 py-3 font-semibold text-gray-405">STU-{student._id.slice(-5).toUpperCase()}</td>
+                                <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
+                                <td className="px-5 py-3 text-gray-550">
+                                  {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
+                                </td>
+                                <td className="px-5 py-3 text-gray-400 font-medium">{attendanceDate}</td>
+                                <td className="px-5 py-3">
+                                  <input
+                                    type="text"
+                                    value={checkInVal}
+                                    onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                    className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
+                                  />
+                                </td>
+                                <td className="px-5 py-3">
+                                  <input
+                                    type="text"
+                                    value={checkOutVal}
+                                    onChange={(e) => setCheckOutTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                    className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
+                                  />
+                                </td>
+                                <td className="px-5 py-3 text-center">
+                                  {/* status checklist switches directly inline */}
+                                  <select
+                                    value={currentStatus}
+                                    onChange={(e) => handleAttendanceChange(student._id, e.target.value)}
+                                    className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold border bg-white dark:bg-gray-900 cursor-pointer focus:outline-none ${
+                                      currentStatus === 'Present'
+                                        ? 'border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400'
+                                        : currentStatus === 'Late'
+                                        ? 'border-orange-300 text-orange-700 dark:border-orange-850 dark:text-orange-400'
+                                        : 'border-rose-300 text-rose-700 dark:border-rose-800 dark:text-rose-450'
+                                    }`}
+                                  >
+                                    <option value="Present">Present</option>
+                                    <option value="Absent">Absent</option>
+                                    <option value="Late">Late</option>
+                                  </select>
+                                </td>
+                                <td className="px-5 py-3">
+                                  <input
+                                    type="text"
+                                    placeholder="Enter remarks..."
+                                    value={attendanceRemarks[student._id] || ''}
+                                    onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                    className="w-32 px-2 py-0.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-transparent focus:outline-none text-[10px] text-gray-700 dark:text-gray-300"
+                                  />
+                                </td>
+                                <td className="px-5 py-3 text-right">
+                                  <div className="flex justify-end gap-1.5">
+                                    <button
+                                      onClick={() => handleSingleMarkAttendance(student._id)}
+                                      className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      {attendanceState[student._id] ? 'Edit Attendance' : 'Mark Attendance'}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setDetailStudent(student);
+                                        setDetailsModalOpen(true);
+                                      }}
+                                      className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      View Details
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
-                  {/* Module Filter */}
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                    <Filter size={12} />
-                    <select
-                      value={selectedModule}
-                      onChange={(e) => {
-                        setSelectedModule(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                    >
-                      {getModulesList().map((mod, i) => (
-                        <option key={i} value={mod}>{mod}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Status Filter */}
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                    <Filter size={12} />
-                    <select
-                      value={gradingStatusFilter}
-                      onChange={(e) => {
-                        setGradingStatusFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                    >
-                      <option value="All">All Statuses</option>
-                      <option value="Completed">Completed</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Not Started">Not Started</option>
-                    </select>
-                  </div>
-
-                  {/* Submit Grades header notification */}
-                  <button
-                    onClick={() => {
-                      toast.success("All scorecards have been saved and submitted successfully!");
-                    }}
-                    className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
-                  >
-                    Submit Grades
-                  </button>
+                  {/* Attendance Pagination */}
+                  {filteredAttendanceStudents.length > itemsPerPage && (
+                    <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-505 font-semibold">
+                      <span>
+                        Showing {attIndexOfFirstItem + 1} to {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} records
+                      </span>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        >
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, attTotalPages))}
+                          disabled={currentPage === attTotalPages}
+                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
 
-              {/* Grading Table */}
-              {loading ? (
-                <div className="space-y-3 py-6">
-                  {[...Array(3)].map((_, idx) => (
-                    <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
-                  ))}
-                </div>
-              ) : paginatedGradingStudents.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 italic text-xs">
-                  No grade entries matching current criteria.
-                </div>
-              ) : (
-                <div className="overflow-x-auto max-h-[420px]">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                      <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                        <th className="px-5 py-3">Student ID</th>
-                        <th className="px-5 py-3">Student Name</th>
-                        <th className="px-5 py-3">Batch</th>
-                        <th className="px-5 py-3">Module</th>
-                        <th className="px-5 py-3 text-center">Marks</th>
-                        <th className="px-5 py-3 text-center">Grade</th>
-                        <th className="px-5 py-3 text-center">Status</th>
-                        <th className="px-5 py-3">Last Updated</th>
-                        <th className="px-5 py-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-150 dark:divide-gray-855 text-xs">
-                      {paginatedGradingStudents.map(student => {
-                        const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
-                        const grade = getLetterGrade(score.marks || 0);
-                        const updatedDate = score.updatedAt 
-                          ? new Date(score.updatedAt).toLocaleDateString()
-                          : '—';
-                        return (
-                          <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
-                            <td className="px-5 py-3 font-semibold text-gray-400">STU-{student._id.slice(-5).toUpperCase()}</td>
-                            <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
-                            <td className="px-5 py-3 text-gray-500">
-                              {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                            </td>
-                            <td className="px-5 py-3 text-gray-600 dark:text-gray-405 font-semibold">{selectedModule}</td>
-                            <td className="px-5 py-3 text-center font-bold text-gray-700 dark:text-gray-300">
-                              {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
-                            </td>
-                            <td className="px-5 py-3 text-center">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${grade.color}`}>
-                                {score.marks !== undefined ? grade.letter : 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3 text-center">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                (score.status || 'Not Started') === 'Completed'
-                                  ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/20'
-                                  : (score.status || 'Not Started') === 'In Progress'
-                                  ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20'
-                                  : 'bg-gray-50 border-gray-200 text-gray-500'
-                              }`}>
-                                {score.status || 'Not Started'}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3 text-gray-400 font-medium">{updatedDate}</td>
-                            <td className="px-5 py-3 text-right">
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  onClick={() => openGradingPanel(student, selectedModule)}
-                                  className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                >
-                                  Edit Grade
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setDetailStudent(student);
-                                    setDetailsModalOpen(true);
-                                  }}
-                                  className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                >
-                                  View Details
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+            {/* TAB 2: MODULE GRADING SHEET */}
+            {activeTab === 'grading' && (
+              <div className="space-y-6">
+                {/* Grading Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
+                      <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
+                    </div>
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
+                      <Users size={20} />
+                    </div>
+                  </motion.div>
 
-              {/* Grading Pagination */}
-              {filteredGradingStudents.length > itemsPerPage && (
-                <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-505 font-semibold">
-                  <span>
-                    Showing {gradIndexOfFirstItem + 1} to {Math.min(gradIndexOfLastItem, filteredGradingStudents.length)} of {filteredGradingStudents.length} records
-                  </span>
-                  <div className="flex space-x-1">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradTotalPages))}
-                      disabled={currentPage === gradTotalPages}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Completed Modules</span>
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{completedGradedCount}</h3>
+                      <p className="text-[9px] text-gray-500">Finished assessment records</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
+                      <BookOpenCheck size={20} />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Score</span>
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                        {avgScoreGrading} <span className="text-xs font-normal text-gray-500">/10</span>
+                      </h3>
+                      <p className="text-[9px] text-gray-500">Average marks in batch</p>
+                    </div>
+                    <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
+                      <Award size={20} />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    whileHover={{ y: -3, scale: 1.01 }}
+                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Pending Grades</span>
+                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{pendingGradesCount}</h3>
+                      <p className="text-[9px] text-gray-500">Grades requiring entries</p>
+                    </div>
+                    <div className="p-3 bg-orange-50 dark:bg-[#453015]/30 text-orange-600 rounded-xl">
+                      <AlertCircle size={20} />
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Grading Table and Filters */}
+                <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                      <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Module Grading Sheet</h2>
+                      <p className="text-[11px] text-gray-500">Track, edit, and input assessment scores for students</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Search Student */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search student..."
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
+                        />
+                      </div>
+
+                      {/* Batch Filter */}
+                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                        <Filter size={12} />
+                        <select
+                          value={selectedBatchId}
+                          onChange={(e) => {
+                            setSelectedBatchId(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                        >
+                          {batches.map(b => (
+                            <option key={b._id} value={b._id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Module Filter */}
+                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                        <Filter size={12} />
+                        <select
+                          value={selectedModule}
+                          onChange={(e) => {
+                            setSelectedModule(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                        >
+                          {getModulesList().map((mod, i) => (
+                            <option key={i} value={mod}>{mod}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Status Filter */}
+                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                        <Filter size={12} />
+                        <select
+                          value={gradingStatusFilter}
+                          onChange={(e) => {
+                            setGradingStatusFilter(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                        >
+                          <option value="All">All Statuses</option>
+                          <option value="Completed">Completed</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Not Started">Not Started</option>
+                        </select>
+                      </div>
+
+                      {/* Submit Grades */}
+                      <button
+                        onClick={() => {
+                          toast.success("All scorecards have been saved and submitted successfully!");
+                        }}
+                        className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
+                      >
+                        Submit Grades
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Grading Table */}
+                  {loading ? (
+                    <div className="space-y-3 py-6">
+                      {[...Array(3)].map((_, idx) => (
+                        <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
+                      ))}
+                    </div>
+                  ) : paginatedGradingStudents.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400 italic text-xs">
+                      No grade entries matching current criteria.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto max-h-[420px]">
+                      <table className="w-full text-left border-collapse">
+                        <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                          <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
+                            <th className="px-5 py-3">Student ID</th>
+                            <th className="px-5 py-3">Student Name</th>
+                            <th className="px-5 py-3">Batch</th>
+                            <th className="px-5 py-3">Module</th>
+                            <th className="px-5 py-3 text-center">Marks</th>
+                            <th className="px-5 py-3 text-center">Grade</th>
+                            <th className="px-5 py-3 text-center">Status</th>
+                            <th className="px-5 py-3">Last Updated</th>
+                            <th className="px-5 py-3 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
+                          {paginatedGradingStudents.map(student => {
+                            const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
+                            const grade = getLetterGrade(score.marks || 0);
+                            const updatedDate = score.updatedAt 
+                              ? new Date(score.updatedAt).toLocaleDateString()
+                              : '—';
+                            return (
+                              <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
+                                <td className="px-5 py-3 font-semibold text-gray-400">STU-{student._id.slice(-5).toUpperCase()}</td>
+                                <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
+                                <td className="px-5 py-3 text-gray-550 font-semibold">
+                                  {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
+                                </td>
+                                <td className="px-5 py-3 text-gray-600 dark:text-gray-450 font-semibold">{selectedModule}</td>
+                                <td className="px-5 py-3 text-center font-bold text-gray-700 dark:text-gray-300">
+                                  {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
+                                </td>
+                                <td className="px-5 py-3 text-center">
+                                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${grade.color}`}>
+                                    {score.marks !== undefined ? grade.letter : 'N/A'}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3 text-center">
+                                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                                    (score.status || 'Not Started') === 'Completed'
+                                      ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/20'
+                                      : (score.status || 'Not Started') === 'In Progress'
+                                      ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20'
+                                      : 'bg-gray-50 border-gray-200 text-gray-505'
+                                  }`}>
+                                    {score.status || 'Not Started'}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3 text-gray-400 font-medium">{updatedDate}</td>
+                                <td className="px-5 py-3 text-right">
+                                  <div className="flex justify-end gap-1.5">
+                                    <button
+                                      onClick={() => openGradingPanel(student, selectedModule)}
+                                      className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      Edit Grade
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setDetailStudent(student);
+                                        setDetailsModalOpen(true);
+                                      }}
+                                      className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                    >
+                                      View Details
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Grading Pagination */}
+                  {filteredGradingStudents.length > itemsPerPage && (
+                    <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-555 font-semibold">
+                      <span>
+                        Showing {gradIndexOfFirstItem + 1} to {Math.min(gradIndexOfLastItem, filteredGradingStudents.length)} of {filteredGradingStudents.length} records
+                      </span>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        >
+                          <ChevronLeft size={14} />
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradTotalPages))}
+                          disabled={currentPage === gradTotalPages}
+                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
