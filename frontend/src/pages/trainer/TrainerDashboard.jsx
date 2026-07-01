@@ -65,20 +65,21 @@ const TrainerDashboard = () => {
   });
 
   useEffect(() => {
-    if (!isCommunicationTrainer) {
-      if (location.pathname === '/trainer/scores') {
-        setActiveTab('grading');
-      } else if (location.pathname === '/trainer/attendance' || location.pathname === '/trainer') {
-        setActiveTab('attendance');
-      }
+    if (location.pathname === '/trainer/scores') {
+      setActiveTab('grading');
+    } else if (location.pathname === '/trainer/attendance' || location.pathname === '/trainer') {
+      setActiveTab('attendance');
     }
-  }, [location.pathname, isCommunicationTrainer]);
+  }, [location.pathname]);
 
   // Attendance Checklist states
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceState, setAttendanceState] = useState({}); // { studentId: 'Present' | 'Absent' | 'Late' }
   const [attendanceRemarks, setAttendanceRemarks] = useState({}); // { studentId: string }
   const [checkInTimes, setCheckInTimes] = useState({}); // { studentId: string }
+  const [checkOutTimes, setCheckOutTimes] = useState({}); // { studentId: string }
+  const [attendanceStatusFilter, setAttendanceStatusFilter] = useState('All');
+  const [gradingStatusFilter, setGradingStatusFilter] = useState('All');
 
   // Grading states
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -95,6 +96,8 @@ const TrainerDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [detailStudent, setDetailStudent] = useState(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   // Modules list based on trainer type
   const getModulesList = () => {
@@ -185,18 +188,40 @@ const TrainerDashboard = () => {
     const defaultState = {};
     const defaultRemarks = {};
     const defaultTimes = {};
+    const defaultOutTimes = {};
     batchStudents.forEach(s => {
       defaultState[s._id] = 'Present';
       defaultRemarks[s._id] = '';
       defaultTimes[s._id] = '09:00 AM';
+      defaultOutTimes[s._id] = '05:00 PM';
     });
     setAttendanceState(defaultState);
     setAttendanceRemarks(defaultRemarks);
     setCheckInTimes(defaultTimes);
+    setCheckOutTimes(defaultOutTimes);
   }, [selectedBatchId, students]);
 
   const handleAttendanceChange = (studentId, status) => {
     setAttendanceState(prev => ({ ...prev, [studentId]: status }));
+  };
+
+  const handleSingleMarkAttendance = async (studentId) => {
+    try {
+      await API.post('/trainer/attendance', {
+        batchId: selectedBatchId,
+        date: attendanceDate,
+        records: [{
+          studentId,
+          status: attendanceState[studentId] || 'Present',
+          remarks: attendanceRemarks[studentId] || '',
+          timeIn: checkInTimes[studentId] || '09:00 AM'
+        }]
+      });
+      toast.success('Attendance updated successfully');
+      loadStats(selectedBatchId);
+    } catch (error) {
+      toast.error('Failed to save attendance');
+    }
   };
 
   // Submit attendance from Checklist view
@@ -328,10 +353,11 @@ const TrainerDashboard = () => {
   // Convert marks to letter grades
   const getLetterGrade = (marks) => {
     if (marks >= 9) return { letter: 'A+', color: 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900' };
-    if (marks === 8) return { letter: 'A', color: 'bg-blue-50 border-blue-250 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900' };
-    if (marks === 7) return { letter: 'B', color: 'bg-yellow-50 border-yellow-250 text-yellow-700 dark:bg-yellow-950/20 dark:border-yellow-900' };
-    if (marks === 6) return { letter: 'C', color: 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900' };
-    return { letter: 'D', color: 'bg-rose-50 border-rose-250 text-rose-700 dark:bg-rose-950/20 dark:border-rose-900' };
+    if (marks === 8) return { letter: 'A', color: 'bg-teal-50 border-teal-250 text-teal-700 dark:bg-teal-950/20 dark:border-teal-900' };
+    if (marks === 7) return { letter: 'B+', color: 'bg-blue-50 border-blue-250 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900' };
+    if (marks === 6) return { letter: 'B', color: 'bg-indigo-50 border-indigo-250 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900' };
+    if (marks === 5) return { letter: 'C', color: 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900' };
+    return { letter: 'Fail', color: 'bg-rose-50 border-rose-250 text-rose-700 dark:bg-rose-950/20 dark:border-rose-900' };
   };
 
   // Calculate grading card stats (for Communication Trainer view)
@@ -483,20 +509,82 @@ const TrainerDashboard = () => {
   // RENDERING LOGIC FOR COMMUNICATION TRAINER
   // -------------------------------------------------------------
   if (isCommunicationTrainer) {
+    // -------------------------------------------------------------
+    // CALCULATING LIVE BATCH STATS FOR CARDS
+    // -------------------------------------------------------------
+    const totalStudentsInBatch = batchStudents.length;
+    const totalBatchesCount = batches.length;
+    
+    // Calculate live attendance average for batch checklist
+    const presentCount = batchStudents.filter(s => attendanceState[s._id] === 'Present').length;
+    const lateCount = batchStudents.filter(s => attendanceState[s._id] === 'Late').length;
+    const batchAttendancePct = totalStudentsInBatch > 0
+      ? Math.round(((presentCount + lateCount) / totalStudentsInBatch) * 100)
+      : 100;
+
+    // Calculate completed grades for batch grading scorecard
+    const activeModuleScores = batchStudents.map(s => s.scores?.find(sc => sc.moduleName === selectedModule) || {});
+    const completedGradedCount = activeModuleScores.filter(sc => sc.status === 'Completed').length;
+    
+    // Average score calculation
+    const completedScoresWithMarks = activeModuleScores.filter(sc => sc.status === 'Completed' && sc.marks !== undefined);
+    const avgScoreGrading = completedScoresWithMarks.length > 0
+      ? (completedScoresWithMarks.reduce((sum, sc) => sum + sc.marks, 0) / completedScoresWithMarks.length).toFixed(1)
+      : '0.0';
+
+    // Pending grades count (where assignment is not Completed yet)
+    const pendingGradesCount = totalStudentsInBatch - completedGradedCount;
+
+    // -------------------------------------------------------------
+    // FILTERED & PAGINATED STUDENTS FOR BOTH TABS
+    // -------------------------------------------------------------
+    // Tab 1: Attendance filtering
+    const filteredAttendanceStudents = batchStudents.filter(student => {
+      const nameMatch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const idMatch = `stu-${student._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
+      const searchMatch = searchQuery === '' || nameMatch || idMatch;
+
+      const currentStatus = attendanceState[student._id] || 'Present';
+      const statusMatch = attendanceStatusFilter === 'All' || currentStatus.toLowerCase() === attendanceStatusFilter.toLowerCase();
+
+      return searchMatch && statusMatch;
+    });
+
+    const attIndexOfLastItem = currentPage * itemsPerPage;
+    const attIndexOfFirstItem = attIndexOfLastItem - itemsPerPage;
+    const paginatedAttendanceStudents = filteredAttendanceStudents.slice(attIndexOfFirstItem, attIndexOfLastItem);
+    const attTotalPages = Math.ceil(filteredAttendanceStudents.length / itemsPerPage);
+
+    // Tab 2: Grading filtering
+    const filteredGradingStudents = batchStudents.filter(student => {
+      const nameMatch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const idMatch = `stu-${student._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
+      const searchMatch = searchQuery === '' || nameMatch || idMatch;
+
+      const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
+      const currentStatus = score.status || 'Not Started';
+      const statusMatch = gradingStatusFilter === 'All' || currentStatus.toLowerCase() === gradingStatusFilter.toLowerCase();
+
+      return searchMatch && statusMatch;
+    });
+
+    const gradIndexOfLastItem = currentPage * itemsPerPage;
+    const gradIndexOfFirstItem = gradIndexOfLastItem - itemsPerPage;
+    const paginatedGradingStudents = filteredGradingStudents.slice(gradIndexOfFirstItem, gradIndexOfLastItem);
+    const gradTotalPages = Math.ceil(filteredGradingStudents.length / itemsPerPage);
+
     return (
       <div className="space-y-6 font-sans pb-10">
-        {/* TOP HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        {/* HEADER AREA */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-              {isDashboard ? 'Communication Trainer Hub' : isAttendance ? 'Mark Attendance' : 'Grade Scorecard'}
+              Communication Trainer Hub
             </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              {isDashboard 
-                ? 'Institutional Overview: Monitor student directories, batches list, and daily attendance records.' 
-                : isAttendance 
-                ? 'Record and update daily roll call sheets. Filter by active batches directory.' 
-                : 'Evaluate student scorecards, record comments, and export performance indices.'}
+            <p className="text-xs text-gray-505 dark:text-gray-400 mt-1">
+              {activeTab === 'attendance'
+                ? 'Record, track, and update daily roll call books.'
+                : 'Evaluate module submissions, input grades, and track cohorts performance.'}
             </p>
           </div>
 
@@ -524,7 +612,7 @@ const TrainerDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-2 px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900">
-              <div className="h-6 w-6 bg-gradient-to-br from-[#4F46E5] to-purple-600 rounded-lg flex items-center justify-center font-black text-white text-[10px]">
+              <div className="h-6 w-6 bg-gradient-to-br from-[#4F46E5] to-purple-650 rounded-lg flex items-center justify-center font-black text-white text-[10px]">
                 {user?.name?.charAt(0)}
               </div>
               <span className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate max-w-[100px]">{user?.name}</span>
@@ -532,173 +620,153 @@ const TrainerDashboard = () => {
           </div>
         </div>
 
-        {/* 1. DASHBOARD PAGE VIEW */}
-        {isDashboard && (
+        {/* TWO TABS BELOW HEADER */}
+        <div className="flex border-b border-gray-205 dark:border-gray-800 bg-white dark:bg-[#12131a] rounded-[16px] overflow-hidden shadow-sm p-1.5 gap-2">
+          <button
+            onClick={() => {
+              setActiveTab('attendance');
+              setCurrentPage(1);
+              navigate('/trainer/attendance');
+            }}
+            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'attendance'
+                ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
+            }`}
+          >
+            <CalendarCheck size={16} />
+            <span>Daily Attendance Roll</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('grading');
+              setCurrentPage(1);
+              navigate('/trainer/scores');
+            }}
+            className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'grading'
+                ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
+            }`}
+          >
+            <Award size={16} />
+            <span>Module Grading Sheet</span>
+          </button>
+        </div>
+
+        {/* -------------------------------------------------------------
+            TAB 1 CONTENT : DAILY ATTENDANCE ROLL
+            ------------------------------------------------------------- */}
+        {activeTab === 'attendance' && (
           <div className="space-y-6">
-            {/* 3 KPI CARDS */}
+            {/* Attendance Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Total Students */}
               <motion.div
-                whileHover={{ y: -4, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-gradient-to-br from-blue-500/15 to-indigo-500/5 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-500/20 dark:border-blue-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
               >
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Students</span>
-                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{stats?.cards?.totalStudents ?? students.length}</h3>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Assigned students in active classes</p>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
+                  <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
                 </div>
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
+                <div className="p-3 bg-blue-500/20 dark:bg-blue-950/40 text-blue-600 rounded-xl">
                   <Users size={22} />
                 </div>
               </motion.div>
 
-              {/* Card 2: Total Batches */}
               <motion.div
-                whileHover={{ y: -4, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-gradient-to-br from-purple-500/15 to-pink-500/5 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-500/20 dark:border-purple-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
               >
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Batches</span>
-                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{stats?.cards?.totalBatches ?? batches.length}</h3>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Assigned training batches</p>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Batches</span>
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalBatchesCount}</h3>
+                  <p className="text-[9px] text-gray-500">Assigned classes portfolio</p>
                 </div>
-                <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
+                <div className="p-3 bg-purple-500/20 dark:bg-purple-950/40 text-purple-600 rounded-xl">
                   <BookOpen size={22} />
                 </div>
               </motion.div>
 
-              {/* Card 3: Overall Attendance */}
               <motion.div
-                whileHover={{ y: -4, scale: 1.01 }}
-                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-gradient-to-br from-emerald-500/15 to-teal-500/5 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-500/20 dark:border-emerald-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
               >
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Overall Attendance</span>
-                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{stats?.cards?.attendancePercentage ?? 92}%</h3>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Average student check-in rate</p>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Overall Attendance %</span>
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{batchAttendancePct}%</h3>
+                  <p className="text-[9px] text-gray-500">Rolling attendance average</p>
                 </div>
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
+                <div className="p-3 bg-emerald-500/20 dark:bg-emerald-950/40 text-emerald-600 rounded-xl">
                   <CheckCircle size={22} />
                 </div>
               </motion.div>
             </div>
 
-            {/* SPACIOUS DASHBOARD PANEL */}
-            <div className="bg-white dark:bg-[#12131a] p-8 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm min-h-[350px] flex flex-col justify-center items-center text-center space-y-4">
-              <div className="h-16 w-16 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-full flex items-center justify-center">
-                <CalendarCheck size={32} />
-              </div>
-              <div className="max-w-md space-y-2">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Communication Trainer Dashboard</h2>
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  Use the navigation tabs above to manage your student directory, record daily attendance checklists, and submit scorecard evaluations.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 2. MARK ATTENDANCE PAGE VIEW */}
-        {isAttendance && (
-          <div className="space-y-8">
-            {/* Table 1: Batch List */}
+            {/* Attendance Filters and Table */}
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div>
-                <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans">Batch List</h2>
-                <p className="text-xs text-gray-500 mt-0.5 font-sans">View your assigned batches and select one to manage attendance</p>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/50">
-                      <th className="px-6 py-3.5">Batch ID</th>
-                      <th className="px-6 py-3.5">Batch Name</th>
-                      <th className="px-6 py-3.5">Trainer</th>
-                      <th className="px-6 py-3.5 text-center">Total Students</th>
-                      <th className="px-6 py-3.5">Schedule</th>
-                      <th className="px-6 py-3.5 text-center">Status</th>
-                      <th className="px-6 py-3.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
-                    {batches.length === 0 ? (
-                      <tr>
-                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400 dark:text-gray-500 italic font-sans">
-                          No batches assigned.
-                        </td>
-                      </tr>
-                    ) : (
-                      batches.map(b => {
-                        const totalStudents = students.filter(s => s.batches.some(sb => sb._id === b._id)).length;
-                        const isSelected = selectedBatchId === b._id;
-                        return (
-                          <tr key={b._id} className={`transition-colors ${isSelected ? 'bg-indigo-50/20 dark:bg-indigo-950/10' : 'hover:bg-gray-50/25'}`}>
-                            <td className="px-6 py-3.5 font-semibold text-gray-500 uppercase">B-{b._id.slice(-4).toUpperCase()}</td>
-                            <td className="px-6 py-3.5 font-bold text-gray-800 dark:text-white">{b.name}</td>
-                            <td className="px-6 py-3.5 text-gray-600 dark:text-gray-400 font-semibold">{user?.name}</td>
-                            <td className="px-6 py-3.5 text-center font-bold text-gray-800 dark:text-white">{totalStudents}</td>
-                            <td className="px-6 py-3.5 text-gray-500 font-medium">{b.schedule || 'Mon-Fri (09:00 AM - 12:00 PM)'}</td>
-                            <td className="px-6 py-3.5 text-center">
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20">
-                                Active
-                              </span>
-                            </td>
-                            <td className="px-6 py-3.5 text-right">
-                              <button
-                                onClick={() => setSelectedBatchId(b._id)}
-                                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all border ${
-                                  isSelected 
-                                    ? 'bg-[#4F46E5] text-white border-transparent'
-                                    : 'border-gray-200 text-gray-500 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900'
-                                }`}
-                              >
-                                {isSelected ? 'Opened' : 'Open Attendance'}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Table 2: Student List */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                  <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans">Student List</h2>
-                  <p className="text-xs text-gray-500 mt-0.5 font-sans">
-                    Mark daily checklist for: <span className="font-bold text-[#4F46E5]">{batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}</span>
-                  </p>
+                  <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Daily Attendance Roll</h2>
+                  <p className="text-[11px] text-gray-505">Track, edit, and mark student checklists for active cohorts</p>
                 </div>
 
+                {/* Filters Row */}
                 <div className="flex flex-wrap items-center gap-3">
+                  {/* Search Student */}
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search name or ID..."
+                      placeholder="Search student..."
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-48 text-gray-700 dark:text-gray-300"
+                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
                     />
                   </div>
 
+                  {/* Batch Filter */}
                   <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
                     <Filter size={12} />
                     <select
-                      value={statusFilter}
+                      value={selectedBatchId}
                       onChange={(e) => {
-                        setStatusFilter(e.target.value);
+                        setSelectedBatchId(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="bg-transparent focus:outline-none text-[11px] font-semibold cursor-pointer text-gray-600 dark:text-gray-400"
+                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                    >
+                      {batches.map(b => (
+                        <option key={b._id} value={b._id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date Picker */}
+                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1 bg-transparent text-xs text-gray-500">
+                    <Calendar size={12} />
+                    <input
+                      type="date"
+                      value={attendanceDate}
+                      onChange={(e) => setAttendanceDate(e.target.value)}
+                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400 py-0.5"
+                    />
+                  </div>
+
+                  {/* Attendance Status Filter */}
+                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                    <Filter size={12} />
+                    <select
+                      value={attendanceStatusFilter}
+                      onChange={(e) => {
+                        setAttendanceStatusFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Present">Present</option>
@@ -707,127 +775,144 @@ const TrainerDashboard = () => {
                     </select>
                   </div>
 
-                  <input
-                    type="date"
-                    value={attendanceDate}
-                    onChange={(e) => setAttendanceDate(e.target.value)}
-                    className="px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none font-bold text-gray-600 dark:text-gray-400 cursor-pointer"
-                  />
-
+                  {/* Global Submit Attendance */}
                   <button
                     onClick={submitAttendance}
                     className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
                   >
-                    Mark Attendance
+                    Submit Register
                   </button>
                 </div>
               </div>
 
-              <div className="overflow-x-auto max-h-[400px]">
-                <table className="w-full text-left border-collapse">
-                  <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                      <th className="px-6 py-3.5">Student ID</th>
-                      <th className="px-6 py-3.5">Student Name</th>
-                      <th className="px-6 py-3.5">Batch</th>
-                      <th className="px-6 py-3.5">Attendance Status</th>
-                      <th className="px-6 py-3.5">Check In Time</th>
-                      <th className="px-6 py-3.5">Remarks</th>
-                      <th className="px-6 py-3.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
-                    {paginatedAttendanceStudents.length === 0 ? (
-                      <tr>
-                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400 dark:text-gray-500 italic">
-                          <div className="flex flex-col items-center justify-center space-y-2">
-                            <AlertCircle size={24} className="text-gray-300" />
-                            <span>No students found matching your criteria.</span>
-                          </div>
-                        </td>
+              {/* Attendance Table */}
+              {loading ? (
+                <div className="space-y-3 py-6">
+                  {[...Array(3)].map((_, idx) => (
+                    <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
+                  ))}
+                </div>
+              ) : paginatedAttendanceStudents.length === 0 ? (
+                <div className="text-center py-12 text-gray-400 italic text-xs">
+                  No student attendance records matching current criteria.
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[420px]">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                      <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
+                        <th className="px-5 py-3">Student ID</th>
+                        <th className="px-5 py-3">Student Name</th>
+                        <th className="px-5 py-3">Batch</th>
+                        <th className="px-5 py-3">Date</th>
+                        <th className="px-5 py-3">Check In</th>
+                        <th className="px-5 py-3">Check Out</th>
+                        <th className="px-5 py-3 text-center">Attendance Status</th>
+                        <th className="px-5 py-3">Remarks</th>
+                        <th className="px-5 py-3 text-right">Action</th>
                       </tr>
-                    ) : (
-                      paginatedAttendanceStudents.map(student => (
-                        <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-gray-500">STU-{student._id.slice(-5).toUpperCase()}</td>
-                          <td className="px-6 py-4 font-bold text-gray-800 dark:text-white text-sm">{student.name}</td>
-                          <td className="px-6 py-4 text-gray-500 font-medium">
-                            {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                              attendanceState[student._id] === 'Present'
-                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/25 dark:border-emerald-900'
-                                : attendanceState[student._id] === 'Late'
-                                ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/25 dark:border-orange-900'
-                                : 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/25 dark:border-rose-900'
-                            }`}>
-                              {attendanceState[student._id] || 'Present'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              value={checkInTimes[student._id] || '09:00 AM'}
-                              onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                              className="px-2 py-1 border rounded-lg bg-transparent text-[11px] focus:outline-none w-20 text-center font-bold text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800"
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <input
-                              type="text"
-                              placeholder="Enter remarks..."
-                              value={attendanceRemarks[student._id] || ''}
-                              onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
-                              className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-800 bg-transparent rounded-xl text-xs w-full focus:outline-none max-w-[150px] text-gray-700 dark:text-gray-300"
-                            />
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end items-center space-x-1.5">
-                              {['Present', 'Absent', 'Late'].map(status => (
+                    </thead>
+                    <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
+                      {paginatedAttendanceStudents.map(student => {
+                        const currentStatus = attendanceState[student._id] || 'Present';
+                        const checkInVal = checkInTimes[student._id] || '09:00 AM';
+                        const checkOutVal = checkOutTimes[student._id] || '05:00 PM';
+                        return (
+                          <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
+                            <td className="px-5 py-3 font-semibold text-gray-400">STU-{student._id.slice(-5).toUpperCase()}</td>
+                            <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
+                            <td className="px-5 py-3 text-gray-550">
+                              {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
+                            </td>
+                            <td className="px-5 py-3 text-gray-400 font-medium">{attendanceDate}</td>
+                            <td className="px-5 py-3">
+                              <input
+                                type="text"
+                                value={checkInVal}
+                                onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
+                              />
+                            </td>
+                            <td className="px-5 py-3">
+                              <input
+                                type="text"
+                                value={checkOutVal}
+                                onChange={(e) => setCheckOutTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
+                              />
+                            </td>
+                            <td className="px-5 py-3 text-center">
+                              {/* status checklist switches directly inline */}
+                              <select
+                                value={currentStatus}
+                                onChange={(e) => handleAttendanceChange(student._id, e.target.value)}
+                                className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold border bg-white dark:bg-gray-900 cursor-pointer focus:outline-none ${
+                                  currentStatus === 'Present'
+                                    ? 'border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400'
+                                    : currentStatus === 'Late'
+                                    ? 'border-orange-300 text-orange-700 dark:border-orange-850 dark:text-orange-400'
+                                    : 'border-rose-300 text-rose-700 dark:border-rose-800 dark:text-rose-450'
+                                }`}
+                              >
+                                <option value="Present">Present</option>
+                                <option value="Absent">Absent</option>
+                                <option value="Late">Late</option>
+                              </select>
+                            </td>
+                            <td className="px-5 py-3">
+                              <input
+                                type="text"
+                                placeholder="Enter remarks..."
+                                value={attendanceRemarks[student._id] || ''}
+                                onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
+                                className="w-32 px-2 py-0.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-transparent focus:outline-none text-[10px] text-gray-700 dark:text-gray-300"
+                              />
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              <div className="flex justify-end gap-1.5">
                                 <button
-                                  key={status}
-                                  onClick={() => handleAttendanceChange(student._id, status)}
-                                  className={`px-3 py-1 rounded-lg text-[9px] font-extrabold border cursor-pointer transition-all ${
-                                    attendanceState[student._id] === status
-                                      ? status === 'Present'
-                                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/20'
-                                        : status === 'Late'
-                                        ? 'bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-950/20'
-                                        : 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/20'
-                                      : 'border-gray-200 text-gray-400 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900'
-                                  }`}
+                                  onClick={() => handleSingleMarkAttendance(student._id)}
+                                  className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
                                 >
-                                  {status}
+                                  {attendanceState[student._id] ? 'Edit Attendance' : 'Mark Attendance'}
                                 </button>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                                <button
+                                  onClick={() => {
+                                    setDetailStudent(student);
+                                    setDetailsModalOpen(true);
+                                  }}
+                                  className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-              {/* Pagination */}
+              {/* Attendance Pagination */}
               {filteredAttendanceStudents.length > itemsPerPage && (
-                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-4 text-[10px] text-gray-500 font-semibold">
+                <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-505 font-semibold">
                   <span>
-                    Showing {attendanceIndexOfFirstItem + 1} to {Math.min(attendanceIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} student records
+                    Showing {attIndexOfFirstItem + 1} to {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} records
                   </span>
-                  <div className="flex space-x-1.5">
+                  <div className="flex space-x-1">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer text-gray-550 dark:text-gray-400"
+                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                     >
                       <ChevronLeft size={14} />
                     </button>
                     <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, attendanceTotalPages))}
-                      disabled={currentPage === attendanceTotalPages}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer text-gray-550 dark:text-gray-400"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, attTotalPages))}
+                      disabled={currentPage === attTotalPages}
+                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                     >
                       <ChevronRight size={14} />
                     </button>
@@ -837,38 +922,123 @@ const TrainerDashboard = () => {
             </div>
           </div>
         )}
-        {/* 3. GRADE SCORECARD PAGE VIEW */}
-        {isGrading && (
+
+        {/* -------------------------------------------------------------
+            TAB 2 CONTENT : MODULE GRADING SHEET
+            ------------------------------------------------------------- */}
+        {activeTab === 'grading' && (
           <div className="space-y-6">
-            {/* Student Grade Table Container */}
+            {/* Grading Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <motion.div
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+              >
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
+                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
+                  <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
+                </div>
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
+                  <Users size={20} />
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+              >
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Completed Modules</span>
+                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{completedGradedCount}</h3>
+                  <p className="text-[9px] text-gray-500">Finished assessment records</p>
+                </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-605 rounded-xl">
+                  <BookOpenCheck size={20} />
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+              >
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Score</span>
+                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                    {avgScoreGrading} <span className="text-xs font-normal text-gray-500">/10</span>
+                  </h3>
+                  <p className="text-[9px] text-gray-500">Average marks in batch</p>
+                </div>
+                <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
+                  <Award size={20} />
+                </div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ y: -3, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
+              >
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Pending Grades</span>
+                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{pendingGradesCount}</h3>
+                  <p className="text-[9px] text-gray-500">Grades requiring entries</p>
+                </div>
+                <div className="p-3 bg-orange-50 dark:bg-[#453015]/30 text-orange-600 rounded-xl">
+                  <AlertCircle size={20} />
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Grading Table and Filters */}
             <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              
-              {/* Table Filters & Actions Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                  <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans font-extrabold">Student Grade Table</h2>
-                  <p className="text-xs text-gray-500 mt-0.5 font-sans">Submit grades, evaluate assignments, and view test scores for the selected batch</p>
+                  <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Module Grading Sheet</h2>
+                  <p className="text-[11px] text-gray-505">Track, edit, and input assessment scores for students</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Search Bar */}
+                  {/* Search Student */}
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search name or ID..."
+                      placeholder="Search student..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
                     />
                   </div>
 
-                  {/* Module Selector Filter */}
+                  {/* Batch Filter */}
+                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                    <Filter size={12} />
+                    <select
+                      value={selectedBatchId}
+                      onChange={(e) => {
+                        setSelectedBatchId(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                    >
+                      {batches.map(b => (
+                        <option key={b._id} value={b._id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Module Filter */}
                   <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
                     <Filter size={12} />
                     <select
                       value={selectedModule}
-                      onChange={(e) => setSelectedModule(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedModule(e.target.value);
+                        setCurrentPage(1);
+                      }}
                       className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
                     >
                       {getModulesList().map((mod, i) => (
@@ -877,36 +1047,28 @@ const TrainerDashboard = () => {
                     </select>
                   </div>
 
-                  {/* Excel Export Button */}
-                  <button
-                    onClick={() => {
-                      const data = batchStudents.map(s => {
-                        const score = s.scores?.find(sc => sc.moduleName === selectedModule) || {};
-                        const grade = getLetterGrade(score.marks || 0);
-                        return {
-                          'Student ID': `STU-${s._id.slice(-5).toUpperCase()}`,
-                          'Student Name': s.name,
-                          'Batch Name': batches.find(b => b._id === selectedBatchId)?.name || 'N/A',
-                          'Module': selectedModule,
-                          'Assignment': score.status || 'Not Started',
-                          'Test Score': score.marks !== undefined ? `${score.marks}/10` : '—',
-                          'Attendance': attendanceState[s._id] || 'Present',
-                          'Final Grade': grade.letter,
-                          'Remarks': score.remarks || ''
-                        };
-                      });
-                      downloadCSV(data, `Grades_Report_${selectedModule}.csv`, ['Student ID', 'Student Name', 'Batch', 'Module', 'Assignment', 'Test Score', 'Attendance', 'Final Grade', 'Remarks']);
-                    }}
-                    className="p-2 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-emerald-605 transition-colors cursor-pointer"
-                    title="Export CSV"
-                  >
-                    <FileSpreadsheet size={15} />
-                  </button>
+                  {/* Status Filter */}
+                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
+                    <Filter size={12} />
+                    <select
+                      value={gradingStatusFilter}
+                      onChange={(e) => {
+                        setGradingStatusFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Completed">Completed</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Not Started">Not Started</option>
+                    </select>
+                  </div>
 
-                  {/* Submit Grades Button */}
+                  {/* Submit Grades header notification */}
                   <button
                     onClick={() => {
-                      toast.success("All batch grade scorecards have been saved and submitted successfully!");
+                      toast.success("All scorecards have been saved and submitted successfully!");
                     }}
                     className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
                   >
@@ -915,99 +1077,102 @@ const TrainerDashboard = () => {
                 </div>
               </div>
 
-              {/* Grading Table with Sticky Header */}
-              <div className="overflow-x-auto max-h-[400px]">
-                <table className="w-full text-left border-collapse">
-                  <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                      <th className="px-6 py-3.5">Student ID</th>
-                      <th className="px-6 py-3.5">Student Name</th>
-                      <th className="px-6 py-3.5">Batch</th>
-                      <th className="px-6 py-3.5">Module</th>
-                      <th className="px-6 py-3.5">Assignment</th>
-                      <th className="px-6 py-3.5 text-center">Test Score</th>
-                      <th className="px-6 py-3.5">Attendance</th>
-                      <th className="px-6 py-3.5 text-center">Final Grade</th>
-                      <th className="px-6 py-3.5">Remarks</th>
-                      <th className="px-6 py-3.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
-                    {paginatedGradingStudents.length === 0 ? (
-                      <tr>
-                        <td colSpan="10" className="px-6 py-10 text-center text-gray-400 italic">
-                          No student records available.
-                        </td>
+              {/* Grading Table */}
+              {loading ? (
+                <div className="space-y-3 py-6">
+                  {[...Array(3)].map((_, idx) => (
+                    <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
+                  ))}
+                </div>
+              ) : paginatedGradingStudents.length === 0 ? (
+                <div className="text-center py-12 text-gray-400 italic text-xs">
+                  No grade entries matching current criteria.
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[420px]">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
+                      <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
+                        <th className="px-5 py-3">Student ID</th>
+                        <th className="px-5 py-3">Student Name</th>
+                        <th className="px-5 py-3">Batch</th>
+                        <th className="px-5 py-3">Module</th>
+                        <th className="px-5 py-3 text-center">Marks</th>
+                        <th className="px-5 py-3 text-center">Grade</th>
+                        <th className="px-5 py-3 text-center">Status</th>
+                        <th className="px-5 py-3">Last Updated</th>
+                        <th className="px-5 py-3 text-right">Action</th>
                       </tr>
-                    ) : (
-                      paginatedGradingStudents.map(student => {
+                    </thead>
+                    <tbody className="divide-y divide-gray-150 dark:divide-gray-855 text-xs">
+                      {paginatedGradingStudents.map(student => {
                         const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
                         const grade = getLetterGrade(score.marks || 0);
+                        const updatedDate = score.updatedAt 
+                          ? new Date(score.updatedAt).toLocaleDateString()
+                          : '—';
                         return (
-                          <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
-                            <td className="px-6 py-4 font-semibold text-gray-500">STU-{student._id.slice(-5).toUpperCase()}</td>
-                            <td className="px-6 py-4 font-bold text-gray-800 dark:text-white text-sm">{student.name}</td>
-                            <td className="px-6 py-4 text-gray-500 font-medium">
+                          <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
+                            <td className="px-5 py-3 font-semibold text-gray-400">STU-{student._id.slice(-5).toUpperCase()}</td>
+                            <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
+                            <td className="px-5 py-3 text-gray-500">
                               {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
                             </td>
-                            <td className="px-6 py-4 text-gray-600 font-semibold">{selectedModule}</td>
-                            <td className="px-6 py-4">
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                            <td className="px-5 py-3 text-gray-600 dark:text-gray-405 font-semibold">{selectedModule}</td>
+                            <td className="px-5 py-3 text-center font-bold text-gray-700 dark:text-gray-300">
+                              {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
+                            </td>
+                            <td className="px-5 py-3 text-center">
+                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${grade.color}`}>
+                                {score.marks !== undefined ? grade.letter : 'N/A'}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-center">
+                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
                                 (score.status || 'Not Started') === 'Completed'
-                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20'
+                                  ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/20'
                                   : (score.status || 'Not Started') === 'In Progress'
-                                  ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/20'
+                                  ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20'
                                   : 'bg-gray-50 border-gray-200 text-gray-500'
                               }`}>
                                 {score.status || 'Not Started'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300">
-                              {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                (attendanceState[student._id] || 'Present') === 'Present'
-                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                  : (attendanceState[student._id] || 'Present') === 'Late'
-                                  ? 'bg-orange-50 border-orange-200 text-orange-700'
-                                  : 'bg-rose-50 border-rose-200 text-rose-700'
-                              }`}>
-                                {attendanceState[student._id] || 'Present'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${grade.color}`}>
-                                {score.marks !== undefined ? grade.letter : 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-gray-500 italic max-w-[150px] truncate" title={score.remarks}>
-                              {score.remarks || '—'}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => openGradingPanel(student, selectedModule)}
-                                className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/30 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[10px] font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
-                              >
-                                <Edit3 size={11} />
-                                <span>Edit Grade</span>
-                              </button>
+                            <td className="px-5 py-3 text-gray-400 font-medium">{updatedDate}</td>
+                            <td className="px-5 py-3 text-right">
+                              <div className="flex justify-end gap-1.5">
+                                <button
+                                  onClick={() => openGradingPanel(student, selectedModule)}
+                                  className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                >
+                                  Edit Grade
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setDetailStudent(student);
+                                    setDetailsModalOpen(true);
+                                  }}
+                                  className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
+                                >
+                                  View Details
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-              {/* Pagination Controls */}
+              {/* Grading Pagination */}
               {filteredGradingStudents.length > itemsPerPage && (
-                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-4 text-[10px] text-gray-500 font-semibold">
+                <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-505 font-semibold">
                   <span>
-                    Showing {gradingIndexOfFirstItem + 1} to {Math.min(gradingIndexOfLastItem, filteredGradingStudents.length)} of {filteredGradingStudents.length} student records
+                    Showing {gradIndexOfFirstItem + 1} to {Math.min(gradIndexOfLastItem, filteredGradingStudents.length)} of {filteredGradingStudents.length} records
                   </span>
-                  <div className="flex space-x-1.5">
+                  <div className="flex space-x-1">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
@@ -1016,8 +1181,8 @@ const TrainerDashboard = () => {
                       <ChevronLeft size={14} />
                     </button>
                     <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradingTotalPages))}
-                      disabled={currentPage === gradingTotalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradTotalPages))}
+                      disabled={currentPage === gradTotalPages}
                       className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                     >
                       <ChevronRight size={14} />
@@ -1028,6 +1193,86 @@ const TrainerDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* DETAILS POPUP / MODAL */}
+        <AnimatePresence>
+          {detailsModalOpen && detailStudent && (
+            <>
+              <div className="fixed inset-0 bg-black/45 backdrop-blur-sm z-40" onClick={() => setDetailsModalOpen(false)} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 15 }}
+                className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-2xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-4 text-xs"
+              >
+                <div className="flex items-center justify-between border-b pb-3 border-gray-200 dark:border-gray-800">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white font-sans">Student Academic Dossier</h3>
+                    <p className="text-[10px] text-gray-500 font-sans">Full contact and score log records</p>
+                  </div>
+                  <button onClick={() => setDetailsModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white cursor-pointer">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-3.5">
+                  <div className="grid grid-cols-2 gap-3.5 bg-gray-50/50 dark:bg-gray-900/30 p-3 rounded-xl border border-gray-150 dark:border-gray-850">
+                    <div>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold block mb-0.5">Full Name</span>
+                      <span className="font-extrabold text-gray-800 dark:text-white">{detailStudent.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold block mb-0.5">Student ID</span>
+                      <span className="font-bold text-gray-600 dark:text-gray-400">STU-{detailStudent._id.slice(-5).toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold block mb-0.5">Mobile Number</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">{detailStudent.mobile || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-gray-400 uppercase font-bold block mb-0.5">Active Batches</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300 truncate block" title={detailStudent.batches?.map(b => b.name).join(', ')}>
+                        {detailStudent.batches?.map(b => b.name).join(', ') || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 font-sans">
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Module Score Records</h4>
+                    <div className="max-h-[160px] overflow-y-auto border border-gray-150 dark:border-gray-850 rounded-xl divide-y divide-gray-150 dark:divide-gray-855">
+                      {getModulesList().map((mod, idx) => {
+                        const score = detailStudent.scores?.find(sc => sc.moduleName === mod) || {};
+                        const grade = getLetterGrade(score.marks || 0);
+                        return (
+                          <div key={idx} className="flex justify-between items-center p-2.5 hover:bg-gray-50/30">
+                            <span className="font-semibold text-gray-600 dark:text-gray-400 max-w-[180px] truncate">{mod}</span>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black border ${grade.color}`}>
+                                {score.marks !== undefined ? grade.letter : 'N/A'}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-bold">
+                                {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={() => setDetailsModalOpen(false)}
+                    className="px-4 py-2 bg-gray-105 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Close Dossier
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* GRADING MODAL PANEL */}
         <AnimatePresence>
@@ -1042,23 +1287,21 @@ const TrainerDashboard = () => {
               >
                 <div className="flex items-center justify-between border-b pb-3 border-gray-200 dark:border-gray-800">
                   <div>
-                    <h3 className="text-sm font-extrabold text-gray-900 dark:text-white">Grade Student Evaluation</h3>
-                    <p className="text-[11px] text-gray-500 font-medium mt-0.5 truncate max-w-[240px]" title={`${selectedStudent.name} - ${selectedModule}`}>
-                      {selectedStudent.name} • {selectedModule}
-                    </p>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white font-sans">Grade Student Assessment</h3>
+                    <p className="text-[10px] text-gray-500 font-sans">Student: {selectedStudent.name} ({selectedModule})</p>
                   </div>
-                  <button onClick={() => setGradingModalOpen(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <button onClick={() => setGradingModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white cursor-pointer">
                     <X size={18} />
                   </button>
                 </div>
 
-                <form onSubmit={submitGrade} className="space-y-4">
+                <form onSubmit={submitGrade} className="space-y-4 text-xs font-sans">
                   <div>
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Module Status</label>
                     <select
                       value={gradingForm.status}
                       onChange={(e) => setGradingForm({ ...gradingForm, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 text-xs font-semibold focus:outline-none cursor-pointer text-gray-700 dark:text-gray-300"
+                      className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-gray-700 dark:text-gray-300 transition-all cursor-pointer"
                     >
                       <option value="Not Started">Not Started</option>
                       <option value="In Progress">In Progress</option>
