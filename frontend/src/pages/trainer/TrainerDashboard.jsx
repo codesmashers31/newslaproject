@@ -535,167 +535,64 @@ const TrainerDashboard = () => {
         {/* 1. DASHBOARD PAGE VIEW */}
         {isDashboard && (
           <div className="space-y-6">
-            {/* KPI CARDS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Card 1: Total Students (Blue Gradient) */}
+            {/* 3 KPI CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Card 1: Total Students */}
               <motion.div
-                whileHover={{ y: -4, scale: 1.015 }}
-                className="bg-gradient-to-br from-blue-600 to-indigo-650 text-white p-6 rounded-2xl shadow-sm flex items-center justify-between relative overflow-hidden"
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
               >
-                <div className="space-y-1.5 z-10">
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-85">Total Students</span>
-                  <h3 className="text-3xl font-black">{stats?.cards?.totalStudents ?? students.length}</h3>
-                  <p className="text-[10px] opacity-75 font-semibold">Assigned students</p>
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Students</span>
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{stats?.cards?.totalStudents ?? students.length}</h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Assigned students in active classes</p>
                 </div>
-                <div className="p-3 bg-white/20 text-white rounded-xl z-10">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
                   <Users size={22} />
                 </div>
-                <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-                  <Users size={90} />
-                </div>
               </motion.div>
 
-              {/* Card 2: Total Batches (Purple Gradient) */}
+              {/* Card 2: Total Batches */}
               <motion.div
-                whileHover={{ y: -4, scale: 1.015 }}
-                className="bg-gradient-to-br from-purple-650 to-fuchsia-600 text-white p-6 rounded-2xl shadow-sm flex items-center justify-between relative overflow-hidden"
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
               >
-                <div className="space-y-1.5 z-10">
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-85">Total Batches</span>
-                  <h3 className="text-3xl font-black">{stats?.cards?.totalBatches ?? batches.length}</h3>
-                  <p className="text-[10px] opacity-75 font-semibold">Assigned batches</p>
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Batches</span>
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{stats?.cards?.totalBatches ?? batches.length}</h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Assigned training batches</p>
                 </div>
-                <div className="p-3 bg-white/20 text-white rounded-xl z-10">
+                <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
                   <BookOpen size={22} />
                 </div>
-                <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-                  <BookOpen size={90} />
-                </div>
               </motion.div>
 
-              {/* Card 3: Overall Attendance (Green Gradient) */}
+              {/* Card 3: Overall Attendance */}
               <motion.div
-                whileHover={{ y: -4, scale: 1.015 }}
-                className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-6 rounded-2xl shadow-sm flex items-center justify-between relative overflow-hidden"
+                whileHover={{ y: -4, scale: 1.01 }}
+                className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-6 rounded-[16px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between"
               >
-                <div className="space-y-1.5 z-10">
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-85">Overall Attendance</span>
-                  <h3 className="text-3xl font-black">{stats?.cards?.attendancePercentage ?? 92}%</h3>
-                  <p className="text-[10px] opacity-75 font-semibold">Attendance rate</p>
+                <div className="space-y-1.5">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Overall Attendance</span>
+                  <h3 className="text-3xl font-black text-gray-900 dark:text-white">{stats?.cards?.attendancePercentage ?? 92}%</h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">Average student check-in rate</p>
                 </div>
-                <div className="relative h-12 w-12 flex items-center justify-center bg-white/20 rounded-full z-10">
-                  <svg className="w-10 h-10 transform -rotate-90">
-                    <circle cx="20" cy="20" r="16" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" fill="transparent" />
-                    <circle 
-                      cx="20" 
-                      cy="20" 
-                      r="16" 
-                      stroke="#ffffff" 
-                      strokeWidth="2.5" 
-                      fill="transparent" 
-                      strokeDasharray="100.5"
-                      strokeDashoffset={100.5 - (100.5 * (stats?.cards?.attendancePercentage ?? 92)) / 100}
-                      className="transition-all duration-500"
-                    />
-                  </svg>
-                  <span className="absolute text-[8px] font-black">{stats?.cards?.attendancePercentage ?? 92}%</span>
-                </div>
-              </motion.div>
-
-              {/* Card 4: Present Today (Orange Gradient) */}
-              <motion.div
-                whileHover={{ y: -4, scale: 1.015 }}
-                className="bg-gradient-to-br from-orange-500 to-amber-600 text-white p-6 rounded-2xl shadow-sm flex items-center justify-between relative overflow-hidden"
-              >
-                <div className="space-y-1.5 z-10">
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-85">Present Today</span>
-                  <h3 className="text-3xl font-black">{stats?.cards?.presentToday ?? 0}</h3>
-                  <p className="text-[10px] opacity-75 font-semibold">Today's active checklist</p>
-                </div>
-                <div className="p-3 bg-white/20 text-white rounded-xl z-10">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
                   <CheckCircle size={22} />
-                </div>
-                <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-                  <CheckCircle size={90} />
                 </div>
               </motion.div>
             </div>
 
-            {/* ATTENDANCE OVERVIEW SECTION */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-              <div>
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white">Attendance Overview</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Comprehensive analytics of class logs and trends</p>
+            {/* SPACIOUS DASHBOARD PANEL */}
+            <div className="bg-white dark:bg-[#12131a] p-8 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm min-h-[350px] flex flex-col justify-center items-center text-center space-y-4">
+              <div className="h-16 w-16 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-full flex items-center justify-center">
+                <CalendarCheck size={32} />
               </div>
-
-              {/* Attendance Status Summary list */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-850">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Checked Students</span>
-                  <p className="text-xl font-bold text-gray-800 dark:text-gray-100">{batchStudents.length}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Present Today</span>
-                  <p className="text-xl font-bold text-emerald-600">{stats?.cards?.presentToday ?? 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Absent Today</span>
-                  <p className="text-xl font-bold text-rose-600">{stats?.cards?.absentToday ?? 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Late Today</span>
-                  <p className="text-xl font-bold text-orange-550">{stats?.cards?.lateToday ?? 0}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Attendance Rate</span>
-                  <p className="text-xl font-bold text-[#4F46E5]">{stats?.cards?.attendancePercentage ?? 92}%</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-                {/* Weekly chart */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Weekly Attendance Trend</h4>
-                  <div className="h-64">
-                    {stats?.weeklyAttendance?.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={stats.weeklyAttendance} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.03)" />
-                          <XAxis dataKey="day" tickLine={false} axisLine={false} style={{ fontSize: '10px', fill: '#94a3b8' }} />
-                          <YAxis tickLine={false} axisLine={false} style={{ fontSize: '10px', fill: '#94a3b8' }} />
-                          <Tooltip cursor={{ fill: 'rgba(0,0,0,0.015)' }} />
-                          <Bar dataKey="Present" fill="#3B82F6" radius={[3, 3, 0, 0]} barSize={8} />
-                          <Bar dataKey="Late" fill="#8B5CF6" radius={[3, 3, 0, 0]} barSize={8} />
-                          <Bar dataKey="Absent" fill="#C084FC" radius={[3, 3, 0, 0]} barSize={8} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-xs text-gray-400 italic">No weekly records logged.</div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Monthly chart */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Monthly Attendance Rate</h4>
-                  <div className="h-64">
-                    {stats?.monthlyAttendance?.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={stats.monthlyAttendance} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.03)" />
-                          <XAxis dataKey="month" tickLine={false} axisLine={false} style={{ fontSize: '10px', fill: '#94a3b8' }} />
-                          <YAxis tickLine={false} axisLine={false} style={{ fontSize: '10px', fill: '#94a3b8' }} />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="Present" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                          <Line type="monotone" dataKey="Late" stroke="#8B5CF6" strokeWidth={2} dot={{ r: 2 }} />
-                          <Line type="monotone" dataKey="Absent" stroke="#C084FC" strokeWidth={1.5} dot={{ r: 2 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-xs text-gray-400 italic">No monthly records logged.</div>
-                    )}
-                  </div>
-                </div>
+              <div className="max-w-md space-y-2">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Communication Trainer Dashboard</h2>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Use the navigation tabs above to manage your student directory, record daily attendance checklists, and submit scorecard evaluations.
+                </p>
               </div>
             </div>
           </div>
@@ -704,11 +601,11 @@ const TrainerDashboard = () => {
         {/* 2. MARK ATTENDANCE PAGE VIEW */}
         {isAttendance && (
           <div className="space-y-8">
-            {/* Batch List */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+            {/* Table 1: Batch List */}
+            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
               <div>
-                <h2 className="text-md font-bold text-gray-800 dark:text-white">Assigned Batches List</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Select a batch to open and mark its daily student attendance register</p>
+                <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans">Batch List</h2>
+                <p className="text-xs text-gray-500 mt-0.5 font-sans">View your assigned batches and select one to manage attendance</p>
               </div>
               
               <div className="overflow-x-auto">
@@ -717,9 +614,9 @@ const TrainerDashboard = () => {
                     <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/50">
                       <th className="px-6 py-3.5">Batch ID</th>
                       <th className="px-6 py-3.5">Batch Name</th>
-                      <th className="px-6 py-3.5">Course</th>
                       <th className="px-6 py-3.5">Trainer</th>
                       <th className="px-6 py-3.5 text-center">Total Students</th>
+                      <th className="px-6 py-3.5">Schedule</th>
                       <th className="px-6 py-3.5 text-center">Status</th>
                       <th className="px-6 py-3.5 text-right">Action</th>
                     </tr>
@@ -727,11 +624,8 @@ const TrainerDashboard = () => {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
                     {batches.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400 dark:text-gray-500 italic">
-                          <div className="flex flex-col items-center justify-center space-y-2">
-                            <BookOpen size={24} className="text-gray-300 dark:text-gray-600" />
-                            <span>No batches assigned to you yet.</span>
-                          </div>
+                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400 dark:text-gray-500 italic font-sans">
+                          No batches assigned.
                         </td>
                       </tr>
                     ) : (
@@ -742,9 +636,9 @@ const TrainerDashboard = () => {
                           <tr key={b._id} className={`transition-colors ${isSelected ? 'bg-indigo-50/20 dark:bg-indigo-950/10' : 'hover:bg-gray-50/25'}`}>
                             <td className="px-6 py-3.5 font-semibold text-gray-500 uppercase">B-{b._id.slice(-4).toUpperCase()}</td>
                             <td className="px-6 py-3.5 font-bold text-gray-800 dark:text-white">{b.name}</td>
-                            <td className="px-6 py-3.5 font-medium text-gray-500">{b.course || 'Communication'}</td>
                             <td className="px-6 py-3.5 text-gray-600 dark:text-gray-400 font-semibold">{user?.name}</td>
                             <td className="px-6 py-3.5 text-center font-bold text-gray-800 dark:text-white">{totalStudents}</td>
+                            <td className="px-6 py-3.5 text-gray-500 font-medium">{b.schedule || 'Mon-Fri (09:00 AM - 12:00 PM)'}</td>
                             <td className="px-6 py-3.5 text-center">
                               <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20">
                                 Active
@@ -771,12 +665,12 @@ const TrainerDashboard = () => {
               </div>
             </div>
 
-            {/* Student List */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+            {/* Table 2: Student List */}
+            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-md font-bold text-gray-800 dark:text-white">Daily Attendance Roll Call</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans">Student List</h2>
+                  <p className="text-xs text-gray-500 mt-0.5 font-sans">
                     Mark daily checklist for: <span className="font-bold text-[#4F46E5]">{batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}</span>
                   </p>
                 </div>
@@ -792,7 +686,7 @@ const TrainerDashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-48"
+                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-48 text-gray-700 dark:text-gray-300"
                     />
                   </div>
 
@@ -817,14 +711,14 @@ const TrainerDashboard = () => {
                     type="date"
                     value={attendanceDate}
                     onChange={(e) => setAttendanceDate(e.target.value)}
-                    className="px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none font-bold text-gray-600 dark:text-gray-400"
+                    className="px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none font-bold text-gray-600 dark:text-gray-400 cursor-pointer"
                   />
 
                   <button
                     onClick={submitAttendance}
                     className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
                   >
-                    Submit Roll Call
+                    Mark Attendance
                   </button>
                 </div>
               </div>
@@ -839,7 +733,7 @@ const TrainerDashboard = () => {
                       <th className="px-6 py-3.5">Attendance Status</th>
                       <th className="px-6 py-3.5">Check In Time</th>
                       <th className="px-6 py-3.5">Remarks</th>
-                      <th className="px-6 py-3.5 text-right animate-none">Mark Attendance</th>
+                      <th className="px-6 py-3.5 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
@@ -847,7 +741,7 @@ const TrainerDashboard = () => {
                       <tr>
                         <td colSpan="7" className="px-6 py-10 text-center text-gray-400 dark:text-gray-500 italic">
                           <div className="flex flex-col items-center justify-center space-y-2">
-                            <AlertCircle size={24} className="text-gray-355" />
+                            <AlertCircle size={24} className="text-gray-300" />
                             <span>No students found matching your criteria.</span>
                           </div>
                         </td>
@@ -926,14 +820,14 @@ const TrainerDashboard = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer text-gray-655 dark:text-gray-400"
+                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer text-gray-550 dark:text-gray-400"
                     >
                       <ChevronLeft size={14} />
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, attendanceTotalPages))}
                       disabled={currentPage === attendanceTotalPages}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer text-gray-655 dark:text-gray-400"
+                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer text-gray-550 dark:text-gray-400"
                     >
                       <ChevronRight size={14} />
                     </button>
@@ -946,59 +840,14 @@ const TrainerDashboard = () => {
         {/* 3. GRADE SCORECARD PAGE VIEW */}
         {isGrading && (
           <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{totalStudentsCount}</h3>
-                </div>
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
-                  <Users size={20} />
-                </div>
-              </div>
-              
-              <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Grade</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {getLetterGrade(Math.round(parseFloat(avgGradeScore))).letter} <span className="text-xs font-normal text-gray-500">({avgGradeScore}/10)</span>
-                  </h3>
-                </div>
-                <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
-                  <Award size={20} />
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Attendance</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{stats?.cards?.attendancePercentage ?? 92}%</h3>
-                </div>
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
-                  <CheckCircle size={20} />
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Completed Modules</span>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">{completedModulesCount}</h3>
-                </div>
-                <div className="p-3 bg-orange-50 dark:bg-[#453015]/30 text-orange-600 rounded-xl">
-                  <BookOpenCheck size={20} />
-                </div>
-              </div>
-            </div>
-
-            {/* DAILY ATTENDANCE & GRADE TABLE */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+            {/* Student Grade Table Container */}
+            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
               
               {/* Table Filters & Actions Header */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-md font-bold text-gray-800 dark:text-white">Daily Attendance & Grade</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Evaluate modules progress, update attendance, and grade students</p>
+                  <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans font-extrabold">Student Grade Table</h2>
+                  <p className="text-xs text-gray-500 mt-0.5 font-sans">Submit grades, evaluate assignments, and view test scores for the selected batch</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -1007,10 +856,10 @@ const TrainerDashboard = () => {
                     <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search name..."
+                      placeholder="Search name or ID..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44"
+                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
                     />
                   </div>
 
@@ -1038,43 +887,30 @@ const TrainerDashboard = () => {
                           'Student ID': `STU-${s._id.slice(-5).toUpperCase()}`,
                           'Student Name': s.name,
                           'Batch Name': batches.find(b => b._id === selectedBatchId)?.name || 'N/A',
-                          'Daily Attendance': attendanceState[s._id] || 'Present',
                           'Module': selectedModule,
-                          'Grade': grade.letter,
-                          'Marks': score.marks || 0,
+                          'Assignment': score.status || 'Not Started',
+                          'Test Score': score.marks !== undefined ? `${score.marks}/10` : '—',
+                          'Attendance': attendanceState[s._id] || 'Present',
+                          'Final Grade': grade.letter,
                           'Remarks': score.remarks || ''
                         };
                       });
-                      downloadCSV(data, `Grades_Report_${selectedModule}.csv`, ['Student ID', 'Student Name', 'Batch', 'Daily Attendance', 'Module', 'Grade', 'Marks', 'Remarks']);
+                      downloadCSV(data, `Grades_Report_${selectedModule}.csv`, ['Student ID', 'Student Name', 'Batch', 'Module', 'Assignment', 'Test Score', 'Attendance', 'Final Grade', 'Remarks']);
                     }}
-                    className="p-2 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-emerald-600 transition-colors cursor-pointer"
-                    title="Export to Excel"
+                    className="p-2 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-emerald-605 transition-colors cursor-pointer"
+                    title="Export CSV"
                   >
                     <FileSpreadsheet size={15} />
                   </button>
 
-                  {/* PDF Export Button */}
+                  {/* Submit Grades Button */}
                   <button
                     onClick={() => {
-                      const headers = ['Student ID', 'Student Name', 'Batch', 'Attendance', 'Grade', 'Remarks'];
-                      const rows = batchStudents.map(s => {
-                        const score = s.scores?.find(sc => sc.moduleName === selectedModule) || {};
-                        const grade = getLetterGrade(score.marks || 0);
-                        return [
-                          `STU-${s._id.slice(-5).toUpperCase()}`,
-                          s.name,
-                          batches.find(b => b._id === selectedBatchId)?.name || 'N/A',
-                          attendanceState[s._id] || 'Present',
-                          `${grade.letter} (${score.marks || 0}/10)`,
-                          score.remarks || ''
-                        ];
-                      });
-                      downloadPDF(`Grades Report - ${selectedModule}`, headers, rows, `Grades_Report_${selectedModule}.pdf`);
+                      toast.success("All batch grade scorecards have been saved and submitted successfully!");
                     }}
-                    className="p-2 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 text-rose-600 transition-colors cursor-pointer"
-                    title="Export to PDF"
+                    className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
                   >
-                    <FileDown size={15} />
+                    Submit Grades
                   </button>
                 </div>
               </div>
@@ -1087,28 +923,26 @@ const TrainerDashboard = () => {
                       <th className="px-6 py-3.5">Student ID</th>
                       <th className="px-6 py-3.5">Student Name</th>
                       <th className="px-6 py-3.5">Batch</th>
-                      <th className="px-6 py-3.5">Daily Attendance</th>
                       <th className="px-6 py-3.5">Module</th>
-                      <th className="px-6 py-3.5 text-center">Grade</th>
-                      <th className="px-6 py-3.5">Trainer Remarks</th>
-                      <th className="px-6 py-3.5">Last Updated</th>
+                      <th className="px-6 py-3.5">Assignment</th>
+                      <th className="px-6 py-3.5 text-center">Test Score</th>
+                      <th className="px-6 py-3.5">Attendance</th>
+                      <th className="px-6 py-3.5 text-center">Final Grade</th>
+                      <th className="px-6 py-3.5">Remarks</th>
                       <th className="px-6 py-3.5 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
                     {paginatedGradingStudents.length === 0 ? (
                       <tr>
-                        <td colSpan="9" className="px-6 py-10 text-center text-gray-400 italic">
-                          No students found matching search.
+                        <td colSpan="10" className="px-6 py-10 text-center text-gray-400 italic">
+                          No student records available.
                         </td>
                       </tr>
                     ) : (
                       paginatedGradingStudents.map(student => {
                         const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
                         const grade = getLetterGrade(score.marks || 0);
-                        const updatedDate = score.updatedAt 
-                          ? new Date(score.updatedAt).toLocaleDateString()
-                          : '—';
                         return (
                           <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
                             <td className="px-6 py-4 font-semibold text-gray-500">STU-{student._id.slice(-5).toUpperCase()}</td>
@@ -1116,56 +950,40 @@ const TrainerDashboard = () => {
                             <td className="px-6 py-4 text-gray-500 font-medium">
                               {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
                             </td>
-                            {/* Interactive Attendance Dropdown */}
-                            <td className="px-6 py-4">
-                              <select
-                                value={attendanceState[student._id] || 'Present'}
-                                onChange={async (e) => {
-                                  const newStatus = e.target.value;
-                                  handleAttendanceChange(student._id, newStatus);
-                                  try {
-                                    await API.post('/trainer/attendance', {
-                                      batchId: selectedBatchId,
-                                      date: attendanceDate,
-                                      records: [{
-                                        studentId: student._id,
-                                        status: newStatus,
-                                        remarks: attendanceRemarks[student._id] || '',
-                                        timeIn: checkInTimes[student._id] || '09:00 AM'
-                                      }]
-                                    });
-                                    toast.success(`Attendance updated to ${newStatus}`);
-                                    loadStats(selectedBatchId);
-                                  } catch (error) {
-                                    toast.error('Failed to update attendance');
-                                  }
-                                }}
-                                className={`px-2 py-1 rounded-lg text-[10px] font-extrabold border bg-white dark:bg-gray-900 cursor-pointer ${
-                                  (attendanceState[student._id] || 'Present') === 'Present'
-                                    ? 'border-emerald-300 text-emerald-700'
-                                    : (attendanceState[student._id] || 'Present') === 'Late'
-                                    ? 'border-orange-300 text-orange-700'
-                                    : 'border-rose-300 text-rose-700'
-                                }`}
-                              >
-                                <option value="Present">Present</option>
-                                <option value="Absent">Absent</option>
-                                <option value="Late">Late</option>
-                              </select>
-                            </td>
                             <td className="px-6 py-4 text-gray-600 font-semibold">{selectedModule}</td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                                (score.status || 'Not Started') === 'Completed'
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20'
+                                  : (score.status || 'Not Started') === 'In Progress'
+                                  ? 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/20'
+                                  : 'bg-gray-50 border-gray-200 text-gray-500'
+                              }`}>
+                                {score.status || 'Not Started'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300">
+                              {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                                (attendanceState[student._id] || 'Present') === 'Present'
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                  : (attendanceState[student._id] || 'Present') === 'Late'
+                                  ? 'bg-orange-50 border-orange-200 text-orange-700'
+                                  : 'bg-rose-50 border-rose-200 text-rose-700'
+                              }`}>
+                                {attendanceState[student._id] || 'Present'}
+                              </span>
+                            </td>
                             <td className="px-6 py-4 text-center">
                               <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${grade.color}`}>
                                 {score.marks !== undefined ? grade.letter : 'N/A'}
                               </span>
-                              {score.marks !== undefined ? (
-                                <p className="text-[9px] text-gray-400 mt-0.5 font-bold">Marks: {score.marks}/10</p>
-                              ) : null}
                             </td>
                             <td className="px-6 py-4 text-gray-500 italic max-w-[150px] truncate" title={score.remarks}>
                               {score.remarks || '—'}
                             </td>
-                            <td className="px-6 py-4 text-gray-500">{updatedDate}</td>
                             <td className="px-6 py-4 text-right">
                               <button
                                 onClick={() => openGradingPanel(student, selectedModule)}
