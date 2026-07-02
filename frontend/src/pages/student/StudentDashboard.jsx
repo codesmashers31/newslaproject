@@ -3,30 +3,14 @@ import API from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { 
   Award, 
-  Calendar, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
   TrendingUp,
   BookOpen,
-  ChevronRight,
   Sparkles,
   FileDown,
-  Mail,
-  Phone,
   Bookmark,
   Trophy
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  Tooltip 
-} from 'recharts';
 import { jsPDF } from 'jspdf';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const StudentDashboard = () => {
   const [data, setData] = useState(null);
@@ -176,7 +160,7 @@ const StudentDashboard = () => {
     );
   }
 
-  const { profile, placement, batch, attendance, scorecards, progress, notifications, upcomingClasses, leaderboardRank, placementReadiness, calculatedScores } = data;
+  const { profile, batch, scorecards, progress, leaderboardRank, placementReadiness, calculatedScores } = data;
 
   const currentScorecard = 
     activeScorecard === 'aptitude' ? scorecards.aptitude :
@@ -304,79 +288,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* 4. Placement preparation & Attendance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Placement Log */}
-        <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-250 dark:border-gray-800 p-6 rounded-3xl backdrop-blur-md shadow-sm space-y-4">
-          <h4 className="font-bold text-sm flex items-center gap-1.5 border-b pb-2 border-gray-150 dark:border-gray-850">
-            <TrendingUp size={16} className="text-indigo-600 dark:text-indigo-400" />
-            Career Preparation timeline
-          </h4>
-          <div className="space-y-4 text-xs">
-            {[
-              { title: 'Resume Uploaded', check: placement.resumeUploaded },
-              { title: 'Mock Interview Feedback', check: placement.mockInterviewCompleted },
-              { title: 'Technical Interview evaluation', check: placement.technicalInterviewCompleted },
-              { title: 'HR Round clearing', check: placement.hrInterviewCompleted }
-            ].map((milestone, idx) => (
-              <div key={idx} className="flex items-center justify-between">
-                <span className="text-gray-500">{milestone.title}</span>
-                {milestone.check ? (
-                  <span className="text-emerald-555 flex items-center gap-1 font-bold">
-                    <CheckCircle2 size={15} />
-                    <span>Completed</span>
-                  </span>
-                ) : (
-                  <span className="text-gray-400 flex items-center gap-1 font-bold">
-                    <AlertCircle size={15} />
-                    <span>Pending</span>
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <hr className="border-gray-200 dark:border-gray-805" />
-
-          <div className="p-3 bg-gray-50/50 dark:bg-gray-900/30 rounded-2xl border text-xs">
-            <p className="font-semibold text-gray-500 uppercase tracking-wider text-[9px]">Placement Status</p>
-            <p className="font-bold text-sm text-indigo-600 dark:text-indigo-400 mt-1">{placement.status || 'Not Started'}</p>
-            {placement.companyName && (
-              <p className="text-[10px] text-gray-500 mt-0.5">Company: {placement.companyName}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Attendance chart */}
-        <div className="lg:col-span-2 bg-white/60 dark:bg-[#12131a]/60 border border-gray-250 dark:border-gray-800 p-6 rounded-3xl backdrop-blur-md shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b pb-2 border-gray-150 dark:border-gray-850 mb-4">
-            <h4 className="font-bold text-sm flex items-center gap-1.5">
-              <Calendar size={16} className="text-indigo-600 dark:text-indigo-400" />
-              Monthly Attendance Curves
-            </h4>
-            <div className="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold px-2.5 py-1 rounded-full">
-              Rate: {attendance.percentage}%
-            </div>
-          </div>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={attendance.monthlyGraph}>
-                <defs>
-                  <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="month" fontSize={11} stroke="#888888" tickLine={false} axisLine={false} />
-                <YAxis fontSize={11} stroke="#888888" tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ borderRadius: '12px' }} />
-                <Area type="monotone" dataKey="Present" stroke="#6366f1" fillOpacity={1} fill="url(#colorPresent)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
 
       {/* 5. Advanced Interactive Modules Dashboard */}
       <div className="bg-white border border-[#c7c4d7] rounded-3xl ambient-shadow overflow-hidden">
@@ -411,19 +322,19 @@ const StudentDashboard = () => {
             <div className="space-y-6">
               {/* Aptitude Dashboard Header Metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Avg. Score</span>
                   <span className="text-xl font-extrabold text-blue-700 mt-1 block">8.2 / 10</span>
                 </div>
-                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl">
+                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Practice Tests</span>
                   <span className="text-xl font-extrabold text-indigo-700 mt-1 block">16 / 16 Done</span>
                 </div>
-                <div className="p-4 bg-purple-50 border border-purple-200 rounded-2xl">
+                <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Mock Assessments</span>
                   <span className="text-xl font-extrabold text-purple-700 mt-1 block">11 Cleared</span>
                 </div>
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Trainer Status</span>
                   <span className="text-xl font-extrabold text-emerald-700 mt-1 block">Readiness OK</span>
                 </div>
