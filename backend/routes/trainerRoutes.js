@@ -4,7 +4,8 @@ import {
   markAttendance, 
   updateStudentScore,
   startSession,
-  getQRToken
+  getQRToken,
+  getTrainerDashboardStats
 } from '../controllers/trainerController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize('Aptitude Trainer', 'Communication Trainer', 'Technical Trainer', 'Super Admin', 'Admin'));
 
+router.get('/dashboard-stats', getTrainerDashboardStats);
 router.get('/students', getAssignedStudents);
 router.post('/attendance', markAttendance);
 router.post('/score', updateStudentScore);

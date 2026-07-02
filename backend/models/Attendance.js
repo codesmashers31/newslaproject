@@ -20,6 +20,10 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
     enum: ['Present', 'Absent', 'Late', 'Excused'],
   },
+  remarks: {
+    type: String,
+    default: '',
+  },
   session: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'AttendanceSession',
