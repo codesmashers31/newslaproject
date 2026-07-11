@@ -168,61 +168,91 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* 3. Active Training Batch Card */}
-        <View className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-sm mb-10">
-          <View className="flex-row items-center space-x-3 mb-4">
-            <View className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mr-2.5">
-              <CalendarDays size={18} color="#818cf8" />
+        {/* 3. Active Training Batches */}
+        {data?.batches && data.batches.length > 0 ? (
+          data.batches.map((b: any) => (
+            <View key={b._id} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-sm mb-6">
+              <View className="flex-row items-center space-x-3 mb-4">
+                <View className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mr-2.5">
+                  <CalendarDays size={18} color="#818cf8" />
+                </View>
+                <View>
+                  <Text className="font-extrabold text-sm text-slate-200">Active Training Batch</Text>
+                  <Text className="text-[10px] text-slate-500">Duration & syllabus schedule</Text>
+                </View>
+              </View>
+
+              <View className="space-y-2.5 pt-1 text-xs">
+                <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
+                  <Text className="font-semibold text-slate-400">Batch Code:</Text>
+                  <Text className="font-bold text-white">{b.name || 'N/A'}</Text>
+                </View>
+                <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
+                  <Text className="font-semibold text-slate-400">Course Syllabus:</Text>
+                  <Text className="font-bold text-indigo-400">{b.course || 'Full Stack Placement Prep'}</Text>
+                </View>
+                <View className="flex-row justify-between pb-1">
+                  <Text className="font-semibold text-slate-400">Schedules:</Text>
+                  <Text className="font-bold text-slate-200">
+                    {b.startDate ? new Date(b.startDate).toLocaleDateString() : 'N/A'}
+                    {' — '}
+                    {b.endDate ? new Date(b.endDate).toLocaleDateString() : 'N/A'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Trainers Row */}
+              <View className="mt-4 pt-3 border-t border-slate-800">
+                <Text className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Assigned Staff Trainers</Text>
+                <View className="space-y-2">
+                  {b.trainers && b.trainers.length > 0 ? (
+                    b.trainers.map((tr: any) => (
+                      <View 
+                        key={tr._id} 
+                        className="flex-row justify-between items-center p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl mb-1.5"
+                      >
+                        <View>
+                          <Text className="text-[9px] font-bold text-indigo-400 uppercase tracking-wide">{tr.role}</Text>
+                          <Text className="font-bold text-xs text-slate-200 mt-0.5">{tr.name}</Text>
+                        </View>
+                        <Text className="text-[9px] text-slate-500 font-medium">{tr.email}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text className="text-[10px] text-slate-500 italic py-1">No trainers assigned yet.</Text>
+                  )}
+                </View>
+              </View>
             </View>
-            <View>
-              <Text className="font-extrabold text-sm text-slate-200">Active Training Batch</Text>
-              <Text className="text-[10px] text-slate-500">Duration & syllabus schedule</Text>
+          ))
+        ) : (
+          <View className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-sm mb-10">
+            <View className="flex-row items-center space-x-3 mb-4">
+              <View className="p-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl mr-2.5">
+                <CalendarDays size={18} color="#818cf8" />
+              </View>
+              <View>
+                <Text className="font-extrabold text-sm text-slate-200">Active Training Batch</Text>
+                <Text className="text-[10px] text-slate-500">Duration & syllabus schedule</Text>
+              </View>
+            </View>
+
+            <View className="space-y-2.5 pt-1 text-xs">
+              <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
+                <Text className="font-semibold text-slate-400">Batch Code:</Text>
+                <Text className="font-bold text-white">N/A</Text>
+              </View>
+              <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
+                <Text className="font-semibold text-slate-400">Course Syllabus:</Text>
+                <Text className="font-bold text-indigo-400">Full Stack Placement Prep</Text>
+              </View>
+              <View className="flex-row justify-between pb-1">
+                <Text className="font-semibold text-slate-400">Schedules:</Text>
+                <Text className="font-bold text-slate-200">N/A — N/A</Text>
+              </View>
             </View>
           </View>
-
-          <View className="space-y-2.5 pt-1 text-xs">
-            <View className="flex-row justify-between border-b pb-2.5 border-slate-800">
-              <Text className="font-semibold text-slate-400">Batch Code:</Text>
-              <Text className="font-bold text-white">{batch.name || 'N/A'}</Text>
-            </View>
-            <View className="flex-row justify-between border-b pb-2.5 border-slate-800">
-              <Text className="font-semibold text-slate-400">Course Syllabus:</Text>
-              <Text className="font-bold text-indigo-400">{batch.course || 'Full Stack Placement Prep'}</Text>
-            </View>
-            <View className="flex-row justify-between pb-1">
-              <Text className="font-semibold text-slate-400">Schedules:</Text>
-              <Text className="font-bold text-slate-200">
-                {batch.startDate ? new Date(batch.startDate).toLocaleDateString() : 'N/A'}
-                {' — '}
-                {batch.endDate ? new Date(batch.endDate).toLocaleDateString() : 'N/A'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Trainers Row */}
-          <View className="mt-4 pt-3 border-t border-slate-800">
-            <Text className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wider mb-2">Assigned Staff Trainers</Text>
-            <View className="space-y-2">
-              {batch.trainers && batch.trainers.length > 0 ? (
-                batch.trainers.map((tr: any) => (
-                  <View 
-                    key={tr._id} 
-                    className="flex-row justify-between items-center p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl"
-                  >
-                    <View>
-                      <Text className="text-[9px] font-bold text-indigo-400 uppercase tracking-wide">{tr.role}</Text>
-                      <Text className="font-bold text-xs text-slate-200 mt-0.5">{tr.name}</Text>
-                    </View>
-                    <Text className="text-[9px] text-slate-500 font-medium">{tr.email}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text className="text-[10px] text-slate-500 italic py-1">No trainers assigned yet.</Text>
-              )}
-            </View>
-          </View>
-        </View>
-
+        )}
       </ScrollView>
     </SafeAreaView>
   );

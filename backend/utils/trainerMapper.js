@@ -107,7 +107,30 @@ export const syncStudentBatchesFromStrings = async (studentId) => {
       });
     }
 
-    // 1. Add student to all matching batches
+    // 1. Ensure all batches in batchNames exist in the database, if not auto-create them
+    for (const name of batchNames) {
+      const exists = await Batch.findOne({ name });
+      if (!exists) {
+        let course = 'Technical Training';
+        if (student.communicationBatch?.split(',').map(s => s.trim()).includes(name)) {
+          course = 'Communication Skills';
+        } else if (student.aptitudeBatch?.split(',').map(s => s.trim()).includes(name)) {
+          course = 'Aptitude & Reasoning';
+        }
+        
+        await Batch.create({
+          name,
+          batchId: name.toUpperCase().replace(/\s+/g, ''),
+          course,
+          students: [studentId],
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days default
+        });
+        console.log(`Auto-created missing batch: ${name} for course: ${course}`);
+      }
+    }
+
+    // 2. Add student to all matching batches
     if (batchNames.length > 0) {
       await Batch.updateMany(
         { name: { $in: batchNames } },
