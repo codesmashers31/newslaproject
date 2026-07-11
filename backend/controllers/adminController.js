@@ -285,16 +285,43 @@ export const importStudentsExcel = async (req, res) => {
     let importCount = 0;
 
     for (const row of data) {
-      // Minimal headers expected: SLAEID, Name, Batch
+      // Minimal headers expected: SLAEID, Name, Batch, BatchID, Batch ID
       const slaeId = String(row.SLAEID || row.slaeid || row.EID || row.eid || '').trim();
       const name = String(row.Name || row.name || '').trim();
-      const batchName = String(row.Batch || row.batch || '').trim();
+      const batchIdentifier = String(row.Batch || row.batch || row.BatchID || row.BatchId || row.batchid || row['Batch ID'] || '').trim();
 
       if (!slaeId || !name) continue;
 
       const email = `${slaeId.toLowerCase()}@lcp.com`;
       const userExists = await User.findOne({ $or: [{ email }, { slaeId }] });
       if (userExists) continue; // Skip existing
+
+      let technicalBatch = '';
+      let communicationBatch = '';
+      let aptitudeBatch = '';
+
+      if (batchIdentifier) {
+        // Look up by batchId first, then by name
+        const dbBatch = await Batch.findOne({
+          $or: [
+            { batchId: batchIdentifier },
+            { name: batchIdentifier }
+          ]
+        });
+
+        if (dbBatch) {
+          if (dbBatch.course === 'Communication Skills') {
+            communicationBatch = dbBatch.name;
+          } else if (dbBatch.course === 'Aptitude & Reasoning') {
+            aptitudeBatch = dbBatch.name;
+          } else {
+            technicalBatch = dbBatch.name;
+          }
+        } else {
+          // Default to technicalBatch if the batch is not found in DB
+          technicalBatch = batchIdentifier;
+        }
+      }
 
       const user = await User.create({
         name,
@@ -304,7 +331,9 @@ export const importStudentsExcel = async (req, res) => {
         role: 'Student',
         status: 'Active',
         slaeId,
-        technicalBatch: batchName,
+        technicalBatch,
+        communicationBatch,
+        aptitudeBatch,
       });
 
       await Student.create({
@@ -317,7 +346,7 @@ export const importStudentsExcel = async (req, res) => {
 
       await Placement.create({ student: user._id });
 
-      if (batchName) {
+      if (batchIdentifier) {
         await syncStudentBatchesFromStrings(user._id);
       }
 
