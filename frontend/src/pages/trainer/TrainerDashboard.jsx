@@ -1262,33 +1262,8 @@ const TrainerDashboard = () => {
                         const currentStatus = attendanceState[student._id] || 'Present';
                         const record = todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
                         
-                        let studentBatches = 'Unassigned';
-                        let displayTrainer = 'Assigned Trainer';
-
-                        if (user?.role === 'Technical Trainer') {
-                          studentBatches = student.technicalBatch || 'Unassigned';
-                          displayTrainer = student.technicalTrainer || user?.name || 'Assigned Trainer';
-                        } else if (user?.role === 'Communication Trainer') {
-                          studentBatches = student.communicationBatch || 'Unassigned';
-                          displayTrainer = student.communicationTrainer || user?.name || 'Assigned Trainer';
-                        } else if (user?.role === 'Aptitude Trainer') {
-                          studentBatches = student.aptitudeBatch || 'Unassigned';
-                          displayTrainer = student.aptitudeTrainer || user?.name || 'Assigned Trainer';
-                        } else {
-                          // Admin / fallback view: show all batches and trainers
-                          const domains = [];
-                          if (student.technicalBatch) domains.push(`Tech: ${student.technicalBatch}`);
-                          if (student.communicationBatch) domains.push(`Comm: ${student.communicationBatch}`);
-                          if (student.aptitudeBatch) domains.push(`Aptitude: ${student.aptitudeBatch}`);
-                          
-                          if (domains.length > 0) {
-                            studentBatches = domains.join(' | ');
-                            displayTrainer = [student.technicalTrainer, student.communicationTrainer, student.aptitudeTrainer].filter(Boolean).join(', ') || 'Admin';
-                          } else {
-                            studentBatches = (student.batches?.map(b => typeof b === 'object' ? b?.name : b).filter(Boolean).join(', ')) || 'Unassigned';
-                            displayTrainer = student.technicalTrainer || student.communicationTrainer || student.aptitudeTrainer || user?.name || 'Assigned Trainer';
-                          }
-                        }
+                        const studentBatches = student.technicalBatch || 'Unassigned';
+                        const displayTrainer = student.technicalTrainer || 'Assigned Trainer';
 
                         const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
                         
