@@ -146,10 +146,19 @@ const BatchManagement = () => {
         formData.aptitudeTrainer
       ].filter(Boolean);
 
+      let courseValue = 'Technical Training';
+      if (formData.technicalTrainer) {
+        courseValue = 'Technical Training';
+      } else if (formData.communicationTrainer) {
+        courseValue = 'Communication Skills';
+      } else if (formData.aptitudeTrainer) {
+        courseValue = 'Aptitude & Reasoning';
+      }
+
       const submitData = {
         name: formData.name,
         batchId: formData.batchId,
-        course: 'Technical Training',
+        course: courseValue,
         status: formData.status,
         trainers: selectedTrainers,
       };
