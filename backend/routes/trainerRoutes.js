@@ -26,14 +26,17 @@ import {
   getTrainers,
   addTrainer,
   updateTrainer,
-  deleteTrainer
+  deleteTrainer,
+  importStudentsExcel
 } from '../controllers/adminController.js';
+import upload from '../middleware/upload.js';
 
 router.get('/dashboard-stats', getTrainerDashboardStats);
 router.get('/students', getAssignedStudents);
 router.post('/students', addStudentByTrainer);
 router.put('/students/:id', updateStudentByTrainer);
 router.delete('/students/:id', deleteStudentByTrainer);
+router.post('/students/import', upload.single('file'), importStudentsExcel);
 
 router.get('/trainers', getTrainers);
 router.post('/trainers', addTrainer);
