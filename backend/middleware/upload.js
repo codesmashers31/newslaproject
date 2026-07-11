@@ -18,9 +18,8 @@ const storage = multer.diskStorage({
   },
 });
 
-// Check file types
 const fileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png|pdf|msword|vnd.openxmlformats-officedocument.wordprocessingml.document|xlsx|xls/;
+  const filetypes = /jpeg|jpg|png|pdf|msword|wordprocessingml|spreadsheetml|xlsx|xls|excel|octet-stream/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
