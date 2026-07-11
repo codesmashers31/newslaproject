@@ -26,17 +26,20 @@ export const syncStudentTrainers = async (studentId) => {
 
       if (isTech) {
         if (!techBatches.includes(batch.name)) techBatches.push(batch.name);
-        const trainer = batch.trainers?.find(t => t.role === 'Technical Trainer');
+        let trainer = batch.trainers?.find(t => t.role === 'Technical Trainer');
+        if (!trainer && batch.trainers?.length > 0) trainer = batch.trainers[0];
         if (trainer && !techTrainers.includes(trainer.name)) techTrainers.push(trainer.name);
       }
       if (isComm) {
         if (!commBatches.includes(batch.name)) commBatches.push(batch.name);
-        const trainer = batch.trainers?.find(t => t.role === 'Communication Trainer');
+        let trainer = batch.trainers?.find(t => t.role === 'Communication Trainer');
+        if (!trainer && batch.trainers?.length > 0) trainer = batch.trainers[0];
         if (trainer && !commTrainers.includes(trainer.name)) commTrainers.push(trainer.name);
       }
       if (isApti) {
         if (!aptiBatches.includes(batch.name)) aptiBatches.push(batch.name);
-        const trainer = batch.trainers?.find(t => t.role === 'Aptitude Trainer');
+        let trainer = batch.trainers?.find(t => t.role === 'Aptitude Trainer');
+        if (!trainer && batch.trainers?.length > 0) trainer = batch.trainers[0];
         if (trainer && !aptiTrainers.includes(trainer.name)) aptiTrainers.push(trainer.name);
       }
     }
