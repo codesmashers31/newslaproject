@@ -1261,6 +1261,7 @@ const TrainerDashboard = () => {
                       <th className="px-5 py-4">SLAEID</th>
                       <th className="px-5 py-4">Student Name</th>
                       <th className="px-5 py-4">Trainer Name</th>
+                      <th className="px-5 py-4">Technical Trainer</th>
                       <th className="px-5 py-4">Batch</th>
                       <th className="px-5 py-4 text-center">Interactive Status</th>
                       <th className="px-5 py-4">Time & Date</th>
@@ -1270,7 +1271,7 @@ const TrainerDashboard = () => {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
                     {paginatedAttendanceStudents.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-slate-400 italic">
+                        <td colSpan="8" className="px-6 py-12 text-center text-slate-400 italic">
                           No students found matching your search or batch selection.
                         </td>
                       </tr>
@@ -1305,6 +1306,9 @@ const TrainerDashboard = () => {
                             </td>
                             <td className="px-5 py-4 font-bold text-slate-700 dark:text-slate-300">
                               {displayTrainer}
+                            </td>
+                            <td className="px-5 py-4 font-bold text-slate-600 dark:text-slate-400">
+                              {student.technicalTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
                             </td>
                             <td className="px-5 py-4">
                               <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/50 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
