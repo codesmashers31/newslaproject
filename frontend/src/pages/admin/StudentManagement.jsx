@@ -457,8 +457,9 @@ const StudentManagement = () => {
               <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-xs font-semibold uppercase tracking-wider bg-gray-50/50 dark:bg-gray-900/30">
                 <th className="px-6 py-4">Student</th>
                 <th className="px-6 py-4">Mobile</th>
-                <th className="px-6 py-4">Batch</th>
-                <th className="px-6 py-4">Placement</th>
+                <th className="px-6 py-4">Technical Training</th>
+                <th className="px-6 py-4">Communication Skills</th>
+                <th className="px-6 py-4">Aptitude & Reasoning</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -466,14 +467,14 @@ const StudentManagement = () => {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10">
+                  <td colSpan="7" className="text-center py-10">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mx-auto"></div>
                     <span className="text-xs text-gray-400 mt-2 block">Loading students directory...</span>
                   </td>
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
+                  <td colSpan="7" className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
                     No students match the criteria.
                   </td>
                 </tr>
@@ -488,7 +489,7 @@ const StudentManagement = () => {
                         <p className="text-sm font-semibold">{student.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{student.email}</p>
                         {student.slaeId && (
-                          <span className="inline-flex mt-0.5 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-450">
+                          <span className="inline-flex mt-0.5 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-455">
                             EID: {student.slaeId}
                           </span>
                         )}
@@ -497,37 +498,14 @@ const StudentManagement = () => {
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {student.mobile}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      {student.batches && student.batches.length > 0 ? (
-                        <div className="space-y-1">
-                          {student.batches.map(b => (
-                            <div key={b._id} className="border-b border-gray-100 dark:border-gray-800/40 pb-1 last:border-0 last:pb-0">
-                              <p className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">{b.name}</p>
-                              <p className="text-[9px] text-gray-500 leading-tight">{b.course}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : student.batch ? (
-                        <div>
-                          <p className="font-semibold text-gray-800 dark:text-gray-300">{student.batch.name}</p>
-                          <p className="text-[9px] text-gray-500">{student.batch.course}</p>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic">Unassigned</span>
-                      )}
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {student.technicalBatch || <span className="text-xs text-gray-400 italic">Unassigned</span>}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        student.placement?.status === 'Offer Received' || student.placement?.status === 'Selected'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
-                          : student.placement?.status === 'Pending'
-                          ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400'
-                          : student.placement?.status === 'Rejected'
-                          ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                      }`}>
-                        {student.placement?.status || 'Not Started'}
-                      </span>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {student.communicationBatch || <span className="text-xs text-gray-400 italic">Unassigned</span>}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {student.aptitudeBatch || <span className="text-xs text-gray-400 italic">Unassigned</span>}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
