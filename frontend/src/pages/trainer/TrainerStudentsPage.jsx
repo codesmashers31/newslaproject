@@ -257,12 +257,16 @@ const TrainerStudentsPage = () => {
       {
         'SLAEID': 'SLA001',
         'Name': 'John Doe',
-        'BatchID': 'BAT-001'
+        'Technical Batch ID': 'TECH-001',
+        'Communication Batch ID': 'COMM-001',
+        'Aptitude Batch ID': 'APTI-001'
       },
       {
         'SLAEID': 'SLA002',
-        'Name': 'Jane Smith',
-        'BatchID': 'BAT-002'
+        'Name': '',
+        'Technical Batch ID': '',
+        'Communication Batch ID': '',
+        'Aptitude Batch ID': ''
       }
     ];
 
@@ -1156,7 +1160,7 @@ const TrainerStudentsPage = () => {
                       <p className="text-xs font-semibold text-slate-650 dark:text-slate-400">
                         {excelFile ? excelFile.name : 'Click or Drag Excel sheet here'}
                       </p>
-                      <p className="text-[10px] text-slate-400">Supported formats: .xlsx or .xls</p>
+                      <p className="text-[10px] text-slate-400">Supported formats: .xlsx or .xls (Columns: SLAEID, Name, Technical Batch ID, Communication Batch ID, Aptitude Batch ID)</p>
                     </div>
                   </div>
                 </div>

@@ -295,11 +295,15 @@ export const importStudentsExcel = async (req, res) => {
       };
 
       const slaeId = getVal(['slaeid', 'eid', 'id', 'studentworkid', 'rollno', 'registerid']);
-      const name = getVal(['name', 'studentname', 'fullname', 'username']);
-      const batchIdentifier = getVal(['batch', 'batchid', 'cohort', 'class', 'group', 'batchname']);
+      const nameVal = getVal(['name', 'studentname', 'fullname', 'username']);
+      const technicalBatchInput = getVal(['technicalbatchid', 'technicalbatch', 'techbatchid', 'techbatch']);
+      const communicationBatchInput = getVal(['communicationbatchid', 'communicationbatch', 'commbatchid', 'commbatch']);
+      const aptitudeBatchInput = getVal(['aptitudebatchid', 'aptitudebatch', 'aptibatchid', 'aptibatch', 'apptitutebatchid', 'apptitutebatch']);
+      const genericBatchInput = getVal(['batch', 'batchid', 'cohort', 'class', 'group', 'batchname']);
 
-      if (!slaeId || !name) continue;
+      if (!slaeId) continue; // Only SLAEID is mandatory
 
+      const name = nameVal || `Student ${slaeId}`;
       const email = `${slaeId.toLowerCase()}@lcp.com`;
       const userExists = await User.findOne({ $or: [{ email }, { slaeId }] });
 
@@ -307,12 +311,32 @@ export const importStudentsExcel = async (req, res) => {
       let communicationBatch = '';
       let aptitudeBatch = '';
 
-      if (batchIdentifier) {
-        // Look up by batchId first, then by name
+      const resolveBatchName = async (input) => {
+        if (!input) return '';
         const dbBatch = await Batch.findOne({
           $or: [
-            { batchId: batchIdentifier },
-            { name: batchIdentifier }
+            { batchId: input },
+            { name: input }
+          ]
+        });
+        return dbBatch ? dbBatch.name : input;
+      };
+
+      if (technicalBatchInput) {
+        technicalBatch = await resolveBatchName(technicalBatchInput);
+      }
+      if (communicationBatchInput) {
+        communicationBatch = await resolveBatchName(communicationBatchInput);
+      }
+      if (aptitudeBatchInput) {
+        aptitudeBatch = await resolveBatchName(aptitudeBatchInput);
+      }
+
+      if (genericBatchInput && !technicalBatchInput && !communicationBatchInput && !aptitudeBatchInput) {
+        const dbBatch = await Batch.findOne({
+          $or: [
+            { batchId: genericBatchInput },
+            { name: genericBatchInput }
           ]
         });
 
@@ -325,25 +349,21 @@ export const importStudentsExcel = async (req, res) => {
             technicalBatch = dbBatch.name;
           }
         } else {
-          // Default to technicalBatch if the batch is not found in DB
-          technicalBatch = batchIdentifier;
+          technicalBatch = genericBatchInput;
         }
       }
 
       if (userExists) {
-        const updateObj = {};
+        const updateObj = { name };
         if (technicalBatch) updateObj.technicalBatch = technicalBatch;
         if (communicationBatch) updateObj.communicationBatch = communicationBatch;
         if (aptitudeBatch) updateObj.aptitudeBatch = aptitudeBatch;
 
-        if (Object.keys(updateObj).length > 0) {
-          await User.findByIdAndUpdate(userExists._id, { $set: updateObj });
-          await syncStudentBatchesFromStrings(userExists._id);
-        }
+        await User.findByIdAndUpdate(userExists._id, { $set: updateObj });
+        await syncStudentBatchesFromStrings(userExists._id);
         importCount++;
         continue;
       }
-
 
       const user = await User.create({
         name,
