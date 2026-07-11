@@ -81,6 +81,8 @@ const TrainerManagement = () => {
     toast.success('Template downloaded successfully!');
   };
 
+  const [importingExcel, setImportingExcel] = useState(false);
+
   const handleExcelImport = async (e) => {
     e.preventDefault();
     if (!excelFile) {
@@ -91,6 +93,7 @@ const TrainerManagement = () => {
     const uploadData = new FormData();
     uploadData.append('file', excelFile);
 
+    setImportingExcel(true);
     try {
       const { data } = await API.post('/admin/trainers/import', uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -101,6 +104,8 @@ const TrainerManagement = () => {
       fetchTrainers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error importing Excel sheet');
+    } finally {
+      setImportingExcel(false);
     }
   };
 
@@ -874,10 +879,17 @@ const TrainerManagement = () => {
 
               <button
                 type="submit"
-                disabled={!excelFile}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10"
+                disabled={!excelFile || importingExcel}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2"
               >
-                Upload & Import
+                {importingExcel ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Importing...</span>
+                  </>
+                ) : (
+                  <span>Upload & Import</span>
+                )}
               </button>
             </form>
           </div>

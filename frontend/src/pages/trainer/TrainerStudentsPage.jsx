@@ -35,6 +35,7 @@ const TrainerStudentsPage = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
+  const [importingExcel, setImportingExcel] = useState(false);
 
   // Add Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -214,6 +215,7 @@ const TrainerStudentsPage = () => {
     const uploadData = new FormData();
     uploadData.append('file', excelFile);
 
+    setImportingExcel(true);
     try {
       const { data } = await API.post('/trainer/students/import', uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -224,6 +226,8 @@ const TrainerStudentsPage = () => {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error importing Excel sheet');
+    } finally {
+      setImportingExcel(false);
     }
   };
 
@@ -1167,10 +1171,17 @@ const TrainerStudentsPage = () => {
 
                 <button
                   type="submit"
-                  disabled={!excelFile}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-purple-500/20 cursor-pointer transition"
+                  disabled={!excelFile || importingExcel}
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-purple-500/20 cursor-pointer transition flex items-center justify-center gap-2"
                 >
-                  Upload & Import
+                  {importingExcel ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Importing...</span>
+                    </>
+                  ) : (
+                    <span>Upload & Import</span>
+                  )}
                 </button>
               </form>
             </div>

@@ -42,6 +42,7 @@ const StudentManagement = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
+  const [importingExcel, setImportingExcel] = useState(false);
 
   const [openDropdownAdd, setOpenDropdownAdd] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
   const [openDropdownEdit, setOpenDropdownEdit] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
@@ -207,6 +208,7 @@ const StudentManagement = () => {
     const uploadData = new FormData();
     uploadData.append('file', excelFile);
 
+    setImportingExcel(true);
     try {
       const { data } = await API.post('/admin/students/import', uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -217,6 +219,8 @@ const StudentManagement = () => {
       loadData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error importing Excel sheet');
+    } finally {
+      setImportingExcel(false);
     }
   };
 
@@ -1232,10 +1236,17 @@ const StudentManagement = () => {
 
                 <button
                   type="submit"
-                  disabled={!excelFile}
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10"
+                  disabled={!excelFile || importingExcel}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2"
                 >
-                  Upload & Import
+                  {importingExcel ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Importing...</span>
+                    </>
+                  ) : (
+                    <span>Upload & Import</span>
+                  )}
                 </button>
               </form>
             </div>
