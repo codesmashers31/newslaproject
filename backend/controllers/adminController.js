@@ -6,7 +6,7 @@ import Attendance from '../models/Attendance.js';
 import Score from '../models/Score.js';
 import Placement from '../models/Placement.js';
 import bcrypt from 'bcryptjs';
-import xlsx from 'xlsx';
+import * as xlsx from 'xlsx';
 import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
 
 // ==========================================
