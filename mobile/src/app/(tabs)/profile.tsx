@@ -51,6 +51,9 @@ export default function ProfileScreen() {
     name: '',
     mobile: '',
     email: '',
+    technicalTrainer: '',
+    communicationTrainer: '',
+    aptitudeTrainer: '',
   });
 
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
@@ -61,7 +64,7 @@ export default function ProfileScreen() {
     if (base) {
       return base.replace('/api', '');
     }
-    return 'http://10.133.172.143:5000';
+    return 'http://172.17.1.232:5000';
   };
 
   const loadProfileData = async () => {
@@ -85,6 +88,9 @@ export default function ProfileScreen() {
         name: student.name || '',
         mobile: student.mobile || '',
         email: student.email || '',
+        technicalTrainer: student.technicalTrainer || '',
+        communicationTrainer: student.communicationTrainer || '',
+        aptitudeTrainer: student.aptitudeTrainer || '',
       });
       setCurrentPhotoPath(p.photo || '');
       setSelectedPhoto(null);
@@ -148,6 +154,11 @@ export default function ProfileScreen() {
       formData.append('github', profileData.github);
       formData.append('bio', profileData.bio);
       
+      // Append trainers
+      formData.append('technicalTrainer', profileData.technicalTrainer);
+      formData.append('communicationTrainer', profileData.communicationTrainer);
+      formData.append('aptitudeTrainer', profileData.aptitudeTrainer);
+      
       // Handle skills array formatting
       const skillsArr = profileData.skills
         ? profileData.skills.split(',').map(s => s.trim()).filter(Boolean)
@@ -169,14 +180,14 @@ export default function ProfileScreen() {
         } as any);
       }
 
-      // 2. Save via API
+      // 2. Save via API (Profile details and trainers)
       await API.put('/student/profile', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      // 3. Optional: Sync user basic details (name, mobile) to the auth object
+      // 3. Sync user basic details (name, mobile) to the auth model
       await API.put('/auth/me', {
         name: profileData.name,
         mobile: profileData.mobile,
@@ -265,10 +276,10 @@ export default function ProfileScreen() {
           </View>
 
           {/* Form Content */}
-          <View className="space-y-4 mb-12">
+          <View className="mb-12">
             
             {/* Bio */}
-            <View>
+            <View className="mb-6">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Short Bio</Text>
               <TextInput
                 multiline
@@ -283,10 +294,10 @@ export default function ProfileScreen() {
             </View>
 
             {/* Basic Info Header */}
-            <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-4">Personal Info</Text>
+            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Personal Info</Text>
 
             {/* Name */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <User size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -301,7 +312,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Mobile */}
-            <View>
+            <View className="mb-6">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Mobile Number</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <Phone size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -316,11 +327,59 @@ export default function ProfileScreen() {
               </View>
             </View>
 
+            {/* Assigned Trainers Header */}
+            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Assigned Trainers</Text>
+
+            {/* Technical Trainer */}
+            <View className="mb-5">
+              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Technical Trainer</Text>
+              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
+                <User size={16} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  value={profileData.technicalTrainer}
+                  onChangeText={(text) => setProfileData({ ...profileData, technicalTrainer: text })}
+                  placeholder="Enter technical trainer name"
+                  placeholderTextColor="#475569"
+                  className="flex-1 text-white text-xs font-semibold"
+                />
+              </View>
+            </View>
+
+            {/* Communication Trainer */}
+            <View className="mb-5">
+              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Communication Trainer</Text>
+              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
+                <User size={16} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  value={profileData.communicationTrainer}
+                  onChangeText={(text) => setProfileData({ ...profileData, communicationTrainer: text })}
+                  placeholder="Enter communication trainer name"
+                  placeholderTextColor="#475569"
+                  className="flex-1 text-white text-xs font-semibold"
+                />
+              </View>
+            </View>
+
+            {/* Aptitude Trainer */}
+            <View className="mb-6">
+              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Aptitude Trainer</Text>
+              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
+                <User size={16} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  value={profileData.aptitudeTrainer}
+                  onChangeText={(text) => setProfileData({ ...profileData, aptitudeTrainer: text })}
+                  placeholder="Enter aptitude trainer name"
+                  placeholderTextColor="#475569"
+                  className="flex-1 text-white text-xs font-semibold"
+                />
+              </View>
+            </View>
+
             {/* Academic Info Header */}
-            <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-4 font-black">Academic details</Text>
+            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Academic Details</Text>
 
             {/* College Name */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">College Name</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <GraduationCap size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -335,7 +394,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Degree */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Degree</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <BookOpen size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -350,7 +409,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Department */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Department</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <BookOpen size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -365,7 +424,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Year of Passing */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Year of Passing</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <Calendar size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -381,7 +440,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Gender */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Gender</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <User size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -396,7 +455,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Date of Birth */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Date of Birth</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <Calendar size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -411,7 +470,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Skills */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Skills (comma-separated)</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <Sparkles size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -426,7 +485,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* Address */}
-            <View>
+            <View className="mb-6">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Home Address</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <MapPin size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -441,10 +500,10 @@ export default function ProfileScreen() {
             </View>
 
             {/* Professional Links Header */}
-            <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-4">Professional Handles</Text>
+            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Professional Handles</Text>
 
             {/* LinkedIn */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">LinkedIn Profile Link</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <Briefcase size={16} color="#64748b" style={{ marginRight: 8 }} />
@@ -460,7 +519,7 @@ export default function ProfileScreen() {
             </View>
 
             {/* GitHub */}
-            <View>
+            <View className="mb-5">
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">GitHub Profile Link</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
                 <Code2 size={16} color="#64748b" style={{ marginRight: 8 }} />

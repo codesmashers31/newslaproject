@@ -22,7 +22,13 @@ export const getStudentDashboard = async (req, res) => {
     const studentId = req.user._id;
 
     // 1. Fetch Profile
-    const profile = await Student.findOne({ user: studentId }) || {};
+    let profile = await Student.findOne({ user: studentId })
+      .populate('user', 'name email mobile role technicalTrainer communicationTrainer aptitudeTrainer')
+      .lean();
+    if (!profile) {
+      const userObj = await User.findById(studentId).select('name email mobile role technicalTrainer communicationTrainer aptitudeTrainer').lean();
+      profile = { user: userObj };
+    }
 
     // 2. Fetch Placement Status
     const placement = await Placement.findOne({ student: studentId }) || {};
@@ -237,6 +243,15 @@ export const updateStudentProfile = async (req, res) => {
     profile.bio = bio || profile.bio;
 
     await profile.save();
+
+    // Update trainer assignments on the User model
+    const user = await User.findById(studentId);
+    if (user) {
+      if (req.body.technicalTrainer !== undefined) user.technicalTrainer = req.body.technicalTrainer;
+      if (req.body.communicationTrainer !== undefined) user.communicationTrainer = req.body.communicationTrainer;
+      if (req.body.aptitudeTrainer !== undefined) user.aptitudeTrainer = req.body.aptitudeTrainer;
+      await user.save();
+    }
 
     // Check if profile is complete to clear "profile is incomplete" alert
     if (profile.collegeName && profile.degree && profile.photo && profile.resumeUrl) {

@@ -17,7 +17,7 @@ const getBaseURL = () => {
     return url;
   }
   
-  let host = '10.133.172.143'; // Default LAN IP fallback
+  let host = '172.17.1.232'; // Default LAN IP fallback
   if (Constants.expoConfig?.hostUri) {
     host = Constants.expoConfig.hostUri.split(':')[0];
   }
