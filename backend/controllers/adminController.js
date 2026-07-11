@@ -269,7 +269,6 @@ export const deleteStudent = async (req, res) => {
   }
 };
 
-// Import students from Excel sheet
 export const importStudentsExcel = async (req, res) => {
   try {
     if (!req.file) {
@@ -284,39 +283,42 @@ export const importStudentsExcel = async (req, res) => {
     let importCount = 0;
 
     for (const row of data) {
-      // Headers expected: Name, Email, Mobile, Password, CollegeName, Degree, Department, YearOfPassing
-      const name = row.Name || row.name;
-      const email = row.Email || row.email;
-      const mobile = row.Mobile || row.mobile || row.Phone || row.phone;
-      const password = row.Password || row.password || 'password123';
-      const collegeName = row.CollegeName || row.college || '';
-      const degree = row.Degree || row.degree || '';
-      const department = row.Department || row.department || '';
-      const yearOfPassing = row.YearOfPassing || row.year || '';
+      // Minimal headers expected: SLAEID, Name, Batch
+      const slaeId = String(row.SLAEID || row.slaeid || row.EID || row.eid || '').trim();
+      const name = String(row.Name || row.name || '').trim();
+      const batchName = String(row.Batch || row.batch || '').trim();
 
-      if (!name || !email || !mobile) continue;
+      if (!slaeId || !name) continue;
 
-      const userExists = await User.findOne({ email });
-      if (userExists) continue; // Skip existing email
+      const email = `${slaeId.toLowerCase()}@lcp.com`;
+      const userExists = await User.findOne({ $or: [{ email }, { slaeId }] });
+      if (userExists) continue; // Skip existing
 
       const user = await User.create({
         name,
         email,
-        mobile: mobile.toString(),
-        password,
+        mobile: '9999999999',
+        password: 'password123',
         role: 'Student',
         status: 'Active',
+        slaeId,
+        technicalBatch: batchName,
       });
 
       await Student.create({
         user: user._id,
-        collegeName,
-        degree,
-        department,
-        yearOfPassing: yearOfPassing.toString(),
+        collegeName: '',
+        degree: '',
+        department: '',
+        yearOfPassing: '',
       });
 
       await Placement.create({ student: user._id });
+
+      if (batchName) {
+        await syncStudentBatchesFromStrings(user._id);
+      }
+
       importCount++;
     }
 

@@ -230,6 +230,27 @@ const StudentManagement = () => {
     toast.success('Excel file downloaded!');
   };
 
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        'SLAEID': 'SLA001',
+        'Name': 'John Doe',
+        'Batch': 'Elite Full Stack Web Dev Batch A'
+      },
+      {
+        'SLAEID': 'SLA002',
+        'Name': 'Jane Smith',
+        'Batch': 'APT1'
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
+    XLSX.writeFile(workbook, 'Student_Import_Template.xlsx');
+    toast.success('Template downloaded successfully!');
+  };
+
   // Export to PDF client-side
   const exportToPDF = () => {
     if (students.length === 0) {
@@ -1152,6 +1173,22 @@ const StudentManagement = () => {
               </div>
 
               <form onSubmit={handleExcelImport} className="space-y-4">
+                {/* Excel Template Download Card */}
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900/40 p-3.5 rounded-2xl border border-gray-150 dark:border-gray-800/80">
+                  <div className="pr-2">
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">Excel Template</p>
+                    <p className="text-[10px] text-gray-400">Minimal required columns template</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={downloadTemplate}
+                    className="flex items-center space-x-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer shrink-0"
+                  >
+                    <FileSpreadsheet size={13} />
+                    <span>Download Model</span>
+                  </button>
+                </div>
+
                 <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-indigo-50/10 transition-colors relative cursor-pointer">
                   <input
                     type="file"
@@ -1166,7 +1203,7 @@ const StudentManagement = () => {
                     <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                       {excelFile ? excelFile.name : 'Click or Drag Excel sheet here'}
                     </p>
-                    <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: Name, Email, Mobile)</p>
+                    <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: SLAEID, Name, Batch)</p>
                   </div>
                 </div>
 
