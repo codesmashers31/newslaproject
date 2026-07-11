@@ -17,15 +17,14 @@ const scoreSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    required: true,
-    enum: ['Not Started', 'In Progress', 'Completed', 'Mastered'],
-    default: 'Not Started',
+    default: 'Not Evaluated',
+  },
+  mockStatus: {
+    type: String,
+    default: 'Not Evaluated',
   },
   marks: {
     type: Number,
-    required: true,
-    min: 0,
-    max: 10,
     default: 0,
   },
   remarks: {

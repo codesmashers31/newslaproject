@@ -53,7 +53,7 @@ const StudentScorecards = () => {
     return (
       <div className="flex justify-center space-x-2.5">
         <div 
-          className={`h-4.5 w-4.5 rounded-full border-2 border-gray-400 flex items-center justify-center ${inProgress ? 'bg-indigo-650 border-indigo-655' : 'bg-transparent'}`}
+          className={`h-4.5 w-4.5 rounded-full border-2 border-gray-400 flex items-center justify-center ${inProgress ? 'bg-indigo-600 border-indigo-600' : 'bg-transparent'}`}
           title="In Progress"
         >
           {inProgress && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -264,7 +264,7 @@ const StudentScorecards = () => {
               {activeTab === 'aptitude' ? 'Aptitude Scorecard' : 'Communication Scorecard'}
             </h3>
           </div>
-          <span className="text-[10px] font-bold text-gray-450 tracking-wider">L&D Department</span>
+          <span className="text-[10px] font-bold text-gray-400 tracking-wider">L&D Department</span>
         </div>
 
         <div className="grid grid-cols-4 gap-4 mb-6 items-center">
@@ -350,15 +350,15 @@ const StudentScorecards = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-12 pt-6 border-t border-dashed border-gray-350 text-center text-xs font-semibold">
+        <div className="grid grid-cols-2 gap-12 pt-6 border-t border-dashed border-gray-300 text-center text-xs font-semibold">
           <div className="flex flex-col items-center">
-            <div className="h-10 w-36 border-b border-gray-400 mb-2 font-serif italic text-gray-550 text-base">
+            <div className="h-10 w-36 border-b border-gray-400 mb-2 font-serif italic text-gray-500 text-base">
               {activeTab === 'aptitude' ? 'Aptitude Mentor' : 'Communication Mentor'}
             </div>
             <span className="text-gray-400 uppercase text-[9px] tracking-widest">Mentor Signature</span>
           </div>
           <div className="flex flex-col items-center">
-            <div className="h-10 w-36 border-b border-gray-400 mb-2 font-serif italic text-gray-550 text-base">
+            <div className="h-10 w-36 border-b border-gray-400 mb-2 font-serif italic text-gray-500 text-base">
               SLA Coordinator
             </div>
             <span className="text-gray-400 uppercase text-[9px] tracking-widest">Manager Signature</span>

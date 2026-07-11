@@ -12,11 +12,15 @@ import {
   deleteBatch,
   getTrainers,
   addTrainer,
+  updateTrainer,
+  deleteTrainer,
   updateTrainerStatus,
   resetTrainerPassword,
+  updateTrainerBatches,
   updatePlacementDetails,
   getAttendanceLogs
 } from '../controllers/adminController.js';
+import { generateStudentAIRoadmapForAdmin } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
 
@@ -35,6 +39,7 @@ router.post('/students', addStudent);
 router.put('/students/:id', editStudent);
 router.delete('/students/:id', deleteStudent);
 router.post('/students/import', upload.single('file'), importStudentsExcel);
+router.post('/students/:userId/ai-roadmap', generateStudentAIRoadmapForAdmin);
 
 // Batch Management
 router.get('/batches', getBatches);
@@ -45,8 +50,11 @@ router.delete('/batches/:id', deleteBatch);
 // Trainer Management
 router.get('/trainers', getTrainers);
 router.post('/trainers', addTrainer);
+router.put('/trainers/:id', updateTrainer);
+router.delete('/trainers/:id', deleteTrainer);
 router.put('/trainers/:id/status', updateTrainerStatus);
 router.put('/trainers/:id/reset-password', resetTrainerPassword);
+router.put('/trainers/:id/batches', updateTrainerBatches);
 
 // Placements
 router.put('/placements/:studentId', upload.single('offerLetter'), updatePlacementDetails);

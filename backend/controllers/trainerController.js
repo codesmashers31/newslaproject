@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Batch from '../models/Batch.js';
 import Attendance from '../models/Attendance.js';
@@ -6,13 +7,15 @@ import Student from '../models/Student.js';
 import Notification from '../models/Notification.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import jwt from 'jsonwebtoken';
+import { syncStudentTrainers, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
 
 // Helper to map trainer role to score category
 const getCategoryByRole = (role) => {
   if (role === 'Aptitude Trainer') return 'Aptitude';
   if (role === 'Communication Trainer') return 'Communication';
   if (role === 'Technical Trainer') return 'Technical';
-  return null;
+  if (role === 'Admin' || role === 'Super Admin') return 'Admin';
+  return 'General';
 };
 
 // @desc    Get all students in batches assigned to this trainer
@@ -27,25 +30,77 @@ export const getAssignedStudents = async (req, res) => {
 
     // Find batches where this trainer is assigned
     const batches = await Batch.find({ trainers: req.user._id })
-      .populate('students', 'name email mobile status')
+      .populate('students', 'name email mobile status slaeId technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
       .lean();
 
-    // Consolidate student details
+    // Fetch all batches in the database populated with trainers to resolve trainer names dynamically
+    const allBatches = await Batch.find()
+      .populate('trainers', 'name role')
+      .lean();
+
+    const batchTrainerMap = {};
+    for (const b of allBatches) {
+      let trainerObj = null;
+      if (b.course === 'Technical Training') {
+        trainerObj = b.trainers?.find(t => t.role === 'Technical Trainer') || b.trainers?.[0];
+      } else if (b.course === 'Communication Skills') {
+        trainerObj = b.trainers?.find(t => t.role === 'Communication Trainer') || b.trainers?.[0];
+      } else if (b.course === 'Aptitude & Reasoning') {
+        trainerObj = b.trainers?.find(t => t.role === 'Aptitude Trainer') || b.trainers?.[0];
+      }
+      if (trainerObj) {
+        batchTrainerMap[b._id.toString()] = trainerObj.name;
+        batchTrainerMap[b.name.trim().toLowerCase()] = trainerObj.name;
+      }
+    }
+
+    // Also fetch all students created/assigned in User table so non-batched students appear too
+    const allStudentUsers = await User.find({ role: 'Student' })
+      .select('name email mobile status slaeId technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
+      .lean();
+
     const studentMap = {};
-    
+
+    for (const std of allStudentUsers) {
+      studentMap[std._id] = {
+        _id: std._id,
+        slaeId: std.slaeId || `SLA-${std._id.toString().slice(-5).toUpperCase()}`,
+        name: std.name,
+        email: std.email,
+        mobile: std.mobile || 'N/A',
+        status: std.status || 'Active',
+        technicalTrainer: std.technicalTrainer || '',
+        communicationTrainer: std.communicationTrainer || '',
+        aptitudeTrainer: std.aptitudeTrainer || '',
+        technicalBatch: std.technicalBatch || '',
+        communicationBatch: std.communicationBatch || '',
+        aptitudeBatch: std.aptitudeBatch || '',
+        batches: []
+      };
+    }
+
     for (const batch of batches) {
       for (const std of batch.students) {
         if (!studentMap[std._id]) {
           studentMap[std._id] = {
             _id: std._id,
+            slaeId: std.slaeId || `SLA-${std._id.toString().slice(-5).toUpperCase()}`,
             name: std.name,
             email: std.email,
-            mobile: std.mobile,
-            status: std.status,
+            mobile: std.mobile || 'N/A',
+            status: std.status || 'Active',
+            technicalTrainer: std.technicalTrainer || '',
+            communicationTrainer: std.communicationTrainer || '',
+            aptitudeTrainer: std.aptitudeTrainer || '',
+            technicalBatch: std.technicalBatch || '',
+            communicationBatch: std.communicationBatch || '',
+            aptitudeBatch: std.aptitudeBatch || '',
             batches: [{ _id: batch._id, name: batch.name, course: batch.course }]
           };
         } else {
-          studentMap[std._id].batches.push({ _id: batch._id, name: batch.name, course: batch.course });
+          if (!studentMap[std._id].batches.some(b => String(b._id) === String(batch._id))) {
+            studentMap[std._id].batches.push({ _id: batch._id, name: batch.name, course: batch.course });
+          }
         }
       }
     }
@@ -55,14 +110,37 @@ export const getAssignedStudents = async (req, res) => {
     // Fetch profiles, scores, and attendance counts
     const profiles = await Student.find({ user: { $in: studentIds } }).lean();
     const scores = await Score.find({ student: { $in: studentIds }, category }).lean();
+    const attendanceLogs = await Attendance.find({ student: { $in: studentIds } }).lean();
     
     const studentsList = studentIds.map(id => {
       const studentData = studentMap[id];
+      
+      let resolvedTechnicalTrainer = studentData.technicalTrainer || '';
+      if (!resolvedTechnicalTrainer && studentData.technicalBatch && batchTrainerMap[studentData.technicalBatch.trim().toLowerCase()]) {
+        resolvedTechnicalTrainer = batchTrainerMap[studentData.technicalBatch.trim().toLowerCase()];
+      }
+
+      let resolvedCommunicationTrainer = studentData.communicationTrainer || '';
+      if (!resolvedCommunicationTrainer && studentData.communicationBatch && batchTrainerMap[studentData.communicationBatch.trim().toLowerCase()]) {
+        resolvedCommunicationTrainer = batchTrainerMap[studentData.communicationBatch.trim().toLowerCase()];
+      }
+
+      let resolvedAptitudeTrainer = studentData.aptitudeTrainer || '';
+      if (!resolvedAptitudeTrainer && studentData.aptitudeBatch && batchTrainerMap[studentData.aptitudeBatch.trim().toLowerCase()]) {
+        resolvedAptitudeTrainer = batchTrainerMap[studentData.aptitudeBatch.trim().toLowerCase()];
+      }
+
       const profile = profiles.find(p => p.user.toString() === id.toString()) || {};
       const studentScores = scores.filter(s => s.student.toString() === id.toString());
       
+      const stuLogs = attendanceLogs.filter(a => a.student?.toString() === id.toString());
+      const totalDays = stuLogs.length;
+      const presentDays = stuLogs.filter(a => a.status === 'Present' || a.status === 'Late').length;
+      const calcAttendancePct = totalDays > 0 
+        ? Math.round((presentDays / totalDays) * 100) 
+        : (profile.attendance !== undefined ? Number(profile.attendance) : 85);
+
       // Calculate overall progress in trainer's category
-      // Hardcode total modules based on category
       let totalModules = 16; // Aptitude
       if (category === 'Communication') totalModules = 11;
       if (category === 'Technical') totalModules = 14;
@@ -72,7 +150,11 @@ export const getAssignedStudents = async (req, res) => {
 
       return {
         ...studentData,
+        technicalTrainer: resolvedTechnicalTrainer,
+        communicationTrainer: resolvedCommunicationTrainer,
+        aptitudeTrainer: resolvedAptitudeTrainer,
         profile,
+        attendancePct: calcAttendancePct,
         progress: progressPercent,
         scores: studentScores,
       };
@@ -91,7 +173,7 @@ export const markAttendance = async (req, res) => {
   const { batchId, date, records } = req.body; // records: [{ studentId, status: 'Present'|'Absent'|'Late' }]
 
   try {
-    if (!batchId || !date || !records || !Array.isArray(records)) {
+    if (!date || !records || !Array.isArray(records)) {
       return res.status(400).json({ message: 'Invalid attendance submit details' });
     }
 
@@ -101,11 +183,32 @@ export const markAttendance = async (req, res) => {
     const savedRecords = [];
 
     for (const rec of records) {
+      let effectiveBatchId = batchId;
+      if (!effectiveBatchId || effectiveBatchId === 'all' || !mongoose.Types.ObjectId.isValid(effectiveBatchId)) {
+        const stu = await User.findById(rec.studentId);
+        let foundBatchId = null;
+        if (stu?.batches && stu.batches.length > 0 && mongoose.Types.ObjectId.isValid(stu.batches[0])) {
+          foundBatchId = stu.batches[0];
+        }
+        if (!foundBatchId) {
+          const batchName = stu?.communicationBatch || stu?.technicalBatch || stu?.aptitudeBatch;
+          if (batchName) {
+            const b = await Batch.findOne({ name: new RegExp(`^${batchName}$`, 'i') });
+            if (b) foundBatchId = b._id;
+          }
+        }
+        if (!foundBatchId) {
+          const anyBatch = await Batch.findOne();
+          foundBatchId = anyBatch?._id;
+        }
+        effectiveBatchId = foundBatchId;
+      }
+
       // Upsert attendance
       const record = await Attendance.findOneAndUpdate(
-        { student: rec.studentId, batch: batchId, date: formattedDate },
+        { student: rec.studentId, batch: effectiveBatchId, date: formattedDate },
         { 
-          status: rec.status, 
+          status: rec.status || 'Present', 
           remarks: rec.remarks || '',
           markedBy: req.user._id 
         },
@@ -131,7 +234,7 @@ export const markAttendance = async (req, res) => {
 // @route   POST /api/trainer/score
 // @access  Private (Trainer only)
 export const updateStudentScore = async (req, res) => {
-  const { studentId, moduleName, status, marks, remarks } = req.body;
+  const { studentId, moduleName, status, mockStatus, marks, remarks } = req.body;
 
   try {
     const category = getCategoryByRole(req.user.role);
@@ -139,20 +242,21 @@ export const updateStudentScore = async (req, res) => {
       return res.status(403).json({ message: 'User is not a valid trainer' });
     }
 
-    if (!studentId || !moduleName || !status) {
-      return res.status(400).json({ message: 'Student, module name, and status are required' });
+    const effectiveStatus = mockStatus || status || 'Completed';
+    const modName = moduleName || 'Mock Evaluation';
+
+    if (!studentId) {
+      return res.status(400).json({ message: 'Student ID is required' });
     }
 
-    const marksNum = Number(marks);
-    if (isNaN(marksNum) || marksNum < 0 || marksNum > 10) {
-      return res.status(400).json({ message: 'Marks must be a number between 0 and 10' });
-    }
+    const marksNum = isNaN(Number(marks)) ? 0 : Number(marks);
 
     // Upsert Score
     const score = await Score.findOneAndUpdate(
-      { student: studentId, moduleName, category },
+      { student: studentId, moduleName: modName, category },
       { 
-        status, 
+        status: effectiveStatus,
+        mockStatus: effectiveStatus, 
         marks: marksNum, 
         remarks: remarks || '', 
         updatedBy: req.user._id 
@@ -163,11 +267,11 @@ export const updateStudentScore = async (req, res) => {
     // Notify student
     await Notification.create({
       recipient: studentId,
-      title: 'Module Progress Graded',
-      message: `Your progress on module "${moduleName}" has been updated to "${status}" with score ${marksNum}/10 by ${req.user.name}.`
+      title: 'Mock Performance Updated',
+      message: `Your mock evaluation performance for "${modName}" has been updated to "${effectiveStatus}" by ${req.user.name}.`
     });
 
-    res.json({ message: 'Score updated successfully', score });
+    res.json({ message: 'Mock evaluation updated successfully', score });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -187,6 +291,8 @@ export const startSession = async (req, res) => {
     // Set other sessions for this trainer to inactive
     await AttendanceSession.updateMany({ trainer: req.user._id, isActive: true }, { isActive: false });
 
+    const trainerIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '';
+
     const session = await AttendanceSession.create({
       trainer: req.user._id,
       batch: batchId,
@@ -195,6 +301,7 @@ export const startSession = async (req, res) => {
       roomNumber: roomNumber.toString(),
       startTime: new Date(),
       isActive: true,
+      ipAddress: trainerIp
     });
 
     res.status(201).json(session);
@@ -227,10 +334,10 @@ export const getQRToken = async (req, res) => {
         generatedAt: Date.now()
       },
       process.env.JWT_SECRET || 'lcp_secret_key_123456',
-      { expiresIn: '2m' }
+      { expiresIn: '15s' }
     );
 
-    res.json({ token, expiresAt: Date.now() + 2 * 60 * 1000 });
+    res.json({ token, expiresAt: Date.now() + 15 * 1000 });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -425,6 +532,234 @@ export const getTrainerDashboardStats = async (req, res) => {
       monthlyAttendance: monthlyBreakdown,
       recentAttendance,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getTrainerBatches = async (req, res) => {
+  try {
+    const batches = await Batch.find({}).sort({ createdAt: -1 }).lean();
+    res.json(batches);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getBatchAttendance = async (req, res) => {
+  const { batchId, date } = req.query;
+
+  try {
+    if (!date) {
+      return res.status(400).json({ message: 'Date is required' });
+    }
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const query = {
+      date: { $gte: startOfDay, $lte: endOfDay }
+    };
+
+    const records = await Attendance.find(query).lean();
+
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const createBatchByTrainer = async (req, res) => {
+  const { name, batchId, course, schedule, status, trainerName } = req.body;
+
+  try {
+    if (!name) {
+      return res.status(400).json({ message: 'Batch name is required' });
+    }
+
+    const generatedBatchId = batchId || `BATCH-${Date.now().toString().slice(-4)}`;
+    const courseType = course || (req.user.role === 'Communication Trainer' ? 'Communication Skills' : req.user.role === 'Aptitude Trainer' ? 'Aptitude & Reasoning' : 'Technical Training');
+
+    const batch = await Batch.create({
+      name,
+      batchId: generatedBatchId,
+      course: courseType,
+      trainerName: trainerName || req.user.name || 'Assigned Trainer',
+      schedule: schedule || 'Mon-Fri (09:00 AM - 12:00 PM)',
+      trainers: [req.user._id],
+      students: [],
+      status: status || 'Active'
+    });
+
+    res.status(201).json(batch);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addStudentByTrainer = async (req, res) => {
+  const {
+    slaeId,
+    name,
+    email,
+    mobile,
+    password,
+    batchId,
+    technicalTrainer,
+    technicalBatch,
+    communicationBatch,
+    aptitudeBatch,
+    status
+  } = req.body;
+
+  try {
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
+
+    let user = await User.findOne({ email });
+    const generatedSlaeId = slaeId || `SLA-${Date.now().toString().slice(-5)}`;
+
+    if (user) {
+      // Update existing student fields
+      user.slaeId = slaeId || user.slaeId || generatedSlaeId;
+      if (technicalTrainer) user.technicalTrainer = technicalTrainer;
+      if (technicalBatch) user.technicalBatch = technicalBatch;
+      if (communicationBatch) user.communicationBatch = communicationBatch;
+      if (aptitudeBatch) user.aptitudeBatch = aptitudeBatch;
+      if (status) user.status = status;
+      await user.save();
+
+      if (batchId) {
+        await Batch.findByIdAndUpdate(batchId, { $addToSet: { students: user._id } });
+      }
+      await syncStudentBatchesFromStrings(user._id);
+      return res.status(200).json({ message: 'Existing student updated and enrolled in batch successfully', user });
+    }
+
+    user = await User.create({
+      name,
+      email,
+      mobile: mobile || '',
+      password: password || 'slastudent123',
+      role: 'Student',
+      slaeId: generatedSlaeId,
+      technicalTrainer: technicalTrainer || req.user.name || '',
+      technicalBatch: technicalBatch || '',
+      communicationBatch: communicationBatch || '',
+      aptitudeBatch: aptitudeBatch || '',
+      status: status || 'Active'
+    });
+
+    await Student.create({ user: user._id });
+
+    if (batchId) {
+      await Batch.findByIdAndUpdate(batchId, { $addToSet: { students: user._id } });
+    }
+
+    await syncStudentBatchesFromStrings(user._id);
+
+    res.status(201).json({ message: 'Student created successfully', user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateBatchByTrainer = async (req, res) => {
+  const { id } = req.params;
+  const { batchId, name, schedule, status, course, trainerName } = req.body;
+
+  try {
+    const batch = await Batch.findById(id);
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found' });
+    }
+
+    if (batchId !== undefined) batch.batchId = batchId;
+    if (name !== undefined) batch.name = name;
+    if (schedule !== undefined) batch.schedule = schedule;
+    if (status !== undefined) batch.status = status;
+    if (course !== undefined) batch.course = course;
+    if (trainerName !== undefined) batch.trainerName = trainerName;
+
+    await batch.save();
+    res.status(200).json(batch);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteBatchByTrainer = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const batch = await Batch.findById(id);
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found' });
+    }
+
+    await Batch.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Batch deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateStudentByTrainer = async (req, res) => {
+  const { id } = req.params;
+  const {
+    slaeId,
+    name,
+    email,
+    mobile,
+    technicalTrainer,
+    technicalBatch,
+    communicationBatch,
+    aptitudeBatch,
+    status
+  } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    if (slaeId !== undefined) user.slaeId = slaeId;
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (mobile !== undefined) user.mobile = mobile;
+    if (technicalTrainer !== undefined) user.technicalTrainer = technicalTrainer;
+    if (technicalBatch !== undefined) user.technicalBatch = technicalBatch;
+    if (communicationBatch !== undefined) user.communicationBatch = communicationBatch;
+    if (aptitudeBatch !== undefined) user.aptitudeBatch = aptitudeBatch;
+    if (status !== undefined) user.status = status;
+
+    await user.save();
+    await syncStudentBatchesFromStrings(user._id);
+    res.status(200).json({ message: 'Student updated successfully', user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteStudentByTrainer = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    await User.findByIdAndDelete(id);
+    await Student.deleteOne({ user: id });
+    await Batch.updateMany({ students: id }, { $pull: { students: id } });
+
+    res.status(200).json({ message: 'Student deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

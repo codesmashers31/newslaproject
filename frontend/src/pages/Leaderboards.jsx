@@ -68,7 +68,7 @@ const Leaderboards = () => {
     { 
       order: 'order-1', 
       height: 'h-32', 
-      bg: 'bg-gradient-to-t from-slate-400/20 to-slate-350/5 dark:from-slate-500/30 dark:to-slate-400/5', 
+      bg: 'bg-gradient-to-t from-slate-400/20 to-slate-300/5 dark:from-slate-500/30 dark:to-slate-400/5', 
       border: 'border-slate-300/30 dark:border-slate-400/40', 
       text: 'text-slate-400',
       label: '2nd'
@@ -77,7 +77,7 @@ const Leaderboards = () => {
       order: 'order-3', 
       height: 'h-28', 
       bg: 'bg-gradient-to-t from-amber-700/20 to-amber-600/5 dark:from-amber-800/30 dark:to-amber-700/5', 
-      border: 'border-amber-700/30 dark:border-amber-850/40', 
+      border: 'border-amber-700/30 dark:border-amber-800/40', 
       text: 'text-amber-700',
       label: '3rd'
     }
@@ -126,7 +126,7 @@ const Leaderboards = () => {
       )}
 
       {/* Filters and Search */}
-      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-250 dark:border-gray-800 rounded-3xl p-6 backdrop-blur-md shadow-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 backdrop-blur-md shadow-xl flex flex-col md:flex-row gap-4 items-center justify-between">
         
         {/* Search */}
         <div className="relative w-full md:max-w-xs">
@@ -178,11 +178,11 @@ const Leaderboards = () => {
       </div>
 
       {/* Rankings List Table */}
-      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-250 dark:border-gray-800 rounded-3xl overflow-hidden backdrop-blur-md shadow-xl">
+      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden backdrop-blur-md shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/10 text-left text-xs font-semibold text-gray-450 dark:text-gray-400">
+              <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/10 text-left text-xs font-semibold text-gray-400 dark:text-gray-400">
                 <th className="px-6 py-4.5 font-bold uppercase tracking-wider text-center">Inst. Rank</th>
                 <th className="px-6 py-4.5 font-bold uppercase tracking-wider text-center">Batch Rank</th>
                 <th className="px-6 py-4.5 font-bold uppercase tracking-wider">Student</th>
@@ -191,11 +191,11 @@ const Leaderboards = () => {
                 <th className="px-6 py-4.5 font-bold uppercase tracking-wider text-center">Grade</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-150 dark:divide-gray-800/80 text-sm">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800/80 text-sm">
               {filteredLeaderboard.map((student, idx) => (
                 <tr
                   key={student.studentId}
-                  className="hover:bg-indigo-50/15 dark:hover:bg-gray-850/20 transition-all"
+                  className="hover:bg-indigo-50/15 dark:hover:bg-gray-800/20 transition-all"
                 >
                   <td className="px-6 py-4 text-center font-black text-gray-700 dark:text-gray-300">
                     {student.instituteRank === 1 ? (
@@ -203,7 +203,7 @@ const Leaderboards = () => {
                     ) : student.instituteRank === 2 ? (
                       <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 font-bold">2</span>
                     ) : student.instituteRank === 3 ? (
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-700/10 dark:bg-amber-900/10 text-amber-750 dark:text-amber-500 font-bold">3</span>
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-700/10 dark:bg-amber-900/10 text-amber-700 dark:text-amber-500 font-bold">3</span>
                     ) : (
                       `#${student.instituteRank}`
                     )}
@@ -228,7 +228,7 @@ const Leaderboards = () => {
                       student.grade === 'A+' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400' :
                       student.grade === 'A' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400' :
                       student.grade === 'B' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400' :
-                      student.grade === 'C' ? 'bg-orange-100 text-orange-850 dark:bg-orange-950/30 dark:text-orange-400' :
+                      student.grade === 'C' ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/30 dark:text-orange-400' :
                       'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-400'
                     }`}>
                       {student.grade}
@@ -238,7 +238,7 @@ const Leaderboards = () => {
               ))}
               {filteredLeaderboard.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-450 dark:text-gray-500 font-medium">
+                  <td colSpan={6} className="px-6 py-10 text-center text-gray-400 dark:text-gray-500 font-medium">
                     No student rankings match selected criteria.
                   </td>
                 </tr>

@@ -3,8 +3,22 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Mail, Lock, LogIn, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { 
+  Mail, 
+  Lock, 
+  ArrowRight, 
+  Eye, 
+  EyeOff, 
+  GraduationCap, 
+  Users, 
+  BookOpen, 
+  Trophy, 
+  Quote, 
+  ShieldCheck, 
+  HelpCircle 
+} from 'lucide-react';
 import logoSla from '../assets/logosla.png';
+import loginImage from '../assets/loginimage.svg';
 
 const Login = () => {
   const { login } = useAuth();
@@ -27,12 +41,10 @@ const Login = () => {
 
     if (result.success) {
       toast.success('Logged in successfully!');
-      
-      // Redirect based on role
       const storedUser = localStorage.getItem('userInfo');
       if (storedUser) {
         const { role } = JSON.parse(storedUser);
-        if (role === 'Admin') {
+        if (role === 'Admin' || role === 'Super Admin') {
           navigate('/admin');
         } else if (['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'].includes(role)) {
           navigate('/trainer');
@@ -46,116 +58,92 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0d0e12] login-page-bg p-4">
-      <div className="absolute inset-0 bg-grid-black/[0.015] bg-[size:20px_20px] pointer-events-none" />
-      
-      <motion.div 
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-800 selection:bg-indigo-500 selection:text-white relative">
+      {/* Main Login Card */}
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-5xl grid md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-[#12131a] border border-gray-200/60 dark:border-gray-800/80 backdrop-blur-lg"
+        className="w-full max-w-md mx-4 p-10 py-12 bg-white border border-slate-200/80 rounded-3xl shadow-xl space-y-8"
       >
-        {/* Left Side - Brand & Info */}
-        <div className="hidden md:flex flex-col justify-between p-12 bg-white dark:bg-[#12131a] text-gray-900 dark:text-gray-100 relative overflow-hidden border-r border-gray-100 dark:border-gray-800/80">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-100/50 dark:bg-indigo-950/10 rounded-full blur-3xl opacity-40" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-100/50 dark:bg-pink-950/10 rounded-full blur-3xl opacity-40" />
-          
-          <div className="relative z-10">
-            <div className="h-14 flex items-center">
-              <img src={logoSla} alt="LCP Logo" className="h-12 w-auto object-contain" />
-            </div>
-            <h2 className="mt-8 text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">LCP Management</h2>
-            <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Learning & Career Progress dashboard. Elevating training institute evaluations with secure, digital analytics and tracking.
+        {/* Top SLA Logo & Brand Header */}
+        <div className="flex flex-col items-center text-center space-y-4">
+          <img src={logoSla} alt="Softlogic Logo" className="h-16 w-auto object-contain mb-2" />
+          <div>
+            <h2 className="text-2xl font-black tracking-tight text-slate-900">
+              Softlogic LCP Portal
+            </h2>
+            <p className="text-xs text-slate-500 mt-1.5 font-medium">
+              Student & Career Portal • Login to Continue
             </p>
-          </div>
-
-          <div className="relative z-10">
-            <blockquote className="border-l-2 border-gray-300 dark:border-gray-700 pl-4 italic text-sm text-gray-500 dark:text-gray-400">
-              "Replace paper scorecards with modular evaluation tracking for student placements."
-            </blockquote>
-            <p className="mt-4 text-xs font-semibold text-gray-400 dark:text-gray-500">LCP Training Platform &copy; 2026</p>
           </div>
         </div>
 
-        {/* Right Side - Form */}
-        <div className="p-8 sm:p-12 flex flex-col justify-center">
-          <div className="w-full max-w-md mx-auto">
-            <div className="flex md:hidden items-center justify-center mb-6">
-              <img src={logoSla} alt="LCP Logo" className="h-10 w-auto object-contain" />
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email Address */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Email Address
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <Mail size={18} />
+              </div>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your registered email"
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium placeholder-slate-400"
+              />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome Back</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Please sign in to your dashboard</p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-              <div>
-                <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-2">Email Address</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                    <Mail size={18} />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                    placeholder="name@institute.com"
-                  />
-                </div>
+          {/* Password */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <Lock size={18} />
               </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-2">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                    <Lock size={18} />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                    placeholder="••••••••"
-                  />
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setShowPassword(!showPassword)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPassword(!showPassword); }}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-250 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </span>
-                </div>
-              </div>
-
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full pl-12 pr-12 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium placeholder-slate-400"
+              />
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 dark:shadow-none flex items-center justify-center space-x-2 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
               >
-                {loading ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <>
-                    <span>Login</span>
-                    <LogIn size={18} />
-                  </>
-                )}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </form>
-
-            <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              New here?{' '}
-              <Link to="/register" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center">
-                <span>Create an account</span>
-                <ArrowRight size={14} className="ml-1" />
-              </Link>
-            </p>
+            </div>
           </div>
-        </div>
+
+          {/* Login Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-lg shadow-indigo-600/10 flex items-center justify-center space-x-2 transition disabled:opacity-50 cursor-pointer mt-4"
+          >
+            {loading ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <>
+                <span>Login to Portal</span>
+                <ArrowRight size={18} />
+              </>
+            )}
+          </button>
+        </form>
       </motion.div>
     </div>
   );

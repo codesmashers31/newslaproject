@@ -14,11 +14,16 @@ import {
   UserCheck, 
   X,
   Calendar,
-  Briefcase
+  Briefcase,
+  Sparkles,
+  BookOpen,
+  Hourglass,
+  Sliders,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
@@ -36,13 +41,38 @@ const StudentManagement = () => {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
 
+  const [openDropdownAdd, setOpenDropdownAdd] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
+  const [openDropdownEdit, setOpenDropdownEdit] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
+  
+  const [batchSearchAdd, setBatchSearchAdd] = useState('');
+  const [techSearchAdd, setTechSearchAdd] = useState('');
+  const [commSearchAdd, setCommSearchAdd] = useState('');
+  const [aptiSearchAdd, setAptiSearchAdd] = useState('');
+
+  const [batchSearchEdit, setBatchSearchEdit] = useState('');
+  const [techSearchEdit, setTechSearchEdit] = useState('');
+  const [commSearchEdit, setCommSearchEdit] = useState('');
+  const [aptiSearchEdit, setAptiSearchEdit] = useState('');
+
+  // AI Study Planner States
+  const [adminConfiguringRoadmap, setAdminConfiguringRoadmap] = useState(false);
+  const [adminTrack, setAdminTrack] = useState('MERN Full Stack Developer');
+  const [adminSkills, setAdminSkills] = useState('');
+  const [adminHours, setAdminHours] = useState(4);
+  const [adminRoadmapLoading, setAdminRoadmapLoading] = useState(false);
+
   // Forms
+  const [trainers, setTrainers] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     mobile: '',
     password: '',
     batchId: '',
+    batchIds: [],
+    technicalTrainer: '',
+    communicationTrainer: '',
+    aptitudeTrainer: '',
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -62,13 +92,21 @@ const StudentManagement = () => {
     linkedin: '',
     github: '',
     batchId: '',
+    batchIds: [],
+    technicalTrainer: '',
+    communicationTrainer: '',
+    aptitudeTrainer: '',
   });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const batchRes = await API.get('/admin/batches');
+      const [batchRes, trainerRes] = await Promise.all([
+        API.get('/admin/batches'),
+        API.get('/trainer/trainers').catch(() => ({ data: [] }))
+      ]);
       setBatches(batchRes.data);
+      setTrainers(trainerRes.data || []);
 
       const params = {};
       if (search) params.search = search;
@@ -87,6 +125,15 @@ const StudentManagement = () => {
   useEffect(() => {
     loadData();
   }, [selectedBatch, selectedPlacement]);
+
+  useEffect(() => {
+    const handleCloseDropdowns = () => {
+      setOpenDropdownAdd(null);
+      setOpenDropdownEdit(null);
+    };
+    window.addEventListener('click', handleCloseDropdowns);
+    return () => window.removeEventListener('click', handleCloseDropdowns);
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -259,6 +306,10 @@ const StudentManagement = () => {
       linkedin: student.profile?.linkedin || '',
       github: student.profile?.github || '',
       batchId: student.batch?._id || '',
+      batchIds: student.batches?.map(b => b._id) || [],
+      technicalTrainer: student.technicalTrainer || '',
+      communicationTrainer: student.communicationTrainer || '',
+      aptitudeTrainer: student.aptitudeTrainer || '',
     });
     setEditModalOpen(true);
   };
@@ -266,6 +317,39 @@ const StudentManagement = () => {
   const openDetailsModal = (student) => {
     setSelectedStudent(student);
     setDetailsModalOpen(true);
+    setAdminTrack(student.profile?.aiRoadmap?.targetTrack || 'MERN Full Stack Developer');
+    setAdminSkills(student.profile?.aiRoadmap?.familiarSkills?.join(', ') || student.profile?.skills?.join(', ') || '');
+    setAdminHours(student.profile?.aiRoadmap?.dailyHours || 4);
+    setAdminConfiguringRoadmap(false);
+  };
+
+  const handleAdminGenerateRoadmap = async (e) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+    setAdminRoadmapLoading(true);
+    try {
+      const { data } = await API.post(`/admin/students/${selectedStudent._id}/ai-roadmap`, {
+        targetTrack: adminTrack,
+        familiarSkills: adminSkills,
+        dailyHours: adminHours
+      });
+      toast.success(`AI Study Plan generated successfully for ${selectedStudent.name}!`);
+      
+      const updatedStudent = {
+        ...selectedStudent,
+        profile: {
+          ...selectedStudent.profile,
+          aiRoadmap: data
+        }
+      };
+      setSelectedStudent(updatedStudent);
+      fetchStudents();
+      setAdminConfiguringRoadmap(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to generate study plan');
+    } finally {
+      setAdminRoadmapLoading(false);
+    }
   };
 
   return (
@@ -313,7 +397,7 @@ const StudentManagement = () => {
       </div>
 
       {/* Search & Filters */}
-      <form onSubmit={handleSearchSubmit} className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-4 rounded-2xl backdrop-blur-md grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+      <form onSubmit={handleSearchSubmit} className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
         {/* Search */}
         <div className="relative">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -369,7 +453,7 @@ const StudentManagement = () => {
       </form>
 
       {/* Students Table */}
-      <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl backdrop-blur-md overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -382,7 +466,7 @@ const StudentManagement = () => {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-850">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
               {loading ? (
                 <tr>
                   <td colSpan="6" className="text-center py-10">
@@ -392,7 +476,7 @@ const StudentManagement = () => {
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-gray-500 dark:text-gray-450 text-sm">
+                  <td colSpan="6" className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
                     No students match the criteria.
                   </td>
                 </tr>
@@ -412,10 +496,19 @@ const StudentManagement = () => {
                       {student.mobile}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {student.batch ? (
+                      {student.batches && student.batches.length > 0 ? (
+                        <div className="space-y-1">
+                          {student.batches.map(b => (
+                            <div key={b._id} className="border-b border-gray-100 dark:border-gray-800/40 pb-1 last:border-0 last:pb-0">
+                              <p className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">{b.name}</p>
+                              <p className="text-[9px] text-gray-500 leading-tight">{b.course}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : student.batch ? (
                         <div>
                           <p className="font-semibold text-gray-800 dark:text-gray-300">{student.batch.name}</p>
-                          <p className="text-[10px] text-gray-500">{student.batch.course}</p>
+                          <p className="text-[9px] text-gray-500">{student.batch.course}</p>
                         </div>
                       ) : (
                         <span className="text-xs text-gray-400 italic">Unassigned</span>
@@ -453,14 +546,14 @@ const StudentManagement = () => {
                       </button>
                       <button 
                         onClick={() => openEditModal(student)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-650 transition-colors"
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-600 transition-colors"
                         title="Edit Profile"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(student._id)}
-                        className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-gray-505 hover:text-red-650 transition-colors"
+                        className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-gray-500 hover:text-red-600 transition-colors"
                         title="Delete Student"
                       >
                         <Trash2 size={16} />
@@ -475,17 +568,11 @@ const StudentManagement = () => {
       </div>
 
       {/* CREATE STUDENT MODAL */}
-      <AnimatePresence>
         {createModalOpen && (
           <>
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setCreateModalOpen(false)} />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 m-auto max-w-lg h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 overflow-hidden border border-gray-200 dark:border-gray-800 p-6 space-y-6"
-            >
-              <div className="flex items-center justify-between border-b border-gray-150 dark:border-gray-850 pb-3">
+            <div className="fixed inset-0 bg-black/55 z-40" onClick={() => setCreateModalOpen(false)} />
+            <div className="fixed inset-0 m-auto max-w-lg h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 overflow-hidden border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
                 <h3 className="text-lg font-bold">Add Student</h3>
                 <button onClick={() => setCreateModalOpen(false)} className="text-gray-500 dark:text-gray-400">
                   <X size={20} />
@@ -501,7 +588,7 @@ const StudentManagement = () => {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-850 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-650"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="Name"
                     />
                   </div>
@@ -512,7 +599,7 @@ const StudentManagement = () => {
                       required
                       value={formData.mobile}
                       onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-850 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-650"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="Mobile"
                     />
                   </div>
@@ -525,35 +612,249 @@ const StudentManagement = () => {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-850 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-650"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     placeholder="email@domain.com"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
                     <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1.5">Initial Password</label>
                     <input
                       type="password"
                       required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-850 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-650"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                       placeholder="password123"
                     />
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1.5">Assign Batch</label>
-                    <select
-                      value={formData.batchId}
-                      onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-850 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-650"
+                  
+                  <div className="md:col-span-2 space-y-1.5 relative">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Assign Batches</label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownAdd(openDropdownAdd === 'batches' ? null : 'batches');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
                     >
-                      <option value="">No Batch Assigned</option>
-                      {batches.map(b => (
-                        <option key={b._id} value={b._id}>{b.name}</option>
-                      ))}
-                    </select>
+                      <span className="truncate">
+                        {formData.batchIds && formData.batchIds.length > 0
+                          ? batches.filter(b => formData.batchIds.includes(b._id)).map(b => b.name).join(', ')
+                          : '-- Select Batches --'}
+                      </span>
+                      {openDropdownAdd === 'batches' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {openDropdownAdd === 'batches' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search batch..."
+                          value={batchSearchAdd}
+                          onChange={(e) => setBatchSearchAdd(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <div className="max-h-28 overflow-y-auto space-y-1.5">
+                          {batches
+                            .filter(b => (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchAdd.toLowerCase()))
+                            .map(b => {
+                              const isChecked = formData.batchIds?.includes(b._id);
+                              return (
+                                <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const updatedBatchIds = e.target.checked
+                                        ? [...(formData.batchIds || []), b._id]
+                                        : (formData.batchIds || []).filter(id => id !== b._id);
+                                      setFormData({ ...formData, batchIds: updatedBatchIds });
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                  />
+                                  <span>{b.name} <span className="text-[10px] text-gray-400 font-medium">({b.course})</span></span>
+                                </label>
+                              );
+                            })}
+                          {batches.filter(b => (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchAdd.toLowerCase())).length === 0 && (
+                            <p className="text-[11px] text-gray-400 italic p-1">No matching batches.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="md:col-span-2 space-y-3 pt-2 border-t border-gray-150 dark:border-gray-800">
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Domain Trainers (Multiple Select)</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Technical Trainers */}
+                      <div className="space-y-1.5 relative">
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Technical Trainers</label>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownAdd(openDropdownAdd === 'techTrainers' ? null : 'techTrainers');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="truncate">{formData.technicalTrainer || '-- Select Trainers --'}</span>
+                          {openDropdownAdd === 'techTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                        {openDropdownAdd === 'techTrainers' && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={techSearchAdd}
+                              onChange={(e) => setTechSearchAdd(e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {trainers
+                                .filter(t => t.role === 'Technical Trainer' && t.name.toLowerCase().includes(techSearchAdd.toLowerCase()))
+                                .map(t => {
+                                  const isChecked = formData.technicalTrainer?.split(', ').includes(t.name);
+                                  return (
+                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentList = formData.technicalTrainer ? formData.technicalTrainer.split(', ').filter(Boolean) : [];
+                                          const newList = e.target.checked
+                                            ? [...currentList, t.name]
+                                            : currentList.filter(n => n !== t.name);
+                                          setFormData({ ...formData, technicalTrainer: newList.join(', ') });
+                                        }}
+                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span>{t.name}</span>
+                                    </label>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Communication Trainers */}
+                      <div className="space-y-1.5 relative">
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Communication Trainers</label>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownAdd(openDropdownAdd === 'commTrainers' ? null : 'commTrainers');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="truncate">{formData.communicationTrainer || '-- Select Trainers --'}</span>
+                          {openDropdownAdd === 'commTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                        {openDropdownAdd === 'commTrainers' && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={commSearchAdd}
+                              onChange={(e) => setCommSearchAdd(e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {trainers
+                                .filter(t => t.role === 'Communication Trainer' && t.name.toLowerCase().includes(commSearchAdd.toLowerCase()))
+                                .map(t => {
+                                  const isChecked = formData.communicationTrainer?.split(', ').includes(t.name);
+                                  return (
+                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentList = formData.communicationTrainer ? formData.communicationTrainer.split(', ').filter(Boolean) : [];
+                                          const newList = e.target.checked
+                                            ? [...currentList, t.name]
+                                            : currentList.filter(n => n !== t.name);
+                                          setFormData({ ...formData, communicationTrainer: newList.join(', ') });
+                                        }}
+                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span>{t.name}</span>
+                                    </label>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Aptitude Trainers */}
+                      <div className="space-y-1.5 relative">
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Aptitude Trainers</label>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownAdd(openDropdownAdd === 'aptiTrainers' ? null : 'aptiTrainers');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="truncate">{formData.aptitudeTrainer || '-- Select Trainers --'}</span>
+                          {openDropdownAdd === 'aptiTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                        {openDropdownAdd === 'aptiTrainers' && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={aptiSearchAdd}
+                              onChange={(e) => setAptiSearchAdd(e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {trainers
+                                .filter(t => t.role === 'Aptitude Trainer' && t.name.toLowerCase().includes(aptiSearchAdd.toLowerCase()))
+                                .map(t => {
+                                  const isChecked = formData.aptitudeTrainer?.split(', ').includes(t.name);
+                                  return (
+                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentList = formData.aptitudeTrainer ? formData.aptitudeTrainer.split(', ').filter(Boolean) : [];
+                                          const newList = e.target.checked
+                                            ? [...currentList, t.name]
+                                            : currentList.filter(n => n !== t.name);
+                                          setFormData({ ...formData, aptitudeTrainer: newList.join(', ') });
+                                        }}
+                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span>{t.name}</span>
+                                    </label>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -564,24 +865,16 @@ const StudentManagement = () => {
                   Create Student Account
                 </button>
               </form>
-            </motion.div>
+            </div>
           </>
         )}
-      </AnimatePresence>
 
       {/* EDIT STUDENT MODAL / DRAWER */}
-      <AnimatePresence>
         {editModalOpen && (
           <>
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setEditModalOpen(false)} />
-            <motion.div 
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 max-w-xl w-full bg-white dark:bg-[#12131a] shadow-2xl z-50 overflow-y-auto border-l border-gray-200 dark:border-gray-800 p-6 space-y-6"
-            >
-              <div className="flex items-center justify-between border-b border-gray-150 dark:border-gray-850 pb-3">
+            <div className="fixed inset-0 bg-black/55 z-40" onClick={() => setEditModalOpen(false)} />
+            <div className="fixed inset-y-0 right-0 max-w-xl w-full bg-white dark:bg-[#12131a] shadow-2xl z-50 overflow-y-auto border-l border-gray-200 dark:border-gray-800 p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
                 <h3 className="text-lg font-bold">Edit Student Details</h3>
                 <button onClick={() => setEditModalOpen(false)} className="text-gray-500 dark:text-gray-400">
                   <X size={20} />
@@ -597,7 +890,7 @@ const StudentManagement = () => {
                       required
                       value={editFormData.name}
                       onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
                     />
                   </div>
                   <div>
@@ -607,7 +900,7 @@ const StudentManagement = () => {
                       required
                       value={editFormData.mobile}
                       onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
                     />
                   </div>
                 </div>
@@ -620,7 +913,7 @@ const StudentManagement = () => {
                       required
                       value={editFormData.email}
                       onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
                     />
                   </div>
                   <div>
@@ -628,7 +921,7 @@ const StudentManagement = () => {
                     <select
                       value={editFormData.status}
                       onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-white dark:bg-[#12131a] dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                      className="w-full px-3 py-2 border rounded-xl bg-white dark:bg-[#12131a] dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
@@ -636,27 +929,240 @@ const StudentManagement = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-1.5 uppercase">Assign Batch</label>
-                    <select
-                      value={editFormData.batchId}
-                      onChange={(e) => setEditFormData({ ...editFormData, batchId: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-white dark:bg-[#12131a] dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2 space-y-1.5 relative">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Assign Batches</label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownEdit(openDropdownEdit === 'batches' ? null : 'batches');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
                     >
-                      <option value="">No Batch Assigned</option>
-                      {batches.map(b => (
-                        <option key={b._id} value={b._id}>{b.name}</option>
-                      ))}
-                    </select>
+                      <span className="truncate">
+                        {editFormData.batchIds && editFormData.batchIds.length > 0
+                          ? batches.filter(b => editFormData.batchIds.includes(b._id)).map(b => b.name).join(', ')
+                          : '-- Select Batches --'}
+                      </span>
+                      {openDropdownEdit === 'batches' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {openDropdownEdit === 'batches' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search batch..."
+                          value={batchSearchEdit}
+                          onChange={(e) => setBatchSearchEdit(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <div className="max-h-28 overflow-y-auto space-y-1.5">
+                          {batches
+                            .filter(b => (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchEdit.toLowerCase()))
+                            .map(b => {
+                              const isChecked = editFormData.batchIds?.includes(b._id);
+                              return (
+                                <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const updatedBatchIds = e.target.checked
+                                        ? [...(editFormData.batchIds || []), b._id]
+                                        : (editFormData.batchIds || []).filter(id => id !== b._id);
+                                      setEditFormData({ ...editFormData, batchIds: updatedBatchIds });
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                  />
+                                  <span>{b.name} <span className="text-[10px] text-gray-400 font-medium">({b.course})</span></span>
+                                </label>
+                              );
+                            })}
+                          {batches.filter(b => (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchEdit.toLowerCase())).length === 0 && (
+                            <p className="text-[11px] text-gray-400 italic p-1">No matching batches.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="block mb-1.5 uppercase">College Name</label>
+
+                  <div className="md:col-span-2 space-y-3 pt-2 border-t border-gray-150 dark:border-gray-800">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block">Assign Domain Trainers (Multiple Select)</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Technical Trainers */}
+                      <div className="space-y-1.5 relative">
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Technical Trainers</label>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownEdit(openDropdownEdit === 'techTrainers' ? null : 'techTrainers');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="truncate">{editFormData.technicalTrainer || '-- Select Trainers --'}</span>
+                          {openDropdownEdit === 'techTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                        {openDropdownEdit === 'techTrainers' && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={techSearchEdit}
+                              onChange={(e) => setTechSearchEdit(e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {trainers
+                                .filter(t => t.role === 'Technical Trainer' && t.name.toLowerCase().includes(techSearchEdit.toLowerCase()))
+                                .map(t => {
+                                  const isChecked = editFormData.technicalTrainer?.split(', ').includes(t.name);
+                                  return (
+                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentList = editFormData.technicalTrainer ? editFormData.technicalTrainer.split(', ').filter(Boolean) : [];
+                                          const newList = e.target.checked
+                                            ? [...currentList, t.name]
+                                            : currentList.filter(n => n !== t.name);
+                                          setEditFormData({ ...editFormData, technicalTrainer: newList.join(', ') });
+                                        }}
+                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span>{t.name}</span>
+                                    </label>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Communication Trainers */}
+                      <div className="space-y-1.5 relative">
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Communication Trainers</label>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownEdit(openDropdownEdit === 'commTrainers' ? null : 'commTrainers');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="truncate">{editFormData.communicationTrainer || '-- Select Trainers --'}</span>
+                          {openDropdownEdit === 'commTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                        {openDropdownEdit === 'commTrainers' && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={commSearchEdit}
+                              onChange={(e) => setCommSearchEdit(e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {trainers
+                                .filter(t => t.role === 'Communication Trainer' && t.name.toLowerCase().includes(commSearchEdit.toLowerCase()))
+                                .map(t => {
+                                  const isChecked = editFormData.communicationTrainer?.split(', ').includes(t.name);
+                                  return (
+                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentList = editFormData.communicationTrainer ? editFormData.communicationTrainer.split(', ').filter(Boolean) : [];
+                                          const newList = e.target.checked
+                                            ? [...currentList, t.name]
+                                            : currentList.filter(n => n !== t.name);
+                                          setEditFormData({ ...editFormData, communicationTrainer: newList.join(', ') });
+                                        }}
+                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span>{t.name}</span>
+                                    </label>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Aptitude Trainers */}
+                      <div className="space-y-1.5 relative">
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Aptitude Trainers</label>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownEdit(openDropdownEdit === 'aptiTrainers' ? null : 'aptiTrainers');
+                          }}
+                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="truncate">{editFormData.aptitudeTrainer || '-- Select Trainers --'}</span>
+                          {openDropdownEdit === 'aptiTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                        {openDropdownEdit === 'aptiTrainers' && (
+                          <div 
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search..."
+                              value={aptiSearchEdit}
+                              onChange={(e) => setAptiSearchEdit(e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                            <div className="max-h-24 overflow-y-auto space-y-1">
+                              {trainers
+                                .filter(t => t.role === 'Aptitude Trainer' && t.name.toLowerCase().includes(aptiSearchEdit.toLowerCase()))
+                                .map(t => {
+                                  const isChecked = editFormData.aptitudeTrainer?.split(', ').includes(t.name);
+                                  return (
+                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => {
+                                          const currentList = editFormData.aptitudeTrainer ? editFormData.aptitudeTrainer.split(', ').filter(Boolean) : [];
+                                          const newList = e.target.checked
+                                            ? [...currentList, t.name]
+                                            : currentList.filter(n => n !== t.name);
+                                          setEditFormData({ ...editFormData, aptitudeTrainer: newList.join(', ') });
+                                        }}
+                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                      />
+                                      <span>{t.name}</span>
+                                    </label>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block mb-1.5 uppercase text-xs font-semibold text-gray-600 tracking-wider">College Name</label>
                     <input
                       type="text"
                       value={editFormData.collegeName}
                       onChange={(e) => setEditFormData({ ...editFormData, collegeName: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
                     />
                   </div>
                 </div>
@@ -668,7 +1174,7 @@ const StudentManagement = () => {
                       type="text"
                       value={editFormData.degree}
                       onChange={(e) => setEditFormData({ ...editFormData, degree: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                     />
                   </div>
                   <div>
@@ -677,7 +1183,7 @@ const StudentManagement = () => {
                       type="text"
                       value={editFormData.department}
                       onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                     />
                   </div>
                   <div>
@@ -686,7 +1192,7 @@ const StudentManagement = () => {
                       type="text"
                       value={editFormData.yearOfPassing}
                       onChange={(e) => setEditFormData({ ...editFormData, yearOfPassing: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                     />
                   </div>
                 </div>
@@ -697,7 +1203,7 @@ const StudentManagement = () => {
                     type="text"
                     value={editFormData.skills}
                     onChange={(e) => setEditFormData({ ...editFormData, skills: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm"
+                    className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                     placeholder="React, CSS, Express, MongoDB"
                   />
                 </div>
@@ -709,7 +1215,7 @@ const StudentManagement = () => {
                       type="text"
                       value={editFormData.linkedin}
                       onChange={(e) => setEditFormData({ ...editFormData, linkedin: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                     />
                   </div>
                   <div>
@@ -718,7 +1224,7 @@ const StudentManagement = () => {
                       type="text"
                       value={editFormData.github}
                       onChange={(e) => setEditFormData({ ...editFormData, github: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-100 text-sm"
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm"
                     />
                   </div>
                 </div>
@@ -730,23 +1236,16 @@ const StudentManagement = () => {
                   Save Profile Changes
                 </button>
               </form>
-            </motion.div>
+            </div>
           </>
         )}
-      </AnimatePresence>
 
       {/* IMPORT FROM EXCEL MODAL */}
-      <AnimatePresence>
         {importModalOpen && (
           <>
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setImportModalOpen(false)} />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6"
-            >
-              <div className="flex items-center justify-between border-b border-gray-150 dark:border-gray-850 pb-3">
+            <div className="fixed inset-0 bg-black/55 z-40" onClick={() => setImportModalOpen(false)} />
+            <div className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
                 <h3 className="text-lg font-bold">Import Students from Excel</h3>
                 <button onClick={() => setImportModalOpen(false)} className="text-gray-500 dark:text-gray-400">
                   <X size={20} />
@@ -780,26 +1279,25 @@ const StudentManagement = () => {
                   Upload & Import
                 </button>
               </form>
-            </motion.div>
+            </div>
           </>
         )}
-      </AnimatePresence>
 
       {/* STUDENT PROFILE & PROGRESS DETAILS MODAL */}
-      <AnimatePresence>
         {detailsModalOpen && selectedStudent && (
           <>
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setDetailsModalOpen(false)} />
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="fixed inset-0 m-auto max-w-4xl w-full max-h-[85vh] overflow-y-auto bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6"
-            >
-              <div className="flex items-center justify-between border-b border-gray-150 dark:border-gray-850 pb-3">
+            <div className="fixed inset-0 bg-black/55 z-40" onClick={() => setDetailsModalOpen(false)} />
+            <div className="fixed inset-0 m-auto max-w-4xl w-full max-h-[85vh] overflow-y-auto bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
                 <div>
                   <h3 className="text-lg font-bold">{selectedStudent.name}'s Student File</h3>
-                  <p className="text-xs text-gray-500">{selectedStudent.batch ? `${selectedStudent.batch.name} • ${selectedStudent.batch.course}` : 'Unassigned Batch'}</p>
+                  <p className="text-xs text-gray-500">
+                    {selectedStudent.batches && selectedStudent.batches.length > 0
+                      ? selectedStudent.batches.map(b => `${b.name} (${b.course})`).join(' • ')
+                      : selectedStudent.batch
+                      ? `${selectedStudent.batch.name} • ${selectedStudent.batch.course}`
+                      : 'Unassigned Batch'}
+                  </p>
                 </div>
                 <button onClick={() => setDetailsModalOpen(false)} className="text-gray-500 dark:text-gray-400">
                   <X size={20} />
@@ -809,7 +1307,7 @@ const StudentManagement = () => {
               {/* Grid content */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Profile detail card */}
-                <div className="bg-gray-50/50 dark:bg-gray-900/30 p-5 rounded-2xl border border-gray-150 dark:border-gray-850 space-y-4">
+                <div className="bg-gray-50/50 dark:bg-gray-900/30 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4">
                   <div className="h-20 w-20 rounded-full bg-indigo-100 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 text-3xl font-bold flex items-center justify-center mx-auto shadow-md">
                     {selectedStudent.name.charAt(0)}
                   </div>
@@ -893,6 +1391,145 @@ const StudentManagement = () => {
                     ) : null}
                   </div>
 
+                  {/* AI Study Planner Card */}
+                  <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/10 dark:to-purple-950/10 p-5 rounded-2xl border border-indigo-100/30 dark:border-indigo-900/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles size={14} className="text-yellow-500 animate-pulse" />
+                        <span>AI Study Planner (Admin Control)</span>
+                      </h5>
+                      {selectedStudent.profile?.aiRoadmap && !adminConfiguringRoadmap && (
+                        <button 
+                          onClick={() => setAdminConfiguringRoadmap(true)}
+                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center space-x-1"
+                        >
+                          <Sliders size={12} />
+                          <span>Configure</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {!selectedStudent.profile?.aiRoadmap || adminConfiguringRoadmap ? (
+                      /* Configuration Form */
+                      <form onSubmit={handleAdminGenerateRoadmap} className="space-y-4 text-xs">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-gray-500 block uppercase tracking-wider">
+                            Target Technology Track
+                          </label>
+                          <select 
+                            value={adminTrack}
+                            onChange={(e) => setAdminTrack(e.target.value)}
+                            className="w-full px-3 py-2 bg-white dark:bg-[#181922] border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs"
+                          >
+                            <option value="MERN Full Stack Developer">MERN Full Stack Developer</option>
+                            <option value="Python Data Scientist">Python Data Scientist</option>
+                            <option value="Java Backend Developer">Java Backend Developer</option>
+                            <option value="UI/UX Designer">UI/UX Designer</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-gray-500 block uppercase tracking-wider">
+                            Familiar Skills
+                          </label>
+                          <textarea 
+                            value={adminSkills}
+                            onChange={(e) => setAdminSkills(e.target.value)}
+                            placeholder="e.g. HTML, CSS, React"
+                            rows="2"
+                            className="w-full px-3 py-2 bg-white dark:bg-[#181922] border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-[10px] font-semibold text-gray-500">
+                            <span>Daily Study Hours:</span>
+                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{adminHours} hrs/day</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="1" 
+                            max="10" 
+                            value={adminHours}
+                            onChange={(e) => setAdminHours(Number(e.target.value))}
+                            className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                        </div>
+
+                        <div className="flex gap-2 pt-1">
+                          {selectedStudent.profile?.aiRoadmap && (
+                            <button 
+                              type="button"
+                              onClick={() => setAdminConfiguringRoadmap(false)}
+                              className="flex-1 py-2 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-[11px] transition"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                          <button 
+                            type="submit"
+                            disabled={adminRoadmapLoading}
+                            className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold text-[11px] transition flex items-center justify-center space-x-1.5"
+                          >
+                            <Sparkles size={12} className="text-yellow-200 animate-pulse" />
+                            <span>{adminRoadmapLoading ? 'Generating...' : 'Generate Plan'}</span>
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      /* Active Roadmap View */
+                      <div className="space-y-3 text-xs">
+                        <div className="flex justify-between items-baseline">
+                          <div>
+                            <p className="font-extrabold text-gray-800 dark:text-gray-200">{selectedStudent.profile.aiRoadmap.targetTrack}</p>
+                            <p className="text-[10px] text-gray-400">
+                              Estimated Time: {selectedStudent.profile.aiRoadmap.topics?.filter(t => !t.completed).reduce((acc, t) => acc + t.estimatedDays, 0)} days remaining
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold rounded-lg border border-indigo-100 dark:border-indigo-900">
+                            {selectedStudent.profile.aiRoadmap.dailyHours} hrs / day
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-[10px] text-gray-400 font-semibold">
+                            <span>Syllabus Progress</span>
+                            <span>
+                              {Math.round((selectedStudent.profile.aiRoadmap.topics?.filter(t => t.completed).length / selectedStudent.profile.aiRoadmap.topics?.length) * 100 || 0)}%
+                            </span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
+                              style={{ 
+                                width: `${(selectedStudent.profile.aiRoadmap.topics?.filter(t => t.completed).length / selectedStudent.profile.aiRoadmap.topics?.length) * 100 || 0}%` 
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Condensed list preview */}
+                        <div className="max-h-[140px] overflow-y-auto space-y-1.5 pr-1 pt-1">
+                          {selectedStudent.profile.aiRoadmap.topics.map((topic, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-white dark:bg-[#181922] rounded-lg border border-gray-200 dark:border-gray-800">
+                              <span className={`text-[11px] font-semibold truncate ${topic.completed ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'}`}>
+                                {topic.name}
+                              </span>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0 ${
+                                topic.completed 
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500' 
+                                  : 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400'
+                              }`}>
+                                {topic.completed ? 'Done' : `${topic.estimatedDays}d`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Standard instructions about student progress */}
                   <div className="p-4 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-800 rounded-2xl text-xs space-y-2">
                     <p className="font-semibold text-gray-500 uppercase tracking-wider text-[10px]">Academic scorecards Summary</p>
@@ -902,10 +1539,9 @@ const StudentManagement = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </>
         )}
-      </AnimatePresence>
     </div>
   );
 };

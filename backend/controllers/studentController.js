@@ -28,15 +28,24 @@ export const getStudentDashboard = async (req, res) => {
     const placement = await Placement.findOne({ student: studentId }) || {};
 
     // 3. Fetch Batch details
-    const batch = await Batch.findOne({ students: studentId })
+    const batches = await Batch.find({ students: studentId })
       .populate('trainers', 'name email role mobile')
       .lean();
+    const batch = batches[0] || null;
 
     // 4. Fetch Attendance stats
     const attendanceRecords = await Attendance.find({ student: studentId }).lean();
     const totalDays = attendanceRecords.length;
     const presentDays = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
     const attendancePercent = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
+
+    const today = new Date();
+    const startOfToday = new Date(today.setHours(0,0,0,0));
+    const endOfToday = new Date(today.setHours(23,59,59,999));
+    const todayRecord = attendanceRecords.find(r => {
+      const rDate = new Date(r.date);
+      return rDate >= startOfToday && rDate <= endOfToday;
+    });
 
     // Group attendance by month for graph
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -132,11 +141,29 @@ export const getStudentDashboard = async (req, res) => {
         endDate: batch.endDate,
         trainers: batch.trainers
       } : null,
+      batches: batches.map(b => ({
+        _id: b._id,
+        name: b.name,
+        course: b.course,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        trainers: b.trainers
+      })),
       attendance: {
         percentage: attendancePercent,
         totalClasses: totalDays,
         presentCount: presentDays,
-        monthlyGraph: monthlyAttendance
+        monthlyGraph: monthlyAttendance,
+        todayRecord: todayRecord ? {
+          status: todayRecord.status,
+          time: todayRecord.createdAt
+        } : null,
+        records: attendanceRecords.map(rec => ({
+          _id: rec._id,
+          date: rec.date,
+          status: rec.status,
+          remarks: rec.remarks || ''
+        })).sort((a, b) => new Date(b.date) - new Date(a.date))
       },
       scorecards: {
         aptitude: aptitudeScorecard,
@@ -396,6 +423,49 @@ export const scanQR = async (req, res) => {
       return res.status(400).json({ message: 'You have already marked attendance for this class/day' });
     }
 
+    /*
+    // 5.5 IP Address Subnet Verification (Anti-Spoofing classroom check)
+    const studentIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '';
+    const trainerIp = session.ipAddress || '';
+
+    const cleanIP = (ip) => {
+      if (!ip) return '';
+      if (ip.includes('::ffff:')) {
+        return ip.split('::ffff:')[1];
+      }
+      if (ip === '::1') return '127.0.0.1';
+      return ip.trim();
+    };
+
+    const cleanStudent = cleanIP(studentIp);
+    const cleanTrainer = cleanIP(trainerIp);
+
+    const getSubnet = (ip) => {
+      const parts = ip.split('.');
+      if (parts.length >= 3) {
+        return `${parts[0]}.${parts[1]}.${parts[2]}`;
+      }
+      return ip;
+    };
+
+    const studentSubnet = getSubnet(cleanStudent);
+    const trainerSubnet = getSubnet(cleanTrainer);
+
+    if (cleanStudent && cleanTrainer && cleanStudent !== cleanTrainer && studentSubnet !== trainerSubnet) {
+      await AttendanceLog.create({
+        student: studentId,
+        session: session._id,
+        scannedToken: token,
+        status: 'Failed',
+        reason: `IP mismatch: Student IP ${cleanStudent} does not match classroom Wi-Fi network ${cleanTrainer}`,
+        ipAddress: cleanStudent
+      });
+      return res.status(403).json({ 
+        message: `Attendance failed: You must be connected to the classroom Wi-Fi network to mark attendance. (Your IP: ${cleanStudent}, Classroom IP: ${cleanTrainer})` 
+      });
+    }
+    */
+
     // 6. Compute Late Logic
     const scanTime = new Date();
     const sessionStartTime = new Date(session.startTime);
@@ -450,6 +520,257 @@ export const getLeaderboard = async (req, res) => {
   try {
     const ranks = await calculateAllRanks();
     res.json(ranks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get student AI roadmap
+// @route   GET /api/student/ai-roadmap
+// @access  Private (Student only)
+export const getStudentAIRoadmap = async (req, res) => {
+  try {
+    const student = await Student.findOne({ user: req.user._id });
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+    res.json(student.aiRoadmap || null);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Generate a new customized AI roadmap
+// @route   POST /api/student/ai-roadmap
+// @access  Private (Student only)
+export const generateStudentAIRoadmap = async (req, res) => {
+  const { targetTrack, familiarSkills, dailyHours } = req.body;
+
+  if (!targetTrack || !dailyHours) {
+    return res.status(400).json({ message: 'Target track and daily study hours are required' });
+  }
+
+  const hoursNum = Number(dailyHours);
+  if (hoursNum < 1 || hoursNum > 10) {
+    return res.status(400).json({ message: 'Daily hours must be between 1 and 10' });
+  }
+
+  try {
+    const student = await Student.findOne({ user: req.user._id });
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const templates = {
+      'MERN Full Stack Developer': [
+        { name: 'HTML5 & CSS3 Essentials', hours: 20, subtopics: ['Semantic Tags', 'CSS Grid & Flexbox', 'Responsive Design', 'Tailwind CSS'] },
+        { name: 'Advanced JavaScript & ES6', hours: 30, subtopics: ['Closures & Scope', 'Promises & Async/Await', 'DOM Manipulation', 'ES6 Modules'] },
+        { name: 'React Frontend Architecture', hours: 40, subtopics: ['Component Lifecycle', 'State Management (Hooks)', 'React Router', 'API Integration (Axios)'] },
+        { name: 'Node.js & Express API Development', hours: 35, subtopics: ['HTTP Server Basics', 'Routing & Middleware', 'REST API Design', 'JWT Authentication'] },
+        { name: 'MongoDB Database Design', hours: 25, subtopics: ['Mongoose Schemas', 'CRUD Operations', 'Aggregation Pipeline', 'Database Security'] },
+        { name: 'System Integration & Git/CI-CD', hours: 20, subtopics: ['Git Version Control', 'Heroku/Vercel Deployment', 'Docker Basics', 'Testing with Jest'] }
+      ],
+      'Python Data Scientist': [
+        { name: 'Python Core & Scripting', hours: 25, subtopics: ['Data Types & Structures', 'Functions & OOP', 'File Handling & APIs', 'Jupyter Notebooks'] },
+        { name: 'Data Analysis with Pandas & NumPy', hours: 35, subtopics: ['NumPy Arrays', 'Pandas DataFrames', 'Data Cleaning & Wrangling', 'Handling Missing Data'] },
+        { name: 'Data Visualization', hours: 20, subtopics: ['Matplotlib Basics', 'Seaborn Advanced Charts', 'Interactive Plots (Plotly)', 'Storytelling with Data'] },
+        { name: 'SQL & Database Querying', hours: 25, subtopics: ['Relational DB Basics', 'SELECT Queries & Joins', 'Aggregations & Grouping', 'NoSQL Basics'] },
+        { name: 'Introduction to Machine Learning', hours: 45, subtopics: ['Supervised Learning', 'Unsupervised Clustering', 'Model Evaluation & Tuning', 'Scikit-Learn library'] },
+        { name: 'Feature Engineering & Capstone Project', hours: 30, subtopics: ['Scaling & Encoding', 'Dimensionality Reduction', 'End-to-End Pipeline', 'Git & Model Deployment'] }
+      ],
+      'Java Backend Developer': [
+        { name: 'Java OOP Core Concepts', hours: 30, subtopics: ['Classes & Objects', 'Inheritance & Polymorphism', 'Interfaces & Abstraction', 'Exception Handling'] },
+        { name: 'Java Collections & Streams', hours: 25, subtopics: ['Lists, Sets & Maps', 'Lambda Expressions', 'Stream API', 'Generics & Threading'] },
+        { name: 'Spring Boot Basics', hours: 40, subtopics: ['Dependency Injection', 'Spring MVC Controllers', 'Spring Boot Configuration', 'REST API endpoints'] },
+        { name: 'Hibernate & JPA Database Integration', hours: 30, subtopics: ['Entity Mapping', 'Spring Data JPA repositories', 'JPQL Queries', 'Transactions'] },
+        { name: 'Security & RESTful API Best Practices', hours: 35, subtopics: ['Spring Security', 'JWT Auth in Spring', 'API Documentation (Swagger)', 'Logging & Monitoring'] },
+        { name: 'Testing & Microservices Intro', hours: 30, subtopics: ['JUnit & Mockito', 'Dockerizing Spring Apps', 'Config Server / Service Discovery', 'Eureka & Gateway'] }
+      ],
+      'UI/UX Designer': [
+        { name: 'Design Thinking & UX Principles', hours: 20, subtopics: ['User-Centered Design', 'Information Architecture', 'Heuristic Evaluation', 'User Personas'] },
+        { name: 'Wireframing & Prototyping in Figma', hours: 35, subtopics: ['Figma Tools & Layouts', 'Auto Layout & Components', 'Interactive Prototyping', 'User Flows'] },
+        { name: 'Visual Design & Typography', hours: 25, subtopics: ['Color Theory', 'Grid Systems', 'Typography Hierarchy', 'Accessibility (WCAG)'] },
+        { name: 'User Research & Usability Testing', hours: 25, subtopics: ['User Interviews', 'A/B Testing', 'Heatmaps & Analytics', 'Cognitive Walkthrough'] },
+        { name: 'Creating Design Systems', hours: 30, subtopics: ['Design Tokens', 'Reusable Figma Components', 'Component States', 'Developer Handoff'] },
+        { name: 'Portfolio Development & Presentation', hours: 25, subtopics: ['Case Study Writing', 'Portfolio Website Design', 'Mockups & Visual Presentation', 'UX Interview prep'] }
+      ]
+    };
+
+    const trackTemplate = templates[targetTrack] || templates['MERN Full Stack Developer'];
+    const skillsArray = Array.isArray(familiarSkills) 
+      ? familiarSkills.map(s => s.trim().toLowerCase()) 
+      : typeof familiarSkills === 'string'
+        ? familiarSkills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+        : [];
+
+    const generatedTopics = trackTemplate.map(topic => {
+      // Check if user is familiar with subtopics
+      let matchingCount = 0;
+      topic.subtopics.forEach(sub => {
+        const subLow = sub.toLowerCase();
+        const hasSkillMatch = skillsArray.some(skill => subLow.includes(skill) || skill.includes(subLow));
+        if (hasSkillMatch) {
+          matchingCount++;
+        }
+      });
+
+      // Reduce hours if user knows some of the subtopics
+      const skillReductionFactor = topic.subtopics.length > 0 ? (matchingCount / topic.subtopics.length) : 0;
+      const adjustedHours = Math.max(5, topic.hours * (1 - (skillReductionFactor * 0.6))); // Maximum 60% reduction
+      const estimatedDays = Math.max(1, Math.round(adjustedHours / hoursNum));
+
+      return {
+        name: topic.name,
+        subtopics: topic.subtopics,
+        estimatedDays,
+        completed: skillReductionFactor === 1 // Mark completed if they know all subtopics
+      };
+    });
+
+    student.aiRoadmap = {
+      targetTrack,
+      familiarSkills: skillsArray,
+      dailyHours: hoursNum,
+      topics: generatedTopics,
+      generatedAt: new Date()
+    };
+
+    await student.save();
+    res.json(student.aiRoadmap);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Toggle completion of a roadmap topic
+// @route   PUT /api/student/ai-roadmap/toggle-topic
+// @access  Private (Student only)
+export const toggleAIRoadmapTopic = async (req, res) => {
+  const { topicId } = req.body;
+  if (!topicId) {
+    return res.status(400).json({ message: 'Topic ID is required' });
+  }
+
+  try {
+    const student = await Student.findOne({ user: req.user._id });
+    if (!student || !student.aiRoadmap) {
+      return res.status(404).json({ message: 'Roadmap not found' });
+    }
+
+    const topicIndex = student.aiRoadmap.topics.findIndex(t => t._id.toString() === topicId);
+    if (topicIndex === -1) {
+      return res.status(404).json({ message: 'Topic not found in roadmap' });
+    }
+
+    // Toggle completed status
+    student.aiRoadmap.topics[topicIndex].completed = !student.aiRoadmap.topics[topicIndex].completed;
+
+    // Use markModified because we are modifying nested fields in subdocuments
+    student.markModified('aiRoadmap');
+    await student.save();
+
+    res.json(student.aiRoadmap);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Generate a new customized AI roadmap for a student (Admin/Trainer view)
+// @route   POST /api/admin/students/:userId/ai-roadmap
+// @access  Private (Admin/Super Admin/Trainer only)
+export const generateStudentAIRoadmapForAdmin = async (req, res) => {
+  const { userId } = req.params;
+  const { targetTrack, familiarSkills, dailyHours } = req.body;
+
+  if (!targetTrack || !dailyHours) {
+    return res.status(400).json({ message: 'Target track and daily study hours are required' });
+  }
+
+  const hoursNum = Number(dailyHours);
+  if (hoursNum < 1 || hoursNum > 10) {
+    return res.status(400).json({ message: 'Daily hours must be between 1 and 10' });
+  }
+
+  try {
+    const student = await Student.findOne({ user: userId });
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const templates = {
+      'MERN Full Stack Developer': [
+        { name: 'HTML5 & CSS3 Essentials', hours: 20, subtopics: ['Semantic Tags', 'CSS Grid & Flexbox', 'Responsive Design', 'Tailwind CSS'] },
+        { name: 'Advanced JavaScript & ES6', hours: 30, subtopics: ['Closures & Scope', 'Promises & Async/Await', 'DOM Manipulation', 'ES6 Modules'] },
+        { name: 'React Frontend Architecture', hours: 40, subtopics: ['Component Lifecycle', 'State Management (Hooks)', 'React Router', 'API Integration (Axios)'] },
+        { name: 'Node.js & Express API Development', hours: 35, subtopics: ['HTTP Server Basics', 'Routing & Middleware', 'REST API Design', 'JWT Authentication'] },
+        { name: 'MongoDB Database Design', hours: 25, subtopics: ['Mongoose Schemas', 'CRUD Operations', 'Aggregation Pipeline', 'Database Security'] },
+        { name: 'System Integration & Git/CI-CD', hours: 20, subtopics: ['Git Version Control', 'Heroku/Vercel Deployment', 'Docker Basics', 'Testing with Jest'] }
+      ],
+      'Python Data Scientist': [
+        { name: 'Python Core & Scripting', hours: 25, subtopics: ['Data Types & Structures', 'Functions & OOP', 'File Handling & APIs', 'Jupyter Notebooks'] },
+        { name: 'Data Analysis with Pandas & NumPy', hours: 35, subtopics: ['NumPy Arrays', 'Pandas DataFrames', 'Data Cleaning & Wrangling', 'Handling Missing Data'] },
+        { name: 'Data Visualization', hours: 20, subtopics: ['Matplotlib Basics', 'Seaborn Advanced Charts', 'Interactive Plots (Plotly)', 'Storytelling with Data'] },
+        { name: 'SQL & Database Querying', hours: 25, subtopics: ['Relational DB Basics', 'SELECT Queries & Joins', 'Aggregations & Grouping', 'NoSQL Basics'] },
+        { name: 'Introduction to Machine Learning', hours: 45, subtopics: ['Supervised Learning', 'Unsupervised Clustering', 'Model Evaluation & Tuning', 'Scikit-Learn library'] },
+        { name: 'Feature Engineering & Capstone Project', hours: 30, subtopics: ['Scaling & Encoding', 'Dimensionality Reduction', 'End-to-End Pipeline', 'Git & Model Deployment'] }
+      ],
+      'Java Backend Developer': [
+        { name: 'Java OOP Core Concepts', hours: 30, subtopics: ['Classes & Objects', 'Inheritance & Polymorphism', 'Interfaces & Abstraction', 'Exception Handling'] },
+        { name: 'Java Collections & Streams', hours: 25, subtopics: ['Lists, Sets & Maps', 'Lambda Expressions', 'Stream API', 'Generics & Threading'] },
+        { name: 'Spring Boot Basics', hours: 40, subtopics: ['Dependency Injection', 'Spring MVC Controllers', 'Spring Boot Configuration', 'REST API endpoints'] },
+        { name: 'Hibernate & JPA Database Integration', hours: 30, subtopics: ['Entity Mapping', 'Spring Data JPA repositories', 'JPQL Queries', 'Transactions'] },
+        { name: 'Security & RESTful API Best Practices', hours: 35, subtopics: ['Spring Security', 'JWT Auth in Spring', 'API Documentation (Swagger)', 'Logging & Monitoring'] },
+        { name: 'Testing & Microservices Intro', hours: 30, subtopics: ['JUnit & Mockito', 'Dockerizing Spring Apps', 'Config Server / Service Discovery', 'Eureka & Gateway'] }
+      ],
+      'UI/UX Designer': [
+        { name: 'Design Thinking & UX Principles', hours: 20, subtopics: ['User-Centered Design', 'Information Architecture', 'Heuristic Evaluation', 'User Personas'] },
+        { name: 'Wireframing & Prototyping in Figma', hours: 35, subtopics: ['Figma Tools & Layouts', 'Auto Layout & Components', 'Interactive Prototyping', 'User Flows'] },
+        { name: 'Visual Design & Typography', hours: 25, subtopics: ['Color Theory', 'Grid Systems', 'Typography Hierarchy', 'Accessibility (WCAG)'] },
+        { name: 'User Research & Usability Testing', hours: 25, subtopics: ['User Interviews', 'A/B Testing', 'Heatmaps & Analytics', 'Cognitive Walkthrough'] },
+        { name: 'Creating Design Systems', hours: 30, subtopics: ['Design Tokens', 'Reusable Figma Components', 'Component States', 'Developer Handoff'] },
+        { name: 'Portfolio Development & Presentation', hours: 25, subtopics: ['Case Study Writing', 'Portfolio Website Design', 'Mockups & Visual Presentation', 'UX Interview prep'] }
+      ]
+    };
+
+    const trackTemplate = templates[targetTrack] || templates['MERN Full Stack Developer'];
+    const skillsArray = Array.isArray(familiarSkills) 
+      ? familiarSkills.map(s => s.trim().toLowerCase()) 
+      : typeof familiarSkills === 'string'
+        ? familiarSkills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+        : [];
+
+    const generatedTopics = trackTemplate.map(topic => {
+      let matchingCount = 0;
+      topic.subtopics.forEach(sub => {
+        const subLow = sub.toLowerCase();
+        const hasSkillMatch = skillsArray.some(skill => subLow.includes(skill) || skill.includes(subLow));
+        if (hasSkillMatch) {
+          matchingCount++;
+        }
+      });
+
+      const skillReductionFactor = topic.subtopics.length > 0 ? (matchingCount / topic.subtopics.length) : 0;
+      const adjustedHours = Math.max(5, topic.hours * (1 - (skillReductionFactor * 0.6)));
+      const estimatedDays = Math.max(1, Math.round(adjustedHours / hoursNum));
+
+      return {
+        name: topic.name,
+        subtopics: topic.subtopics,
+        estimatedDays,
+        completed: skillReductionFactor === 1
+      };
+    });
+
+    student.aiRoadmap = {
+      targetTrack,
+      familiarSkills: skillsArray,
+      dailyHours: hoursNum,
+      topics: generatedTopics,
+      generatedAt: new Date()
+    };
+
+    await student.save();
+    res.json(student.aiRoadmap);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

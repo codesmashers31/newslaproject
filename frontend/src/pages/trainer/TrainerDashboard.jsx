@@ -19,7 +19,10 @@ import {
   FileSpreadsheet,
   AlertCircle,
   FileDown,
-  BookOpenCheck
+  BookOpenCheck,
+  Plus,
+  UserPlus,
+  Sparkles
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -42,12 +45,218 @@ const TrainerDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isCommunicationTrainer = user?.role === 'Communication Trainer' || user?.role === 'Admin';
+  const isCommunicationTrainer = ['Communication Trainer', 'Aptitude Trainer', 'Technical Trainer', 'Admin', 'Super Admin'].includes(user?.role);
 
   const [students, setStudents] = useState([]);
   const [batches, setBatches] = useState([]);
-  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('all');
   const [loading, setLoading] = useState(true);
+
+  // Add Batch & Add Student Modal States
+  const [showAddBatchModal, setShowAddBatchModal] = useState(false);
+  const [newBatchForm, setNewBatchForm] = useState({ name: '', course: '', schedule: 'Mon-Fri (09:00 AM - 12:00 PM)' });
+  const [creatingBatch, setCreatingBatch] = useState(false);
+
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [newStudentForm, setNewStudentForm] = useState({ name: '', email: '', mobile: '', batchId: '', technicalTrainer: '' });
+  const [creatingStudent, setCreatingStudent] = useState(false);
+
+  // Mock Evaluation Modal States & Handlers (70% Attendance Eligibility Rule)
+  const [showMockModal, setShowMockModal] = useState(false);
+  const [selectedMockStudent, setSelectedMockStudent] = useState(null);
+  const [mockForm, setMockForm] = useState({ status: 'Excellent', remarks: '', marks: 10 });
+  const [savingMock, setSavingMock] = useState(false);
+
+  const openMockModal = (student) => {
+    const attPct = student.attendancePct !== undefined ? student.attendancePct : 85;
+    if (attPct < 70) {
+      toast.error(`Not eligible for mock evaluation! Student has ${attPct}% attendance (Minimum 70% required).`);
+      return;
+    }
+    const existingScore = student.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
+    setSelectedMockStudent(student);
+    setMockForm({
+      status: existingScore.mockStatus || existingScore.status || 'Excellent',
+      remarks: existingScore.remarks || '',
+      marks: existingScore.marks !== undefined ? existingScore.marks : 10
+    });
+    setShowMockModal(true);
+  };
+
+  const handleSaveMockEvaluation = async (e) => {
+    e.preventDefault();
+    if (!selectedMockStudent) return;
+    setSavingMock(true);
+    try {
+      await API.post('/trainer/score', {
+        studentId: selectedMockStudent._id,
+        moduleName: 'Mock Evaluation',
+        status: mockForm.status,
+        mockStatus: mockForm.status,
+        marks: mockForm.marks,
+        remarks: mockForm.remarks
+      });
+      toast.success('Mock evaluation updated successfully!');
+      setShowMockModal(false);
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update mock evaluation');
+    } finally {
+      setSavingMock(false);
+    }
+  };
+
+  const renderMockEvaluationModal = () => {
+    if (!showMockModal || !selectedMockStudent) return null;
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div>
+              <h3 className="text-base font-black text-gray-900 dark:text-white">Update Spoken Mock Details</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {selectedMockStudent.name} ({selectedMockStudent.slaeId || `SLA-${selectedMockStudent._id.slice(-5).toUpperCase()}`})
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMockModal(false)}
+              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Eligibility & Attendance Badge */}
+          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-3.5 flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <CheckCircle className="text-emerald-600 dark:text-emerald-400 h-5 w-5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Attendance Requirement Met</p>
+                <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
+                  Student has {(selectedMockStudent.attendancePct !== undefined ? selectedMockStudent.attendancePct : 85)}% attendance (≥ 70% required)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                Mock Performance Status *
+              </label>
+              <select
+                value={mockForm.status}
+                onChange={(e) => setMockForm({ ...mockForm, status: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-xs font-bold text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5] cursor-pointer"
+              >
+                <option value="Excellent">Excellent</option>
+                <option value="Good">Good</option>
+                <option value="Average">Average</option>
+                <option value="Poor">Poor</option>
+                <option value="Not Attended">Not Attended</option>
+                <option value="Not Qualified">Not Qualified</option>
+                <option value="Not Required">Not Required</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                Spoken Mock Score (0 - 10)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                value={mockForm.marks}
+                onChange={(e) => setMockForm({ ...mockForm, marks: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-xs font-bold text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                Trainer Remarks & Spoken Feedback
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Enter detailed spoken feedback (fluency, grammar, confidence, vocabulary)..."
+                value={mockForm.remarks}
+                onChange={(e) => setMockForm({ ...mockForm, remarks: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 text-xs text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <button
+              type="button"
+              onClick={() => setShowMockModal(false)}
+              className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={savingMock}
+              onClick={handleSaveMockEvaluation}
+              className="px-5 py-2 rounded-xl bg-[#4F46E5] hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+            >
+              {savingMock ? 'Saving...' : 'Save Mock Details'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleCreateBatch = async (e) => {
+    e.preventDefault();
+    const courseType = newBatchForm.course.trim() || (user?.role === 'Communication Trainer' ? 'Communication Skills' : user?.role === 'Aptitude Trainer' ? 'Aptitude & Reasoning' : 'Technical Training');
+    if (!newBatchForm.name.trim()) {
+      toast.error('Please enter a batch name');
+      return;
+    }
+    setCreatingBatch(true);
+    try {
+      const res = await API.post('/trainer/batches', {
+        name: newBatchForm.name.trim(),
+        course: courseType,
+        schedule: newBatchForm.schedule
+      });
+      toast.success('Batch created successfully!');
+      setBatches(prev => [...prev, res.data]);
+      setSelectedBatchId(res.data._id);
+      setShowAddBatchModal(false);
+      setNewBatchForm({ name: '', course: '', schedule: 'Mon-Fri (09:00 AM - 12:00 PM)' });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create batch');
+    } finally {
+      setCreatingBatch(false);
+    }
+  };
+
+  const handleCreateStudent = async (e) => {
+    e.preventDefault();
+    if (!newStudentForm.name.trim() || !newStudentForm.email.trim() || !newStudentForm.batchId) {
+      toast.error('Student Name, Email, and Batch selection are required');
+      return;
+    }
+    setCreatingStudent(true);
+    try {
+      await API.post('/trainer/students', newStudentForm);
+      toast.success('Student added and enrolled successfully!');
+      setShowAddStudentModal(false);
+      setNewStudentForm({ name: '', email: '', mobile: '', batchId: '', technicalTrainer: '' });
+      // Refresh students
+      const res = await API.get('/trainer/students');
+      setStudents(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add student');
+    } finally {
+      setCreatingStudent(false);
+    }
+  };
 
   // Statistics and charts data (for Communication Trainer)
   const [stats, setStats] = useState(null);
@@ -78,6 +287,7 @@ const TrainerDashboard = () => {
   const [attendanceRemarks, setAttendanceRemarks] = useState({}); // { studentId: string }
   const [checkInTimes, setCheckInTimes] = useState({}); // { studentId: string }
   const [checkOutTimes, setCheckOutTimes] = useState({}); // { studentId: string }
+  const [todayRecords, setTodayRecords] = useState([]);
   const [attendanceStatusFilter, setAttendanceStatusFilter] = useState('All');
   const [gradingStatusFilter, setGradingStatusFilter] = useState('All');
 
@@ -131,20 +341,45 @@ const TrainerDashboard = () => {
     setLoading(true);
     try {
       const { data } = await API.get('/trainer/students');
-      setStudents(data);
+      const { data: batchData } = await API.get('/trainer/batches');
 
-      // Consolidate batches list
-      const batchMap = {};
-      data.forEach(student => {
-        student.batches.forEach(b => {
-          batchMap[b._id] = b;
-        });
+      let relevantBatches = batchData || [];
+      let relevantStudents = data || [];
+
+      if (user?.role === 'Communication Trainer') {
+        relevantStudents = relevantStudents.filter(s => Boolean(s.communicationBatch));
+      } else if (user?.role === 'Aptitude Trainer') {
+        relevantStudents = relevantStudents.filter(s => Boolean(s.aptitudeBatch));
+      } else if (user?.role === 'Technical Trainer') {
+        relevantStudents = relevantStudents.filter(s => Boolean(s.technicalBatch));
+      }
+
+      // Collect all unique batches the loaded relevantStudents belong to
+      const studentBatchNamesAndIds = new Set();
+      relevantStudents.forEach(s => {
+        if (s.communicationBatch) studentBatchNamesAndIds.add(s.communicationBatch.trim().toLowerCase());
+        if (s.technicalBatch) studentBatchNamesAndIds.add(s.technicalBatch.trim().toLowerCase());
+        if (s.aptitudeBatch) studentBatchNamesAndIds.add(s.aptitudeBatch.trim().toLowerCase());
+        if (s.batch) studentBatchNamesAndIds.add(s.batch.trim().toLowerCase());
+        if (Array.isArray(s.batches)) {
+          s.batches.forEach(b => {
+            if (b?._id) studentBatchNamesAndIds.add(String(b._id));
+            if (b?.name) studentBatchNamesAndIds.add(b.name.trim().toLowerCase());
+            if (typeof b === 'string') studentBatchNamesAndIds.add(b.trim().toLowerCase());
+          });
+        }
       });
-      const batchList = Object.values(batchMap);
-      setBatches(batchList);
+
+      relevantBatches = relevantBatches.filter(b => 
+        studentBatchNamesAndIds.has(String(b._id)) || 
+        studentBatchNamesAndIds.has(b.name?.trim()?.toLowerCase())
+      );
+
+      setStudents(relevantStudents);
+      setBatches(relevantBatches);
       
-      if (batchList.length > 0 && !selectedBatchId) {
-        setSelectedBatchId(batchList[0]._id);
+      if (!selectedBatchId) {
+        setSelectedBatchId('all');
       }
     } catch (error) {
       toast.error('Failed to load students');
@@ -178,28 +413,70 @@ const TrainerDashboard = () => {
     }
   }, [selectedBatchId, location.pathname, isCommunicationTrainer]);
 
-  // Filter students based on selected batch for attendance roll and grading
-  const batchStudents = students.filter(s => 
-    s.batches.some(b => b._id.toString() === selectedBatchId.toString())
-  );
+  const selectedBatchObj = batches.find(b => String(b._id) === String(selectedBatchId) || String(b.name) === String(selectedBatchId));
 
-  // Initialize attendance checklist state
+  const batchStudents = (!selectedBatchId || selectedBatchId === 'all')
+    ? students
+    : students.filter(s => {
+        const selId = String(selectedBatchId);
+        const selName = selectedBatchObj?.name?.trim()?.toLowerCase();
+
+        const inBatchesArray = s.batches?.some(b => 
+          String(b?._id || b) === selId ||
+          (selName && String(b?.name || b).trim().toLowerCase() === selName)
+        );
+
+        const matchesDomainBatch = Boolean(selName && (
+          String(s.communicationBatch || '').trim().toLowerCase() === selName ||
+          String(s.technicalBatch || '').trim().toLowerCase() === selName ||
+          String(s.aptitudeBatch || '').trim().toLowerCase() === selName ||
+          String(s.batch || '').trim().toLowerCase() === selName
+        ));
+
+        return inBatchesArray || matchesDomainBatch;
+      });
+
+  // Fetch existing attendance logs and initialize state
   useEffect(() => {
-    const defaultState = {};
-    const defaultRemarks = {};
-    const defaultTimes = {};
-    const defaultOutTimes = {};
-    batchStudents.forEach(s => {
-      defaultState[s._id] = 'Present';
-      defaultRemarks[s._id] = '';
-      defaultTimes[s._id] = '09:00 AM';
-      defaultOutTimes[s._id] = '05:00 PM';
-    });
-    setAttendanceState(defaultState);
-    setAttendanceRemarks(defaultRemarks);
-    setCheckInTimes(defaultTimes);
-    setCheckOutTimes(defaultOutTimes);
-  }, [selectedBatchId, students]);
+    const fetchAndInitializeAttendance = async () => {
+      if (!selectedBatchId) return;
+
+      try {
+        const { data: existingRecords } = await API.get(`/trainer/attendance?batchId=${selectedBatchId}&date=${attendanceDate}`);
+        setTodayRecords(existingRecords);
+        
+        const nextState = {};
+        const nextRemarks = {};
+        const nextTimes = {};
+        const nextOutTimes = {};
+
+        batchStudents.forEach(s => {
+          const record = existingRecords.find(r => String(r?.student?._id || r?.student) === String(s?._id));
+          
+          if (record) {
+            nextState[s._id] = record.status;
+            nextRemarks[s._id] = record.remarks || '';
+            nextTimes[s._id] = record.timeIn || '09:00 AM';
+            nextOutTimes[s._id] = record.timeOut || '05:00 PM';
+          } else {
+            nextState[s._id] = 'Absent';
+            nextRemarks[s._id] = '';
+            nextTimes[s._id] = '09:00 AM';
+            nextOutTimes[s._id] = '05:00 PM';
+          }
+        });
+
+        setAttendanceState(nextState);
+        setAttendanceRemarks(nextRemarks);
+        setCheckInTimes(nextTimes);
+        setCheckOutTimes(nextOutTimes);
+      } catch (error) {
+        console.error('Failed to load today\'s attendance logs', error);
+      }
+    };
+
+    fetchAndInitializeAttendance();
+  }, [selectedBatchId, attendanceDate, students]);
 
   const handleAttendanceChange = (studentId, status) => {
     setAttendanceState(prev => ({ ...prev, [studentId]: status }));
@@ -226,30 +503,31 @@ const TrainerDashboard = () => {
 
   // Submit attendance from Checklist view
   const submitAttendance = async () => {
-    const records = Object.keys(attendanceState).map(studentId => ({
-      studentId,
-      status: attendanceState[studentId],
-      remarks: attendanceRemarks[studentId] || '',
-      timeIn: checkInTimes[studentId] || '09:00 AM'
+    const targetStudents = batchStudents.length > 0 ? batchStudents : students;
+    const records = targetStudents.map(student => ({
+      studentId: student._id,
+      status: attendanceState[student._id] || 'Present',
+      remarks: attendanceRemarks[student._id] || '',
+      timeIn: checkInTimes[student._id] || '09:00 AM'
     }));
 
     if (records.length === 0) {
-      toast.error('No students in this batch');
+      toast.error('No students found to save attendance');
       return;
     }
 
     try {
-      await API.post('/trainer/attendance', {
+      const { data } = await API.post('/trainer/attendance', {
         batchId: selectedBatchId,
         date: attendanceDate,
         records
       });
-      toast.success('Attendance submitted successfully!');
+      toast.success(data?.message || 'Attendance submitted successfully!');
       if (isCommunicationTrainer) {
         loadStats(selectedBatchId);
       }
     } catch (error) {
-      toast.error('Failed to submit attendance');
+      toast.error(error.response?.data?.message || 'Failed to submit attendance');
     }
   };
 
@@ -352,12 +630,34 @@ const TrainerDashboard = () => {
 
   // Convert marks to letter grades
   const getLetterGrade = (marks) => {
-    if (marks >= 9) return { letter: 'A+', color: 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900' };
-    if (marks === 8) return { letter: 'A', color: 'bg-teal-50 border-teal-250 text-teal-700 dark:bg-teal-950/20 dark:border-teal-900' };
-    if (marks === 7) return { letter: 'B+', color: 'bg-blue-50 border-blue-250 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900' };
-    if (marks === 6) return { letter: 'B', color: 'bg-indigo-50 border-indigo-250 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900' };
-    if (marks === 5) return { letter: 'C', color: 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900' };
-    return { letter: 'Fail', color: 'bg-rose-50 border-rose-250 text-rose-700 dark:bg-rose-950/20 dark:border-rose-900' };
+    if (marks >= 9) return { letter: 'A+', color: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900' };
+    if (marks === 8) return { letter: 'A', color: 'bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-950/20 dark:border-teal-900' };
+    if (marks === 7) return { letter: 'B+', color: 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900' };
+    if (marks === 6) return { letter: 'B', color: 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900' };
+    if (marks === 5) return { letter: 'C', color: 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900' };
+    return { letter: 'Fail', color: 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:border-rose-900' };
+  };
+
+  // Badge styles for Mock Evaluation Performance
+  const getMockBadgeStyle = (status) => {
+    switch (status) {
+      case 'Excellent':
+        return 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400';
+      case 'Good':
+        return 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400';
+      case 'Average':
+        return 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400';
+      case 'Poor':
+        return 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400';
+      case 'Not Attended':
+        return 'bg-gray-100 border-gray-300 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+      case 'Not Qualified':
+        return 'bg-purple-50 border-purple-300 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400';
+      case 'Not Required':
+        return 'bg-slate-100 border-slate-300 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
+      default:
+        return 'bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-900 dark:text-gray-400';
+    }
   };
 
   // Calculate grading card stats (for Communication Trainer view)
@@ -372,7 +672,7 @@ const TrainerDashboard = () => {
   const filteredAttendanceStudents = batchStudents.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         `STU-${s._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = statusFilter === 'All' || attendanceState[s._id] === statusFilter;
+    const matchStatus = attendanceStatusFilter === 'All' || attendanceState[s._id] === attendanceStatusFilter;
     return matchSearch && matchStatus;
   });
   const attendanceTotalPages = Math.ceil(filteredAttendanceStudents.length / itemsPerPage);
@@ -389,6 +689,192 @@ const TrainerDashboard = () => {
   const gradingIndexOfLastItem = currentPage * itemsPerPage;
   const gradingIndexOfFirstItem = gradingIndexOfLastItem - itemsPerPage;
   const paginatedGradingStudents = filteredGradingStudents.slice(gradingIndexOfFirstItem, gradingIndexOfLastItem);
+
+  // Single Clean Table View for Mock Evaluation (/trainer/scores)
+  const renderMockScoresSection = () => {
+    const totalStudents = batchStudents.length;
+    const eligibleStudents = batchStudents.filter(s => (s.attendancePct !== undefined ? s.attendancePct : 85) >= 70).length;
+    const evaluatedStudents = batchStudents.filter(s => {
+      const score = s.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || s.scores?.[0];
+      return score && (score.mockStatus || score.status) && (score.mockStatus !== 'Not Evaluated' && score.status !== 'Not Evaluated');
+    }).length;
+
+    return (
+      <div className="space-y-6">
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-[#12131a] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Batch Students</span>
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1">{totalStudents}</h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">Students enrolled across selection</p>
+            </div>
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 text-[#4F46E5] rounded-xl">
+              <Users size={22} />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#12131a] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Eligible (≥ 70% Attendance)</span>
+              <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{eligibleStudents}</h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">Qualified for spoken mock evaluation</p>
+            </div>
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 rounded-xl">
+              <CheckCircle size={22} />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#12131a] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Evaluated Mocks</span>
+              <h3 className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{evaluatedStudents}</h3>
+              <p className="text-[10px] text-gray-500 mt-0.5">Mock evaluation statuses updated</p>
+            </div>
+            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 text-purple-600 rounded-xl">
+              <Award size={22} />
+            </div>
+          </div>
+        </div>
+
+        {/* Single Unified Table Card */}
+        <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+          {/* Top Filter & Search Bar */}
+          <div className="p-5 border-b border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-black text-gray-900 dark:text-white font-sans">Spoken Mock Performance Evaluation</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Single table view for spoken mock grading. Requires at least 70% attendance to update.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-60">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search student or SLAEID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-gray-700 dark:text-gray-200 font-medium"
+                />
+              </div>
+              <div className="flex items-center space-x-1.5 border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 text-xs">
+                <Filter size={13} className="text-gray-400" />
+                <select
+                  value={selectedBatchId}
+                  onChange={(e) => setSelectedBatchId(e.target.value)}
+                  className="bg-transparent focus:outline-none text-xs font-bold cursor-pointer text-gray-700 dark:text-gray-300"
+                >
+                  <option value="all">All Batches</option>
+                  {batches.map(b => (
+                    <option key={b._id} value={b._id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Table content */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/40 text-gray-500 text-[11px] font-bold uppercase tracking-wider">
+                  <th className="px-5 py-3.5">SLAEID</th>
+                  <th className="px-5 py-3.5">Student Name</th>
+                  <th className="px-5 py-3.5">Batch</th>
+                  <th className="px-5 py-3.5">Technical Trainer</th>
+                  <th className="px-5 py-3.5">Batch Status</th>
+                  <th className="px-5 py-3.5">Attendance %</th>
+                  <th className="px-5 py-3.5">Mock Status</th>
+                  <th className="px-5 py-3.5">Remarks</th>
+                  <th className="px-5 py-3.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
+                {filteredGradingStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="text-center py-12 text-gray-400 italic">
+                      No students found matching your filters.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredGradingStudents.map(student => {
+                    const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
+                    const attPct = student.attendancePct !== undefined ? student.attendancePct : 85;
+                    const isEligible = attPct >= 70;
+                    const mockScore = student.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
+                    const currentMockStatus = mockScore.mockStatus || mockScore.status || 'Not Evaluated';
+
+                    return (
+                      <tr key={student._id} className="hover:bg-gray-50/60 dark:hover:bg-gray-900/40 transition-colors">
+                        <td className="px-5 py-4 font-mono font-bold text-purple-600 dark:text-purple-400">
+                          {displaySlaeId}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="font-extrabold text-gray-900 dark:text-white text-sm">{student.name}</div>
+                          <div className="text-[11px] text-gray-400 mt-0.5">{student.email}</div>
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-gray-600 dark:text-gray-300">
+                          {batches.find(b => b._id === selectedBatchId)?.name || student.batches?.[0]?.name || 'Communication'}
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-gray-600 dark:text-gray-300">
+                          {student.technicalTrainer || '—'}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                            student.status === 'Active' || student.status === 'Enrolled'
+                              ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
+                              : student.status === 'Completed'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                              : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                          }`}>
+                            {student.status || 'Active'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-sm text-gray-800 dark:text-gray-200">{attPct}%</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                              isEligible
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                : 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+                            }`}>
+                              {isEligible ? 'Eligible' : '< 70%'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-extrabold border ${getMockBadgeStyle(currentMockStatus)}`}>
+                            {currentMockStatus}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                          {mockScore.remarks || '—'}
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => openMockModal(student)}
+                            title={isEligible ? "Update Spoken Mock Evaluation" : `Not eligible (${attPct}% attendance < 70%)`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                              isEligible
+                                ? 'bg-[#4F46E5] hover:bg-indigo-500 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-rose-50 hover:text-rose-600'
+                            }`}
+                          >
+                            <Edit3 size={13} />
+                            <span>Update Mock</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Fallback views calculations (for other trainers)
   const originalPresentCount = batchStudents.filter(s => attendanceState[s._id] === 'Present').length;
@@ -418,7 +904,7 @@ const TrainerDashboard = () => {
 
           {/* Attendance Overview Skeleton */}
           <div className="p-6 bg-white dark:bg-[#12131a] rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4 shadow-sm">
-            <div className="h-6 w-32 bg-gray-250 dark:bg-gray-800 rounded" />
+            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-800 rounded" />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {Array(4).fill(0).map((_, i) => (
                 <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800/40 rounded-xl" />
@@ -436,28 +922,19 @@ const TrainerDashboard = () => {
     if (isAttendance) {
       return (
         <div className="space-y-6">
-          {/* Header Skeleton */}
-          <div className="h-20 bg-gray-100 dark:bg-gray-800/40 rounded-2xl border border-gray-200 dark:border-gray-800" />
+          {/* Header Bar Skeleton */}
+          <div className="h-16 bg-gray-100 dark:bg-gray-800/40 rounded-2xl border border-gray-200 dark:border-gray-800 animate-pulse" />
           
-          {/* Table 1 Skeleton */}
-          <div className="p-6 bg-white dark:bg-[#12131a] rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4 shadow-sm">
-            <div className="h-6 w-40 bg-gray-200 dark:bg-gray-800 rounded" />
-            <div className="space-y-3">
-              <div className="h-10 bg-gray-100 dark:bg-gray-800/30 rounded-xl" />
-              {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-12 bg-gray-50 dark:bg-gray-900/30 rounded-xl" />
-              ))}
+          {/* Single Table Skeleton */}
+          <div className="p-6 bg-white dark:bg-[#12131a] rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4 shadow-sm animate-pulse">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+              <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+              <div className="h-8 w-28 bg-gray-200 dark:bg-gray-800 rounded-xl" />
             </div>
-          </div>
-          
-          {/* Table 2 Skeleton */}
-          <div className="p-6 bg-white dark:bg-[#12131a] rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4 shadow-sm">
-            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded" />
-            <div className="h-10 bg-gray-100 dark:bg-gray-800/30 rounded-xl" />
-            <div className="space-y-3">
-              <div className="h-10 bg-gray-100 dark:bg-gray-800/30 rounded-xl" />
-              {Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-12 bg-gray-50 dark:bg-gray-900/30 rounded-xl" />
+            <div className="space-y-3 pt-2">
+              <div className="h-10 bg-gray-100 dark:bg-gray-800/40 rounded-xl" />
+              {Array(6).fill(0).map((_, i) => (
+                <div key={i} className="h-14 bg-gray-50 dark:bg-gray-900/30 rounded-xl" />
               ))}
             </div>
           </div>
@@ -579,7 +1056,7 @@ const TrainerDashboard = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-              {isDashboard ? 'Communication Trainer Hub' : isAttendance ? 'Mark Attendance' : 'Grade Scorecard'}
+              {isDashboard ? `${user?.role || 'Trainer'} Hub` : isAttendance ? 'Mark Attendance' : 'Grade Scorecard'}
             </h1>
             <p className="text-xs text-gray-500 mt-1">
               {isDashboard 
@@ -590,34 +1067,28 @@ const TrainerDashboard = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Batch Selector */}
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Batch:</span>
-              <select
-                value={selectedBatchId}
-                onChange={(e) => {
-                  setSelectedBatchId(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-gray-700 dark:text-gray-300 transition-all cursor-pointer"
-              >
-                {batches.map(b => (
-                  <option key={b._id} value={b._id}>{b.name}</option>
-                ))}
-              </select>
-            </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {isDashboard && (
+              <>
+                <select
+                  value={selectedBatchId || 'all'}
+                  onChange={(e) => {
+                    setSelectedBatchId(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 text-xs font-extrabold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-gray-700 dark:text-gray-300 transition-all cursor-pointer shadow-sm"
+                >
+                  <option value="all">All Batches</option>
+                  {batches.map(b => (
+                    <option key={b._id} value={b._id}>{b.name}</option>
+                  ))}
+                </select>
+              </>
+            )}
 
             <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-900 px-3.5 py-2 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-600 dark:text-gray-400">
               <Calendar size={14} className="text-[#4F46E5]" />
               <span>{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-            </div>
-
-            <div className="flex items-center space-x-2 px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900">
-              <div className="h-6 w-6 bg-gradient-to-br from-[#4F46E5] to-purple-650 rounded-lg flex items-center justify-center font-black text-white text-[10px]">
-                {user?.name?.charAt(0)}
-              </div>
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate max-w-[100px]">{user?.name}</span>
             </div>
           </div>
         </div>
@@ -676,7 +1147,7 @@ const TrainerDashboard = () => {
             {/* Spacious welcome guide panel */}
             <div className="bg-white dark:bg-[#12131a] p-8 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm text-center space-y-4">
               <BookOpen className="h-10 w-10 text-[#4F46E5] mx-auto animate-pulse" />
-              <h2 className="text-lg font-bold text-gray-850 dark:text-white font-sans font-extrabold">Welcome to Communication Trainer Hub</h2>
+              <h2 className="text-lg font-bold text-gray-800 dark:text-white font-sans font-extrabold">Welcome to {user?.role || 'Trainer'} Hub</h2>
               <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
                 Use the sidebar or links to record daily attendance, search cohorts database, grade scores across multiple modules, or generate QR scanners.
               </p>
@@ -684,187 +1155,204 @@ const TrainerDashboard = () => {
           </div>
         )}
 
-        {/* 2. MARK ATTENDANCE PAGE VIEW */}
+        {/* 2. SINGLE ADVANCED STUDENT ATTENDANCE PORTAL */}
         {isAttendance && (
           <div className="space-y-6">
-            {/* Table 1: Batch List */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div>
-                <h2 className="text-md font-bold text-gray-800 dark:text-white font-sans font-extrabold">Batches Directory</h2>
-                <p className="text-xs text-gray-505 mt-0.5 font-sans">List of assigned active batches and training schedules</p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-555 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                      <th className="px-6 py-3.5">Batch ID</th>
-                      <th className="px-6 py-3.5">Batch Name</th>
-                      <th className="px-6 py-3.5">Trainer</th>
-                      <th className="px-6 py-3.5 text-center">Total Students</th>
-                      <th className="px-6 py-3.5">Schedule</th>
-                      <th className="px-6 py-3.5">Status</th>
-                      <th className="px-6 py-3.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
-                    {batches.map(b => {
-                      const batchStudentsCount = students.filter(s => s.batches.some(bt => bt._id === b._id)).length;
-                      const isActive = b._id === selectedBatchId;
-                      return (
-                        <tr key={b._id} className={`hover:bg-gray-50/20 transition-colors ${isActive ? 'bg-indigo-50/10' : ''}`}>
-                          <td className="px-6 py-3.5 font-semibold text-gray-505 font-mono">BAT-{b._id.slice(-5).toUpperCase()}</td>
-                          <td className="px-6 py-3.5 font-bold text-gray-800 dark:text-white">{b.name}</td>
-                          <td className="px-6 py-3.5 text-gray-500 font-semibold">{user?.name}</td>
-                          <td className="px-6 py-3.5 text-center font-bold text-gray-700 dark:text-gray-300">{batchStudentsCount} Students</td>
-                          <td className="px-6 py-3.5 text-gray-500 font-medium">{b.schedule || 'Mon-Fri (09:00 AM - 12:00 PM)'}</td>
-                          <td className="px-6 py-3.5 text-center">
-                            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 border border-emerald-200 text-emerald-700">
-                              Active
-                            </span>
-                          </td>
-                          <td className="px-6 py-3.5 text-right">
-                            <button
-                              onClick={() => {
-                                setSelectedBatchId(b._id);
-                                toast.success(`Selected cohort: ${b.name}`);
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer transition-colors ${
-                                isActive 
-                                  ? 'bg-[#4F46E5] text-white shadow-sm'
-                                  : 'border border-gray-200 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-300'
-                              }`}
-                            >
-                              {isActive ? 'Active Batch' : 'Open Attendance'}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Table 2: Student List */}
-            <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Student Attendance List</h2>
-                  <p className="text-xs text-gray-505 mt-0.5 font-sans">Record checks and submit roll checklist for the active batch</p>
-                </div>
-
+            {/* Single Advanced Table Card */}
+            <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+              {/* Table Toolbar */}
+              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-3">
+                  {/* Search Input */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                    <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search student..."
+                      placeholder="Search student by name, ID..."
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
+                      className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-56 text-slate-700 dark:text-slate-200"
                     />
                   </div>
 
-                  <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1 bg-transparent text-xs text-[#4F46E5]">
-                    <Calendar size={12} />
+                  {/* Batch Dropdown */}
+                  <select
+                    value={selectedBatchId || 'all'}
+                    onChange={(e) => {
+                      setSelectedBatchId(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option value="all">All Batches</option>
+                    {batches.map(b => (
+                      <option key={b._id} value={b._id}>{b.name}</option>
+                    ))}
+                  </select>
+
+                  {/* Date Selector */}
+                  <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 bg-slate-50 dark:bg-slate-900/50 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    <Calendar size={13} />
                     <input
                       type="date"
                       value={attendanceDate}
                       onChange={(e) => setAttendanceDate(e.target.value)}
-                      className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-650 dark:text-gray-400 py-0.5"
+                      className="bg-transparent focus:outline-none cursor-pointer"
                     />
                   </div>
 
+                  {/* Status Filter */}
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+                    {['All', 'Present', 'Absent', 'Late'].map(st => (
+                      <button
+                        key={st}
+                        onClick={() => {
+                          setAttendanceStatusFilter(st);
+                          setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                          attendanceStatusFilter === st
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
                   <button
                     onClick={submitAttendance}
-                    className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition cursor-pointer flex items-center gap-1.5"
                   >
-                    Submit Register
+                    <CheckCircle size={14} />
+                    <span>Save Attendance</span>
                   </button>
                 </div>
               </div>
 
-              <div className="overflow-x-auto max-h-[400px]">
+              {/* Advanced Single Table */}
+              <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                      <th className="px-6 py-3.5">Student ID</th>
-                      <th className="px-6 py-3.5">Student Name</th>
-                      <th className="px-6 py-3.5">Batch</th>
-                      <th className="px-6 py-3.5 text-center">Status</th>
-                      <th className="px-6 py-3.5">Check In Time</th>
-                      <th className="px-6 py-3.5">Remarks</th>
-                      <th className="px-6 py-3.5 text-right">Action</th>
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+                      <th className="px-5 py-4">SLAEID</th>
+                      <th className="px-5 py-4">Student Name</th>
+                      <th className="px-5 py-4">Trainer Name</th>
+                      <th className="px-5 py-4">Batch</th>
+                      <th className="px-5 py-4 text-center">Interactive Status</th>
+                      <th className="px-5 py-4">Time & Date</th>
+                      <th className="px-5 py-4">Remarks</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
                     {paginatedAttendanceStudents.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-10 text-center text-gray-400 italic">
-                          No student records available.
+                        <td colSpan="7" className="px-6 py-12 text-center text-slate-400 italic">
+                          No students found matching your search or batch selection.
                         </td>
                       </tr>
                     ) : (
                       paginatedAttendanceStudents.map(student => {
                         const currentStatus = attendanceState[student._id] || 'Present';
-                        const checkInTimeVal = checkInTimes[student._id] || '09:00 AM';
-                        const remarksVal = attendanceRemarks[student._id] || '';
+                        const record = todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
+                        
+                        let studentBatches = 'Unassigned';
+                        let displayTrainer = 'Assigned Trainer';
+
+                        if (user?.role === 'Technical Trainer') {
+                          studentBatches = student.technicalBatch || 'Unassigned';
+                          displayTrainer = student.technicalTrainer || user?.name || 'Assigned Trainer';
+                        } else if (user?.role === 'Communication Trainer') {
+                          studentBatches = student.communicationBatch || 'Unassigned';
+                          displayTrainer = student.communicationTrainer || user?.name || 'Assigned Trainer';
+                        } else if (user?.role === 'Aptitude Trainer') {
+                          studentBatches = student.aptitudeBatch || 'Unassigned';
+                          displayTrainer = student.aptitudeTrainer || user?.name || 'Assigned Trainer';
+                        } else {
+                          // Admin / fallback view: show all batches and trainers
+                          const domains = [];
+                          if (student.technicalBatch) domains.push(`Tech: ${student.technicalBatch}`);
+                          if (student.communicationBatch) domains.push(`Comm: ${student.communicationBatch}`);
+                          if (student.aptitudeBatch) domains.push(`Aptitude: ${student.aptitudeBatch}`);
+                          
+                          if (domains.length > 0) {
+                            studentBatches = domains.join(' | ');
+                            displayTrainer = [student.technicalTrainer, student.communicationTrainer, student.aptitudeTrainer].filter(Boolean).join(', ') || 'Admin';
+                          } else {
+                            studentBatches = (student.batches?.map(b => typeof b === 'object' ? b?.name : b).filter(Boolean).join(', ')) || 'Unassigned';
+                            displayTrainer = student.technicalTrainer || student.communicationTrainer || student.aptitudeTrainer || user?.name || 'Assigned Trainer';
+                          }
+                        }
+
+                        const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
+                        
                         return (
-                          <tr key={student._id} className="hover:bg-gray-50/20 transition-colors">
-                            <td className="px-6 py-4 font-semibold text-gray-505 font-mono">STU-{student._id.slice(-5).toUpperCase()}</td>
-                            <td className="px-6 py-4 font-bold text-gray-850 dark:text-white text-sm">{student.name}</td>
-                            <td className="px-6 py-4 text-[#4F46E5] font-semibold">{batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}</td>
-                            <td className="px-6 py-4 text-center">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                currentStatus === 'Present'
-                                  ? 'bg-[#4F46E5]/10 border-[#4F46E5]/30 text-[#4F46E5]'
-                                  : currentStatus === 'Late'
-                                  ? 'bg-orange-50 border-orange-200 text-orange-700'
-                                  : 'bg-rose-50 border-rose-300 text-rose-700'
-                              }`}>
-                                {currentStatus}
+                          <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="px-5 py-4 font-mono font-bold text-purple-600 dark:text-purple-400">
+                              {displaySlaeId}
+                            </td>
+                            <td className="px-5 py-4">
+                              <div className="font-extrabold text-slate-800 dark:text-white text-sm">{student.name}</div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">{student.email}</div>
+                            </td>
+                            <td className="px-5 py-4 font-bold text-slate-700 dark:text-slate-300">
+                              {displayTrainer}
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/50 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
+                                {studentBatches}
                               </span>
                             </td>
-                            <td className="px-6 py-4">
-                              <input
-                                type="text"
-                                value={checkInTimeVal}
-                                onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                className="px-2.5 py-1 border border-gray-205 dark:border-gray-800 rounded bg-transparent focus:outline-none text-[10px] w-20 text-center font-bold text-gray-700 dark:text-gray-300"
-                              />
-                            </td>
-                            <td className="px-6 py-4">
-                              <input
-                                type="text"
-                                placeholder="Add observations..."
-                                value={remarksVal}
-                                onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                className="px-2.5 py-1 border border-gray-205 dark:border-gray-800 rounded bg-transparent focus:outline-none text-[10px] w-32 text-gray-700 dark:text-gray-300"
-                              />
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex justify-end space-x-1">
-                                {['Present', 'Absent', 'Late'].map(status => (
-                                  <button
-                                    key={status}
-                                    onClick={() => handleAttendanceChange(student._id, status)}
-                                    className={`px-2.5 py-1 rounded text-[9px] font-extrabold transition-all border cursor-pointer ${
-                                      currentStatus === status
-                                        ? status === 'Present'
-                                          ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                                          : status === 'Late'
-                                          ? 'bg-orange-50 border-orange-300 text-orange-700'
-                                          : 'bg-rose-50 border-rose-300 text-rose-700'
-                                        : 'border-gray-200 hover:bg-gray-55 text-gray-500'
-                                    }`}
-                                  >
-                                    {status}
-                                  </button>
-                                ))}
+                            <td className="px-5 py-4">
+                              <div className="flex items-center justify-center gap-1.5">
+                                {['Present', 'Absent', 'Late'].map(st => {
+                                  const isSelected = currentStatus === st;
+                                  const baseStyle = st === 'Present'
+                                    ? isSelected ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100'
+                                    : st === 'Absent'
+                                    ? isSelected ? 'bg-rose-600 text-white shadow-sm' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100'
+                                    : isSelected ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-100';
+
+                                  return (
+                                    <button
+                                      key={st}
+                                      onClick={() => handleAttendanceChange(student._id, st)}
+                                      className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${baseStyle}`}
+                                    >
+                                      {st}
+                                    </button>
+                                  );
+                                })}
                               </div>
+                            </td>
+                            <td className="px-5 py-4 font-mono text-[11px] text-slate-500">
+                              {record ? (
+                                <div>
+                                  <div className="font-bold text-slate-700 dark:text-slate-300">
+                                    {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                  <div className="text-[10px] text-slate-400">
+                                    {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-slate-400 italic">Not Submitted Today</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-4">
+                              <input
+                                type="text"
+                                placeholder="Add remark..."
+                                value={attendanceRemarks[student._id] || ''}
+                                onChange={(e) => setAttendanceRemarks({ ...attendanceRemarks, [student._id]: e.target.value })}
+                                className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-xs w-full max-w-[160px] text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              />
                             </td>
                           </tr>
                         );
@@ -874,25 +1362,34 @@ const TrainerDashboard = () => {
                 </table>
               </div>
 
-              {/* Attendance Pagination */}
-              {filteredAttendanceStudents.length > itemsPerPage && (
-                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-4 text-[10px] text-gray-550 font-semibold">
-                  <span>
-                    Showing {attIndexOfFirstItem + 1} to {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} student records
-                  </span>
-                  <div className="flex space-x-1.5">
+              {/* Table Pagination Bar */}
+              {filteredAttendanceStudents.length > 0 && (
+                <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/40 dark:bg-slate-900/30">
+                  <div className="text-xs text-slate-500 font-semibold">
+                    Showing <span className="font-bold text-slate-700 dark:text-slate-300">{attIndexOfFirstItem + 1}</span> to{' '}
+                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                      {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)}
+                    </span>{' '}
+                    of <span className="font-bold text-slate-700 dark:text-slate-300">{filteredAttendanceStudents.length}</span> students
+                  </div>
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                      className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
                     >
                       <ChevronLeft size={14} />
+                      <span>Previous</span>
                     </button>
+                    <span className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-extrabold">
+                      Page {currentPage} of {attTotalPages || 1}
+                    </span>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, attTotalPages))}
-                      disabled={currentPage === attTotalPages}
-                      className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                      disabled={currentPage === attTotalPages || attTotalPages === 0}
+                      className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
                     >
+                      <span>Next</span>
                       <ChevronRight size={14} />
                     </button>
                   </div>
@@ -902,566 +1399,8 @@ const TrainerDashboard = () => {
           </div>
         )}
 
-        {/* 3. GRADE SCORECARD PAGE VIEW (TABS ACTIVE ONLY HERE) */}
-        {isGrading && (
-          <div className="space-y-6">
-            {/* TWO TABS (ONLY VISIBLE ON GRADE SCORECARD ROUTE) */}
-            <div className="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] rounded-[16px] overflow-hidden shadow-sm p-1.5 gap-2">
-              <button
-                onClick={() => {
-                  setActiveTab('attendance');
-                  setCurrentPage(1);
-                }}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
-                  activeTab === 'attendance'
-                    ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
-                    : 'text-gray-505 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
-                }`}
-              >
-                <CalendarCheck size={16} />
-                <span>Daily Attendance Roll</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('grading');
-                  setCurrentPage(1);
-                }}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all duration-300 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${
-                  activeTab === 'grading'
-                    ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/10'
-                    : 'text-gray-505 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/60 dark:text-gray-400'
-                }`}
-              >
-                <Award size={16} />
-                <span>Module Grading Sheet</span>
-              </button>
-            </div>
-
-            {/* TAB 1: DAILY ATTENDANCE ROLL */}
-            {activeTab === 'attendance' && (
-              <div className="space-y-6">
-                {/* Attendance Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-gradient-to-br from-blue-500/15 to-indigo-500/5 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-500/20 dark:border-blue-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
-                      <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
-                      <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
-                    </div>
-                    <div className="p-3 bg-blue-500/20 dark:bg-blue-950/40 text-blue-600 rounded-xl">
-                      <Users size={22} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-gradient-to-br from-purple-500/15 to-pink-500/5 dark:from-purple-950/20 dark:to-pink-950/10 border border-purple-500/20 dark:border-purple-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Batches</span>
-                      <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalBatchesCount}</h3>
-                      <p className="text-[9px] text-gray-500">Assigned classes portfolio</p>
-                    </div>
-                    <div className="p-3 bg-purple-500/20 dark:bg-purple-950/40 text-purple-600 rounded-xl">
-                      <BookOpen size={22} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-gradient-to-br from-emerald-500/15 to-teal-500/5 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-500/20 dark:border-emerald-900/30 p-6 rounded-[16px] shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Overall Attendance %</span>
-                      <h3 className="text-3xl font-black text-gray-900 dark:text-white">{batchAttendancePct}%</h3>
-                      <p className="text-[9px] text-gray-500">Rolling attendance average</p>
-                    </div>
-                    <div className="p-3 bg-emerald-500/20 dark:bg-emerald-950/40 text-emerald-600 rounded-xl">
-                      <CheckCircle size={22} />
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Attendance Filters and Table */}
-                <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold animate-pulse">Daily Attendance Book</h2>
-                      <p className="text-[11px] text-gray-500">View check-in logs, modify roll status, and submit daily registers</p>
-                    </div>
-
-                    {/* Filters Row */}
-                    <div className="flex flex-wrap items-center gap-3">
-                      {/* Search Student */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search student..."
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
-                        />
-                      </div>
-
-                      {/* Batch Filter */}
-                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                        <Filter size={12} />
-                        <select
-                          value={selectedBatchId}
-                          onChange={(e) => {
-                            setSelectedBatchId(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                        >
-                          {batches.map(b => (
-                            <option key={b._id} value={b._id}>{b.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Date Picker */}
-                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1 bg-transparent text-xs text-gray-500">
-                        <Calendar size={12} />
-                        <input
-                          type="date"
-                          value={attendanceDate}
-                          onChange={(e) => setAttendanceDate(e.target.value)}
-                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400 py-0.5"
-                        />
-                      </div>
-
-                      {/* Attendance Status Filter */}
-                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                        <Filter size={12} />
-                        <select
-                          value={attendanceStatusFilter}
-                          onChange={(e) => {
-                            setAttendanceStatusFilter(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                        >
-                          <option value="All">All Statuses</option>
-                          <option value="Present">Present</option>
-                          <option value="Absent">Absent</option>
-                          <option value="Late">Late</option>
-                        </select>
-                      </div>
-
-                      {/* Global Submit Attendance */}
-                      <button
-                        onClick={submitAttendance}
-                        className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
-                      >
-                        Mark Attendance
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Attendance Table */}
-                  {loading ? (
-                    <div className="space-y-3 py-6">
-                      {[...Array(3)].map((_, idx) => (
-                        <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
-                      ))}
-                    </div>
-                  ) : paginatedAttendanceStudents.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 italic text-xs">
-                      No student attendance records matching filters.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto max-h-[420px]">
-                      <table className="w-full text-left border-collapse">
-                        <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                          <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                            <th className="px-5 py-3">Student ID</th>
-                            <th className="px-5 py-3">Student Name</th>
-                            <th className="px-5 py-3">Batch</th>
-                            <th className="px-5 py-3 text-center">Attendance Status</th>
-                            <th className="px-5 py-3">Check In Time</th>
-                            <th className="px-5 py-3">Remarks</th>
-                            <th className="px-5 py-3 text-right">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-150 dark:divide-gray-855 text-xs">
-                          {paginatedAttendanceStudents.map(student => {
-                            const currentStatus = attendanceState[student._id] || 'Present';
-                            const checkInVal = checkInTimes[student._id] || '09:00 AM';
-                            return (
-                              <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
-                                <td className="px-5 py-3 font-semibold text-gray-405">STU-{student._id.slice(-5).toUpperCase()}</td>
-                                <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
-                                <td className="px-5 py-3 text-gray-550">
-                                  {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                                </td>
-                                <td className="px-5 py-3 text-center">
-                                  {/* status checklist switches directly inline */}
-                                  <select
-                                    value={currentStatus}
-                                    onChange={(e) => handleAttendanceChange(student._id, e.target.value)}
-                                    className={`px-2 py-0.5 rounded-lg text-[9px] font-extrabold border bg-white dark:bg-gray-900 cursor-pointer focus:outline-none ${
-                                      currentStatus === 'Present'
-                                        ? 'border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400'
-                                        : currentStatus === 'Late'
-                                        ? 'border-orange-300 text-orange-700 dark:border-orange-850 dark:text-orange-400'
-                                        : 'border-rose-300 text-rose-700 dark:border-rose-800 dark:text-rose-450'
-                                    }`}
-                                  >
-                                    <option value="Present">Present</option>
-                                    <option value="Absent">Absent</option>
-                                    <option value="Late">Late</option>
-                                  </select>
-                                </td>
-                                <td className="px-5 py-3">
-                                  <input
-                                    type="text"
-                                    value={checkInVal}
-                                    onChange={(e) => setCheckInTimes(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                    className="w-16 px-1.5 py-0.5 border border-gray-200 dark:border-gray-800 rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[#4F46E5] text-[10px] text-gray-700 dark:text-gray-300 font-semibold"
-                                  />
-                                </td>
-                                <td className="px-5 py-3">
-                                  <input
-                                    type="text"
-                                    placeholder="Enter remarks..."
-                                    value={attendanceRemarks[student._id] || ''}
-                                    onChange={(e) => setAttendanceRemarks(prev => ({ ...prev, [student._id]: e.target.value }))}
-                                    className="w-32 px-2 py-0.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-transparent focus:outline-none text-[10px] text-gray-700 dark:text-gray-300"
-                                  />
-                                </td>
-                                <td className="px-5 py-3 text-right">
-                                  <div className="flex justify-end gap-1.5">
-                                    <button
-                                      onClick={() => handleSingleMarkAttendance(student._id)}
-                                      className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                    >
-                                      {attendanceState[student._id] ? 'Edit Attendance' : 'Mark Attendance'}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setDetailStudent(student);
-                                        setDetailsModalOpen(true);
-                                      }}
-                                      className="px-2.5 py-1 bg-gray-55 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                    >
-                                      View Details
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* Attendance Pagination */}
-                  {filteredAttendanceStudents.length > itemsPerPage && (
-                    <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-505 font-semibold">
-                      <span>
-                        Showing {attIndexOfFirstItem + 1} to {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)} of {filteredAttendanceStudents.length} records
-                      </span>
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                        >
-                          <ChevronLeft size={14} />
-                        </button>
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, attTotalPages))}
-                          disabled={currentPage === attTotalPages}
-                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: MODULE GRADING SHEET */}
-            {activeTab === 'grading' && (
-              <div className="space-y-6">
-                {/* Grading Summary Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Students</span>
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
-                      <p className="text-[9px] text-gray-500">Active enrollments in batch</p>
-                    </div>
-                    <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
-                      <Users size={20} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Completed Modules</span>
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{completedGradedCount}</h3>
-                      <p className="text-[9px] text-gray-500">Finished assessment records</p>
-                    </div>
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
-                      <BookOpenCheck size={20} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Average Score</span>
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                        {avgScoreGrading} <span className="text-xs font-normal text-gray-500">/10</span>
-                      </h3>
-                      <p className="text-[9px] text-gray-500">Average marks in batch</p>
-                    </div>
-                    <div className="p-3 bg-purple-50 dark:bg-purple-950/30 text-purple-600 rounded-xl">
-                      <Award size={20} />
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ y: -3, scale: 1.01 }}
-                    className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm flex items-center justify-between"
-                  >
-                    <div className="space-y-1">
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Pending Grades</span>
-                      <h3 className="text-2xl font-black text-gray-900 dark:text-white">{pendingGradesCount}</h3>
-                      <p className="text-[9px] text-gray-500">Grades requiring entries</p>
-                    </div>
-                    <div className="p-3 bg-orange-50 dark:bg-[#453015]/30 text-orange-600 rounded-xl">
-                      <AlertCircle size={20} />
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Grading Table and Filters */}
-                <div className="bg-white dark:bg-[#12131a] p-6 rounded-[16px] border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <h2 className="text-md font-bold text-gray-850 dark:text-white font-sans font-extrabold">Module Grading Sheet</h2>
-                      <p className="text-[11px] text-gray-500">Track, edit, and input assessment scores for students</p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                      {/* Search Student */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search student..."
-                          value={searchQuery}
-                          onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] w-full sm:w-44 text-gray-700 dark:text-gray-300"
-                        />
-                      </div>
-
-                      {/* Batch Filter */}
-                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                        <Filter size={12} />
-                        <select
-                          value={selectedBatchId}
-                          onChange={(e) => {
-                            setSelectedBatchId(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                        >
-                          {batches.map(b => (
-                            <option key={b._id} value={b._id}>{b.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Module Filter */}
-                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                        <Filter size={12} />
-                        <select
-                          value={selectedModule}
-                          onChange={(e) => {
-                            setSelectedModule(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                        >
-                          {getModulesList().map((mod, i) => (
-                            <option key={i} value={mod}>{mod}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Status Filter */}
-                      <div className="flex items-center space-x-1 border border-gray-200 dark:border-gray-800 rounded-xl px-2.5 py-1.5 bg-transparent text-xs text-gray-500">
-                        <Filter size={12} />
-                        <select
-                          value={gradingStatusFilter}
-                          onChange={(e) => {
-                            setGradingStatusFilter(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className="bg-transparent focus:outline-none text-[11px] font-bold cursor-pointer text-gray-600 dark:text-gray-400"
-                        >
-                          <option value="All">All Statuses</option>
-                          <option value="Completed">Completed</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Not Started">Not Started</option>
-                        </select>
-                      </div>
-
-                      {/* Submit Grades */}
-                      <button
-                        onClick={() => {
-                          toast.success("All scorecards have been saved and submitted successfully!");
-                        }}
-                        className="bg-[#4F46E5] hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
-                      >
-                        Submit Grades
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Grading Table */}
-                  {loading ? (
-                    <div className="space-y-3 py-6">
-                      {[...Array(3)].map((_, idx) => (
-                        <div key={idx} className="h-10 bg-gray-100 dark:bg-gray-900 rounded-xl animate-pulse w-full" />
-                      ))}
-                    </div>
-                  ) : paginatedGradingStudents.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 italic text-xs">
-                      No grade entries matching current criteria.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto max-h-[420px]">
-                      <table className="w-full text-left border-collapse">
-                        <thead className="sticky top-0 bg-white dark:bg-[#12131a] z-10">
-                          <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-[10px] font-bold uppercase bg-gray-50/80 backdrop-blur-sm">
-                            <th className="px-5 py-3">Student ID</th>
-                            <th className="px-5 py-3">Student Name</th>
-                            <th className="px-5 py-3">Batch</th>
-                            <th className="px-5 py-3">Module</th>
-                            <th className="px-5 py-3 text-center">Marks</th>
-                            <th className="px-5 py-3 text-center">Grade</th>
-                            <th className="px-5 py-3 text-center">Status</th>
-                            <th className="px-5 py-3">Last Updated</th>
-                            <th className="px-5 py-3 text-right">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-150 dark:divide-gray-850 text-xs">
-                          {paginatedGradingStudents.map(student => {
-                            const score = student.scores?.find(sc => sc.moduleName === selectedModule) || {};
-                            const grade = getLetterGrade(score.marks || 0);
-                            const updatedDate = score.updatedAt 
-                              ? new Date(score.updatedAt).toLocaleDateString()
-                              : '—';
-                            return (
-                              <tr key={student._id} className="hover:bg-gray-50/30 transition-colors">
-                                <td className="px-5 py-3 font-semibold text-gray-400">STU-{student._id.slice(-5).toUpperCase()}</td>
-                                <td className="px-5 py-3 font-bold text-gray-800 dark:text-white">{student.name}</td>
-                                <td className="px-5 py-3 text-gray-550 font-semibold">
-                                  {batches.find(b => b._id === selectedBatchId)?.name || 'N/A'}
-                                </td>
-                                <td className="px-5 py-3 text-gray-600 dark:text-gray-450 font-semibold">{selectedModule}</td>
-                                <td className="px-5 py-3 text-center font-bold text-gray-700 dark:text-gray-300">
-                                  {score.marks !== undefined ? `${score.marks}/10` : '—/10'}
-                                </td>
-                                <td className="px-5 py-3 text-center">
-                                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${grade.color}`}>
-                                    {score.marks !== undefined ? grade.letter : 'N/A'}
-                                  </span>
-                                </td>
-                                <td className="px-5 py-3 text-center">
-                                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                                    (score.status || 'Not Started') === 'Completed'
-                                      ? 'bg-emerald-50 border-emerald-250 text-emerald-700 dark:bg-emerald-950/20'
-                                      : (score.status || 'Not Started') === 'In Progress'
-                                      ? 'bg-orange-50 border-orange-250 text-orange-700 dark:bg-orange-950/20'
-                                      : 'bg-gray-50 border-gray-200 text-gray-505'
-                                  }`}>
-                                    {score.status || 'Not Started'}
-                                  </span>
-                                </td>
-                                <td className="px-5 py-3 text-gray-400 font-medium">{updatedDate}</td>
-                                <td className="px-5 py-3 text-right">
-                                  <div className="flex justify-end gap-1.5">
-                                    <button
-                                      onClick={() => openGradingPanel(student, selectedModule)}
-                                      className="px-2.5 py-1 border border-indigo-200 hover:bg-indigo-50/50 dark:border-gray-800 dark:hover:bg-gray-900 text-[#4F46E5] dark:text-indigo-400 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                    >
-                                      Edit Grade
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setDetailStudent(student);
-                                        setDetailsModalOpen(true);
-                                      }}
-                                      className="px-2.5 py-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[9px] font-bold cursor-pointer transition-colors"
-                                    >
-                                      View Details
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* Grading Pagination */}
-                  {filteredGradingStudents.length > itemsPerPage && (
-                    <div className="flex items-center justify-between border-t border-gray-250 dark:border-gray-855 pt-4 text-[10px] text-gray-555 font-semibold">
-                      <span>
-                        Showing {gradIndexOfFirstItem + 1} to {Math.min(gradIndexOfLastItem, filteredGradingStudents.length)} of {filteredGradingStudents.length} records
-                      </span>
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                        >
-                          <ChevronLeft size={14} />
-                        </button>
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradTotalPages))}
-                          disabled={currentPage === gradTotalPages}
-                          className="p-1 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-55 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 3. GRADE SCORECARD PAGE VIEW (/trainer/scores) */}
+        {isGrading && renderMockScoresSection()}
 
         {/* DETAILS POPUP / MODAL */}
         <AnimatePresence>
@@ -1485,7 +1424,7 @@ const TrainerDashboard = () => {
                 </div>
 
                 <div className="space-y-3.5">
-                  <div className="grid grid-cols-2 gap-3.5 bg-gray-50/50 dark:bg-gray-900/30 p-3 rounded-xl border border-gray-150 dark:border-gray-850">
+                  <div className="grid grid-cols-2 gap-3.5 bg-gray-50/50 dark:bg-gray-900/30 p-3 rounded-xl border border-gray-200 dark:border-gray-800">
                     <div>
                       <span className="text-[9px] text-gray-400 uppercase font-bold block mb-0.5">Full Name</span>
                       <span className="font-extrabold text-gray-800 dark:text-white">{detailStudent.name}</span>
@@ -1508,7 +1447,7 @@ const TrainerDashboard = () => {
 
                   <div className="space-y-2 font-sans">
                     <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Module Score Records</h4>
-                    <div className="max-h-[160px] overflow-y-auto border border-gray-150 dark:border-gray-850 rounded-xl divide-y divide-gray-150 dark:divide-gray-855">
+                    <div className="max-h-[160px] overflow-y-auto border border-gray-200 dark:border-gray-800 rounded-xl divide-y divide-gray-200 dark:divide-gray-800">
                       {getModulesList().map((mod, idx) => {
                         const score = detailStudent.scores?.find(sc => sc.moduleName === mod) || {};
                         const grade = getLetterGrade(score.marks || 0);
@@ -1580,7 +1519,7 @@ const TrainerDashboard = () => {
 
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <label className="text-[10px] font-bold text-gray-455 uppercase tracking-wider block">Assigned Score (0-10)</label>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Assigned Score (0-10)</label>
                       <span className="text-xs font-black text-[#4F46E5]">{gradingForm.marks}/10</span>
                     </div>
                     <input
@@ -1620,6 +1559,7 @@ const TrainerDashboard = () => {
             </>
           )}
         </AnimatePresence>
+        {renderMockEvaluationModal()}
       </div>
     );
   }
@@ -1645,18 +1585,36 @@ const TrainerDashboard = () => {
           </p>
         </div>
 
-        {/* Batch Selector */}
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Select Batch:</span>
-          <select
-            value={selectedBatchId}
-            onChange={(e) => setSelectedBatchId(e.target.value)}
-            className="px-3.5 py-2.5 border border-[#c7c4d7] rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#4648d4] text-gray-700 dark:text-gray-300 dark:bg-[#12131a] dark:border-gray-800"
-          >
-            {batches.map(b => (
-              <option key={b._id} value={b._id}>{b.name} ({b.course})</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {isFallbackDashboard && (
+            <>
+              <button
+                onClick={() => setShowAddBatchModal(true)}
+                className="px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <Plus size={14} />
+                <span>Add Batch</span>
+              </button>
+              <button
+                onClick={() => setShowAddStudentModal(true)}
+                className="px-3 py-2 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/70 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <UserPlus size={14} />
+                <span>Add Student</span>
+              </button>
+
+              <select
+                value={selectedBatchId || 'all'}
+                onChange={(e) => setSelectedBatchId(e.target.value)}
+                className="px-3.5 py-2.5 border border-[#c7c4d7] rounded-xl bg-white text-sm font-extrabold focus:outline-none focus:ring-2 focus:ring-[#4648d4] text-gray-700 dark:text-gray-300 dark:bg-[#12131a] dark:border-gray-800 shadow-sm cursor-pointer"
+              >
+                <option value="all">All Batches</option>
+                {batches.map(b => (
+                  <option key={b._id} value={b._id}>{b.name} ({b.course})</option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
       </div>
 
@@ -1760,8 +1718,8 @@ const TrainerDashboard = () => {
       {isFallbackAttendance && (
         <div className="space-y-6">
           {loading ? (
-            <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-850 rounded-3xl">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-650 border-t-transparent"></div>
+            <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
             </div>
           ) : batchStudents.length === 0 ? (
             <div className="text-center py-10 bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 text-gray-500">
@@ -1777,7 +1735,7 @@ const TrainerDashboard = () => {
                     type="date"
                     value={attendanceDate}
                     onChange={(e) => setAttendanceDate(e.target.value)}
-                    className="px-3 py-1.5 border dark:border-gray-855 rounded-xl bg-transparent text-sm focus:outline-none text-gray-700 dark:text-gray-300"
+                    className="px-3 py-1.5 border dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none text-gray-700 dark:text-gray-300"
                   />
                 </div>
                 <button
@@ -1798,12 +1756,12 @@ const TrainerDashboard = () => {
                       <th className="px-6 py-4 text-center">Status Checked</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-855 text-sm">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-sm">
                     {batchStudents.map(student => (
                       <tr key={student._id} className="hover:bg-gray-50/20 dark:hover:bg-gray-900/10 transition-colors">
                         <td className="px-6 py-4 font-semibold text-gray-900 dark:text-gray-100">{student.name}</td>
                         <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{student.mobile || '—'}</td>
-                        <td className="px-6 py-4 text-xs font-semibold text-gray-555 dark:text-gray-400">
+                        <td className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400">
                           {student.batches?.map(b => b.name).join(', ') || '—'}
                         </td>
                         <td className="px-6 py-4">
@@ -1819,7 +1777,7 @@ const TrainerDashboard = () => {
                                       : status === 'Late'
                                       ? 'bg-orange-55/15 border-orange-300 text-orange-600 dark:bg-orange-950/25 dark:border-orange-900'
                                       : 'bg-rose-55/15 border-rose-300 text-rose-600 dark:bg-rose-950/25 dark:border-rose-900'
-                                    : 'border-gray-200 text-gray-450 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900'
+                                    : 'border-gray-200 text-gray-400 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900'
                                 }`}
                               >
                                 {status}
@@ -1837,173 +1795,6 @@ const TrainerDashboard = () => {
         </div>
       )}
 
-      {/* 3. SCORES VIEW: Show tabs for both roll and grading sheet */}
-      {isFallbackScores && (
-        <div className="space-y-6">
-          {/* Tabs */}
-          <div className="flex border-b border-[#c7c4d7] bg-[#f0f3ff] rounded-t-2xl overflow-hidden border dark:border-gray-800 dark:bg-gray-900 font-sans">
-            <button
-              onClick={() => setActiveTab('attendance')}
-              className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-2 cursor-pointer ${
-                activeTab === 'attendance'
-                  ? 'border-[#4648d4] text-[#4648d4] bg-white dark:bg-[#12131a] dark:text-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
-              }`}
-            >
-              <CalendarCheck size={16} />
-              <span>Daily Attendance Roll</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('grading')}
-              className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-2 cursor-pointer ${
-                activeTab === 'grading'
-                  ? 'border-[#4648d4] text-[#4648d4] bg-white dark:bg-[#12131a] dark:text-white'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
-              }`}
-            >
-              <Award size={16} />
-              <span>Module Grading Sheet</span>
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-855 rounded-3xl">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-650 border-t-transparent"></div>
-            </div>
-          ) : batchStudents.length === 0 ? (
-            <div className="text-center py-10 bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 text-gray-500">
-              No students currently enrolled in this batch.
-            </div>
-          ) : (
-            <div>
-              {/* Daily Attendance Roll Tab */}
-              {activeTab === 'attendance' && (
-                <div className="space-y-6">
-                  <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-4 rounded-2xl backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center space-x-3">
-                      <Calendar size={18} className="text-[#4648d4]" />
-                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Class Roll Call Date:</span>
-                      <input
-                        type="date"
-                        value={attendanceDate}
-                        onChange={(e) => setAttendanceDate(e.target.value)}
-                        className="px-3 py-1.5 border dark:border-gray-855 rounded-xl bg-transparent text-sm focus:outline-none text-gray-700 dark:text-gray-300"
-                      />
-                    </div>
-                    <button
-                      onClick={submitAttendance}
-                      className="bg-[#4648d4] hover:bg-[#393bb3] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/20 cursor-pointer"
-                    >
-                      Submit Attendance Book
-                    </button>
-                  </div>
-
-                  <div className="bg-white/60 dark:bg-[#12131a]/60 border border-[#c7c4d7] dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-xs font-semibold uppercase tracking-wider bg-gray-50/50 dark:bg-gray-900/30">
-                          <th className="px-6 py-4">Student</th>
-                          <th className="px-6 py-4">Mobile</th>
-                          <th className="px-6 py-4">Batches</th>
-                          <th className="px-6 py-4 text-center">Status Checked</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-855 text-sm">
-                        {batchStudents.map(student => (
-                          <tr key={student._id} className="hover:bg-gray-50/20 dark:hover:bg-gray-900/10 transition-colors">
-                            <td className="px-6 py-4 font-semibold text-gray-900 dark:text-gray-100">{student.name}</td>
-                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{student.mobile || '—'}</td>
-                            <td className="px-6 py-4 text-xs font-semibold text-gray-555 dark:text-gray-400">
-                              {student.batches?.map(b => b.name).join(', ') || '—'}
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex justify-center items-center space-x-2">
-                                {['Present', 'Absent', 'Late'].map(status => (
-                                  <button
-                                    key={status}
-                                    onClick={() => handleAttendanceChange(student._id, status)}
-                                    className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
-                                      attendanceState[student._id] === status
-                                        ? status === 'Present'
-                                          ? 'bg-emerald-55/15 border-emerald-300 text-emerald-600 dark:bg-emerald-950/25 dark:border-emerald-900'
-                                          : status === 'Late'
-                                          ? 'bg-orange-55/15 border-orange-300 text-orange-600 dark:bg-orange-950/25 dark:border-orange-900'
-                                          : 'bg-rose-55/15 border-rose-300 text-rose-600 dark:bg-rose-950/25 dark:border-rose-900'
-                                        : 'border-gray-200 text-gray-450 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900'
-                                    }`}
-                                  >
-                                    {status}
-                                  </button>
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Module Grading Sheet Tab */}
-              {activeTab === 'grading' && (
-                <div className="space-y-6">
-                  {/* Table of Module Progress */}
-                  <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-xs font-semibold uppercase bg-gray-50/50 dark:bg-gray-900/30">
-                          <th className="px-6 py-4 min-w-[150px]">Student Name</th>
-                          {getModulesList().map((mod, index) => (
-                            <th key={index} className="px-4 py-4 text-xs font-semibold min-w-[140px] text-center border-l border-gray-150 dark:border-gray-850">
-                              {mod}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-855 text-xs">
-                        {batchStudents.map(student => (
-                          <tr key={student._id} className="hover:bg-gray-50/20 dark:hover:bg-gray-900/10 transition-colors">
-                            <td className="px-6 py-4 font-bold text-sm">{student.name}</td>
-                            {getModulesList().map((mod, idx) => {
-                              const score = student.scores?.find(s => s.moduleName === mod) || {};
-                              return (
-                                <td key={idx} className="px-3 py-4 text-center border-l border-gray-150 dark:border-gray-850">
-                                  <div className="space-y-2">
-                                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                      score.status === 'Completed'
-                                        ? 'bg-emerald-55/15 dark:bg-emerald-950/25 text-emerald-600 dark:text-emerald-450 border border-emerald-300 dark:border-emerald-900'
-                                        : score.status === 'In Progress'
-                                        ? 'bg-orange-55/15 dark:bg-orange-950/25 text-orange-600 dark:text-orange-450 border border-orange-300 dark:border-orange-900'
-                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border border-transparent'
-                                    }`}>
-                                      {score.status || 'Not Started'}
-                                    </span>
-                                    {score.status && score.status !== 'Not Started' && (
-                                      <p className="font-semibold text-gray-655 dark:text-gray-400">Score: {score.marks}/10</p>
-                                    )}
-                                    <button
-                                      onClick={() => openGradingPanel(student, mod)}
-                                      className="w-full py-1 text-[10px] bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/25 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center gap-1 font-semibold"
-                                    >
-                                      <Edit3 size={11} />
-                                      <span>Grade</span>
-                                    </button>
-                                  </div>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* GRADING MODAL PANEL */}
       <AnimatePresence>
@@ -2014,9 +1805,9 @@ const TrainerDashboard = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-250 dark:border-gray-800 p-6 space-y-6"
+              className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6"
             >
-              <div className="flex items-center justify-between border-b pb-3 border-gray-150 dark:border-gray-855">
+              <div className="flex items-center justify-between border-b pb-3 border-gray-200 dark:border-gray-800">
                 <div>
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white">Grade: {selectedStudent.name}</h3>
                   <p className="text-xs text-gray-500 max-w-[280px] truncate">Module: {selectedModule}</p>
@@ -2052,7 +1843,7 @@ const TrainerDashboard = () => {
                     step="1"
                     value={gradingForm.marks}
                     onChange={(e) => setGradingForm({ ...gradingForm, marks: Number(e.target.value) })}
-                    className="w-full h-2 bg-gray-200 dark:bg-gray-850 rounded-lg appearance-none cursor-pointer accent-[#4648d4]"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-[#4648d4]"
                   />
                   <div className="flex justify-between text-[10px] text-gray-400 px-1 mt-0.5 font-bold">
                     <span>0 (Poor)</span>
@@ -2082,6 +1873,197 @@ const TrainerDashboard = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* ADD BATCH MODAL */}
+      <AnimatePresence>
+        {showAddBatchModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                    <Plus size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Create New Batch</h3>
+                    <p className="text-xs text-slate-500">Add a new training batch for your domain</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddBatchModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateBatch} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Batch Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Communication Batch 2, Aptitude Batch A"
+                    value={newBatchForm.name}
+                    onChange={(e) => setNewBatchForm({ ...newBatchForm, name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Course / Module *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Communication Skills, Aptitude & Reasoning"
+                    value={newBatchForm.course}
+                    onChange={(e) => setNewBatchForm({ ...newBatchForm, course: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Schedule</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Mon-Fri (09:00 AM - 12:00 PM)"
+                    value={newBatchForm.schedule}
+                    onChange={(e) => setNewBatchForm({ ...newBatchForm, schedule: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddBatchModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creatingBatch}
+                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                  >
+                    {creatingBatch ? 'Creating...' : 'Create Batch'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ADD STUDENT MODAL */}
+      <AnimatePresence>
+        {showAddStudentModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400">
+                    <UserPlus size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Add & Enroll Student</h3>
+                    <p className="text-xs text-slate-500">Enroll a student directly into your batch</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddStudentModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateStudent} className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Student Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Rahul Sharma"
+                    value={newStudentForm.name}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="student@example.com"
+                    value={newStudentForm.email}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, email: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Mobile Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 9876543210"
+                    value={newStudentForm.mobile}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, mobile: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Assign to Batch *</label>
+                  <select
+                    required
+                    value={newStudentForm.batchId}
+                    onChange={(e) => setNewStudentForm({ ...newStudentForm, batchId: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                  >
+                    <option value="">Select a Batch...</option>
+                    {batches.map(b => (
+                      <option key={b._id} value={b._id}>{b.name} ({b.course})</option>
+                    ))}
+                  </select>
+                </div>
+
+
+                <div className="flex justify-end gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddStudentModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creatingStudent}
+                    className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-md shadow-purple-500/25 cursor-pointer disabled:opacity-50"
+                  >
+                    {creatingStudent ? 'Adding...' : 'Add & Enroll'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* UPDATE SPOKEN MOCK EVALUATION MODAL */}
+      {renderMockEvaluationModal()}
     </div>
   );
 };

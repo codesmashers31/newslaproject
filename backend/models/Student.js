@@ -60,6 +60,18 @@ const studentSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  aiRoadmap: {
+    targetTrack: { type: String, default: '' },
+    familiarSkills: { type: [String], default: [] },
+    dailyHours: { type: Number, default: 0 },
+    topics: [{
+      name: { type: String, required: true },
+      subtopics: [{ type: String }],
+      estimatedDays: { type: Number, required: true },
+      completed: { type: Boolean, default: false },
+    }],
+    generatedAt: { type: Date, default: null }
+  },
   updatedAt: {
     type: Date,
     default: Date.now,

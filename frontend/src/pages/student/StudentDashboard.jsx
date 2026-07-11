@@ -8,9 +8,16 @@ import {
   Sparkles,
   FileDown,
   Bookmark,
-  Trophy
+  Trophy,
+  Calendar,
+  CalendarDays,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  Camera
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { Link } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const [data, setData] = useState(null);
@@ -151,15 +158,16 @@ const StudentDashboard = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-40 bg-gray-250 dark:bg-gray-800 rounded-3xl" />
+        <div className="h-40 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-80 bg-gray-250 dark:bg-gray-800 rounded-3xl" />
-          <div className="h-80 bg-gray-250 dark:bg-gray-800 rounded-3xl" />
+          <div className="lg:col-span-2 h-80 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
+          <div className="h-80 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
         </div>
       </div>
     );
   }
 
+  if (!data) return null;
   const { profile, batch, scorecards, progress, leaderboardRank, placementReadiness, calculatedScores } = data;
 
   const currentScorecard = 
@@ -185,9 +193,134 @@ const StudentDashboard = () => {
           <div>
             <h1 className="text-3xl font-extrabold text-white">Hello, {profile.user?.name}!</h1>
             <p className="text-sm text-indigo-100 mt-1">
-              Enrolled in {batch ? `${batch.name} • ${batch.course}` : 'Unassigned Batch. Contact administrator.'}
+              {data.batches && data.batches.length > 0 
+                ? `Enrolled in: ${data.batches.map(b => `${b.name} (${b.course})`).join(' • ')}`
+                : batch 
+                ? `Enrolled in: ${batch.name} • ${batch.course}` 
+                : 'Unassigned Batch. Contact administrator.'}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Batch Details and Daily Attendance Scanner Roll Call */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Left Card: Batch Profile Details */}
+        <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                <CalendarDays size={20} />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-gray-900 dark:text-white">Active Training Batch</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Course duration & curriculum details</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 text-xs text-gray-700 dark:text-gray-300">
+              <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
+                <span className="font-semibold text-gray-500 dark:text-gray-400">Batch Name:</span>
+                <span className="font-bold text-gray-900 dark:text-white">{batch?.name || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
+                <span className="font-semibold text-gray-500 dark:text-gray-400">Course / Syllabus:</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">{batch?.course || 'Full Stack Placement Prep'}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
+                <span className="font-semibold text-gray-500 dark:text-gray-400">Schedule:</span>
+                <span className="font-bold">
+                  {batch?.startDate ? new Date(batch.startDate).toLocaleDateString() : 'N/A'}
+                  {' — '}
+                  {batch?.endDate ? new Date(batch.endDate).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
+            </div>
+
+            {/* List of Trainers */}
+            <div className="pt-2">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Assigned Staff Trainers</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {batch?.trainers && batch.trainers.length > 0 ? (
+                  batch.trainers.map((tr) => (
+                    <div key={tr._id} className="p-2.5 border border-gray-100 dark:border-gray-850 bg-gray-50/50 dark:bg-[#181922] rounded-xl text-center space-y-1">
+                      <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide block truncate">{tr.role}</span>
+                      <h5 className="font-bold text-xs text-gray-800 dark:text-white truncate" title={tr.name}>{tr.name}</h5>
+                      <span className="text-[9px] text-gray-400 block truncate">{tr.email}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-gray-400 italic col-span-3 text-center py-2 bg-gray-50 dark:bg-[#181922] rounded-xl">No trainers assigned yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Card: Daily Roll Call Check-in */}
+        <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 rounded-xl">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-900 dark:text-white">Daily Attendance Roll Call</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Today is: {new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance Status View */}
+            {data.attendance?.todayRecord ? (
+              // Case: Marked
+              <div className="flex flex-col items-center justify-center py-5 space-y-3 bg-emerald-50/20 dark:bg-emerald-950/5 border border-emerald-200/50 dark:border-emerald-900/20 rounded-2xl p-4">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
+                  <CheckCircle2 size={24} />
+                </div>
+                <div className="text-center">
+                  <span className="inline-flex px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider">
+                    {data.attendance.todayRecord.status}
+                  </span>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                    Verified today at {new Date(data.attendance.todayRecord.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1">Daily attendance session logged successfully.</p>
+                </div>
+              </div>
+            ) : (
+              // Case: Pending Check-in
+              <div className="flex flex-col items-center justify-center py-5 space-y-3 bg-amber-50/20 dark:bg-amber-950/5 border border-amber-200/50 dark:border-amber-900/20 rounded-2xl p-4">
+                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center animate-bounce">
+                  <AlertTriangle size={24} />
+                </div>
+                <div className="text-center">
+                  <span className="inline-flex px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-xs font-bold uppercase tracking-wider">
+                    Pending
+                  </span>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">
+                    You have not checked in for today's sessions yet.
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1">Please scan the live QR code projected by your trainer to record attendance.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Link: Scanner Direct link */}
+          {!data.attendance?.todayRecord && (
+            <Link
+              to="/student/scanner"
+              className="mt-4 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
+            >
+              <Camera size={14} />
+              <span>Scan Attendance QR Code</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -211,7 +344,7 @@ const StudentDashboard = () => {
 
         {/* Grade Card */}
         <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-5 rounded-3xl backdrop-blur-md shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-indigo-100 dark:bg-indigo-950/30 text-indigo-650 dark:text-indigo-400 rounded-2xl">
+          <div className="p-3 bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl">
             <Award size={24} />
           </div>
           <div>
@@ -256,7 +389,7 @@ const StudentDashboard = () => {
               <span>{item.label}</span>
               <span className="font-bold text-gray-800 dark:text-gray-200">{item.value}%</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-850 h-2.5 rounded-full overflow-hidden">
+            <div className="w-full bg-gray-200 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden">
               <div className={`${item.color} h-full rounded-full transition-all duration-500`} style={{ width: `${item.value}%` }} />
             </div>
           </div>
@@ -280,7 +413,7 @@ const StudentDashboard = () => {
           <button
             onClick={isCertificateClaimed ? generatePDFCertificate : handleClaimCertificate}
             disabled={certificateClaiming}
-            className="bg-indigo-650 hover:bg-indigo-550 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+            className="bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50"
           >
             <FileDown size={14} />
             <span>{isCertificateClaimed ? 'Download Certificate' : 'Claim Certificate'}</span>
@@ -296,7 +429,8 @@ const StudentDashboard = () => {
           {[
             { id: 'aptitude', name: 'Aptitude Module', icon: BookOpen },
             { id: 'communication', name: 'Communication Module', icon: Bookmark },
-            { id: 'technical', name: 'Technical Module', icon: Award }
+            { id: 'technical', name: 'Technical Module', icon: Award },
+            { id: 'attendance', name: 'Attendance History', icon: Calendar }
           ].map(tab => {
             const Icon = tab.icon;
             return (
@@ -385,7 +519,7 @@ const StudentDashboard = () => {
                       </div>
                       <div>
                         <p className="font-bold text-xs">Prof. Sarah Jenkins</p>
-                        <p className="text-[10px] text-gray-450">Lead Aptitude Trainer</p>
+                        <p className="text-[10px] text-gray-400">Lead Aptitude Trainer</p>
                       </div>
                     </div>
                     <blockquote className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-[#c7c4d7]">
@@ -466,7 +600,7 @@ const StudentDashboard = () => {
                       </div>
                       <div>
                         <p className="font-bold text-xs">Prof. Julian Reed</p>
-                        <p className="text-[10px] text-gray-450">Communication Lead</p>
+                        <p className="text-[10px] text-gray-400">Communication Lead</p>
                       </div>
                     </div>
                     <blockquote className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-[#c7c4d7]">
@@ -565,7 +699,7 @@ const StudentDashboard = () => {
                       </div>
                       <div>
                         <p className="font-bold text-xs">Prof. Marcus Vance</p>
-                        <p className="text-[10px] text-gray-455">Technical Evaluator</p>
+                        <p className="text-[10px] text-gray-400">Technical Evaluator</p>
                       </div>
                     </div>
                     <blockquote className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-[#c7c4d7]">
@@ -573,9 +707,70 @@ const StudentDashboard = () => {
                     </blockquote>
                     <div className="pt-2 border-t border-[#c7c4d7] flex justify-between items-center text-xs">
                       <span className="text-gray-500">Coding Speed</span>
-                      <span className="font-extrabold text-indigo-650">Top 10%</span>
+                      <span className="font-extrabold text-indigo-600">Top 10%</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeScorecard === 'attendance' && (
+            <div className="space-y-6">
+              {/* Stats Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Attendance Rate</span>
+                  <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{data.attendance?.percentage || 0}%</span>
+                </div>
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Classes Present</span>
+                  <span className="text-xl font-extrabold text-emerald-700 mt-1 block">{data.attendance?.presentCount || 0} Days</span>
+                </div>
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Total Sessions</span>
+                  <span className="text-xl font-extrabold text-gray-700 mt-1 block">{data.attendance?.totalClasses || 0} Sessions</span>
+                </div>
+              </div>
+
+              {/* Attendance Table */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-sm text-[#111c2d]">Day-Wise Attendance Logs</h4>
+                <div className="border border-[#c7c4d7] rounded-2xl overflow-hidden bg-white">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-[#c7c4d7] text-gray-500 font-semibold uppercase tracking-wider">
+                        <th className="px-4 py-3">Date</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#c7c4d7]">
+                      {!data.attendance?.records || data.attendance.records.length === 0 ? (
+                        <tr>
+                          <td colSpan="3" className="px-4 py-8 text-center text-gray-500 italic">No attendance records found.</td>
+                        </tr>
+                      ) : (
+                        data.attendance.records.map((item, idx) => (
+                          <tr key={item._id || idx} className="hover:bg-gray-50/20 transition-colors">
+                            <td className="px-4 py-3.5 font-bold text-gray-800">
+                              {new Date(item.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                                item.status === 'Present' ? 'bg-emerald-50 text-emerald-600' :
+                                item.status === 'Late' ? 'bg-amber-50 text-amber-600' :
+                                'bg-rose-50 text-rose-600'
+                              }`}>
+                                {item.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-gray-500 max-w-[200px] truncate">{item.remarks || '—'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Student from '../models/Student.js';
 import Placement from '../models/Placement.js';
@@ -68,7 +69,41 @@ export const authUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const trimmedInput = email ? email.trim() : '';
+
+    // 1. Try to find user directly by email
+    let user = await User.findOne({ email: trimmedInput.toLowerCase() });
+
+    // 2. If not found, try to find user by mobile (in case mobile is stored in User model's email or mobile field)
+    if (!user) {
+      user = await User.findOne({
+        $or: [
+          { email: trimmedInput },
+          { mobile: trimmedInput }
+        ]
+      });
+    }
+
+    // 3. If still not found, search in the 'students' collection (which has the actual student mobile field)
+    if (!user) {
+      const studentProfile = await mongoose.connection.db.collection('students').findOne({
+        $or: [
+          { mobile: trimmedInput },
+          { mobile: ` ${trimmedInput}` },
+          { mobile: `${trimmedInput} ` },
+          { email: trimmedInput.toLowerCase() }
+        ]
+      });
+
+      if (studentProfile) {
+        user = await User.findOne({
+          $or: [
+            { studentId: studentProfile._id.toString() },
+            { studentId: studentProfile._id }
+          ]
+        });
+      }
+    }
 
     if (user && (await user.matchPassword(password))) {
       if (user.status === 'Inactive') {
@@ -79,7 +114,7 @@ export const authUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: user.mobile || '',
         role: user.role,
         token: generateToken(user._id),
       });
@@ -106,6 +141,38 @@ export const getUserProfile = async (req, res) => {
         email: user.email,
         mobile: user.mobile,
         role: user.role,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/me
+// @access  Private
+export const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.mobile = req.body.mobile || user.mobile;
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+
+      const updatedUser = await user.save();
+
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        mobile: updatedUser.mobile,
+        role: updatedUser.role,
+        token: generateToken(updatedUser._id),
       });
     } else {
       res.status(404).json({ message: 'User not found' });

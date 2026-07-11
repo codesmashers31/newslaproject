@@ -32,7 +32,7 @@ const PlacementReadiness = () => {
 
   if (!data || !data.placementReadiness) {
     return (
-      <div className="text-center py-10 bg-white dark:bg-[#12131a] rounded-3xl border border-gray-250 dark:border-gray-800">
+      <div className="text-center py-10 bg-white dark:bg-[#12131a] rounded-3xl border border-gray-200 dark:border-gray-800">
         <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p className="text-gray-500">Placement details not available.</p>
       </div>
@@ -44,8 +44,8 @@ const PlacementReadiness = () => {
   // Status mapping colors
   const statusConfig = {
     'Ready': {
-      bg: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-450',
-      border: 'border-emerald-250 dark:border-emerald-900/30',
+      bg: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400',
+      border: 'border-emerald-200 dark:border-emerald-900/30',
       icon: <CheckCircle className="w-5 h-5 text-emerald-500" />
     },
     'Almost Ready': {
@@ -54,12 +54,12 @@ const PlacementReadiness = () => {
       icon: <CheckCircle className="w-5 h-5 text-blue-500" />
     },
     'Needs Improvement': {
-      bg: 'bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-455',
-      border: 'border-amber-250 dark:border-amber-900/30',
+      bg: 'bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400',
+      border: 'border-amber-200 dark:border-amber-900/30',
       icon: <AlertTriangle className="w-5 h-5 text-amber-500" />
     },
     'Critical': {
-      bg: 'bg-rose-50 text-rose-800 dark:bg-rose-950/20 dark:text-rose-450',
+      bg: 'bg-rose-50 text-rose-800 dark:bg-rose-950/20 dark:text-rose-400',
       border: 'border-rose-200 dark:border-rose-900/30',
       icon: <XCircle className="w-5 h-5 text-rose-500" />
     }
@@ -80,7 +80,7 @@ const PlacementReadiness = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Progress Card */}
-        <div className="md:col-span-1 bg-white/70 dark:bg-[#12131a]/80 border border-gray-250 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
+        <div className="md:col-span-1 bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
           <h2 className="font-bold text-lg mb-6">Readiness score</h2>
           
           {/* Radial progress ring */}
@@ -91,7 +91,7 @@ const PlacementReadiness = () => {
                 cy="80"
                 r="70"
                 strokeWidth="10"
-                className="stroke-gray-150 dark:stroke-gray-800"
+                className="stroke-gray-200 dark:stroke-gray-800"
                 fill="transparent"
               />
               <circle
@@ -99,7 +99,7 @@ const PlacementReadiness = () => {
                 cy="80"
                 r="70"
                 strokeWidth="10"
-                className="stroke-indigo-650 dark:stroke-indigo-500"
+                className="stroke-indigo-600 dark:stroke-indigo-500"
                 fill="transparent"
                 strokeDasharray={440}
                 strokeDashoffset={440 - (440 * percentage) / 100}
@@ -119,7 +119,7 @@ const PlacementReadiness = () => {
         </div>
 
         {/* Requirements Breakdown List */}
-        <div className="md:col-span-2 bg-white/70 dark:bg-[#12131a]/80 border border-gray-250 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl">
+        <div className="md:col-span-2 bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl">
           <h2 className="font-bold text-lg mb-6">Readiness Criteria</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
@@ -192,7 +192,7 @@ const PlacementReadiness = () => {
       </div>
 
       {/* AI Recommendation Panel */}
-      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-250 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl">
+      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl">
         <h2 className="font-bold text-lg mb-4 flex items-center gap-2.5">
           <Sparkles className="text-violet-500 fill-violet-500/20" />
           AI Recommendation Panel
@@ -207,7 +207,7 @@ const PlacementReadiness = () => {
               key={index}
               className="flex gap-3.5 p-4 rounded-2xl bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/50 dark:border-indigo-900/20 text-sm font-medium"
             >
-              <div className="h-5 w-5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-655 dark:text-indigo-400 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+              <div className="h-5 w-5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
                 {index + 1}
               </div>
               <span className="text-gray-700 dark:text-gray-300">{rec}</span>

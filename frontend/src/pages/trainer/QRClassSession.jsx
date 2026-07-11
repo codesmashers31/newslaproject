@@ -12,7 +12,7 @@ const QRClassSession = () => {
   
   const [activeSession, setActiveSession] = useState(null);
   const [qrToken, setQrToken] = useState('');
-  const [countdown, setCountdown] = useState(120);
+  const [countdown, setCountdown] = useState(15);
   const [loading, setLoading] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
 
@@ -22,15 +22,8 @@ const QRClassSession = () => {
   useEffect(() => {
     const fetchBatches = async () => {
       try {
-        const { data } = await API.get('/trainer/students');
-        // Extract batches from assigned students list
-        const batchMap = {};
-        data.forEach(student => {
-          student.batches.forEach(b => {
-            batchMap[b._id] = b;
-          });
-        });
-        setBatches(Object.values(batchMap));
+        const { data } = await API.get('/trainer/batches');
+        setBatches(data);
       } catch (error) {
         console.error('Error fetching batches', error);
         toast.error('Failed to load active batches');
@@ -45,7 +38,7 @@ const QRClassSession = () => {
     try {
       const { data } = await API.get(`/trainer/session/${sessionId}/qr`);
       setQrToken(data.token);
-      setCountdown(120); // Reset 2 minutes countdown
+      setCountdown(15); // Reset 15 seconds countdown
     } catch (error) {
       console.error('Error loading QR code', error);
       toast.error('Failed to rotate QR token');
@@ -62,7 +55,7 @@ const QRClassSession = () => {
           if (prev <= 1) {
             // Trigger token refresh
             fetchQRToken(activeSession._id);
-            return 120;
+            return 15;
           }
           return prev - 1;
         });
@@ -211,7 +204,7 @@ const QRClassSession = () => {
               </span>
             </div>
 
-            <div className="relative p-6 bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-2xl shadow-inner max-w-xs mx-auto">
+            <div className="relative p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-inner max-w-xs mx-auto">
               {qrLoading && (
                 <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-2xl z-10">
                   <RefreshCw className="h-8 w-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
@@ -234,14 +227,14 @@ const QRClassSession = () => {
               <div className="w-full bg-gray-200 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
                 <div
                   className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all duration-1000 ease-linear"
-                  style={{ width: `${(countdown / 120) * 100}%` }}
+                  style={{ width: `${(countdown / 15) * 100}%` }}
                 ></div>
               </div>
             </div>
 
             <div className="mt-6 flex items-center gap-2 text-xs text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-4 py-2.5 rounded-xl border border-rose-200/50 dark:border-rose-900/20">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>Screenshots or shared copies expire automatically within 2 minutes.</span>
+              <span>Screenshots or shared copies expire automatically within 15 seconds.</span>
             </div>
           </div>
 

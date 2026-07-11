@@ -6,7 +6,10 @@ import {
   getNotifications,
   markNotificationsAsRead,
   scanQR,
-  getLeaderboard
+  getLeaderboard,
+  getStudentAIRoadmap,
+  generateStudentAIRoadmap,
+  toggleAIRoadmapTopic
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -29,5 +32,9 @@ router.get('/notifications', getNotifications);
 router.put('/notifications/read', markNotificationsAsRead);
 router.post('/attendance/scan', scanQR);
 router.get('/leaderboard', getLeaderboard);
+
+router.get('/ai-roadmap', getStudentAIRoadmap);
+router.post('/ai-roadmap', generateStudentAIRoadmap);
+router.put('/ai-roadmap/toggle-topic', toggleAIRoadmapTopic);
 
 export default router;

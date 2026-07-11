@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { 
   User, 
@@ -97,7 +97,7 @@ const StudentProfile = () => {
 
   if (loading) {
     return (
-      <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-850 rounded-3xl animate-pulse">
+      <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl animate-pulse">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
       </div>
     );
@@ -114,13 +114,13 @@ const StudentProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Avatar & Files summary */}
-        <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-250 dark:border-gray-800 p-6 rounded-3xl backdrop-blur-md shadow-sm space-y-6 flex flex-col items-center text-center">
+        <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-6 rounded-3xl backdrop-blur-md shadow-sm space-y-6 flex flex-col items-center text-center">
           
           {/* Avatar Picture */}
           <div className="relative group">
             <div className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-gray-100 flex items-center justify-center shadow-lg relative">
               {currentPhoto ? (
-                <img src={`http://localhost:5000${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
+                <img src={currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
               ) : (
                 <User size={48} className="text-gray-400" />
               )}
@@ -152,7 +152,7 @@ const StudentProfile = () => {
             <p className="text-[10px] text-gray-400">Upload JPEG, JPG, or PNG under 5MB</p>
           </div>
 
-          <hr className="w-full border-gray-200 dark:border-gray-850" />
+          <hr className="w-full border-gray-200 dark:border-gray-800" />
 
           {/* Resume Log */}
           <div className="w-full space-y-4">
@@ -181,7 +181,7 @@ const StudentProfile = () => {
 
             {currentResume && (
               <a 
-                href={`http://localhost:5000${currentResume}`}
+                href={`${BACKEND_URL}${currentResume}`}
                 target="_blank" 
                 rel="noreferrer"
                 className="text-xs text-indigo-600 hover:underline flex items-center gap-1 font-semibold justify-center"
@@ -194,7 +194,7 @@ const StudentProfile = () => {
         </div>
 
         {/* Right Column: Edit inputs */}
-        <div className="lg:col-span-2 bg-white/60 dark:bg-[#12131a]/60 border border-gray-250 dark:border-gray-800 p-6 sm:p-8 rounded-3xl backdrop-blur-md shadow-sm">
+        <div className="lg:col-span-2 bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-6 sm:p-8 rounded-3xl backdrop-blur-md shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5 text-xs font-semibold text-gray-600 dark:text-gray-400">
             {/* Bio */}
             <div>
@@ -202,7 +202,7 @@ const StudentProfile = () => {
               <textarea
                 value={profileData.bio}
                 onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none h-20"
+                className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none h-20"
                 placeholder="Write a brief intro about your career aspirations..."
               />
             </div>
@@ -216,7 +216,7 @@ const StudentProfile = () => {
                   required
                   value={profileData.collegeName}
                   onChange={(e) => setProfileData({ ...profileData, collegeName: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="e.g. Stanford University"
                 />
               </div>
@@ -227,7 +227,7 @@ const StudentProfile = () => {
                   required
                   value={profileData.degree}
                   onChange={(e) => setProfileData({ ...profileData, degree: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="e.g. B.Tech / B.Sc"
                 />
               </div>
@@ -241,7 +241,7 @@ const StudentProfile = () => {
                   required
                   value={profileData.department}
                   onChange={(e) => setProfileData({ ...profileData, department: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="e.g. Computer Science"
                 />
               </div>
@@ -252,7 +252,7 @@ const StudentProfile = () => {
                   required
                   value={profileData.yearOfPassing}
                   onChange={(e) => setProfileData({ ...profileData, yearOfPassing: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="e.g. 2026"
                 />
               </div>
@@ -263,7 +263,7 @@ const StudentProfile = () => {
                   required
                   value={profileData.dob}
                   onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                 />
               </div>
             </div>
@@ -274,7 +274,7 @@ const StudentProfile = () => {
                 <select
                   value={profileData.gender}
                   onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-white dark:bg-[#12131a] dark:border-gray-850 text-gray-900 dark:text-gray-155 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-white dark:bg-[#12131a] dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                 >
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
@@ -288,7 +288,7 @@ const StudentProfile = () => {
                   type="text"
                   value={profileData.skills}
                   onChange={(e) => setProfileData({ ...profileData, skills: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="e.g. HTML, CSS, JavaScript, React"
                 />
               </div>
@@ -300,7 +300,7 @@ const StudentProfile = () => {
                 type="text"
                 value={profileData.address}
                 onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-150 text-sm focus:outline-none"
+                className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                 placeholder="City, State, Country"
               />
             </div>
@@ -316,7 +316,7 @@ const StudentProfile = () => {
                   type="url"
                   value={profileData.linkedin}
                   onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-155 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="https://linkedin.com/in/username"
                 />
               </div>
@@ -329,7 +329,7 @@ const StudentProfile = () => {
                   type="url"
                   value={profileData.github}
                   onChange={(e) => setProfileData({ ...profileData, github: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-850 text-gray-900 dark:text-gray-155 text-sm focus:outline-none"
+                  className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-200 text-sm focus:outline-none"
                   placeholder="https://github.com/username"
                 />
               </div>

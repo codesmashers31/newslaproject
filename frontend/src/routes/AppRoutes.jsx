@@ -18,6 +18,8 @@ import PlacementManagement from '../pages/admin/PlacementManagement';
 
 // Trainer Pages
 import TrainerDashboard from '../pages/trainer/TrainerDashboard';
+import TrainerBatchesPage from '../pages/trainer/TrainerBatchesPage';
+import TrainerStudentsPage from '../pages/trainer/TrainerStudentsPage';
 
 // Student Pages
 import StudentDashboard from '../pages/student/StudentDashboard';
@@ -27,6 +29,8 @@ import QRScanner from '../pages/student/QRScanner';
 import PlacementReadiness from '../pages/student/PlacementReadiness';
 import Leaderboards from '../pages/Leaderboards';
 import StudentScorecards from '../pages/student/StudentScorecards';
+import AIRoadmap from '../pages/student/AIRoadmap';
+import UserProfile from '../pages/common/UserProfile';
 
 const AppRoutes = () => {
   return (
@@ -60,7 +64,7 @@ const AppRoutes = () => {
           path="/admin/batches" 
           element={
             <DashboardLayout>
-              <BatchManagement />
+              <TrainerBatchesPage />
             </DashboardLayout>
           } 
         />
@@ -88,15 +92,47 @@ const AppRoutes = () => {
             </DashboardLayout>
           } 
         />
+        <Route 
+          path="/admin/profile" 
+          element={
+            <DashboardLayout>
+              <UserProfile />
+            </DashboardLayout>
+          } 
+        />
       </Route>
 
       {/* TRAINER DASHBOARDS */}
-      <Route element={<ProtectedRoute allowedRoles={['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer', 'Admin', 'Super Admin']} />}>
         <Route 
           path="/trainer" 
           element={
             <DashboardLayout>
               <TrainerDashboard />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/trainer/batches" 
+          element={
+            <DashboardLayout>
+              <TrainerBatchesPage />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/trainer/trainers" 
+          element={
+            <DashboardLayout>
+              <TrainerManagement />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/trainer/students" 
+          element={
+            <DashboardLayout>
+              <TrainerStudentsPage />
             </DashboardLayout>
           } 
         />
@@ -121,6 +157,14 @@ const AppRoutes = () => {
           element={
             <DashboardLayout>
               <QRClassSession />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/trainer/profile" 
+          element={
+            <DashboardLayout>
+              <UserProfile />
             </DashboardLayout>
           } 
         />
@@ -173,6 +217,14 @@ const AppRoutes = () => {
           element={
             <DashboardLayout>
               <StudentScorecards />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/student/ai-roadmap" 
+          element={
+            <DashboardLayout>
+              <AIRoadmap />
             </DashboardLayout>
           } 
         />

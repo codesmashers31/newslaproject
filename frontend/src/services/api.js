@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+export const BACKEND_URL = import.meta.env.VITE_API_URL 
+  ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') 
+  : `http://${window.location.hostname}:5000`;
+
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api', // Maps to the Express backend port
+  baseURL: import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`,
   headers: {
     'Content-Type': 'application/json',
   },

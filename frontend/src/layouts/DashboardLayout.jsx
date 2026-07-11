@@ -33,26 +33,16 @@ const DashboardLayout = ({ children }) => {
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') return true;
-    if (savedTheme === 'light') return false;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Sync theme with document class
+  // Sync theme with document class (Forced Light Mode)
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }, []);
 
   // Fetch student notifications if role is student
   useEffect(() => {
@@ -85,9 +75,9 @@ const DashboardLayout = ({ children }) => {
 
   // Role based navigation links
   const getNavLinks = () => {
-    const baseClass = "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 font-medium ";
-    const activeClass = "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/25 dark:text-indigo-400 border-l-4 border-indigo-600 dark:border-indigo-400 shadow-sm";
-    const inactiveClass = "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/40 dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-gray-800/30";
+    const baseClass = "group flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 select-none ";
+    const activeClass = "bg-[#4F46E5]/10 text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818cf8] font-bold border border-[#4F46E5]/20 shadow-xs";
+    const inactiveClass = "text-slate-600 hover:text-[#4F46E5] hover:bg-slate-100/90 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50";
 
     const makeLink = (path, icon, label) => {
       const isActive = location.pathname === path;
@@ -96,47 +86,77 @@ const DashboardLayout = ({ children }) => {
           key={path}
           to={path} 
           onClick={() => setMobileMenuOpen(false)}
+          style={{
+            fontFamily: '"Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontStyle: 'normal',
+            fontWeight: isActive ? 700 : 600,
+            fontSize: '12px',
+            lineHeight: '16px',
+            color: isActive ? 'oklch(0.488 0.243 264.376)' : undefined
+          }}
           className={`${baseClass} ${isActive ? activeClass : inactiveClass}`}
         >
-          {icon}
-          <span className={`${!sidebarOpen && "lg:hidden"} origin-left duration-200`}>{label}</span>
+          <div className="flex items-center gap-3">
+            <span className={`${isActive ? 'text-[#4F46E5] dark:text-[#818cf8]' : 'text-slate-500 group-hover:text-[#4F46E5]'} transition-colors`}>
+              {icon}
+            </span>
+            <span className={`${!sidebarOpen && "lg:hidden"} origin-left duration-200 truncate`}>{label}</span>
+          </div>
+          {isActive && sidebarOpen && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5] dark:bg-[#818cf8]" />
+          )}
         </Link>
       );
     };
 
+    const renderSection = (title, links) => (
+      <div className="space-y-1.5">
+        {sidebarOpen && (
+          <div className="px-3.5 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            {title}
+          </div>
+        )}
+        <div className="space-y-1.5">
+          {links}
+        </div>
+      </div>
+    );
+
     if (user?.role === 'Admin' || user?.role === 'Super Admin') {
-      return [
-        makeLink('/admin', <LayoutDashboard size={20} />, 'Dashboard'),
-        makeLink('/admin/students', <Users size={20} />, 'Students'),
-        makeLink('/admin/batches', <FolderGit size={20} />, 'Batches'),
-        makeLink('/admin/trainers', <GraduationCap size={20} />, 'Trainers'),
-        makeLink('/admin/attendance', <CalendarCheck size={20} />, 'Attendance'),
-        makeLink('/admin/placement', <Briefcase size={20} />, 'Placement'),
-      ];
+      return renderSection('Administration', [
+        makeLink('/admin', <LayoutDashboard size={17} />, 'Dashboard'),
+        makeLink('/admin/trainers', <GraduationCap size={17} />, 'Trainers Directory'),
+        makeLink('/admin/batches', <FolderGit size={17} />, 'Batches Directory'),
+        makeLink('/admin/students', <Users size={17} />, 'Students Directory'),
+        makeLink('/admin/attendance', <CalendarCheck size={17} />, 'Attendance'),
+        makeLink('/admin/placement', <Briefcase size={17} />, 'Placement'),
+      ]);
     } else if (['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'].includes(user?.role || '')) {
-      return [
-        makeLink('/trainer', <LayoutDashboard size={20} />, 'Dashboard'),
-        makeLink('/trainer/attendance', <CalendarCheck size={20} />, 'Mark Attendance'),
-        makeLink('/trainer/scores', <FilePieChart size={20} />, 'Grade Scorecard'),
-        makeLink('/trainer/session', <Camera size={20} />, 'Smart Attendance QR'),
-      ];
+      return renderSection('Trainer Portal', [
+        makeLink('/trainer', <LayoutDashboard size={17} />, 'Dashboard'),
+        makeLink('/trainer/batches', <FolderGit size={17} />, 'Batches Directory'),
+        makeLink('/trainer/students', <Users size={17} />, 'Students Directory'),
+        makeLink('/trainer/attendance', <CalendarCheck size={17} />, 'Mark Attendance'),
+        makeLink('/trainer/scores', <FilePieChart size={17} />, 'Grade Scorecard'),
+        makeLink('/trainer/session', <Camera size={17} />, 'Smart Attendance QR'),
+      ]);
     } else if (user?.role === 'Student') {
-      return [
-        makeLink('/student', <LayoutDashboard size={20} />, 'Overview'),
-        makeLink('/student/profile', <User size={20} />, 'My Profile'),
-        makeLink('/student/scanner', <Camera size={20} />, 'Scan QR Attendance'),
-        makeLink('/student/placement', <Briefcase size={20} />, 'Placement Readiness'),
-        makeLink('/student/leaderboard', <Trophy size={20} />, 'Leaderboard'),
-        makeLink('/student/scorecards', <FileText size={20} />, 'My Scorecards'),
-      ];
+      return renderSection('Student Hub', [
+        makeLink('/student', <LayoutDashboard size={17} />, 'Overview'),
+        makeLink('/student/ai-roadmap', <Sparkles size={17} />, 'AI Study Planner'),
+        makeLink('/student/scanner', <Camera size={17} />, 'Scan QR Attendance'),
+        makeLink('/student/placement', <Briefcase size={17} />, 'Placement Readiness'),
+        makeLink('/student/leaderboard', <Trophy size={17} />, 'Leaderboard'),
+        makeLink('/student/scorecards', <FileText size={17} />, 'My Scorecards'),
+      ]);
     }
-    return [];
+    return null;
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 transition-colors duration-300 dark:bg-[#0b0c10] dark:text-gray-100 flex">
+    <div className="min-h-screen bg-gray-100/50 text-gray-900 transition-colors duration-300 dark:bg-[#0b0c10] dark:text-gray-100 flex">
       
       {/* 1. SIDEBAR (LARGE SCREEN) */}
       <aside 
@@ -169,29 +189,29 @@ const DashboardLayout = ({ children }) => {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-3.5 py-5 space-y-4 overflow-y-auto">
           {getNavLinks()}
         </nav>
 
         {/* Footer info / Logout */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800/85">
+        <div className="p-3.5 border-t border-gray-200 dark:border-gray-800/85">
           {sidebarOpen ? (
-            <div className="bg-gray-100/50 dark:bg-gray-900/40 rounded-2xl p-3 mb-3 flex items-center space-x-3">
-              <div className="h-9 w-9 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold">
+            <div className="bg-gray-100/60 dark:bg-gray-900/40 rounded-xl p-2.5 mb-2.5 flex items-center gap-2.5">
+              <div className="h-8 w-8 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold text-xs">
                 {user?.name?.charAt(0)}
               </div>
               <div className="overflow-hidden flex-1">
-                <p className="text-xs font-semibold truncate">{user?.name}</p>
-                <p className="text-[10px] text-gray-500 truncate">{user?.role}</p>
+                <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">{user?.name}</p>
+                <p className="text-[10px] font-semibold text-slate-500 truncate">{user?.role}</p>
               </div>
             </div>
           ) : null}
           <button 
             onClick={handleLogout}
-            className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50/50 dark:text-red-400 dark:hover:bg-red-950/20 font-medium transition-all duration-300"
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 transition-all duration-200 cursor-pointer"
           >
-            <LogOut size={20} />
-            {sidebarOpen && <span>Logout</span>}
+            <LogOut size={16} />
+            <span className={`${!sidebarOpen && "lg:hidden"}`}>Logout</span>
           </button>
         </div>
       </aside>
@@ -228,7 +248,7 @@ const DashboardLayout = ({ children }) => {
                     <X size={20} />
                   </button>
                 </div>
-                <nav className="space-y-2">
+                <nav className="space-y-4">
                   {getNavLinks()}
                 </nav>
               </div>
@@ -264,26 +284,19 @@ const DashboardLayout = ({ children }) => {
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-850"
+              className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <Menu size={20} />
             </button>
-            <div className="hidden sm:flex items-center space-x-2 text-xs font-medium bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-full border border-indigo-100/40 dark:border-indigo-900/30">
-              <Sparkles size={13} />
-              <span>{user?.role} Workspace</span>
-            </div>
+            {user?.role !== 'Communication Trainer' && (
+              <div className="hidden sm:flex items-center space-x-2 text-xs font-medium bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-full border border-indigo-100/40 dark:border-indigo-900/30">
+                <Sparkles size={13} />
+                <span>{user?.role} Workspace</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
-
-            {/* Dark Mode Toggle */}
-            <button 
-              onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 hover:text-indigo-650 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors cursor-pointer"
-              aria-label="Toggle theme"
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
 
             {/* Notifications Dropdown (Student only) */}
             {user?.role === 'Student' && (
@@ -315,9 +328,9 @@ const DashboardLayout = ({ children }) => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#12131a] border border-gray-250 dark:border-gray-800 rounded-2xl shadow-xl z-40 p-4"
+                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-40 p-4"
                       >
-                        <div className="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-850 pb-2">
+                        <div className="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
                           <h4 className="font-semibold text-sm">Notifications</h4>
                           <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
                             {unreadCount} new
@@ -328,7 +341,7 @@ const DashboardLayout = ({ children }) => {
                             <p className="text-xs text-gray-500 text-center py-4">No notifications yet.</p>
                           ) : (
                             notifications.map(notif => (
-                              <div key={notif._id} className={`p-2.5 rounded-xl border transition-all ${notif.isRead ? 'bg-transparent border-gray-100 dark:border-gray-850' : 'bg-indigo-50/30 border-indigo-100/50 dark:bg-indigo-950/10 dark:border-indigo-900/30'}`}>
+                              <div key={notif._id} className={`p-2.5 rounded-xl border transition-all ${notif.isRead ? 'bg-transparent border-gray-100 dark:border-gray-800' : 'bg-indigo-50/30 border-indigo-100/50 dark:bg-indigo-950/10 dark:border-indigo-900/30'}`}>
                                 <h5 className="text-xs font-semibold">{notif.title}</h5>
                                 <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{notif.message}</p>
                                 <span className="text-[8px] text-gray-400 mt-1 block">
@@ -352,12 +365,15 @@ const DashboardLayout = ({ children }) => {
                   setProfileDropdownOpen(!profileDropdownOpen);
                   setNotifDropdownOpen(false);
                 }}
-                className="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 border border-transparent hover:border-gray-200 dark:hover:border-gray-800"
+                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 border border-gray-200/60 dark:border-gray-800 transition-all cursor-pointer shadow-2xs"
               >
-                <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white shadow-md shadow-indigo-500/25">
+                <div className="h-8 w-8 bg-[#4F46E5] rounded-lg flex items-center justify-center font-extrabold text-white text-xs shadow-sm">
                   {user?.name?.charAt(0)}
                 </div>
-                <span className="hidden sm:block text-xs font-semibold">{user?.name}</span>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-bold leading-none text-gray-800 dark:text-gray-200">{user?.name}</span>
+                  <span className="text-[10px] text-gray-400 mt-0.5">{user?.role}</span>
+                </div>
               </button>
 
               <AnimatePresence>
@@ -370,23 +386,32 @@ const DashboardLayout = ({ children }) => {
                       exit={{ opacity: 0, y: 10 }}
                       className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-40 p-2"
                     >
-                      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-850">
-                        <p className="text-xs font-semibold truncate">{user?.name}</p>
-                        <p className="text-[10px] text-gray-500 truncate">{user?.email}</p>
+                      <div className="px-3 py-2.5 border-b border-gray-200 dark:border-gray-800 mb-1">
+                        <p className="text-xs font-extrabold text-gray-900 dark:text-white truncate">{user?.name}</p>
+                        <p className="text-[10px] text-gray-500 truncate mt-0.5">{user?.email}</p>
+                        <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-[#4F46E5] dark:text-indigo-400">
+                          {user?.role}
+                        </span>
                       </div>
                       <Link 
-                        to={user?.role === 'Student' ? '/student/profile' : '#'}
+                        to={
+                          user?.role === 'Student' 
+                            ? '/student/profile' 
+                            : (user?.role === 'Admin' || user?.role === 'Super Admin')
+                            ? '/admin/profile'
+                            : '/trainer/profile'
+                        }
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-850"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 hover:text-[#4F46E5] transition-colors"
                       >
-                        <User size={15} />
+                        <User size={16} />
                         <span>My Profile</span>
                       </Link>
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center space-x-2 px-3 py-2 rounded-xl text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 w-full text-left"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 w-full text-left transition-colors mt-1"
                       >
-                        <LogOut size={15} />
+                        <LogOut size={16} />
                         <span>Logout</span>
                       </button>
                     </motion.div>
@@ -398,7 +423,7 @@ const DashboardLayout = ({ children }) => {
         </header>
 
         {/* Page Area Content */}
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        <main className="flex-1 m-4 lg:m-6 p-6 lg:p-8 overflow-y-auto bg-white border border-gray-200/80 rounded-[24px] shadow-sm">
           {children}
         </main>
       </div>

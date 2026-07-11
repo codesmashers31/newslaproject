@@ -32,6 +32,10 @@ const attendanceSessionSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  ipAddress: {
+    type: String,
+    default: '',
+  },
 }, {
   timestamps: true,
 });

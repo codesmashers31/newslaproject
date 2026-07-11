@@ -28,9 +28,53 @@ const userSchema = new mongoose.Schema({
     required: true,
     enum: ['Super Admin', 'Admin', 'Student', 'Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'],
   },
+  slaeId: {
+    type: String,
+    trim: true,
+  },
+  trainerId: {
+    type: String,
+    trim: true,
+  },
+  stacks: [{
+    type: String,
+  }],
+  skills: [{
+    type: String,
+  }],
+  technicalTrainer: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  communicationTrainer: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  aptitudeTrainer: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  technicalBatch: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  communicationBatch: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  aptitudeBatch: {
+    type: String,
+    trim: true,
+    default: '',
+  },
   status: {
     type: String,
-    enum: ['Active', 'Inactive'],
+    enum: ['Active', 'Inactive', 'Completed', 'Enrolled'],
     default: 'Active',
   },
   createdAt: {
