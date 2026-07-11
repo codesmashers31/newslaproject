@@ -498,14 +498,35 @@ const StudentManagement = () => {
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {student.mobile}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {student.technicalBatch || <span className="text-xs text-gray-400 italic">Unassigned</span>}
+                    <td className="px-6 py-4 text-sm">
+                      <div className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">
+                        {student.technicalBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
+                      </div>
+                      {student.technicalBatch && student.technicalTrainer && (
+                        <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-0.5 leading-none">
+                          Trainer: {student.technicalTrainer}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {student.communicationBatch || <span className="text-xs text-gray-400 italic">Unassigned</span>}
+                    <td className="px-6 py-4 text-sm">
+                      <div className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">
+                        {student.communicationBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
+                      </div>
+                      {student.communicationBatch && student.communicationTrainer && (
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5 leading-none">
+                          Trainer: {student.communicationTrainer}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {student.aptitudeBatch || <span className="text-xs text-gray-400 italic">Unassigned</span>}
+                    <td className="px-6 py-4 text-sm">
+                      <div className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">
+                        {student.aptitudeBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
+                      </div>
+                      {student.aptitudeBatch && student.aptitudeTrainer && (
+                        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5 leading-none">
+                          Trainer: {student.aptitudeTrainer}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
