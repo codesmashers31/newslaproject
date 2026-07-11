@@ -20,8 +20,8 @@ import {
   User, 
   Mail, 
   Phone, 
-  Linkedin, 
-  Github, 
+  Briefcase, 
+  Code2, 
   BookOpen, 
   MapPin, 
   Calendar,
@@ -447,7 +447,7 @@ export default function ProfileScreen() {
             <View>
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">LinkedIn Profile Link</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Linkedin size={16} color="#64748b" style={{ marginRight: 8 }} />
+                <Briefcase size={16} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.linkedin}
                   onChangeText={(text) => setProfileData({ ...profileData, linkedin: text })}
@@ -463,7 +463,7 @@ export default function ProfileScreen() {
             <View>
               <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">GitHub Profile Link</Text>
               <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Github size={16} color="#64748b" style={{ marginRight: 8 }} />
+                <Code2 size={16} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.github}
                   onChangeText={(text) => setProfileData({ ...profileData, github: text })}

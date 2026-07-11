@@ -3,9 +3,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const getBaseURL = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+  let url = process.env.EXPO_PUBLIC_API_URL || '';
+  
+  if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    let host = '10.0.2.2'; // Fallback for Android emulator
+    if (Constants.expoConfig?.hostUri) {
+      host = Constants.expoConfig.hostUri.split(':')[0];
+    }
+    url = url.replace('localhost', host).replace('127.0.0.1', host);
   }
+  
+  if (url) {
+    return url;
+  }
+  
   let host = '10.133.172.143'; // Default LAN IP fallback
   if (Constants.expoConfig?.hostUri) {
     host = Constants.expoConfig.hostUri.split(':')[0];
