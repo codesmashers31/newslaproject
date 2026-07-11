@@ -357,10 +357,18 @@ const TrainerDashboard = () => {
       // Collect all unique batches the loaded relevantStudents belong to
       const studentBatchNamesAndIds = new Set();
       relevantStudents.forEach(s => {
-        if (s.communicationBatch) studentBatchNamesAndIds.add(s.communicationBatch.trim().toLowerCase());
-        if (s.technicalBatch) studentBatchNamesAndIds.add(s.technicalBatch.trim().toLowerCase());
-        if (s.aptitudeBatch) studentBatchNamesAndIds.add(s.aptitudeBatch.trim().toLowerCase());
-        if (s.batch) studentBatchNamesAndIds.add(s.batch.trim().toLowerCase());
+        if (s.communicationBatch) {
+          s.communicationBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        }
+        if (s.technicalBatch) {
+          s.technicalBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        }
+        if (s.aptitudeBatch) {
+          s.aptitudeBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        }
+        if (s.batch) {
+          s.batch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        }
         if (Array.isArray(s.batches)) {
           s.batches.forEach(b => {
             if (b?._id) studentBatchNamesAndIds.add(String(b._id));
@@ -370,10 +378,19 @@ const TrainerDashboard = () => {
         }
       });
 
-      relevantBatches = relevantBatches.filter(b => 
-        studentBatchNamesAndIds.has(String(b._id)) || 
-        studentBatchNamesAndIds.has(b.name?.trim()?.toLowerCase())
-      );
+      relevantBatches = relevantBatches.filter(b => {
+        // Direct assignment check
+        const isAssigned = b.trainers?.some(t => {
+          const tId = typeof t === 'object' ? t?._id : t;
+          return String(tId) === String(user?._id);
+        }) || b.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+
+        // Student presence check
+        const hasStudents = studentBatchNamesAndIds.has(String(b._id)) || 
+                            studentBatchNamesAndIds.has(b.name?.trim()?.toLowerCase());
+
+        return isAssigned || hasStudents;
+      });
 
       setStudents(relevantStudents);
       setBatches(relevantBatches);
@@ -427,10 +444,10 @@ const TrainerDashboard = () => {
         );
 
         const matchesDomainBatch = Boolean(selName && (
-          String(s.communicationBatch || '').trim().toLowerCase() === selName ||
-          String(s.technicalBatch || '').trim().toLowerCase() === selName ||
-          String(s.aptitudeBatch || '').trim().toLowerCase() === selName ||
-          String(s.batch || '').trim().toLowerCase() === selName
+          String(s.communicationBatch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName) ||
+          String(s.technicalBatch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName) ||
+          String(s.aptitudeBatch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName) ||
+          String(s.batch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName)
         ));
 
         return inBatchesArray || matchesDomainBatch;
