@@ -153,7 +153,7 @@ export const getStudents = async (req, res) => {
 
 // Add Single Student
 export const addStudent = async (req, res) => {
-  const { name, email, mobile, password, batchId, batchIds, technicalTrainer, communicationTrainer, aptitudeTrainer } = req.body;
+  const { name, email, mobile, password, technicalBatch, communicationBatch, aptitudeBatch } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -168,28 +168,13 @@ export const addStudent = async (req, res) => {
       password,
       role: 'Student',
       status: 'Active',
-      technicalTrainer: technicalTrainer || '',
-      communicationTrainer: communicationTrainer || '',
-      aptitudeTrainer: aptitudeTrainer || '',
+      technicalBatch: technicalBatch || '',
+      communicationBatch: communicationBatch || '',
+      aptitudeBatch: aptitudeBatch || '',
     });
 
     const studentProfile = await Student.create({ user: user._id });
     const placement = await Placement.create({ student: user._id });
-
-    // Assign to batches if provided
-    const targetBatchIds = Array.isArray(batchIds) 
-      ? batchIds 
-      : batchId 
-        ? [batchId] 
-        : [];
-        
-    for (const bId of targetBatchIds) {
-      if (bId) {
-        await Batch.findByIdAndUpdate(bId, {
-          $addToSet: { students: user._id }
-        });
-      }
-    }
 
     await syncStudentBatchesFromStrings(user._id);
 
@@ -209,7 +194,7 @@ export const addStudent = async (req, res) => {
 // Edit Student
 export const editStudent = async (req, res) => {
   const { id } = req.params;
-  const { name, email, mobile, status, collegeName, degree, department, yearOfPassing, gender, address, skills, bio, linkedin, github, batchId, batchIds, technicalTrainer, communicationTrainer, aptitudeTrainer } = req.body;
+  const { name, email, mobile, status, collegeName, degree, department, yearOfPassing, gender, address, skills, bio, linkedin, github, technicalBatch, communicationBatch, aptitudeBatch } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -222,9 +207,9 @@ export const editStudent = async (req, res) => {
     user.email = email || user.email;
     user.mobile = mobile || user.mobile;
     user.status = status || user.status;
-    if (technicalTrainer !== undefined) user.technicalTrainer = technicalTrainer;
-    if (communicationTrainer !== undefined) user.communicationTrainer = communicationTrainer;
-    if (aptitudeTrainer !== undefined) user.aptitudeTrainer = aptitudeTrainer;
+    if (technicalBatch !== undefined) user.technicalBatch = technicalBatch;
+    if (communicationBatch !== undefined) user.communicationBatch = communicationBatch;
+    if (aptitudeBatch !== undefined) user.aptitudeBatch = aptitudeBatch;
     await user.save();
 
     // Update profile
@@ -245,31 +230,6 @@ export const editStudent = async (req, res) => {
       },
       { new: true, upsert: true }
     );
-
-    // Update batch assignments
-    const targetBatchIds = Array.isArray(batchIds)
-      ? batchIds
-      : batchId !== undefined
-        ? batchId ? [batchId] : []
-        : undefined;
-
-    if (targetBatchIds !== undefined) {
-      const studentObjectId = new mongoose.Types.ObjectId(id);
-      // Remove student from all batches first
-      await Batch.updateMany(
-        { students: studentObjectId },
-        { $pull: { students: studentObjectId } }
-      );
-      // Add student to the new batches
-      for (const bId of targetBatchIds) {
-        if (bId) {
-          const batchObjectId = new mongoose.Types.ObjectId(bId);
-          await Batch.findByIdAndUpdate(batchObjectId, {
-            $addToSet: { students: studentObjectId }
-          });
-        }
-      }
-    }
 
     await syncStudentBatchesFromStrings(user._id);
 

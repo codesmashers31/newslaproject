@@ -68,11 +68,9 @@ const StudentManagement = () => {
     email: '',
     mobile: '',
     password: '',
-    batchId: '',
-    batchIds: [],
-    technicalTrainer: '',
-    communicationTrainer: '',
-    aptitudeTrainer: '',
+    technicalBatch: '',
+    communicationBatch: '',
+    aptitudeBatch: '',
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -91,11 +89,9 @@ const StudentManagement = () => {
     bio: '',
     linkedin: '',
     github: '',
-    batchId: '',
-    batchIds: [],
-    technicalTrainer: '',
-    communicationTrainer: '',
-    aptitudeTrainer: '',
+    technicalBatch: '',
+    communicationBatch: '',
+    aptitudeBatch: '',
   });
 
   const loadData = async () => {
@@ -305,11 +301,9 @@ const StudentManagement = () => {
       bio: student.profile?.bio || '',
       linkedin: student.profile?.linkedin || '',
       github: student.profile?.github || '',
-      batchId: student.batch?._id || '',
-      batchIds: student.batches?.map(b => b._id) || [],
-      technicalTrainer: student.technicalTrainer || '',
-      communicationTrainer: student.communicationTrainer || '',
-      aptitudeTrainer: student.aptitudeTrainer || '',
+      technicalBatch: student.technicalBatch || '',
+      communicationBatch: student.communicationBatch || '',
+      aptitudeBatch: student.aptitudeBatch || '',
     });
     setEditModalOpen(true);
   };
@@ -630,25 +624,22 @@ const StudentManagement = () => {
                     />
                   </div>
                   
+                  {/* Technical Training Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Assign Batches</label>
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Technical Training Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenDropdownAdd(openDropdownAdd === 'batches' ? null : 'batches');
+                        setOpenDropdownAdd(openDropdownAdd === 'techBatch' ? null : 'techBatch');
                       }}
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
                     >
-                      <span className="truncate">
-                        {formData.batchIds && formData.batchIds.length > 0
-                          ? batches.filter(b => formData.batchIds.includes(b._id)).map(b => b.name).join(', ')
-                          : '-- Select Batches --'}
-                      </span>
-                      {openDropdownAdd === 'batches' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      <span className="truncate">{formData.technicalBatch || '-- Select Batch --'}</span>
+                      {openDropdownAdd === 'techBatch' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                     
-                    {openDropdownAdd === 'batches' && (
+                    {openDropdownAdd === 'techBatch' && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
                         className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
@@ -662,199 +653,140 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchAdd.toLowerCase()))
+                            .filter(b => b.course === 'Technical Training' && (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()))
                             .map(b => {
-                              const isChecked = formData.batchIds?.includes(b._id);
+                              const currentList = formData.technicalBatch ? formData.technicalBatch.split(', ').filter(Boolean) : [];
+                              const isChecked = currentList.includes(b.name);
                               return (
                                 <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
                                   <input
                                     type="checkbox"
                                     checked={isChecked}
                                     onChange={(e) => {
-                                      const updatedBatchIds = e.target.checked
-                                        ? [...(formData.batchIds || []), b._id]
-                                        : (formData.batchIds || []).filter(id => id !== b._id);
-                                      setFormData({ ...formData, batchIds: updatedBatchIds });
+                                      const newList = e.target.checked
+                                        ? [...currentList, b.name]
+                                        : currentList.filter(name => name !== b.name);
+                                      setFormData({ ...formData, technicalBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
-                                  <span>{b.name} <span className="text-[10px] text-gray-400 font-medium">({b.course})</span></span>
+                                  <span>{b.name}</span>
                                 </label>
                               );
                             })}
-                          {batches.filter(b => (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchAdd.toLowerCase())).length === 0 && (
-                            <p className="text-[11px] text-gray-400 italic p-1">No matching batches.</p>
-                          )}
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="md:col-span-2 space-y-3 pt-2 border-t border-gray-150 dark:border-gray-800">
-                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Domain Trainers (Multiple Select)</label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Technical Trainers */}
-                      <div className="space-y-1.5 relative">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Technical Trainers</label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownAdd(openDropdownAdd === 'techTrainers' ? null : 'techTrainers');
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate">{formData.technicalTrainer || '-- Select Trainers --'}</span>
-                          {openDropdownAdd === 'techTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                        {openDropdownAdd === 'techTrainers' && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              value={techSearchAdd}
-                              onChange={(e) => setTechSearchAdd(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <div className="max-h-24 overflow-y-auto space-y-1">
-                              {trainers
-                                .filter(t => t.role === 'Technical Trainer' && t.name.toLowerCase().includes(techSearchAdd.toLowerCase()))
-                                .map(t => {
-                                  const isChecked = formData.technicalTrainer?.split(', ').includes(t.name);
-                                  return (
-                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentList = formData.technicalTrainer ? formData.technicalTrainer.split(', ').filter(Boolean) : [];
-                                          const newList = e.target.checked
-                                            ? [...currentList, t.name]
-                                            : currentList.filter(n => n !== t.name);
-                                          setFormData({ ...formData, technicalTrainer: newList.join(', ') });
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
-                                      />
-                                      <span>{t.name}</span>
-                                    </label>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        )}
+                  {/* Communication Skills Batch */}
+                  <div className="md:col-span-2 space-y-1.5 relative">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Communication Skills Batch</label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownAdd(openDropdownAdd === 'commBatch' ? null : 'commBatch');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="truncate">{formData.communicationBatch || '-- Select Batch --'}</span>
+                      {openDropdownAdd === 'commBatch' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {openDropdownAdd === 'commBatch' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search batch..."
+                          value={commSearchAdd}
+                          onChange={(e) => setCommSearchAdd(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <div className="max-h-28 overflow-y-auto space-y-1.5">
+                          {batches
+                            .filter(b => b.course === 'Communication Skills' && (b.name || '').toLowerCase().includes(commSearchAdd.toLowerCase()))
+                            .map(b => {
+                              const currentList = formData.communicationBatch ? formData.communicationBatch.split(', ').filter(Boolean) : [];
+                              const isChecked = currentList.includes(b.name);
+                              return (
+                                <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const newList = e.target.checked
+                                        ? [...currentList, b.name]
+                                        : currentList.filter(name => name !== b.name);
+                                      setFormData({ ...formData, communicationBatch: newList.join(', ') });
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-650 h-3.5 w-3.5 cursor-pointer"
+                                  />
+                                  <span>{b.name}</span>
+                                </label>
+                              );
+                            })}
+                        </div>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Communication Trainers */}
-                      <div className="space-y-1.5 relative">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Communication Trainers</label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownAdd(openDropdownAdd === 'commTrainers' ? null : 'commTrainers');
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate">{formData.communicationTrainer || '-- Select Trainers --'}</span>
-                          {openDropdownAdd === 'commTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                        {openDropdownAdd === 'commTrainers' && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              value={commSearchAdd}
-                              onChange={(e) => setCommSearchAdd(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <div className="max-h-24 overflow-y-auto space-y-1">
-                              {trainers
-                                .filter(t => t.role === 'Communication Trainer' && t.name.toLowerCase().includes(commSearchAdd.toLowerCase()))
-                                .map(t => {
-                                  const isChecked = formData.communicationTrainer?.split(', ').includes(t.name);
-                                  return (
-                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentList = formData.communicationTrainer ? formData.communicationTrainer.split(', ').filter(Boolean) : [];
-                                          const newList = e.target.checked
-                                            ? [...currentList, t.name]
-                                            : currentList.filter(n => n !== t.name);
-                                          setFormData({ ...formData, communicationTrainer: newList.join(', ') });
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
-                                      />
-                                      <span>{t.name}</span>
-                                    </label>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        )}
+                  {/* Aptitude & Reasoning Batch */}
+                  <div className="md:col-span-2 space-y-1.5 relative">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Aptitude & Reasoning Batch</label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownAdd(openDropdownAdd === 'aptiBatch' ? null : 'aptiBatch');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="truncate">{formData.aptitudeBatch || '-- Select Batch --'}</span>
+                      {openDropdownAdd === 'aptiBatch' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {openDropdownAdd === 'aptiBatch' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search batch..."
+                          value={aptiSearchAdd}
+                          onChange={(e) => setAptiSearchAdd(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <div className="max-h-28 overflow-y-auto space-y-1.5">
+                          {batches
+                            .filter(b => b.course === 'Aptitude & Reasoning' && (b.name || '').toLowerCase().includes(aptiSearchAdd.toLowerCase()))
+                            .map(b => {
+                              const currentList = formData.aptitudeBatch ? formData.aptitudeBatch.split(', ').filter(Boolean) : [];
+                              const isChecked = currentList.includes(b.name);
+                              return (
+                                <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const newList = e.target.checked
+                                        ? [...currentList, b.name]
+                                        : currentList.filter(name => name !== b.name);
+                                      setFormData({ ...formData, aptitudeBatch: newList.join(', ') });
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                  />
+                                  <span>{b.name}</span>
+                                </label>
+                              );
+                            })}
+                        </div>
                       </div>
-
-                      {/* Aptitude Trainers */}
-                      <div className="space-y-1.5 relative">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">Aptitude Trainers</label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownAdd(openDropdownAdd === 'aptiTrainers' ? null : 'aptiTrainers');
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate">{formData.aptitudeTrainer || '-- Select Trainers --'}</span>
-                          {openDropdownAdd === 'aptiTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                        {openDropdownAdd === 'aptiTrainers' && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              value={aptiSearchAdd}
-                              onChange={(e) => setAptiSearchAdd(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <div className="max-h-24 overflow-y-auto space-y-1">
-                              {trainers
-                                .filter(t => t.role === 'Aptitude Trainer' && t.name.toLowerCase().includes(aptiSearchAdd.toLowerCase()))
-                                .map(t => {
-                                  const isChecked = formData.aptitudeTrainer?.split(', ').includes(t.name);
-                                  return (
-                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentList = formData.aptitudeTrainer ? formData.aptitudeTrainer.split(', ').filter(Boolean) : [];
-                                          const newList = e.target.checked
-                                            ? [...currentList, t.name]
-                                            : currentList.filter(n => n !== t.name);
-                                          setFormData({ ...formData, aptitudeTrainer: newList.join(', ') });
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
-                                      />
-                                      <span>{t.name}</span>
-                                    </label>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
@@ -930,25 +862,22 @@ const StudentManagement = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Technical Training Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Assign Batches</label>
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Technical Training Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenDropdownEdit(openDropdownEdit === 'batches' ? null : 'batches');
+                        setOpenDropdownEdit(openDropdownEdit === 'techBatch' ? null : 'techBatch');
                       }}
                       className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
                     >
-                      <span className="truncate">
-                        {editFormData.batchIds && editFormData.batchIds.length > 0
-                          ? batches.filter(b => editFormData.batchIds.includes(b._id)).map(b => b.name).join(', ')
-                          : '-- Select Batches --'}
-                      </span>
-                      {openDropdownEdit === 'batches' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      <span className="truncate">{editFormData.technicalBatch || '-- Select Batch --'}</span>
+                      {openDropdownEdit === 'techBatch' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                     
-                    {openDropdownEdit === 'batches' && (
+                    {openDropdownEdit === 'techBatch' && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
                         className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
@@ -962,199 +891,140 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchEdit.toLowerCase()))
+                            .filter(b => b.course === 'Technical Training' && (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()))
                             .map(b => {
-                              const isChecked = editFormData.batchIds?.includes(b._id);
+                              const currentList = editFormData.technicalBatch ? editFormData.technicalBatch.split(', ').filter(Boolean) : [];
+                              const isChecked = currentList.includes(b.name);
                               return (
                                 <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
                                   <input
                                     type="checkbox"
                                     checked={isChecked}
                                     onChange={(e) => {
-                                      const updatedBatchIds = e.target.checked
-                                        ? [...(editFormData.batchIds || []), b._id]
-                                        : (editFormData.batchIds || []).filter(id => id !== b._id);
-                                      setEditFormData({ ...editFormData, batchIds: updatedBatchIds });
+                                      const newList = e.target.checked
+                                        ? [...currentList, b.name]
+                                        : currentList.filter(name => name !== b.name);
+                                      setEditFormData({ ...editFormData, technicalBatch: newList.join(', ') });
                                     }}
                                     className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
-                                  <span>{b.name} <span className="text-[10px] text-gray-400 font-medium">({b.course})</span></span>
+                                  <span>{b.name}</span>
                                 </label>
                               );
                             })}
-                          {batches.filter(b => (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()) || (b.course || '').toLowerCase().includes(batchSearchEdit.toLowerCase())).length === 0 && (
-                            <p className="text-[11px] text-gray-400 italic p-1">No matching batches.</p>
-                          )}
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className="md:col-span-2 space-y-3 pt-2 border-t border-gray-150 dark:border-gray-800">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block">Assign Domain Trainers (Multiple Select)</label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {/* Technical Trainers */}
-                      <div className="space-y-1.5 relative">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Technical Trainers</label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownEdit(openDropdownEdit === 'techTrainers' ? null : 'techTrainers');
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate">{editFormData.technicalTrainer || '-- Select Trainers --'}</span>
-                          {openDropdownEdit === 'techTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                        {openDropdownEdit === 'techTrainers' && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              value={techSearchEdit}
-                              onChange={(e) => setTechSearchEdit(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <div className="max-h-24 overflow-y-auto space-y-1">
-                              {trainers
-                                .filter(t => t.role === 'Technical Trainer' && t.name.toLowerCase().includes(techSearchEdit.toLowerCase()))
-                                .map(t => {
-                                  const isChecked = editFormData.technicalTrainer?.split(', ').includes(t.name);
-                                  return (
-                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentList = editFormData.technicalTrainer ? editFormData.technicalTrainer.split(', ').filter(Boolean) : [];
-                                          const newList = e.target.checked
-                                            ? [...currentList, t.name]
-                                            : currentList.filter(n => n !== t.name);
-                                          setEditFormData({ ...editFormData, technicalTrainer: newList.join(', ') });
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
-                                      />
-                                      <span>{t.name}</span>
-                                    </label>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        )}
+                  {/* Communication Skills Batch */}
+                  <div className="md:col-span-2 space-y-1.5 relative">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Communication Skills Batch</label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownEdit(openDropdownEdit === 'commBatch' ? null : 'commBatch');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="truncate">{editFormData.communicationBatch || '-- Select Batch --'}</span>
+                      {openDropdownEdit === 'commBatch' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {openDropdownEdit === 'commBatch' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search batch..."
+                          value={commSearchEdit}
+                          onChange={(e) => setCommSearchEdit(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <div className="max-h-28 overflow-y-auto space-y-1.5">
+                          {batches
+                            .filter(b => b.course === 'Communication Skills' && (b.name || '').toLowerCase().includes(commSearchEdit.toLowerCase()))
+                            .map(b => {
+                              const currentList = editFormData.communicationBatch ? editFormData.communicationBatch.split(', ').filter(Boolean) : [];
+                              const isChecked = currentList.includes(b.name);
+                              return (
+                                <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const newList = e.target.checked
+                                        ? [...currentList, b.name]
+                                        : currentList.filter(name => name !== b.name);
+                                      setEditFormData({ ...editFormData, communicationBatch: newList.join(', ') });
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                  />
+                                  <span>{b.name}</span>
+                                </label>
+                              );
+                            })}
+                        </div>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Communication Trainers */}
-                      <div className="space-y-1.5 relative">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Communication Trainers</label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownEdit(openDropdownEdit === 'commTrainers' ? null : 'commTrainers');
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate">{editFormData.communicationTrainer || '-- Select Trainers --'}</span>
-                          {openDropdownEdit === 'commTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                        {openDropdownEdit === 'commTrainers' && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              value={commSearchEdit}
-                              onChange={(e) => setCommSearchEdit(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <div className="max-h-24 overflow-y-auto space-y-1">
-                              {trainers
-                                .filter(t => t.role === 'Communication Trainer' && t.name.toLowerCase().includes(commSearchEdit.toLowerCase()))
-                                .map(t => {
-                                  const isChecked = editFormData.communicationTrainer?.split(', ').includes(t.name);
-                                  return (
-                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentList = editFormData.communicationTrainer ? editFormData.communicationTrainer.split(', ').filter(Boolean) : [];
-                                          const newList = e.target.checked
-                                            ? [...currentList, t.name]
-                                            : currentList.filter(n => n !== t.name);
-                                          setEditFormData({ ...editFormData, communicationTrainer: newList.join(', ') });
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
-                                      />
-                                      <span>{t.name}</span>
-                                    </label>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        )}
+                  {/* Aptitude & Reasoning Batch */}
+                  <div className="md:col-span-2 space-y-1.5 relative">
+                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Aptitude & Reasoning Batch</label>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownEdit(openDropdownEdit === 'aptiBatch' ? null : 'aptiBatch');
+                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm font-semibold flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="truncate">{editFormData.aptitudeBatch || '-- Select Batch --'}</span>
+                      {openDropdownEdit === 'aptiBatch' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {openDropdownEdit === 'aptiBatch' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-2xl p-3 bg-white dark:bg-[#12131a] shadow-2xl space-y-2"
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search batch..."
+                          value={aptiSearchEdit}
+                          onChange={(e) => setAptiSearchEdit(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <div className="max-h-28 overflow-y-auto space-y-1.5">
+                          {batches
+                            .filter(b => b.course === 'Aptitude & Reasoning' && (b.name || '').toLowerCase().includes(aptiSearchEdit.toLowerCase()))
+                            .map(b => {
+                              const currentList = editFormData.aptitudeBatch ? editFormData.aptitudeBatch.split(', ').filter(Boolean) : [];
+                              const isChecked = currentList.includes(b.name);
+                              return (
+                                <label key={b._id} className="flex items-center space-x-2.5 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const newList = e.target.checked
+                                        ? [...currentList, b.name]
+                                        : currentList.filter(name => name !== b.name);
+                                      setEditFormData({ ...editFormData, aptitudeBatch: newList.join(', ') });
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-650 h-3.5 w-3.5 cursor-pointer"
+                                  />
+                                  <span>{b.name}</span>
+                                </label>
+                              );
+                            })}
+                        </div>
                       </div>
-
-                      {/* Aptitude Trainers */}
-                      <div className="space-y-1.5 relative">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wide">Aptitude Trainers</label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownEdit(openDropdownEdit === 'aptiTrainers' ? null : 'aptiTrainers');
-                          }}
-                          className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-semibold flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="truncate">{editFormData.aptitudeTrainer || '-- Select Trainers --'}</span>
-                          {openDropdownEdit === 'aptiTrainers' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                        {openDropdownEdit === 'aptiTrainers' && (
-                          <div 
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute z-50 mt-1 w-full border border-gray-200 dark:border-gray-800 rounded-xl p-2 bg-white dark:bg-[#12131a] shadow-xl space-y-1.5"
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search..."
-                              value={aptiSearchEdit}
-                              onChange={(e) => setAptiSearchEdit(e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-200 dark:border-gray-800 rounded bg-slate-50 dark:bg-slate-900/40 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                            <div className="max-h-24 overflow-y-auto space-y-1">
-                              {trainers
-                                .filter(t => t.role === 'Aptitude Trainer' && t.name.toLowerCase().includes(aptiSearchEdit.toLowerCase()))
-                                .map(t => {
-                                  const isChecked = editFormData.aptitudeTrainer?.split(', ').includes(t.name);
-                                  return (
-                                    <label key={t._id} className="flex items-center space-x-2 text-[11px] font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                      <input
-                                        type="checkbox"
-                                        checked={isChecked}
-                                        onChange={(e) => {
-                                          const currentList = editFormData.aptitudeTrainer ? editFormData.aptitudeTrainer.split(', ').filter(Boolean) : [];
-                                          const newList = e.target.checked
-                                            ? [...currentList, t.name]
-                                            : currentList.filter(n => n !== t.name);
-                                          setEditFormData({ ...editFormData, aptitudeTrainer: newList.join(', ') });
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
-                                      />
-                                      <span>{t.name}</span>
-                                    </label>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block mb-1.5 uppercase text-xs font-semibold text-gray-600 tracking-wider">College Name</label>
