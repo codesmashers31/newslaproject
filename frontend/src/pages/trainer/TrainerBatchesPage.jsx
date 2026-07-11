@@ -250,14 +250,19 @@ const parseScheduleToTimes = (scheduleStr) => {
   };
 
   const filteredBatches = batches.filter(batch => {
+    const isAssigned = batch.trainers?.some(t => {
+      const tId = typeof t === 'object' ? t?._id : t;
+      return String(tId) === String(user?._id);
+    }) || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+
     if (user?.role === 'Communication Trainer') {
-      const isComm = batch.course?.includes('Communication') || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+      const isComm = batch.course?.includes('Communication') || isAssigned;
       if (!isComm) return false;
     } else if (user?.role === 'Aptitude Trainer') {
-      const isApti = batch.course?.includes('Aptitude') || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+      const isApti = batch.course?.includes('Aptitude') || isAssigned;
       if (!isApti) return false;
     } else if (user?.role === 'Technical Trainer') {
-      const isTech = batch.course === 'Technical Training' || (!batch.course?.includes('Communication') && !batch.course?.includes('Aptitude')) || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+      const isTech = batch.course === 'Technical Training' || (!batch.course?.includes('Communication') && !batch.course?.includes('Aptitude')) || isAssigned;
       if (!isTech) return false;
     }
 
@@ -269,6 +274,7 @@ const parseScheduleToTimes = (scheduleStr) => {
 
     const matchesDomain =
       domainFilter === 'All' ||
+      isAssigned ||
       (domainFilter === 'Technical' && (batch.course === 'Technical Training' || (!batch.course?.includes('Comm') && !batch.course?.includes('Apti')))) ||
       (domainFilter === 'Communication' && batch.course?.includes('Communication')) ||
       (domainFilter === 'Aptitude' && batch.course?.includes('Aptitude'));
