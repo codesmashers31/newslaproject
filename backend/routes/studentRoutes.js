@@ -9,7 +9,9 @@ import {
   getLeaderboard,
   getStudentAIRoadmap,
   generateStudentAIRoadmap,
-  toggleAIRoadmapTopic
+  toggleAIRoadmapTopic,
+  getAvailableBatches,
+  getAvailableTrainers
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -20,6 +22,8 @@ router.use(protect);
 router.use(authorize('Student', 'Super Admin', 'Admin'));
 
 router.get('/dashboard', getStudentDashboard);
+router.get('/batches', getAvailableBatches);
+router.get('/trainers', getAvailableTrainers);
 
 router.put('/profile', upload.fields([
   { name: 'photo', maxCount: 1 },

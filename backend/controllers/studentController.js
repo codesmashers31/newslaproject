@@ -790,3 +790,31 @@ export const generateStudentAIRoadmapForAdmin = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get all active batches for selection
+// @route   GET /api/student/batches
+// @access  Private (Student only)
+export const getAvailableBatches = async (req, res) => {
+  try {
+    const batches = await Batch.find({ status: 'Active' })
+      .populate('trainers', 'name role')
+      .lean();
+    res.json(batches);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all trainers for selection
+// @route   GET /api/student/trainers
+// @access  Private (Student only)
+export const getAvailableTrainers = async (req, res) => {
+  try {
+    const trainers = await User.find({ 
+      role: { $in: ['Technical Trainer', 'Communication Trainer', 'Aptitude Trainer'] } 
+    }).select('name role email').lean();
+    res.json(trainers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
