@@ -11,24 +11,13 @@ const run = async () => {
     await mongoose.connect(mongoUri);
     console.log("MongoDB connected.");
 
-    const students = await User.find({ 
-      role: 'Student', 
-      $or: [
-        { technicalTrainer: { $ne: '' } },
-        { communicationTrainer: { $ne: '' } },
-        { aptitudeTrainer: { $ne: '' } }
-      ]
-    });
+    const staff = await User.find({ 
+      role: { $in: ['Super Admin', 'Admin', 'Technical Trainer', 'Communication Trainer', 'Aptitude Trainer'] } 
+    }).select('name email role').lean();
     
-    console.log(`Found ${students.length} students with assigned trainers:`);
-    students.forEach(s => {
-      console.log({
-        id: s._id,
-        name: s.name,
-        technicalTrainer: s.technicalTrainer,
-        communicationTrainer: s.communicationTrainer,
-        aptitudeTrainer: s.aptitudeTrainer
-      });
+    console.log(`Found ${staff.length} staff members:`);
+    staff.forEach(s => {
+      console.log(`- Role: ${s.role} | Name: ${s.name} | Email: ${s.email}`);
     });
 
     process.exit(0);
