@@ -388,7 +388,7 @@ export const importStudentsExcel = async (req, res) => {
 
       await Placement.create({ student: user._id });
 
-      if (batchIdentifier) {
+      if (technicalBatch || communicationBatch || aptitudeBatch) {
         await syncStudentBatchesFromStrings(user._id);
       }
 
