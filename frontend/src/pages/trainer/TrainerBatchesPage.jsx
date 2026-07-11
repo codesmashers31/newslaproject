@@ -385,7 +385,19 @@ const parseScheduleToTimes = (scheduleStr) => {
                   const displayId = batch.batchId || `BATCH-${(idx + 1).toString().padStart(3, '0')}`;
                   const displayTime = batch.schedule || '09:00 AM - 11:00 AM (Mon - Fri)';
                   const displayStatus = batch.status || 'Active';
-                  const domainBadge = batch.course || 'Technical Training';
+                  let domainBadge = batch.course || 'Technical Training';
+                  if (batch.trainers && batch.trainers.length > 0) {
+                    const roles = batch.trainers.map(t => t.role);
+                    if (roles.includes(user?.role)) {
+                      if (user?.role === 'Communication Trainer') domainBadge = 'Communication Skills';
+                      else if (user?.role === 'Aptitude Trainer') domainBadge = 'Aptitude & Reasoning';
+                      else if (user?.role === 'Technical Trainer') domainBadge = 'Technical Training';
+                    } else {
+                      if (roles.includes('Communication Trainer')) domainBadge = 'Communication Skills';
+                      else if (roles.includes('Aptitude Trainer')) domainBadge = 'Aptitude & Reasoning';
+                      else if (roles.includes('Technical Trainer')) domainBadge = 'Technical Training';
+                    }
+                  }
 
                   return (
                     <tr key={batch._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
@@ -409,9 +421,24 @@ const parseScheduleToTimes = (scheduleStr) => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
-                          <UserCheck size={14} className="text-indigo-500" />
-                          <span>{batch.trainerName || `${domainBadge.split(' ')[0]} Trainer`}</span>
+                        <div className="flex flex-col gap-1 font-bold text-slate-700 dark:text-slate-300">
+                          {batch.trainers && batch.trainers.length > 0 ? (
+                            batch.trainers.map(t => (
+                              <div key={t._id} className="flex items-center gap-1.5">
+                                <UserCheck size={14} className="text-indigo-500" />
+                                <span>{t.name} <span className="text-[10px] text-gray-400 font-normal">({t.role})</span></span>
+                              </div>
+                            ))
+                          ) : batch.trainerName ? (
+                            <div className="flex items-center gap-1.5">
+                              <UserCheck size={14} className="text-indigo-500" />
+                              <span>{batch.trainerName}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-gray-450 font-normal italic">
+                              No trainers assigned
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">

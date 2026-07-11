@@ -345,7 +345,7 @@ export const getBatches = async (req, res) => {
 };
 
 export const createBatch = async (req, res) => {
-  const { name, course, trainers, students, startDate, endDate, status } = req.body;
+  const { name, batchId, course, trainers, students, startDate, endDate, status } = req.body;
 
   try {
     const batchExists = await Batch.findOne({ name });
@@ -355,6 +355,7 @@ export const createBatch = async (req, res) => {
 
     const batch = await Batch.create({
       name,
+      batchId: batchId || `BAT-${Date.now().toString().slice(-4)}`,
       course,
       trainers: trainers || [],
       students: students || [],
@@ -375,7 +376,7 @@ export const createBatch = async (req, res) => {
 
 export const editBatch = async (req, res) => {
   const { id } = req.params;
-  const { name, course, trainers, students, startDate, endDate, status } = req.body;
+  const { name, batchId, course, trainers, students, startDate, endDate, status } = req.body;
 
   try {
     const batch = await Batch.findById(id);
@@ -384,6 +385,7 @@ export const editBatch = async (req, res) => {
     }
 
     batch.name = name || batch.name;
+    batch.batchId = batchId !== undefined ? batchId : batch.batchId;
     batch.course = course || batch.course;
     batch.trainers = trainers || batch.trainers;
     batch.students = students || batch.students;
