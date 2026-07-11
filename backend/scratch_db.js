@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import User from './models/User.js';
+import Batch from './models/Batch.js';
 
 dotenv.config();
 
@@ -11,13 +11,10 @@ const run = async () => {
     await mongoose.connect(mongoUri);
     console.log("MongoDB connected.");
 
-    const staff = await User.find({ 
-      role: { $in: ['Super Admin', 'Admin', 'Technical Trainer', 'Communication Trainer', 'Aptitude Trainer'] } 
-    }).select('name email role').lean();
-    
-    console.log(`Found ${staff.length} staff members:`);
-    staff.forEach(s => {
-      console.log(`- Role: ${s.role} | Name: ${s.name} | Email: ${s.email}`);
+    const batches = await Batch.find().select('name course').lean();
+    console.log(`Found ${batches.length} batches:`);
+    batches.forEach(b => {
+      console.log(`- Batch Name: "${b.name}" | Course/Domain: "${b.course}"`);
     });
 
     process.exit(0);

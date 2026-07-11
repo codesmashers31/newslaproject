@@ -68,6 +68,7 @@ const StudentManagement = () => {
     email: '',
     mobile: '',
     password: '',
+    slaeId: '',
     technicalBatch: '',
     communicationBatch: '',
     aptitudeBatch: '',
@@ -89,6 +90,7 @@ const StudentManagement = () => {
     bio: '',
     linkedin: '',
     github: '',
+    slaeId: '',
     technicalBatch: '',
     communicationBatch: '',
     aptitudeBatch: '',
@@ -301,6 +303,7 @@ const StudentManagement = () => {
       bio: student.profile?.bio || '',
       linkedin: student.profile?.linkedin || '',
       github: student.profile?.github || '',
+      slaeId: student.slaeId || '',
       technicalBatch: student.technicalBatch || '',
       communicationBatch: student.communicationBatch || '',
       aptitudeBatch: student.aptitudeBatch || '',
@@ -484,6 +487,11 @@ const StudentManagement = () => {
                       <div>
                         <p className="text-sm font-semibold">{student.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{student.email}</p>
+                        {student.slaeId && (
+                          <span className="inline-flex mt-0.5 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-450">
+                            EID: {student.slaeId}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
@@ -599,16 +607,28 @@ const StudentManagement = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1.5">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                    placeholder="email@domain.com"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1.5">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      placeholder="email@domain.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1.5">Student EID</label>
+                    <input
+                      type="text"
+                      value={formData.slaeId}
+                      onChange={(e) => setFormData({ ...formData, slaeId: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      placeholder="e.g. SLA001"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -626,7 +646,7 @@ const StudentManagement = () => {
                   
                   {/* Technical Training Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Technical Training Batch</label>
+                    <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-1">Technical Training Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -653,7 +673,7 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => b.course === 'Technical Training' && (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()))
+                            .filter(b => !(b.course || '').toLowerCase().includes('communication') && !(b.course || '').toLowerCase().includes('aptitude') && (b.name || '').toLowerCase().includes(batchSearchAdd.toLowerCase()))
                             .map(b => {
                               const currentList = formData.technicalBatch ? formData.technicalBatch.split(', ').filter(Boolean) : [];
                               const isChecked = currentList.includes(b.name);
@@ -681,7 +701,7 @@ const StudentManagement = () => {
 
                   {/* Communication Skills Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Communication Skills Batch</label>
+                    <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-1">Communication Skills Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -708,7 +728,7 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => b.course === 'Communication Skills' && (b.name || '').toLowerCase().includes(commSearchAdd.toLowerCase()))
+                            .filter(b => (b.course || '').toLowerCase().includes('communication') && (b.name || '').toLowerCase().includes(commSearchAdd.toLowerCase()))
                             .map(b => {
                               const currentList = formData.communicationBatch ? formData.communicationBatch.split(', ').filter(Boolean) : [];
                               const isChecked = currentList.includes(b.name);
@@ -723,7 +743,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setFormData({ ...formData, communicationBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-650 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-300 text-indigo-655 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -736,7 +756,7 @@ const StudentManagement = () => {
 
                   {/* Aptitude & Reasoning Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Aptitude & Reasoning Batch</label>
+                    <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-1">Aptitude & Reasoning Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -763,7 +783,7 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => b.course === 'Aptitude & Reasoning' && (b.name || '').toLowerCase().includes(aptiSearchAdd.toLowerCase()))
+                            .filter(b => (b.course || '').toLowerCase().includes('aptitude') && (b.name || '').toLowerCase().includes(aptiSearchAdd.toLowerCase()))
                             .map(b => {
                               const currentList = formData.aptitudeBatch ? formData.aptitudeBatch.split(', ').filter(Boolean) : [];
                               const isChecked = currentList.includes(b.name);
@@ -778,7 +798,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setFormData({ ...formData, aptitudeBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-300 text-indigo-655 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -837,7 +857,7 @@ const StudentManagement = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block mb-1.5 uppercase">Email Address</label>
                     <input
@@ -846,6 +866,16 @@ const StudentManagement = () => {
                       value={editFormData.email}
                       onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
                       className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 uppercase">Student EID</label>
+                    <input
+                      type="text"
+                      value={editFormData.slaeId}
+                      onChange={(e) => setEditFormData({ ...editFormData, slaeId: e.target.value })}
+                      className="w-full px-3 py-2 border rounded-xl bg-transparent dark:border-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none"
+                      placeholder="e.g. SLA001"
                     />
                   </div>
                   <div>
@@ -864,7 +894,7 @@ const StudentManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Technical Training Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Technical Training Batch</label>
+                    <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-1">Technical Training Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -891,7 +921,7 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => b.course === 'Technical Training' && (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()))
+                            .filter(b => !(b.course || '').toLowerCase().includes('communication') && !(b.course || '').toLowerCase().includes('aptitude') && (b.name || '').toLowerCase().includes(batchSearchEdit.toLowerCase()))
                             .map(b => {
                               const currentList = editFormData.technicalBatch ? editFormData.technicalBatch.split(', ').filter(Boolean) : [];
                               const isChecked = currentList.includes(b.name);
@@ -906,7 +936,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setEditFormData({ ...editFormData, technicalBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-350 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -919,7 +949,7 @@ const StudentManagement = () => {
 
                   {/* Communication Skills Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Communication Skills Batch</label>
+                    <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-1">Communication Skills Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -946,7 +976,7 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => b.course === 'Communication Skills' && (b.name || '').toLowerCase().includes(commSearchEdit.toLowerCase()))
+                            .filter(b => (b.course || '').toLowerCase().includes('communication') && (b.name || '').toLowerCase().includes(commSearchEdit.toLowerCase()))
                             .map(b => {
                               const currentList = editFormData.communicationBatch ? editFormData.communicationBatch.split(', ').filter(Boolean) : [];
                               const isChecked = currentList.includes(b.name);
@@ -961,7 +991,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setEditFormData({ ...editFormData, communicationBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-350 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -974,7 +1004,7 @@ const StudentManagement = () => {
 
                   {/* Aptitude & Reasoning Batch */}
                   <div className="md:col-span-2 space-y-1.5 relative">
-                    <label className="text-xs font-semibold text-gray-650 dark:text-gray-400 uppercase tracking-wider block mb-1">Aptitude & Reasoning Batch</label>
+                    <label className="text-xs font-semibold text-gray-655 dark:text-gray-400 uppercase tracking-wider block mb-1">Aptitude & Reasoning Batch</label>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1001,7 +1031,7 @@ const StudentManagement = () => {
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
-                            .filter(b => b.course === 'Aptitude & Reasoning' && (b.name || '').toLowerCase().includes(aptiSearchEdit.toLowerCase()))
+                            .filter(b => (b.course || '').toLowerCase().includes('aptitude') && (b.name || '').toLowerCase().includes(aptiSearchEdit.toLowerCase()))
                             .map(b => {
                               const currentList = editFormData.aptitudeBatch ? editFormData.aptitudeBatch.split(', ').filter(Boolean) : [];
                               const isChecked = currentList.includes(b.name);
@@ -1016,7 +1046,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setEditFormData({ ...editFormData, aptitudeBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-650 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-350 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>

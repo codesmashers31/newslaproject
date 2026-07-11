@@ -153,7 +153,7 @@ export const getStudents = async (req, res) => {
 
 // Add Single Student
 export const addStudent = async (req, res) => {
-  const { name, email, mobile, password, technicalBatch, communicationBatch, aptitudeBatch } = req.body;
+  const { name, email, mobile, password, slaeId, technicalBatch, communicationBatch, aptitudeBatch } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -168,6 +168,7 @@ export const addStudent = async (req, res) => {
       password,
       role: 'Student',
       status: 'Active',
+      slaeId: slaeId || '',
       technicalBatch: technicalBatch || '',
       communicationBatch: communicationBatch || '',
       aptitudeBatch: aptitudeBatch || '',
@@ -194,7 +195,7 @@ export const addStudent = async (req, res) => {
 // Edit Student
 export const editStudent = async (req, res) => {
   const { id } = req.params;
-  const { name, email, mobile, status, collegeName, degree, department, yearOfPassing, gender, address, skills, bio, linkedin, github, technicalBatch, communicationBatch, aptitudeBatch } = req.body;
+  const { name, email, mobile, status, collegeName, degree, department, yearOfPassing, gender, address, skills, bio, linkedin, github, slaeId, technicalBatch, communicationBatch, aptitudeBatch } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -207,6 +208,7 @@ export const editStudent = async (req, res) => {
     user.email = email || user.email;
     user.mobile = mobile || user.mobile;
     user.status = status || user.status;
+    if (slaeId !== undefined) user.slaeId = slaeId;
     if (technicalBatch !== undefined) user.technicalBatch = technicalBatch;
     if (communicationBatch !== undefined) user.communicationBatch = communicationBatch;
     if (aptitudeBatch !== undefined) user.aptitudeBatch = aptitudeBatch;
