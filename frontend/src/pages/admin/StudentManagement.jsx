@@ -43,6 +43,8 @@ const StudentManagement = () => {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
   const [importingExcel, setImportingExcel] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [openDropdownAdd, setOpenDropdownAdd] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
   const [openDropdownEdit, setOpenDropdownEdit] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
@@ -141,6 +143,7 @@ const StudentManagement = () => {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
     loadData();
   }, [selectedBatch, selectedPlacement]);
 
@@ -155,6 +158,7 @@ const StudentManagement = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setCurrentPage(1);
     loadData();
   };
 
@@ -397,6 +401,9 @@ const StudentManagement = () => {
     }
   };
 
+  const totalPages = Math.ceil(students.length / itemsPerPage);
+  const paginatedStudents = students.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -527,7 +534,7 @@ const StudentManagement = () => {
                   </td>
                 </tr>
               ) : (
-                students.map((student) => (
+                paginatedStudents.map((student) => (
                   <tr key={student._id} className="hover:bg-gray-50/30 dark:hover:bg-gray-900/10 transition-colors">
                     <td className="px-6 py-4 flex items-center space-x-3">
                       <div className="h-9 w-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center">
@@ -614,6 +621,78 @@ const StudentManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {students.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-t border-gray-250 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/20 text-xs">
+            <div className="text-gray-500 font-semibold">
+              Showing {Math.min(students.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(students.length, currentPage * itemsPerPage)} of {students.length} entries
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-gray-400 font-semibold">Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] font-bold text-gray-750 dark:text-gray-300 focus:outline-none cursor-pointer"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-600 dark:text-gray-450 hover:bg-slate-105 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pageNum = idx + 1;
+                  if (pageNum === 1 || pageNum === totalPages || Math.abs(pageNum - currentPage) <= 1) {
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                          currentPage === pageNum
+                            ? 'bg-indigo-650 text-white shadow-md shadow-indigo-500/10'
+                            : 'border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-605 dark:text-gray-450 hover:bg-slate-105 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  if (pageNum === 2 || pageNum === totalPages - 1) {
+                    return <span key={pageNum} className="px-1 text-gray-400">...</span>;
+                  }
+                  return null;
+                })}
+
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-600 dark:text-gray-450 hover:bg-slate-105 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* CREATE STUDENT MODAL */}
