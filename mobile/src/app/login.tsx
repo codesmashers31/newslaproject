@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -53,12 +54,9 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert('Google Sign-In', 'Connecting to Google Student Authentication...');
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -68,30 +66,30 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Center Top Circular Icon Badge */}
+          {/* Header */}
           <View style={styles.headerContainer}>
             <View style={styles.iconCircle}>
-              <GraduationCap size={36} color="#3b82f6" />
+              <GraduationCap size={36} color="#6366f1" />
             </View>
-            <Text style={styles.title}>Welcome Back!</Text>
+            <Text style={styles.title}>LCP Student Portal</Text>
             <Text style={styles.subtitle}>
-              Login to continue your learning journey
+              Enter credentials to access your academic cohort dashboard.
             </Text>
           </View>
 
-          {/* Form Section */}
+          {/* Form */}
           <View style={styles.formContainer}>
             {/* Email Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email Address</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.inputIcon}>
-                  <Mail size={18} color="#6b7280" />
+                  <Mail size={18} color="#64748b" />
                 </View>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your student email"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#475569"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -105,12 +103,12 @@ export default function LoginScreen() {
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.inputIcon}>
-                  <Lock size={18} color="#6b7280" />
+                  <Lock size={18} color="#64748b" />
                 </View>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#475569"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
@@ -120,15 +118,15 @@ export default function LoginScreen() {
                   style={styles.eyeIcon}
                 >
                   {showPassword ? (
-                    <EyeOff size={18} color="#6b7280" />
+                    <EyeOff size={18} color="#64748b" />
                   ) : (
-                    <Eye size={18} color="#6b7280" />
+                    <Eye size={18} color="#64748b" />
                   )}
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Primary Login Button matching reference UI */}
+            {/* Login Button */}
             <TouchableOpacity
               style={styles.primaryButton}
               onPress={handleLogin}
@@ -145,7 +143,7 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Bottom Vector Illustration filling the gap */}
+            {/* Bottom Vector Illustration (optimized sizing) */}
             <View style={styles.illustrationContainer}>
               <Image
                 source={require('../../assets/images/loginimage.svg')}
@@ -163,7 +161,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#020617', // Slate 950
   },
   flex: {
     flex: 1,
@@ -171,56 +169,61 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 64,
+    paddingTop: 36,
     paddingBottom: 24,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
   },
   iconCircle: {
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: '#eff6ff',
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
     borderWidth: 1.5,
-    borderColor: '#dbeafe',
+    borderColor: 'rgba(99, 102, 241, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#ffffff',
     marginBottom: 6,
+    letterSpacing: 0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: 13,
+    color: '#94a3b8',
     textAlign: 'center',
+    paddingHorizontal: 12,
+    lineHeight: 18,
   },
   formContainer: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#cbd5e1',
     marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 12,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 12,
+    borderColor: '#1e293b',
+    borderRadius: 14,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 14,
     height: 50,
   },
   inputIcon: {
@@ -229,23 +232,23 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: '#111827',
+    color: '#ffffff',
   },
   eyeIcon: {
     padding: 6,
   },
   primaryButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 12,
-    height: 52,
+    backgroundColor: '#6366f1',
+    borderRadius: 14,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    shadowColor: '#3b82f6',
+    marginTop: 10,
+    shadowColor: '#6366f1',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   primaryButtonContent: {
     flexDirection: 'row',
@@ -253,112 +256,17 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '700',
-    marginRight: 8,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 22,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e5e7eb',
-  },
-  dividerTextContainer: {
-    marginHorizontal: 12,
-  },
-  dividerText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#9ca3af',
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 12,
-    backgroundColor: '#ffffff',
-    height: 50,
-  },
-  googleIconCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#fef2f2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleGText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#ea4335',
-  },
-  googleButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginLeft: 10,
-  },
-  securityBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#eff6ff',
-    borderWidth: 1,
-    borderColor: '#dbeafe',
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 22,
-  },
-  securityBannerText: {
-    flex: 1,
-    fontSize: 12,
-    color: '#1e3a8a',
-    marginLeft: 10,
-    lineHeight: 17,
-  },
-  registerPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  registerText: {
-    fontSize: 14,
-    color: '#4b5563',
-  },
-  registerLink: {
-    fontSize: 14,
-    color: '#3b82f6',
     fontWeight: '700',
-  },
-  footerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  footerHelpText: {
-    fontSize: 13,
-    color: '#6b7280',
-    marginLeft: 6,
-  },
-  footerSupportLink: {
-    fontSize: 13,
-    color: '#3b82f6',
-    fontWeight: '600',
+    marginRight: 6,
   },
   illustrationContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 36,
+    marginTop: 28,
   },
   illustrationImage: {
     width: '100%',
-    height: 180,
+    height: 110,
   },
 });

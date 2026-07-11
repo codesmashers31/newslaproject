@@ -164,7 +164,7 @@ export default function QRScannerScreen() {
                         <Text style={styles.detailsLabel}>Status</Text>
                         <Text style={styles.detailsValueStatus}>{scanResult.details.status}</Text>
                       </View>
-                      <View style={{ alignItems: 'end' as const }}>
+                      <View style={{ alignItems: 'flex-end' }}>
                         <Text style={styles.detailsLabel}>Marked Date</Text>
                         <Text style={styles.detailsValue}>
                           {new Date(scanResult.details.date).toLocaleDateString()}
