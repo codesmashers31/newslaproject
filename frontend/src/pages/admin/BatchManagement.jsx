@@ -195,11 +195,16 @@ const BatchManagement = () => {
                 {/* Title & Actions */}
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
                         <BookOpen size={20} className="text-indigo-500" />
                         {batch.name}
                       </h3>
+                      {batch.batchId && (
+                        <span className="bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                          ID: {batch.batchId}
+                        </span>
+                      )}
                       <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                         batch.status === 'Active'
                           ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
@@ -208,7 +213,6 @@ const BatchManagement = () => {
                         {batch.status || 'Active'}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-semibold uppercase tracking-wider">{batch.course}</p>
                   </div>
                   <div className="flex space-x-1.5 bg-gray-50 dark:bg-[#181922] p-1 rounded-xl border border-gray-100 dark:border-gray-800">
                     <button
@@ -241,15 +245,17 @@ const BatchManagement = () => {
                   </span>
                 </div>
 
-                {/* Assigned Trainers Box */}
+                {/* Allotments Trainers List Box */}
                 <div className="mt-3 bg-gray-50/20 dark:bg-[#181922]/40 p-3.5 rounded-xl border border-gray-200 dark:border-gray-800/60 text-xs">
                   <p className="text-[10px] font-extrabold text-indigo-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                     <GraduationCap size={13} />
-                    <span>Assigned Trainers</span>
+                    <span>Allotments Trainers List</span>
                   </p>
                   <p className="text-xs text-gray-700 dark:text-gray-300 font-semibold leading-relaxed">
                     {batch.trainers && batch.trainers.length > 0
                       ? batch.trainers.map(t => `${t.name} (${t.role})`).join(' • ')
+                      : batch.trainerName
+                      ? batch.trainerName
                       : 'No trainers assigned yet.'}
                   </p>
                 </div>
