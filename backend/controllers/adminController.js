@@ -285,16 +285,23 @@ export const importStudentsExcel = async (req, res) => {
     let importCount = 0;
 
     for (const row of data) {
-      // Minimal headers expected: SLAEID, Name, Batch, BatchID, Batch ID
-      const slaeId = String(row.SLAEID || row.slaeid || row.EID || row.eid || '').trim();
-      const name = String(row.Name || row.name || '').trim();
-      const batchIdentifier = String(row.Batch || row.batch || row.BatchID || row.BatchId || row.batchid || row['Batch ID'] || '').trim();
+      const rowKeys = Object.keys(row);
+      const getVal = (possibleKeys) => {
+        const matchingKey = rowKeys.find(k => {
+          const cleanK = k.replace(/[\s\-_]+/g, '').toLowerCase();
+          return possibleKeys.includes(cleanK);
+        });
+        return matchingKey ? String(row[matchingKey]).trim() : '';
+      };
+
+      const slaeId = getVal(['slaeid', 'eid', 'id', 'studentworkid', 'rollno', 'registerid']);
+      const name = getVal(['name', 'studentname', 'fullname', 'username']);
+      const batchIdentifier = getVal(['batch', 'batchid', 'cohort', 'class', 'group', 'batchname']);
 
       if (!slaeId || !name) continue;
 
       const email = `${slaeId.toLowerCase()}@lcp.com`;
       const userExists = await User.findOne({ $or: [{ email }, { slaeId }] });
-      if (userExists) continue; // Skip existing
 
       let technicalBatch = '';
       let communicationBatch = '';
@@ -322,6 +329,21 @@ export const importStudentsExcel = async (req, res) => {
           technicalBatch = batchIdentifier;
         }
       }
+
+      if (userExists) {
+        const updateObj = {};
+        if (technicalBatch) updateObj.technicalBatch = technicalBatch;
+        if (communicationBatch) updateObj.communicationBatch = communicationBatch;
+        if (aptitudeBatch) updateObj.aptitudeBatch = aptitudeBatch;
+
+        if (Object.keys(updateObj).length > 0) {
+          await User.findByIdAndUpdate(userExists._id, { $set: updateObj });
+          await syncStudentBatchesFromStrings(userExists._id);
+        }
+        importCount++;
+        continue;
+      }
+
 
       const user = await User.create({
         name,
