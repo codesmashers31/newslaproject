@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { 
@@ -26,6 +27,7 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 
 const StudentManagement = () => {
+  const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +97,23 @@ const StudentManagement = () => {
     communicationBatch: '',
     aptitudeBatch: '',
   });
+
+  const getFilteredFilterBatches = () => {
+    if (!user) return batches;
+    
+    const role = user.role || '';
+    if (role === 'Technical Trainer') {
+      return batches.filter(b => !(b.course || '').toLowerCase().includes('communication') && !(b.course || '').toLowerCase().includes('aptitude'));
+    }
+    if (role === 'Communication Trainer') {
+      return batches.filter(b => (b.course || '').toLowerCase().includes('communication'));
+    }
+    if (role === 'Aptitude Trainer') {
+      return batches.filter(b => (b.course || '').toLowerCase().includes('aptitude'));
+    }
+    
+    return batches;
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -438,7 +457,7 @@ const StudentManagement = () => {
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
           >
             <option value="">All Batches</option>
-            {batches.map(b => (
+            {getFilteredFilterBatches().map(b => (
               <option key={b._id} value={b._id}>{b.name}</option>
             ))}
           </select>
