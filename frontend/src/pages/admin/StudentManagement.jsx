@@ -624,7 +624,7 @@ const StudentManagement = () => {
 
         {/* Pagination Controls */}
         {students.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-t border-gray-250 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/20 text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-t border-gray-200 dark:border-gray-800 bg-slate-50/50 dark:bg-slate-900/20 text-xs">
             <div className="text-gray-500 font-semibold">
               Showing {Math.min(students.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(students.length, currentPage * itemsPerPage)} of {students.length} entries
             </div>
@@ -638,7 +638,7 @@ const StudentManagement = () => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] font-bold text-gray-750 dark:text-gray-300 focus:outline-none cursor-pointer"
+                  className="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] font-bold text-gray-700 dark:text-gray-300 focus:outline-none cursor-pointer"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -652,7 +652,7 @@ const StudentManagement = () => {
                   type="button"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-600 dark:text-gray-450 hover:bg-slate-105 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
                 >
                   Previous
                 </button>
@@ -667,8 +667,8 @@ const StudentManagement = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
                           currentPage === pageNum
-                            ? 'bg-indigo-650 text-white shadow-md shadow-indigo-500/10'
-                            : 'border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-605 dark:text-gray-450 hover:bg-slate-105 dark:hover:bg-slate-800'
+                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                            : 'border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-605 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         {pageNum}
@@ -685,7 +685,7 @@ const StudentManagement = () => {
                   type="button"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-600 dark:text-gray-450 hover:bg-slate-105 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
                 >
                   Next
                 </button>

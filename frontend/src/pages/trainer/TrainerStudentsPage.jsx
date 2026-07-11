@@ -536,7 +536,7 @@ const TrainerStudentsPage = () => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] font-bold text-slate-700 dark:text-slate-350 focus:outline-none cursor-pointer"
+                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -565,8 +565,8 @@ const TrainerStudentsPage = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
                           currentPage === pageNum
-                            ? 'bg-purple-650 text-white shadow-md shadow-purple-500/10'
-                            : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-605 dark:text-slate-405 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'bg-purple-600 text-white shadow-md shadow-purple-500/10'
+                            : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
                         {pageNum}
@@ -574,7 +574,7 @@ const TrainerStudentsPage = () => {
                     );
                   }
                   if (pageNum === 2 || pageNum === totalPages - 1) {
-                    return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                    return <span key={pageNum} className="px-1 text-gray-400">...</span>;
                   }
                   return null;
                 })}
