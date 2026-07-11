@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Plus, Edit2, Trash2, X, BookOpen, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as XLSX from 'xlsx';
 
 const BatchManagement = () => {
   const [batches, setBatches] = useState([]);
@@ -10,8 +11,54 @@ const BatchManagement = () => {
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingBatch, setEditingBatch] = useState(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
 
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        'Batch Name': 'Elite Full Stack Web Dev Batch A',
+        'Assignment Trainers': 'Bala, Selva',
+        'Batch ID': 'BAT-001'
+      },
+      {
+        'Batch Name': 'APT1',
+        'Assignment Trainers': 'Softlogic',
+        'Batch ID': 'BAT-002'
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
+    XLSX.writeFile(workbook, 'Batch_Import_Template.xlsx');
+    toast.success('Template downloaded successfully!');
+  };
+
+  const handleExcelImport = async (e) => {
+    e.preventDefault();
+    if (!excelFile) {
+      toast.error('Please select a file first');
+      return;
+    }
+
+    const uploadData = new FormData();
+    uploadData.append('file', excelFile);
+
+    try {
+      const { data } = await API.post('/admin/batches/import', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success(data.message || 'Imported batches successfully!');
+      setImportModalOpen(false);
+      setExcelFile(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error importing Excel sheet');
+    }
+  };
+
+  const [editingBatch, setEditingBatch] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     course: '',
@@ -105,13 +152,23 @@ const BatchManagement = () => {
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Batch Management</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Configure active training groups and status trackers</p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
-        >
-          <Plus size={16} />
-          <span>Create Batch</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={openAddModal}
+            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
+          >
+            <Plus size={16} />
+            <span>Create Batch</span>
+          </button>
+
+          <button
+            onClick={() => setImportModalOpen(true)}
+            className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-purple-500/20 duration-200 cursor-pointer"
+          >
+            <Upload size={16} />
+            <span>Import Excel</span>
+          </button>
+        </div>
       </div>
 
       {/* Grid of Batches */}
@@ -304,6 +361,65 @@ const BatchManagement = () => {
           </>
         )}
       </AnimatePresence>
+
+      {/* IMPORT FROM EXCEL MODAL */}
+      {importModalOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/55 z-40" onClick={() => setImportModalOpen(false)} />
+          <div className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-3xl shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+              <h3 className="text-lg font-bold">Import Batches from Excel</h3>
+              <button onClick={() => setImportModalOpen(false)} className="text-gray-500 dark:text-gray-400">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleExcelImport} className="space-y-4">
+              {/* Excel Template Download Card */}
+              <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900/40 p-3.5 rounded-2xl border border-gray-150 dark:border-gray-800/80">
+                <div className="pr-2">
+                  <p className="text-xs font-bold text-gray-700 dark:text-gray-300">Excel Template</p>
+                  <p className="text-[10px] text-gray-400">Minimal required columns template</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={downloadTemplate}
+                  className="flex items-center space-x-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer shrink-0"
+                >
+                  <FileSpreadsheet size={13} />
+                  <span>Download Model</span>
+                </button>
+              </div>
+
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-indigo-50/10 transition-colors relative cursor-pointer">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={(e) => setExcelFile(e.target.files[0])}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="space-y-2">
+                  <div className="h-10 w-10 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto">
+                    <FileSpreadsheet size={24} />
+                  </div>
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                    {excelFile ? excelFile.name : 'Click or Drag Excel sheet here'}
+                  </p>
+                  <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: Batch Name, Assignment Trainers, Batch ID)</p>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!excelFile}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10"
+              >
+                Upload & Import
+              </button>
+            </form>
+          </div>
+        </>
+      )}
     </div>
   );
 };

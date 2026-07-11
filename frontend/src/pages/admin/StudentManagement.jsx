@@ -254,12 +254,12 @@ const StudentManagement = () => {
       {
         'SLAEID': 'SLA001',
         'Name': 'John Doe',
-        'Batch': 'Elite Full Stack Web Dev Batch A'
+        'BatchID': 'BAT-001'
       },
       {
         'SLAEID': 'SLA002',
         'Name': 'Jane Smith',
-        'Batch': 'APT1'
+        'BatchID': 'BAT-002'
       }
     ];
 
@@ -1222,7 +1222,7 @@ const StudentManagement = () => {
                     <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                       {excelFile ? excelFile.name : 'Click or Drag Excel sheet here'}
                     </p>
-                    <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: SLAEID, Name, Batch)</p>
+                    <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: SLAEID, Name, BatchID)</p>
                   </div>
                 </div>
 

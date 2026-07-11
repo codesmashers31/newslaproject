@@ -18,7 +18,9 @@ import {
   resetTrainerPassword,
   updateTrainerBatches,
   updatePlacementDetails,
-  getAttendanceLogs
+  getAttendanceLogs,
+  importTrainersExcel,
+  importBatchesExcel
 } from '../controllers/adminController.js';
 import { generateStudentAIRoadmapForAdmin } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -39,6 +41,8 @@ router.post('/students', addStudent);
 router.put('/students/:id', editStudent);
 router.delete('/students/:id', deleteStudent);
 router.post('/students/import', upload.single('file'), importStudentsExcel);
+router.post('/batches/import', upload.single('file'), importBatchesExcel);
+router.post('/trainers/import', upload.single('file'), importTrainersExcel);
 router.post('/students/:userId/ai-roadmap', generateStudentAIRoadmapForAdmin);
 
 // Batch Management

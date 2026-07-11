@@ -64,7 +64,7 @@ const AppRoutes = () => {
           path="/admin/batches" 
           element={
             <DashboardLayout>
-              <TrainerBatchesPage />
+              <BatchManagement />
             </DashboardLayout>
           } 
         />

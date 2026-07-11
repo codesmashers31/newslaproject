@@ -652,3 +652,98 @@ export const getAttendanceLogs = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const importTrainersExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an Excel file' });
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    let importCount = 0;
+
+    for (const row of data) {
+      // Columns: EMPID, Name, Mobile, Email
+      const empid = String(row.EMPID || row.empid || row.EmpID || row.id || '').trim();
+      const name = String(row.Name || row.name || '').trim();
+      const mobile = String(row.Mobile || row.mobile || row.phone || row.Phone || '').trim();
+      const email = String(row.Email || row.email || '').trim();
+
+      if (!name || !email || !mobile) continue;
+
+      const trainerExists = await User.findOne({ email });
+      if (trainerExists) continue;
+
+      await User.create({
+        name,
+        email,
+        mobile,
+        password: 'password123',
+        role: 'Technical Trainer',
+        status: 'Active',
+        trainerId: empid || `TR-${Date.now().toString().slice(-4)}`,
+      });
+
+      importCount++;
+    }
+
+    res.json({ message: `Successfully imported ${importCount} trainers` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const importBatchesExcel = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an Excel file' });
+    }
+
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    let importCount = 0;
+
+    for (const row of data) {
+      // Columns: Batch Name, Assignment Trainers, Batch ID
+      const batchName = String(row['Batch Name'] || row.BatchName || row.name || '').trim();
+      const assignmentTrainers = String(row['Assignment Trainers'] || row.AssignmentTrainers || row.trainers || '').trim();
+      const batchId = String(row['Batch ID'] || row.BatchID || row.id || '').trim();
+
+      if (!batchName) continue;
+
+      const batchExists = await Batch.findOne({ name: batchName });
+      if (batchExists) continue;
+
+      const trainerIds = [];
+      if (assignmentTrainers) {
+        const names = assignmentTrainers.split(',').map(n => n.trim()).filter(Boolean);
+        const trainers = await User.find({ name: { $in: names } });
+        trainers.forEach(t => trainerIds.push(t._id));
+      }
+
+      await Batch.create({
+        name: batchName,
+        course: 'Technical Training',
+        batchId: batchId || `BAT-${Date.now().toString().slice(-4)}`,
+        trainers: trainerIds,
+        trainerName: assignmentTrainers,
+        status: 'Active',
+      });
+
+      importCount++;
+    }
+
+    res.json({ message: `Successfully imported ${importCount} batches` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
