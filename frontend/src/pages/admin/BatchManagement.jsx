@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 
