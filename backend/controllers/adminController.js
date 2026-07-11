@@ -725,15 +725,23 @@ export const importBatchesExcel = async (req, res) => {
       if (batchExists) continue;
 
       const trainerIds = [];
+      let resolvedCourse = 'Technical Training';
       if (assignmentTrainers) {
         const names = assignmentTrainers.split(',').map(n => n.trim()).filter(Boolean);
         const trainers = await User.find({ name: { $in: names } });
-        trainers.forEach(t => trainerIds.push(t._id));
+        trainers.forEach(t => {
+          trainerIds.push(t._id);
+          if (t.role === 'Communication Trainer') {
+            resolvedCourse = 'Communication Skills';
+          } else if (t.role === 'Aptitude Trainer' && resolvedCourse !== 'Communication Skills') {
+            resolvedCourse = 'Aptitude & Reasoning';
+          }
+        });
       }
 
       await Batch.create({
         name: batchName,
-        course: 'Technical Training',
+        course: resolvedCourse,
         batchId: batchId || `BAT-${Date.now().toString().slice(-4)}`,
         trainers: trainerIds,
         trainerName: assignmentTrainers,
