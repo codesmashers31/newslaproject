@@ -61,9 +61,11 @@ const BatchManagement = () => {
   const [editingBatch, setEditingBatch] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    course: '',
+    batchId: '',
     status: 'Active',
-    trainers: [],
+    technicalTrainer: '',
+    communicationTrainer: '',
+    aptitudeTrainer: '',
   });
 
   const loadData = async () => {
@@ -90,20 +92,29 @@ const BatchManagement = () => {
     setEditingBatch(null);
     setFormData({
       name: '',
-      course: '',
+      batchId: '',
       status: 'Active',
-      trainers: [],
+      technicalTrainer: '',
+      communicationTrainer: '',
+      aptitudeTrainer: '',
     });
     setModalOpen(true);
   };
 
   const openEditModal = (batch) => {
     setEditingBatch(batch);
+    const trainerList = batch.trainers || [];
+    const techT = trainerList.find(t => t.role === 'Technical Trainer')?._id || '';
+    const commT = trainerList.find(t => t.role === 'Communication Trainer')?._id || '';
+    const aptiT = trainerList.find(t => t.role === 'Aptitude Trainer')?._id || '';
+
     setFormData({
       name: batch.name,
-      course: batch.course,
+      batchId: batch.batchId || '',
       status: batch.status || 'Active',
-      trainers: batch.trainers?.map(t => typeof t === 'object' ? t._id : t) || [],
+      technicalTrainer: techT,
+      communicationTrainer: commT,
+      aptitudeTrainer: aptiT,
     });
     setModalOpen(true);
   };
@@ -111,11 +122,18 @@ const BatchManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const selectedTrainers = [
+        formData.technicalTrainer,
+        formData.communicationTrainer,
+        formData.aptitudeTrainer
+      ].filter(Boolean);
+
       const submitData = {
         name: formData.name,
-        course: formData.course,
+        batchId: formData.batchId,
+        course: 'Technical Training',
         status: formData.status,
-        trainers: formData.trainers,
+        trainers: selectedTrainers,
       };
 
       if (editingBatch) {
@@ -286,6 +304,17 @@ const BatchManagement = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-4">
                   <div>
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch ID</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.batchId}
+                      onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
+                      placeholder="e.g. MERN001"
+                    />
+                  </div>
+                  <div>
                     <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch Name</label>
                     <input
                       type="text"
@@ -293,21 +322,10 @@ const BatchManagement = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
-                      placeholder="e.g. MERN-2026-A"
+                      placeholder="e.g. Elite Full Stack Web Dev Batch A"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Course Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.course}
-                      onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
-                      placeholder="e.g. Full Stack MERN"
-                    />
-                  </div>
-                   <div>
                     <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch Status</label>
                     <select
                       value={formData.status}
@@ -318,40 +336,52 @@ const BatchManagement = () => {
                       <option value="Inactive">Inactive</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Assign Trainers (Multiple Select)</label>
-                    <div className="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-800 rounded-xl p-3 bg-gray-50 dark:bg-[#181922] space-y-3">
-                      {['Technical Trainer', 'Communication Trainer', 'Aptitude Trainer'].map(role => {
-                        const roleTrainers = trainers.filter(t => t.role === role);
-                        if (roleTrainers.length === 0) return null;
-                        return (
-                          <div key={role} className="space-y-1">
-                            <p className="text-[10px] font-extrabold text-indigo-500 uppercase tracking-wide border-b border-gray-100 dark:border-gray-850 pb-0.5 mb-1.5">{role}s</p>
-                            {roleTrainers.map(t => {
-                              const isChecked = formData.trainers?.includes(t._id);
-                              return (
-                                <label key={t._id} className="flex items-center space-x-2 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer select-none py-0.5">
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={(e) => {
-                                      const updatedTrainers = e.target.checked
-                                        ? [...(formData.trainers || []), t._id]
-                                        : (formData.trainers || []).filter(id => id !== t._id);
-                                      setFormData({ ...formData, trainers: updatedTrainers });
-                                    }}
-                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                  />
-                                  <span>{t.name}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                      {trainers.length === 0 && (
-                        <p className="text-xs text-gray-400 italic">No trainers available.</p>
-                      )}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Trainers (Multiple Select)</label>
+                    
+                    {/* Technical Trainer Select */}
+                    <div>
+                      <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Technical Trainer</label>
+                      <select
+                        value={formData.technicalTrainer}
+                        onChange={(e) => setFormData({ ...formData, technicalTrainer: e.target.value })}
+                        className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                      >
+                        <option value="">Select Technical Trainer (Optional)</option>
+                        {trainers.filter(t => t.role === 'Technical Trainer').map(t => (
+                          <option key={t._id} value={t._id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Communication Trainer Select */}
+                    <div>
+                      <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Communication Trainer</label>
+                      <select
+                        value={formData.communicationTrainer}
+                        onChange={(e) => setFormData({ ...formData, communicationTrainer: e.target.value })}
+                        className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                      >
+                        <option value="">Select Communication Trainer (Optional)</option>
+                        {trainers.filter(t => t.role === 'Communication Trainer').map(t => (
+                          <option key={t._id} value={t._id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Aptitude Trainer Select */}
+                    <div>
+                      <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Aptitude Trainer</label>
+                      <select
+                        value={formData.aptitudeTrainer}
+                        onChange={(e) => setFormData({ ...formData, aptitudeTrainer: e.target.value })}
+                        className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                      >
+                        <option value="">Select Aptitude Trainer (Optional)</option>
+                        {trainers.filter(t => t.role === 'Aptitude Trainer').map(t => (
+                          <option key={t._id} value={t._id}>{t.name}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
