@@ -12,9 +12,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#020617', // Slate 950
           borderTopColor: '#1e293b', // Slate 800
-          paddingBottom: 6,
-          paddingTop: 6,
-          height: 60,
+          paddingBottom: 16,
+          paddingTop: 8,
+          height: 75,
         },
         tabBarActiveTintColor: '#6366f1', // Indigo 500
         tabBarInactiveTintColor: '#64748b', // Slate 500
