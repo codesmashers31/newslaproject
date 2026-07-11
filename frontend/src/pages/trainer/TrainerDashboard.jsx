@@ -1279,8 +1279,18 @@ const TrainerDashboard = () => {
                         const currentStatus = attendanceState[student._id] || 'Present';
                         const record = todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
                         
-                        const studentBatches = student.technicalBatch || 'Unassigned';
-                        const displayTrainer = student.technicalTrainer || 'Assigned Trainer';
+                        let studentBatches = 'Unassigned';
+                        let displayTrainer = 'Assigned Trainer';
+                        if (user?.role === 'Communication Trainer') {
+                          studentBatches = student.communicationBatch || 'Unassigned';
+                          displayTrainer = student.communicationTrainer || 'Assigned Trainer';
+                        } else if (user?.role === 'Aptitude Trainer') {
+                          studentBatches = student.aptitudeBatch || 'Unassigned';
+                          displayTrainer = student.aptitudeTrainer || 'Assigned Trainer';
+                        } else {
+                          studentBatches = student.technicalBatch || 'Unassigned';
+                          displayTrainer = student.technicalTrainer || 'Assigned Trainer';
+                        }
 
                         const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
                         
