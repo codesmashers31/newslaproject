@@ -4,8 +4,10 @@ import { toast } from 'react-hot-toast';
 import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { useAuth } from '../../context/AuthContext';
 
 const BatchManagement = () => {
+  const { user } = useAuth();
   const [batches, setBatches] = useState([]);
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +84,22 @@ const BatchManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFilteredBatchesForDisplay = () => {
+    if (!user) return batches;
+    if (user.role === 'Super Admin' || user.role === 'Admin') {
+      return batches;
+    }
+    
+    return batches.filter(batch => {
+      const isAssigned = batch.trainers?.some(t => {
+        const tId = typeof t === 'object' ? t?._id : t;
+        return String(tId) === String(user?._id);
+      }) || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+
+      return isAssigned;
+    });
   };
 
   useEffect(() => {
@@ -170,23 +188,25 @@ const BatchManagement = () => {
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Batch Management</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Configure active training groups and status trackers</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={openAddModal}
-            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>Create Batch</span>
-          </button>
+        {(user?.role === 'Super Admin' || user?.role === 'Admin') && (
+          <div className="flex gap-2">
+            <button
+              onClick={openAddModal}
+              className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
+            >
+              <Plus size={16} />
+              <span>Create Batch</span>
+            </button>
 
-          <button
-            onClick={() => setImportModalOpen(true)}
-            className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-purple-500/20 duration-200 cursor-pointer"
-          >
-            <Upload size={16} />
-            <span>Import Excel</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-purple-500/20 duration-200 cursor-pointer"
+            >
+              <Upload size={16} />
+              <span>Import Excel</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Grid of Batches */}
@@ -202,7 +222,7 @@ const BatchManagement = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {batches.map((batch) => (
+          {getFilteredBatchesForDisplay().map((batch) => (
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,22 +252,24 @@ const BatchManagement = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex space-x-1.5 bg-gray-50 dark:bg-[#181922] p-1 rounded-xl border border-gray-100 dark:border-gray-800">
-                    <button
-                      onClick={() => openEditModal(batch)}
-                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-500 transition-colors cursor-pointer"
-                      title="Edit Batch"
-                    >
-                      <Edit2 size={13} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(batch._id)}
-                      className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg text-gray-400 hover:text-rose-600 transition-colors cursor-pointer"
-                      title="Delete Batch"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
+                  {(user?.role === 'Super Admin' || user?.role === 'Admin') && (
+                    <div className="flex space-x-1.5 bg-gray-50 dark:bg-[#181922] p-1 rounded-xl border border-gray-100 dark:border-gray-800">
+                      <button
+                        onClick={() => openEditModal(batch)}
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-500 transition-colors cursor-pointer"
+                        title="Edit Batch"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(batch._id)}
+                        className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg text-gray-400 hover:text-rose-600 transition-colors cursor-pointer"
+                        title="Delete Batch"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <hr className="my-4 border-gray-200 dark:border-gray-800" />
