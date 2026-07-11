@@ -160,6 +160,9 @@ export const updateUserProfile = async (req, res) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.mobile = req.body.mobile || user.mobile;
+      if (req.file) {
+        user.photo = `/uploads/${req.file.filename}`;
+      }
       if (req.body.password) {
         user.password = req.body.password;
       }
@@ -172,6 +175,7 @@ export const updateUserProfile = async (req, res) => {
         email: updatedUser.email,
         mobile: updatedUser.mobile,
         role: updatedUser.role,
+        photo: updatedUser.photo,
         token: generateToken(updatedUser._id),
       });
     } else {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import API from '../services/api';
+import API, { BACKEND_URL } from '../services/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -253,24 +253,42 @@ const DashboardLayout = ({ children }) => {
                 </nav>
               </div>
 
-              <div>
-                <div className="bg-gray-100/50 dark:bg-gray-900/40 rounded-2xl p-3 mb-4 flex items-center space-x-3">
-                  <div className="h-9 w-9 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold">
-                    {user?.name?.charAt(0)}
-                  </div>
-                  <div className="overflow-hidden flex-1">
-                    <p className="text-xs font-semibold truncate">{user?.name}</p>
-                    <p className="text-[10px] text-gray-500 truncate">{user?.role}</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 font-medium transition-all duration-300"
-                >
-                  <LogOut size={20} />
-                  <span>Logout</span>
-                </button>
-              </div>
+               <div>
+                 <div className="bg-gray-100/50 dark:bg-gray-900/40 rounded-2xl p-3 mb-4 flex items-center space-x-3">
+                   <div className="h-9 w-9 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold overflow-hidden relative">
+                     {user?.photo ? (
+                       <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
+                     ) : (
+                       user?.name?.charAt(0)
+                     )}
+                   </div>
+                   <div className="overflow-hidden flex-1">
+                     <p className="text-xs font-semibold truncate">{user?.name}</p>
+                     <p className="text-[10px] text-gray-500 truncate">{user?.role}</p>
+                   </div>
+                 </div>
+                 <Link 
+                   to={
+                     user?.role === 'Student' 
+                       ? '/student/profile' 
+                       : (user?.role === 'Admin' || user?.role === 'Super Admin')
+                       ? '/admin/profile'
+                       : '/trainer/profile'
+                   }
+                   onClick={() => setMobileMenuOpen(false)}
+                   className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 font-medium transition-all duration-300 mb-2"
+                 >
+                   <User size={20} />
+                   <span>My Profile</span>
+                 </Link>
+                 <button 
+                   onClick={handleLogout}
+                   className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20 font-medium transition-all duration-300"
+                 >
+                   <LogOut size={20} />
+                   <span>Logout</span>
+                 </button>
+               </div>
             </motion.div>
           </>
         )}
@@ -367,8 +385,12 @@ const DashboardLayout = ({ children }) => {
                 }}
                 className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 border border-gray-200/60 dark:border-gray-800 transition-all cursor-pointer shadow-2xs"
               >
-                <div className="h-8 w-8 bg-[#4F46E5] rounded-lg flex items-center justify-center font-extrabold text-white text-xs shadow-sm">
-                  {user?.name?.charAt(0)}
+                <div className="h-8 w-8 rounded-lg overflow-hidden bg-[#4F46E5] flex items-center justify-center font-extrabold text-white text-xs shadow-sm relative">
+                  {user?.photo ? (
+                    <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    user?.name?.charAt(0)
+                  )}
                 </div>
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-bold leading-none text-gray-800 dark:text-gray-200">{user?.name}</span>

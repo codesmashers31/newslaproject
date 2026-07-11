@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     enum: ['Super Admin', 'Admin', 'Student', 'Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'],
   },
+  photo: {
+    type: String,
+    default: '',
+  },
   slaeId: {
     type: String,
     trim: true,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import API from '../../services/api';
+import API, { BACKEND_URL } from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { 
   User, 
@@ -11,12 +11,13 @@ import {
   Save, 
   CheckCircle, 
   Sparkles,
-  Building2
+  Building2,
+  Upload
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const UserProfile = () => {
-  const { user, login } = useAuth();
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -27,6 +28,9 @@ const UserProfile = () => {
     confirmPassword: '',
   });
 
+  const [photoFile, setPhotoFile] = useState(null);
+  const [currentPhoto, setCurrentPhoto] = useState(user?.photo || '');
+
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -34,6 +38,7 @@ const UserProfile = () => {
         name: user.name || '',
         mobile: user.mobile || '',
       }));
+      setCurrentPhoto(user.photo || '');
     }
   }, [user]);
 
@@ -45,23 +50,29 @@ const UserProfile = () => {
     }
 
     setSaving(true);
-    try {
-      const payload = {
-        name: formData.name,
-        mobile: formData.mobile,
-      };
-      if (formData.password) {
-        payload.password = formData.password;
-      }
+    const updateData = new FormData();
+    updateData.append('name', formData.name);
+    updateData.append('mobile', formData.mobile);
+    if (formData.password) {
+      updateData.append('password', formData.password);
+    }
+    if (photoFile) {
+      updateData.append('photo', photoFile);
+    }
 
-      const { data } = await API.put('/auth/me', payload);
-      // Update local storage / context user object
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const updatedUser = { ...storedUser, name: data.name, mobile: data.mobile };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+    try {
+      const { data } = await API.put('/auth/me', updateData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const storedUser = JSON.parse(localStorage.getItem('userInfo') || '{}');
+      const updatedUser = { ...storedUser, name: data.name, mobile: data.mobile, photo: data.photo };
+      updateUser(updatedUser);
 
       toast.success('Profile updated successfully!');
       setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+      setPhotoFile(null);
+      setCurrentPhoto(data.photo || '');
     } catch (error) {
       console.error('Failed to update profile:', error);
       toast.error(error.response?.data?.message || 'Failed to update profile');
@@ -107,8 +118,48 @@ const UserProfile = () => {
       {/* MAIN FORM GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT CARD: ACCOUNT SNAPSHOT */}
-        <div className="bg-white dark:bg-[#12131a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="bg-white dark:bg-[#12131a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6 flex flex-col items-center text-center">
+          {/* Avatar Picture */}
+          <div className="relative group">
+            <div className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-lg relative">
+              {currentPhoto ? (
+                <img src={currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-3xl font-extrabold text-[#4F46E5]">{user?.name?.charAt(0)}</span>
+              )}
+            </div>
+            {/* Hover file indicator */}
+            <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 pointer-events-none text-white text-[10px] font-bold">
+              <span>Change Photo</span>
+            </div>
+            {/* hidden upload input */}
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setPhotoFile(file);
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    setCurrentPhoto(event.target.result);
+                  };
+                  reader.readAsDataURL(file);
+                  toast.success(`Selected photo: ${file.name}`);
+                }
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+            />
+          </div>
+
+          <div className="space-y-1">
+            <h4 className="font-bold text-base text-gray-900 dark:text-white">Profile Image</h4>
+            <p className="text-[10px] text-gray-400">Upload JPEG, JPG, or PNG under 5MB</p>
+          </div>
+
+          <hr className="w-full border-gray-200 dark:border-gray-800" />
+
+          <div className="w-full flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-800 text-left">
             <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-[#4F46E5] dark:text-indigo-400">
               <User size={20} />
             </div>
@@ -118,7 +169,7 @@ const UserProfile = () => {
             </div>
           </div>
 
-          <div className="space-y-4 text-xs">
+          <div className="space-y-4 text-xs w-full">
             <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800/60">
               <span className="text-gray-500 font-medium">Full Name</span>
               <span className="font-bold text-gray-800 dark:text-gray-200">{user?.name}</span>

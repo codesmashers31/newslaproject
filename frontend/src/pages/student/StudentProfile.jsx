@@ -139,7 +139,10 @@ const StudentProfile = () => {
                   setPhotoFile(file);
                   // Preview photo
                   const reader = new FileReader();
-                  reader.onload = (event) => setCurrentPhoto(event.target.result.replace('data:image/jpeg;base64,', '')); // temporary preview
+                  reader.onload = (event) => {
+                    setCurrentPhoto(event.target.result);
+                  };
+                  reader.readAsDataURL(file);
                   toast.success(`Selected photo: ${file.name}`);
                 }
               }}
