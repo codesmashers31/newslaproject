@@ -63,6 +63,10 @@ export default function ProfileScreen() {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>('');
 
+  const [techSearch, setTechSearch] = useState('');
+  const [commSearch, setCommSearch] = useState('');
+  const [aptiSearch, setAptiSearch] = useState('');
+
   const getServerRoot = () => {
     const base = API.defaults.baseURL;
     if (base) {
@@ -259,10 +263,30 @@ export default function ProfileScreen() {
     ? { uri: `${getServerRoot()}${currentPhotoPath}` } 
     : null;
 
-  // Filter batches by category
-  const techBatches = availableBatches.filter(b => b.course === 'Technical Training' || (!b.course?.includes('Communication') && !b.course?.includes('Aptitude')));
-  const commBatches = availableBatches.filter(b => b.course?.includes('Communication'));
-  const aptiBatches = availableBatches.filter(b => b.course?.includes('Aptitude'));
+  // Filter batches by category and search terms
+  const techBatches = availableBatches
+    .filter(b => b.course === 'Technical Training' || (!b.course?.includes('Communication') && !b.course?.includes('Aptitude')))
+    .filter(b => {
+      if (!techSearch) return true;
+      return b.name?.toLowerCase().includes(techSearch.toLowerCase()) || 
+             b.trainers?.some((t: any) => t.name?.toLowerCase().includes(techSearch.toLowerCase()));
+    });
+
+  const commBatches = availableBatches
+    .filter(b => b.course?.includes('Communication'))
+    .filter(b => {
+      if (!commSearch) return true;
+      return b.name?.toLowerCase().includes(commSearch.toLowerCase()) || 
+             b.trainers?.some((t: any) => t.name?.toLowerCase().includes(commSearch.toLowerCase()));
+    });
+
+  const aptiBatches = availableBatches
+    .filter(b => b.course?.includes('Aptitude'))
+    .filter(b => {
+      if (!aptiSearch) return true;
+      return b.name?.toLowerCase().includes(aptiSearch.toLowerCase()) || 
+             b.trainers?.some((t: any) => t.name?.toLowerCase().includes(aptiSearch.toLowerCase()));
+    });
 
   return (
     <SafeAreaView className="flex-1 bg-slate-950">
@@ -379,6 +403,17 @@ export default function ProfileScreen() {
             {/* Technical Domain */}
             <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
               <Text className="text-white font-extrabold text-xs mb-3 text-indigo-400 uppercase tracking-wide">Technical Training</Text>
+              
+              <View className="mb-3">
+                <TextInput
+                  value={techSearch}
+                  onChangeText={setTechSearch}
+                  placeholder="🔍 Search by trainer or batch name..."
+                  placeholderTextColor="#475569"
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
+                />
+              </View>
+
               {techBatches.length > 0 ? (
                 <View className="space-y-2 mb-3">
                   {techBatches.map((b: any) => {
@@ -430,6 +465,17 @@ export default function ProfileScreen() {
             {/* Communication Domain */}
             <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
               <Text className="text-white font-extrabold text-xs mb-3 text-indigo-400 uppercase tracking-wide">Communication Skills</Text>
+              
+              <View className="mb-3">
+                <TextInput
+                  value={commSearch}
+                  onChangeText={setCommSearch}
+                  placeholder="🔍 Search by trainer or batch name..."
+                  placeholderTextColor="#475569"
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
+                />
+              </View>
+
               {commBatches.length > 0 ? (
                 <View className="space-y-2 mb-3">
                   {commBatches.map((b: any) => {
@@ -481,6 +527,17 @@ export default function ProfileScreen() {
             {/* Aptitude Domain */}
             <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
               <Text className="text-white font-extrabold text-xs mb-3 text-indigo-400 uppercase tracking-wide">Aptitude & Reasoning</Text>
+              
+              <View className="mb-3">
+                <TextInput
+                  value={aptiSearch}
+                  onChangeText={setAptiSearch}
+                  placeholder="🔍 Search by trainer or batch name..."
+                  placeholderTextColor="#475569"
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
+                />
+              </View>
+
               {aptiBatches.length > 0 ? (
                 <View className="space-y-2 mb-3">
                   {aptiBatches.map((b: any) => {
