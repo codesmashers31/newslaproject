@@ -5,7 +5,7 @@ export const BACKEND_URL = import.meta.env.VITE_API_URL
   : `http://${window.location.hostname}:5000`;
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`,
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
