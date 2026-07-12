@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const getBaseURL = () => {
-  let host = '172.17.1.232'; // Default LAN IP fallback
+  let host = '10.253.37.143'; // Default LAN IP fallback
   if (Constants.expoConfig?.hostUri) {
     host = Constants.expoConfig.hostUri.split(':')[0];
   }
