@@ -437,7 +437,7 @@ export default function ProfileScreen() {
                 <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
                 <Text className="text-white text-xs font-bold">{profileData.aptitudeTrainer || 'Unassigned'}</Text>
               </View>
-            </View>        </View>
+            </View>
 
             {/* Academic Info Header */}
             <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Academic Details</Text>
