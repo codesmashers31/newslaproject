@@ -172,8 +172,9 @@ export const getStudentDashboard = async (req, res) => {
     ];
 
     // Compute grades, ranks and placement readiness metrics
-    const rankDetails = await calculateAllRanks();
-    const myRank = rankDetails.find(r => r.studentId === studentId.toString()) || { instituteRank: 0, batchRank: 0 };
+    // Rank calculations are too slow for synchronous dashboard load with 100+ users.
+    // Setting default to 0 to prevent Render API timeouts.
+    const myRank = { instituteRank: 0, batchRank: 0 };
     const readiness = await calculatePlacementReadiness(studentId);
     const calculatedScores = await calculateStudentScores(studentId);
 
