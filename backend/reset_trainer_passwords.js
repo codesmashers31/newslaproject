@@ -24,8 +24,7 @@ const resetPasswords = async () => {
     for (const email of trainerEmails) {
       const user = await User.findOne({ email: email.toLowerCase().trim() });
       if (user) {
-        user.password = hashedPassword;
-        await user.save();
+        await User.updateOne({ _id: user._id }, { $set: { password: hashedPassword } });
         console.log(`Password reset successfully for: ${email} -> password123`);
       } else {
         console.log(`User not found in DB: ${email}`);
