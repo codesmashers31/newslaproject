@@ -34,7 +34,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Missing Details', 'Please enter both your email address and password.');
+      Alert.alert('Missing Details', 'Please enter both your EID/email and password.');
       return;
     }
     setLoading(true);
@@ -81,18 +81,18 @@ export default function LoginScreen() {
           <View style={styles.formContainer}>
             {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
+              <Text style={styles.label}>Student EID / Email</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.inputIcon}>
                   <Mail size={18} color="#64748b" />
                 </View>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your student email"
+                  placeholder="Enter EID (e.g. SLA001) or Email"
                   placeholderTextColor="#475569"
                   value={email}
                   onChangeText={setEmail}
-                  keyboardType="email-address"
+                  keyboardType="default"
                   autoCapitalize="none"
                 />
               </View>

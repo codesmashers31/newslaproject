@@ -71,10 +71,17 @@ export const authUser = async (req, res) => {
   try {
     const trimmedInput = email ? email.trim() : '';
 
-    // 1. Try to find user directly by email
-    let user = await User.findOne({ email: trimmedInput.toLowerCase() });
+    // 1. Try to find user by email or slaeId (EID)
+    let user = await User.findOne({
+      $or: [
+        { email: trimmedInput.toLowerCase() },
+        { slaeId: trimmedInput },
+        { slaeId: trimmedInput.toUpperCase() },
+        { slaeId: trimmedInput.toLowerCase() }
+      ]
+    });
 
-    // 2. If not found, try to find user by mobile (in case mobile is stored in User model's email or mobile field)
+    // 2. If not found, try to find user by mobile
     if (!user) {
       user = await User.findOne({
         $or: [
