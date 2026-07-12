@@ -3,15 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const getBaseURL = () => {
-  let host = '10.253.37.143'; // Default LAN IP fallback
-  if (Constants.expoConfig?.hostUri) {
-    const uriHost = Constants.expoConfig.hostUri.split(':')[0];
-    // If Expo resolves to a local machine loopback, force the actual LAN IP instead
-    if (uriHost && uriHost !== 'localhost' && uriHost !== '127.0.0.1') {
-      host = uriHost;
-    }
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
   }
-  return `http://${host}:5000/api`;
+  return 'https://newslaproject.onrender.com/api';
 };
 
 const API = axios.create({
