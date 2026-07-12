@@ -8,6 +8,7 @@ import Notification from '../models/Notification.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import jwt from 'jsonwebtoken';
 import { syncStudentTrainers, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
+import Enrollment from '../models/Enrollment.js';
 
 // Helper to map trainer role to score category
 const getCategoryByRole = (role) => {
@@ -56,12 +57,31 @@ export const getAssignedStudents = async (req, res) => {
 
     // Also fetch all students created/assigned in User table so non-batched students appear too
     const allStudentUsers = await User.find({ role: 'Student' })
-      .select('name email mobile status slaeId technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
+      .select('name email mobile status slaeId')
+      .lean();
+
+    const allStudentIds = allStudentUsers.map(s => s._id);
+
+    // Fetch active enrollments for these students
+    const enrollments = await Enrollment.find({ studentId: { $in: allStudentIds }, status: 'Active' })
+      .populate('batchId', 'name')
+      .populate('trainerId', 'name')
       .lean();
 
     const studentMap = {};
 
     for (const std of allStudentUsers) {
+      const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
+      
+      const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const technicalTrainer = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      
+      const communicationBatch = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const communicationTrainer = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      
+      const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+
       studentMap[std._id] = {
         _id: std._id,
         slaeId: std.slaeId || `SLA-${std._id.toString().slice(-5).toUpperCase()}`,
@@ -69,12 +89,12 @@ export const getAssignedStudents = async (req, res) => {
         email: std.email,
         mobile: std.mobile || 'N/A',
         status: std.status || 'Active',
-        technicalTrainer: std.technicalTrainer || '',
-        communicationTrainer: std.communicationTrainer || '',
-        aptitudeTrainer: std.aptitudeTrainer || '',
-        technicalBatch: std.technicalBatch || '',
-        communicationBatch: std.communicationBatch || '',
-        aptitudeBatch: std.aptitudeBatch || '',
+        technicalTrainer,
+        communicationTrainer,
+        aptitudeTrainer,
+        technicalBatch,
+        communicationBatch,
+        aptitudeBatch,
         batches: []
       };
     }
@@ -82,6 +102,14 @@ export const getAssignedStudents = async (req, res) => {
     for (const batch of batches) {
       for (const std of batch.students) {
         if (!studentMap[std._id]) {
+          const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
+          const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
+          const technicalTrainer = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+          const communicationBatch = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
+          const communicationTrainer = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+          const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
+          const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+
           studentMap[std._id] = {
             _id: std._id,
             slaeId: std.slaeId || `SLA-${std._id.toString().slice(-5).toUpperCase()}`,
@@ -89,12 +117,12 @@ export const getAssignedStudents = async (req, res) => {
             email: std.email,
             mobile: std.mobile || 'N/A',
             status: std.status || 'Active',
-            technicalTrainer: std.technicalTrainer || '',
-            communicationTrainer: std.communicationTrainer || '',
-            aptitudeTrainer: std.aptitudeTrainer || '',
-            technicalBatch: std.technicalBatch || '',
-            communicationBatch: std.communicationBatch || '',
-            aptitudeBatch: std.aptitudeBatch || '',
+            technicalTrainer,
+            communicationTrainer,
+            aptitudeTrainer,
+            technicalBatch,
+            communicationBatch,
+            aptitudeBatch,
             batches: [{ _id: batch._id, name: batch.name, course: batch.course }]
           };
         } else {
@@ -187,15 +215,9 @@ export const markAttendance = async (req, res) => {
       if (!effectiveBatchId || effectiveBatchId === 'all' || !mongoose.Types.ObjectId.isValid(effectiveBatchId)) {
         const stu = await User.findById(rec.studentId);
         let foundBatchId = null;
-        if (stu?.batches && stu.batches.length > 0 && mongoose.Types.ObjectId.isValid(stu.batches[0])) {
-          foundBatchId = stu.batches[0];
-        }
         if (!foundBatchId) {
-          const batchName = stu?.communicationBatch || stu?.technicalBatch || stu?.aptitudeBatch;
-          if (batchName) {
-            const b = await Batch.findOne({ name: new RegExp(`^${batchName}$`, 'i') });
-            if (b) foundBatchId = b._id;
-          }
+          const enroll = await Enrollment.findOne({ studentId: rec.studentId, status: 'Active' });
+          if (enroll) foundBatchId = enroll.batchId;
         }
         if (!foundBatchId) {
           const anyBatch = await Batch.findOne();
@@ -626,17 +648,13 @@ export const addStudentByTrainer = async (req, res) => {
     if (user) {
       // Update existing student fields
       user.slaeId = slaeId || user.slaeId || generatedSlaeId;
-      if (technicalTrainer) user.technicalTrainer = technicalTrainer;
-      if (technicalBatch) user.technicalBatch = technicalBatch;
-      if (communicationBatch) user.communicationBatch = communicationBatch;
-      if (aptitudeBatch) user.aptitudeBatch = aptitudeBatch;
       if (status) user.status = status;
       await user.save();
 
       if (batchId) {
         await Batch.findByIdAndUpdate(batchId, { $addToSet: { students: user._id } });
       }
-      await syncStudentBatchesFromStrings(user._id);
+      await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
       return res.status(200).json({ message: 'Existing student updated and enrolled in batch successfully', user });
     }
 
@@ -647,10 +665,6 @@ export const addStudentByTrainer = async (req, res) => {
       password: password || 'slastudent123',
       role: 'Student',
       slaeId: generatedSlaeId,
-      technicalTrainer: technicalTrainer || req.user.name || '',
-      technicalBatch: technicalBatch || '',
-      communicationBatch: communicationBatch || '',
-      aptitudeBatch: aptitudeBatch || '',
       status: status || 'Active'
     });
 
@@ -660,7 +674,7 @@ export const addStudentByTrainer = async (req, res) => {
       await Batch.findByIdAndUpdate(batchId, { $addToSet: { students: user._id } });
     }
 
-    await syncStudentBatchesFromStrings(user._id);
+    await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
 
     res.status(201).json({ message: 'Student created successfully', user });
   } catch (error) {
@@ -732,14 +746,10 @@ export const updateStudentByTrainer = async (req, res) => {
     if (name !== undefined) user.name = name;
     if (email !== undefined) user.email = email;
     if (mobile !== undefined) user.mobile = mobile;
-    if (technicalTrainer !== undefined) user.technicalTrainer = technicalTrainer;
-    if (technicalBatch !== undefined) user.technicalBatch = technicalBatch;
-    if (communicationBatch !== undefined) user.communicationBatch = communicationBatch;
-    if (aptitudeBatch !== undefined) user.aptitudeBatch = aptitudeBatch;
     if (status !== undefined) user.status = status;
 
     await user.save();
-    await syncStudentBatchesFromStrings(user._id);
+    await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
     res.status(200).json({ message: 'Student updated successfully', user });
   } catch (error) {
     res.status(500).json({ message: error.message });

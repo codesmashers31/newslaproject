@@ -12,6 +12,7 @@ import TechnicalModule from '../models/TechnicalModule.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import AttendanceLog from '../models/AttendanceLog.js';
 import jwt from 'jsonwebtoken';
+import Enrollment from '../models/Enrollment.js';
 import { calculateStudentScores, calculateAllRanks, calculatePlacementReadiness } from '../utils/calculations.js';
 
 // @desc    Get student dashboard details
@@ -23,21 +24,61 @@ export const getStudentDashboard = async (req, res) => {
 
     // 1. Fetch Profile
     let profile = await Student.findOne({ user: studentId })
-      .populate('user', 'name email mobile role technicalTrainer communicationTrainer aptitudeTrainer')
+      .populate('user', 'name email mobile role')
       .lean();
     if (!profile) {
-      const userObj = await User.findById(studentId).select('name email mobile role technicalTrainer communicationTrainer aptitudeTrainer').lean();
+      const userObj = await User.findById(studentId).select('name email mobile role').lean();
       profile = { user: userObj };
     }
 
     // 2. Fetch Placement Status
     const placement = await Placement.findOne({ student: studentId }) || {};
 
-    // 3. Fetch Batch details
-    const batches = await Batch.find({ students: studentId })
-      .populate('trainers', 'name email role mobile')
+    // 3. Fetch Batch details from active Enrollments
+    const enrollments = await Enrollment.find({ studentId, status: 'Active' })
+      .populate({
+        path: 'batchId',
+        populate: { path: 'trainers', select: 'name email role mobile' }
+      })
+      .populate('trainerId', 'name email role mobile')
       .lean();
+
+    const batches = enrollments.map(e => {
+      const b = e.batchId || {};
+      const trainersList = [];
+      if (e.trainerId) {
+        trainersList.push(e.trainerId);
+      }
+      if (b.trainers && b.trainers.length > 0) {
+        b.trainers.forEach(tr => {
+          if (!trainersList.some(t => t._id.toString() === tr._id.toString())) {
+            trainersList.push(tr);
+          }
+        });
+      }
+
+      return {
+        _id: b._id,
+        name: b.name,
+        course: b.course,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        trainers: trainersList
+      };
+    });
+    
     const batch = batches[0] || null;
+
+    if (profile && profile.user) {
+      profile.user.technicalBatch = enrollments.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      profile.user.technicalTrainer = enrollments.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      
+      profile.user.communicationBatch = enrollments.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      profile.user.communicationTrainer = enrollments.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      
+      profile.user.aptitudeBatch = enrollments.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      profile.user.aptitudeTrainer = enrollments.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+    }
 
     // 4. Fetch Attendance stats
     const attendanceRecords = await Attendance.find({ student: studentId }).lean();
@@ -244,14 +285,70 @@ export const updateStudentProfile = async (req, res) => {
 
     await profile.save();
 
-    // Update trainer assignments on the User model
-    const user = await User.findById(studentId);
-    if (user) {
-      if (req.body.technicalTrainer !== undefined) user.technicalTrainer = req.body.technicalTrainer;
-      if (req.body.communicationTrainer !== undefined) user.communicationTrainer = req.body.communicationTrainer;
-      if (req.body.aptitudeTrainer !== undefined) user.aptitudeTrainer = req.body.aptitudeTrainer;
-      await user.save();
-    }
+    // Sync batch/trainer assignments to Enrollment collection
+    const syncEnrollmentField = async (dept, batchNameString, trainerNameString) => {
+      if (batchNameString === undefined) return;
+      
+      const batchNames = batchNameString.split(',').map(s => s.trim()).filter(Boolean);
+      const trainerNames = trainerNameString ? trainerNameString.split(',').map(s => s.trim()).filter(Boolean) : [];
+      
+      // Get all active enrollments for this department for the student
+      const existingEnrollments = await Enrollment.find({ studentId, department: dept, status: 'Active' });
+      const targetBatchIds = [];
+      
+      for (let i = 0; i < batchNames.length; i++) {
+        const bName = batchNames[i];
+        const tName = trainerNames[i] || trainerNames[0];
+        
+        let batch = await Batch.findOne({ name: bName });
+        if (!batch) {
+          batch = await Batch.create({
+            name: bName,
+            batchId: bName.toUpperCase().replace(/\s+/g, ''),
+            course: dept === 'Technical' ? 'Technical Training' : dept === 'Communication' ? 'Communication Skills' : 'Aptitude & Reasoning',
+            status: 'Active',
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+          });
+        }
+        
+        let trainer = null;
+        if (tName) {
+          trainer = await User.findOne({ name: tName, role: `${dept} Trainer` });
+        }
+        
+        const enroll = await Enrollment.findOneAndUpdate(
+          { studentId, batchId: batch._id, department: dept },
+          {
+            trainerId: trainer ? trainer._id : null,
+            course: batch.course,
+            status: 'Active'
+          },
+          { upsert: true, new: true }
+        );
+        
+        targetBatchIds.push(batch._id.toString());
+        
+        if (!batch.students?.includes(studentId)) {
+          await Batch.findByIdAndUpdate(batch._id, { $addToSet: { students: studentId } });
+        }
+      }
+      
+      // Mark legacy active enrollments not selected anymore as Completed
+      for (const oldEnroll of existingEnrollments) {
+        if (!targetBatchIds.includes(oldEnroll.batchId.toString())) {
+          oldEnroll.status = 'Completed';
+          oldEnroll.completedAt = new Date();
+          await oldEnroll.save();
+          
+          await Batch.findByIdAndUpdate(oldEnroll.batchId, { $pull: { students: studentId } });
+        }
+      }
+    };
+
+    await syncEnrollmentField('Technical', req.body.technicalBatch, req.body.technicalTrainer);
+    await syncEnrollmentField('Communication', req.body.communicationBatch, req.body.communicationTrainer);
+    await syncEnrollmentField('Aptitude', req.body.aptitudeBatch, req.body.aptitudeTrainer);
 
     // Check if profile is complete to clear "profile is incomplete" alert
     if (profile.collegeName && profile.degree && profile.photo && profile.resumeUrl) {

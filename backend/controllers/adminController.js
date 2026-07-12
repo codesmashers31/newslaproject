@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import * as xlsx from 'xlsx';
 import fs from 'fs';
 import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
+import Enrollment from '../models/Enrollment.js';
 
 // ==========================================
 // DASHBOARD ANALYTICS
@@ -124,15 +125,38 @@ export const getStudents = async (req, res) => {
     // Find batches that contain student IDs
     const batches = await Batch.find({ students: { $in: studentIds } }).lean();
 
+    // Fetch all active enrollments for these students
+    const enrollments = await Enrollment.find({ studentId: { $in: studentIds }, status: 'Active' })
+      .populate('batchId', 'name')
+      .populate('trainerId', 'name')
+      .lean();
+
     let result = students.map(student => {
       const profile = profiles.find(p => p.user.toString() === student._id.toString()) || {};
       const placement = placements.find(p => p.student.toString() === student._id.toString()) || {};
       const studentBatches = batches.filter(b => b.students.some(sId => sId.toString() === student._id.toString()));
 
+      const studentEnrolls = enrollments.filter(e => e.studentId.toString() === student._id.toString());
+      
+      const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const technicalTrainer = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      
+      const communicationBatch = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const communicationTrainer = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      
+      const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+
       return {
         ...student,
         profile,
         placement,
+        technicalBatch,
+        technicalTrainer,
+        communicationBatch,
+        communicationTrainer,
+        aptitudeBatch,
+        aptitudeTrainer,
         batches: studentBatches.map(b => ({ _id: b._id, name: b.name, course: b.course })),
         batch: studentBatches[0] ? { _id: studentBatches[0]._id, name: studentBatches[0].name, course: studentBatches[0].course } : null,
       };
@@ -170,15 +194,12 @@ export const addStudent = async (req, res) => {
       role: 'Student',
       status: 'Active',
       slaeId: slaeId || '',
-      technicalBatch: technicalBatch || '',
-      communicationBatch: communicationBatch || '',
-      aptitudeBatch: aptitudeBatch || '',
     });
 
     const studentProfile = await Student.create({ user: user._id });
     const placement = await Placement.create({ student: user._id });
 
-    await syncStudentBatchesFromStrings(user._id);
+    await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
 
     res.status(201).json({
       _id: user._id,
@@ -210,9 +231,6 @@ export const editStudent = async (req, res) => {
     user.mobile = mobile || user.mobile;
     user.status = status || user.status;
     if (slaeId !== undefined) user.slaeId = slaeId;
-    if (technicalBatch !== undefined) user.technicalBatch = technicalBatch;
-    if (communicationBatch !== undefined) user.communicationBatch = communicationBatch;
-    if (aptitudeBatch !== undefined) user.aptitudeBatch = aptitudeBatch;
     await user.save();
 
     // Update profile
@@ -234,7 +252,7 @@ export const editStudent = async (req, res) => {
       { new: true, upsert: true }
     );
 
-    await syncStudentBatchesFromStrings(user._id);
+    await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
 
     res.json({ message: 'Student updated successfully', profile });
   } catch (error) {
@@ -355,12 +373,8 @@ export const importStudentsExcel = async (req, res) => {
 
       if (userExists) {
         const updateObj = { name };
-        if (technicalBatch) updateObj.technicalBatch = technicalBatch;
-        if (communicationBatch) updateObj.communicationBatch = communicationBatch;
-        if (aptitudeBatch) updateObj.aptitudeBatch = aptitudeBatch;
-
         await User.findByIdAndUpdate(userExists._id, { $set: updateObj });
-        await syncStudentBatchesFromStrings(userExists._id);
+        await syncStudentBatchesFromStrings(userExists._id, { technicalBatch, communicationBatch, aptitudeBatch });
         importCount++;
         continue;
       }
@@ -373,9 +387,6 @@ export const importStudentsExcel = async (req, res) => {
         role: 'Student',
         status: 'Active',
         slaeId,
-        technicalBatch,
-        communicationBatch,
-        aptitudeBatch,
       });
 
       await Student.create({
@@ -389,7 +400,7 @@ export const importStudentsExcel = async (req, res) => {
       await Placement.create({ student: user._id });
 
       if (technicalBatch || communicationBatch || aptitudeBatch) {
-        await syncStudentBatchesFromStrings(user._id);
+        await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
       }
 
       importCount++;

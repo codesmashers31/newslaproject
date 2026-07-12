@@ -1,8 +1,9 @@
 import Batch from '../models/Batch.js';
 import User from '../models/User.js';
+import Enrollment from '../models/Enrollment.js';
 
 /**
- * Automatically resolves and updates a student's domain batches and trainers
+ * Automatically resolves and updates a student's domain enrollments
  * based on the active batches they are enrolled in.
  */
 export const syncStudentTrainers = async (studentId) => {
@@ -11,51 +12,45 @@ export const syncStudentTrainers = async (studentId) => {
       .populate('trainers', 'name role')
       .lean();
 
-    const techBatches = [];
-    const techTrainers = [];
-    const commBatches = [];
-    const commTrainers = [];
-    const aptiBatches = [];
-    const aptiTrainers = [];
+    const activeBatchIds = batches.map(b => b._id.toString());
 
-    for (const batch of batches) {
-      const courseType = batch.course || '';
-      const isTech = courseType === 'Technical Training' || (!courseType.includes('Communication') && !courseType.includes('Aptitude'));
-      const isComm = courseType.includes('Communication');
-      const isApti = courseType.includes('Aptitude');
-
-      if (isTech) {
-        if (!techBatches.includes(batch.name)) techBatches.push(batch.name);
-        let trainer = batch.trainers?.find(t => t.role === 'Technical Trainer');
-        if (!trainer && batch.trainers?.length > 0) trainer = batch.trainers[0];
-        if (trainer && !techTrainers.includes(trainer.name)) techTrainers.push(trainer.name);
-      }
-      if (isComm) {
-        if (!commBatches.includes(batch.name)) commBatches.push(batch.name);
-        let trainer = batch.trainers?.find(t => t.role === 'Communication Trainer');
-        if (!trainer && batch.trainers?.length > 0) trainer = batch.trainers[0];
-        if (trainer && !commTrainers.includes(trainer.name)) commTrainers.push(trainer.name);
-      }
-      if (isApti) {
-        if (!aptiBatches.includes(batch.name)) aptiBatches.push(batch.name);
-        let trainer = batch.trainers?.find(t => t.role === 'Aptitude Trainer');
-        if (!trainer && batch.trainers?.length > 0) trainer = batch.trainers[0];
-        if (trainer && !aptiTrainers.includes(trainer.name)) aptiTrainers.push(trainer.name);
+    // 1. Mark any active enrollments that are no longer in the batches list as Completed
+    const oldActiveEnrollments = await Enrollment.find({ studentId, status: 'Active' });
+    for (const enroll of oldActiveEnrollments) {
+      if (!activeBatchIds.includes(enroll.batchId.toString())) {
+        enroll.status = 'Completed';
+        enroll.completedAt = new Date();
+        await enroll.save();
       }
     }
 
-    const updateFields = {
-      technicalBatch: techBatches.join(', '),
-      technicalTrainer: techTrainers.join(', '),
-      communicationBatch: commBatches.join(', '),
-      communicationTrainer: commTrainers.join(', '),
-      aptitudeBatch: aptiBatches.join(', '),
-      aptitudeTrainer: aptiTrainers.join(', ')
-    };
+    // 2. Create or update active enrollments for each batch
+    for (const batch of batches) {
+      const courseType = batch.course || '';
+      let dept = 'Technical';
+      if (courseType.includes('Communication')) {
+        dept = 'Communication';
+      } else if (courseType.includes('Aptitude')) {
+        dept = 'Aptitude';
+      }
 
-    // Always update student fields, even if some have become empty (e.g. unassigned from batches)
-    await User.findByIdAndUpdate(studentId, { $set: updateFields });
-    console.log(`Synced trainers for student ${studentId}:`, updateFields);
+      let trainer = batch.trainers?.find(t => t.role === `${dept} Trainer`);
+      if (!trainer && batch.trainers?.length > 0) {
+        trainer = batch.trainers[0];
+      }
+
+      await Enrollment.findOneAndUpdate(
+        { studentId, batchId: batch._id, department: dept },
+        {
+          trainerId: trainer ? trainer._id : null,
+          course: batch.course,
+          status: 'Active',
+          enrolledAt: new Date()
+        },
+        { upsert: true, new: true }
+      );
+    }
+    console.log(`Synced enrollments for student ${studentId} based on active batches.`);
   } catch (error) {
     console.error(`Failed to sync trainers for student ${studentId}:`, error);
   }
@@ -79,29 +74,33 @@ export const syncBatchStudents = async (batchId) => {
 
 /**
  * Synchronizes a student's database batch enrollments (Batch.students array)
- * based on the comma-separated strings of batch names in their user document,
- * then resolves the trainers.
+ * based on the comma-separated strings of batch names, then resolves the trainers.
  */
-export const syncStudentBatchesFromStrings = async (studentId) => {
+export const syncStudentBatchesFromStrings = async (studentId, batchStrings = {}) => {
   try {
     const student = await User.findById(studentId).lean();
     if (!student) return;
 
+    // Use passed strings, fallback to user document legacy fields for migration compatibility
+    const techStr = batchStrings.technicalBatch !== undefined ? batchStrings.technicalBatch : (student.technicalBatch || '');
+    const commStr = batchStrings.communicationBatch !== undefined ? batchStrings.communicationBatch : (student.communicationBatch || '');
+    const aptiStr = batchStrings.aptitudeBatch !== undefined ? batchStrings.aptitudeBatch : (student.aptitudeBatch || '');
+
     const batchNames = [];
-    if (student.technicalBatch) {
-      student.technicalBatch.split(',').forEach(b => {
+    if (techStr) {
+      techStr.split(',').forEach(b => {
         const name = b.trim();
         if (name) batchNames.push(name);
       });
     }
-    if (student.communicationBatch) {
-      student.communicationBatch.split(',').forEach(b => {
+    if (commStr) {
+      commStr.split(',').forEach(b => {
         const name = b.trim();
         if (name) batchNames.push(name);
       });
     }
-    if (student.aptitudeBatch) {
-      student.aptitudeBatch.split(',').forEach(b => {
+    if (aptiStr) {
+      aptiStr.split(',').forEach(b => {
         const name = b.trim();
         if (name) batchNames.push(name);
       });
@@ -112,9 +111,9 @@ export const syncStudentBatchesFromStrings = async (studentId) => {
       const exists = await Batch.findOne({ name });
       if (!exists) {
         let course = 'Technical Training';
-        if (student.communicationBatch?.split(',').map(s => s.trim()).includes(name)) {
+        if (commStr.split(',').map(s => s.trim()).includes(name)) {
           course = 'Communication Skills';
-        } else if (student.aptitudeBatch?.split(',').map(s => s.trim()).includes(name)) {
+        } else if (aptiStr.split(',').map(s => s.trim()).includes(name)) {
           course = 'Aptitude & Reasoning';
         }
         
@@ -138,13 +137,13 @@ export const syncStudentBatchesFromStrings = async (studentId) => {
       );
     }
 
-    // 2. Remove student from all non-matching batches
+    // 3. Remove student from all non-matching batches
     await Batch.updateMany(
       { name: { $nin: batchNames } },
       { $pull: { students: studentId } }
     );
 
-    // 3. Resolve and update trainer names
+    // 4. Resolve and update trainer names inside the Enrollment collection
     await syncStudentTrainers(studentId);
   } catch (error) {
     console.error(`Failed to sync student batches from strings for student ${studentId}:`, error);

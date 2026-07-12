@@ -46,36 +46,6 @@ const userSchema = new mongoose.Schema({
   skills: [{
     type: String,
   }],
-  technicalTrainer: {
-    type: String,
-    trim: true,
-    default: '',
-  },
-  communicationTrainer: {
-    type: String,
-    trim: true,
-    default: '',
-  },
-  aptitudeTrainer: {
-    type: String,
-    trim: true,
-    default: '',
-  },
-  technicalBatch: {
-    type: String,
-    trim: true,
-    default: '',
-  },
-  communicationBatch: {
-    type: String,
-    trim: true,
-    default: '',
-  },
-  aptitudeBatch: {
-    type: String,
-    trim: true,
-    default: '',
-  },
   status: {
     type: String,
     enum: ['Active', 'Inactive', 'Completed', 'Enrolled'],
