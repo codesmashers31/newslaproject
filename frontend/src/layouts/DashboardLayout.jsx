@@ -33,16 +33,20 @@ const DashboardLayout = ({ children }) => {
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [notifications, setNotifications] = useState([]);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Sync theme with document class (Forced Light Mode)
+  // Sync theme with document class
   useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }, []);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   // Fetch student notifications if role is student
   useEffect(() => {
@@ -375,6 +379,15 @@ const DashboardLayout = ({ children }) => {
                 </AnimatePresence>
               </div>
             )}
+
+            {/* Theme Toggle Button */}
+            <button 
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors cursor-pointer"
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
 
             {/* Quick Profile Dropdown */}
             <div className="relative">

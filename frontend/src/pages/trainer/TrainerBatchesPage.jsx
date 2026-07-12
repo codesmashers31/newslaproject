@@ -1016,8 +1016,8 @@ const TrainerBatchesPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1 font-bold text-slate-700 dark:text-slate-300">
                           {batch.trainers && batch.trainers.length > 0 ? (
-                            batch.trainers.map(t => (
-                              <div key={t._id} className="flex items-center gap-1.5">
+                            batch.trainers.map((t, idx) => (
+                              <div key={t._id || idx} className="flex items-center gap-1.5">
                                 <UserCheck size={14} className="text-indigo-500" />
                                 <span>{t.name} <span className="text-[10px] text-gray-400 font-normal">({t.role})</span></span>
                               </div>
