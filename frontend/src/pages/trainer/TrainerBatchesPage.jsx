@@ -12,7 +12,14 @@ import {
   Edit3,
   Trash2,
   UserCheck,
-  BookOpen
+  BookOpen,
+  ArrowLeft,
+  UserMinus,
+  Upload,
+  Share2,
+  Users,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,135 +33,6 @@ const formatTime12Hour = (time24) => {
   const hoursDisplay = hours < 10 ? `0${hours}` : hours;
   return `${hoursDisplay}:${minutes} ${ampm}`;
 };
-
-const TrainerBatchesPage = () => {
-  const { user } = useAuth();
-  const [batches, setBatches] = useState([]);
-  const [trainers, setTrainers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [domainFilter, setDomainFilter] = useState(() => {
-    if (user?.role === 'Communication Trainer') return 'Communication';
-    if (user?.role === 'Aptitude Trainer') return 'Aptitude';
-    if (user?.role === 'Technical Trainer') return 'Technical';
-    return 'All';
-  });
-
-  useEffect(() => {
-    if (user?.role === 'Communication Trainer') setDomainFilter('Communication');
-    else if (user?.role === 'Aptitude Trainer') setDomainFilter('Aptitude');
-    else if (user?.role === 'Technical Trainer') setDomainFilter('Technical');
-  }, [user?.role]);
-
-  const getDefaultCourse = () => {
-    if (user?.role === 'Communication Trainer') return 'Communication Skills';
-    if (user?.role === 'Aptitude Trainer') return 'Aptitude & Reasoning';
-    if (user?.role === 'Technical Trainer') return 'Technical Training';
-    return 'Technical Training';
-  };
-
-  const handleOpenCreate = () => {
-    setFormData({
-      batchId: '',
-      name: '',
-      course: getDefaultCourse(),
-      trainerName: '',
-      startTime: '09:00',
-      endTime: '11:00',
-      days: 'Mon - Fri',
-      status: 'Active'
-    });
-    setShowAddModal(true);
-  };
-
-  // Add Modal State
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [formData, setFormData] = useState({
-    batchId: '',
-    name: '',
-    course: getDefaultCourse(),
-    trainerName: '',
-    startTime: '09:00',
-    endTime: '11:00',
-    days: 'Mon - Fri',
-    status: 'Active'
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  // Edit Modal State
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingBatch, setEditingBatch] = useState(null);
-  const [editFormData, setEditFormData] = useState({
-    batchId: '',
-    name: '',
-    course: 'Technical Training',
-    trainerName: '',
-    startTime: '09:00',
-    endTime: '11:00',
-    days: 'Mon - Fri',
-    status: 'Active'
-  });
-  const [updating, setUpdating] = useState(false);
-
-  const fetchBatches = async () => {
-    setLoading(true);
-    try {
-      const [batchesRes, trainersRes] = await Promise.all([
-        API.get('/trainer/batches'),
-        API.get('/trainer/trainers').catch(() => ({ data: [] }))
-      ]);
-      setBatches(batchesRes.data || []);
-      setTrainers(trainersRes.data || []);
-    } catch (error) {
-      toast.error('Failed to load batches directory');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBatches();
-  }, []);
-
-  // CREATE BATCH
-  const handleCreateBatch = async (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      toast.error('Batch Name is required');
-      return;
-    }
-
-    const formattedSchedule = `${formatTime12Hour(formData.startTime)} - ${formatTime12Hour(formData.endTime)} (${formData.days})`;
-
-    setSubmitting(true);
-    try {
-      const res = await API.post('/trainer/batches', {
-        batchId: formData.batchId.trim() || `BATCH-${Date.now().toString().slice(-4)}`,
-        name: formData.name.trim(),
-        course: formData.course,
-        trainerName: formData.trainerName.trim() || `${formData.course.split(' ')[0]} Trainer`,
-        schedule: formattedSchedule,
-        status: formData.status
-      });
-      toast.success('Batch created successfully!');
-      setBatches(prev => [res.data, ...prev]);
-      setShowAddModal(false);
-      setFormData({
-        batchId: '',
-        name: '',
-        course: 'Technical Training',
-        trainerName: '',
-        startTime: '09:00',
-        endTime: '11:00',
-        days: 'Mon - Fri',
-        status: 'Active'
-      });
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create batch');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
 const parseScheduleToTimes = (scheduleStr) => {
   if (!scheduleStr) return { startTime: '09:00', endTime: '11:00', days: 'Mon - Fri' };
@@ -182,6 +60,277 @@ const parseScheduleToTimes = (scheduleStr) => {
     return { startTime: '09:00', endTime: '11:00', days: 'Mon - Fri' };
   }
 };
+
+const TrainerBatchesPage = () => {
+  const { user } = useAuth();
+  
+  // Batches directory states
+  const [batches, setBatches] = useState([]);
+  const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [domainFilter, setDomainFilter] = useState(() => {
+    if (user?.role === 'Communication Trainer') return 'Communication';
+    if (user?.role === 'Aptitude Trainer') return 'Aptitude';
+    if (user?.role === 'Technical Trainer') return 'Technical';
+    return 'All';
+  });
+
+  // Selected Batch student sub-page state
+  const [selectedBatchForStudents, setSelectedBatchForStudents] = useState(null);
+  const [batchStudents, setBatchStudents] = useState([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [studentSearchText, setStudentSearchText] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+
+  // Assignment Modal states
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignSearchQuery, setAssignSearchQuery] = useState('');
+  const [assignSearchResults, setAssignSearchResults] = useState([]);
+  const [searchingAllStudents, setSearchingAllStudents] = useState(false);
+  const [assigningStudent, setAssigningStudent] = useState(false);
+
+  // Transfer Modal states
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [destBatchId, setDestBatchId] = useState('');
+  const [transferring, setTransferring] = useState(false);
+
+  // Bulk Import Modal states
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importStats, setImportStats] = useState(null);
+  const [importing, setImporting] = useState(false);
+
+  // Add / Edit batch states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({
+    batchId: '',
+    name: '',
+    course: '',
+    trainerName: '',
+    startTime: '09:00',
+    endTime: '11:00',
+    days: 'Mon - Fri',
+    status: 'Active'
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingBatch, setEditingBatch] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    batchId: '',
+    name: '',
+    course: '',
+    trainerName: '',
+    startTime: '09:00',
+    endTime: '11:00',
+    days: 'Mon - Fri',
+    status: 'Active'
+  });
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    if (user?.role === 'Communication Trainer') setDomainFilter('Communication');
+    else if (user?.role === 'Aptitude Trainer') setDomainFilter('Aptitude');
+    else if (user?.role === 'Technical Trainer') setDomainFilter('Technical');
+  }, [user?.role]);
+
+  const getDefaultCourse = () => {
+    if (user?.role === 'Communication Trainer') return 'Communication Skills';
+    if (user?.role === 'Aptitude Trainer') return 'Aptitude & Reasoning';
+    return 'Technical Training';
+  };
+
+  const fetchBatches = async () => {
+    setLoading(true);
+    try {
+      const [batchesRes, trainersRes] = await Promise.all([
+        API.get('/trainer/batches'),
+        API.get('/trainer/trainers').catch(() => ({ data: [] }))
+      ]);
+      setBatches(batchesRes.data || []);
+      setTrainers(trainersRes.data || []);
+    } catch (error) {
+      toast.error('Failed to load batches directory');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBatches();
+  }, []);
+
+  // LOAD STUDENTS FOR CHOSEN BATCH
+  const handleViewStudents = async (batch) => {
+    setSelectedBatchForStudents(batch);
+    setLoadingStudents(true);
+    setSelectedStudentIds([]);
+    try {
+      const res = await API.get(`/trainer/batches/${batch._id}/students`);
+      setBatchStudents(res.data || []);
+    } catch (error) {
+      toast.error('Failed to load batch students list');
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  // SEARCH ALL STUDENTS FOR ADDITION
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (!assignSearchQuery.trim()) {
+        setAssignSearchResults([]);
+        return;
+      }
+      setSearchingAllStudents(true);
+      try {
+        const res = await API.get(`/trainer/students/search?query=${encodeURIComponent(assignSearchQuery)}`);
+        setAssignSearchResults(res.data || []);
+      } catch (error) {
+        toast.error('Failed to search student registry');
+      } finally {
+        setSearchingAllStudents(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounce);
+  }, [assignSearchQuery]);
+
+  // ASSIGN SINGLE STUDENT
+  const handleAssignStudent = async (student) => {
+    if (!selectedBatchForStudents) return;
+    setAssigningStudent(true);
+    try {
+      await API.post(`/trainer/batches/${selectedBatchForStudents._id}/students`, {
+        slaeId: student.slaeId
+      });
+      toast.success(`${student.name} assigned successfully!`);
+      // Reload students
+      handleViewStudents(selectedBatchForStudents);
+      setShowAssignModal(false);
+      setAssignSearchQuery('');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to assign student');
+    } finally {
+      setAssigningStudent(false);
+    }
+  };
+
+  // REMOVE STUDENT FROM BATCH
+  const handleRemoveStudent = async (studentId, studentName) => {
+    if (!selectedBatchForStudents) return;
+    if (!window.confirm(`Are you sure you want to remove ${studentName} from this batch?`)) {
+      return;
+    }
+
+    try {
+      await API.delete(`/trainer/batches/${selectedBatchForStudents._id}/students/${studentId}`);
+      toast.success(`${studentName} removed from batch successfully.`);
+      setBatchStudents(prev => prev.filter(s => s._id !== studentId));
+    } catch (error) {
+      toast.error('Failed to remove student');
+    }
+  };
+
+  // TRANSFER STUDENTS
+  const handleTransferStudents = async (e) => {
+    e.preventDefault();
+    if (!destBatchId) {
+      toast.error('Please select a destination batch');
+      return;
+    }
+    if (selectedStudentIds.length === 0) {
+      toast.error('No students selected for transfer');
+      return;
+    }
+
+    setTransferring(true);
+    try {
+      await API.post('/trainer/batches/transfer', {
+        sourceBatchId: selectedBatchForStudents._id,
+        destBatchId,
+        studentIds: selectedStudentIds
+      });
+      toast.success('Selected students transferred successfully!');
+      setShowTransferModal(false);
+      setDestBatchId('');
+      // Reload students
+      handleViewStudents(selectedBatchForStudents);
+    } catch (error) {
+      toast.error('Failed to transfer students');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  // BULK EXCEL UPLOAD
+  const handleBulkImport = async (e) => {
+    e.preventDefault();
+    if (!importFile) {
+      toast.error('Please select an Excel sheet (.xlsx, .xls)');
+      return;
+    }
+
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', importFile);
+
+    setImporting(true);
+    setImportStats(null);
+    try {
+      const res = await API.post(`/trainer/batches/${selectedBatchForStudents._id}/students/import`, formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setImportStats(res.data);
+      toast.success('Bulk import completed!');
+      handleViewStudents(selectedBatchForStudents);
+    } catch (error) {
+      toast.error('Bulk import failed. Please verify sheet columns.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // CREATE BATCH
+  const handleCreateBatch = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error('Batch Name is required');
+      return;
+    }
+
+    const formattedSchedule = `${formatTime12Hour(formData.startTime)} - ${formatTime12Hour(formData.endTime)} (${formData.days})`;
+    const chosenCourse = formData.course || getDefaultCourse();
+
+    setSubmitting(true);
+    try {
+      const res = await API.post('/trainer/batches', {
+        batchId: formData.batchId.trim() || `BATCH-${Date.now().toString().slice(-4)}`,
+        name: formData.name.trim(),
+        course: chosenCourse,
+        trainerName: formData.trainerName.trim() || user?.name || `${chosenCourse.split(' ')[0]} Trainer`,
+        schedule: formattedSchedule,
+        status: formData.status
+      });
+      toast.success('Batch created successfully!');
+      setBatches(prev => [res.data, ...prev]);
+      setShowAddModal(false);
+      setFormData({
+        batchId: '',
+        name: '',
+        course: '',
+        trainerName: '',
+        startTime: '09:00',
+        endTime: '11:00',
+        days: 'Mon - Fri',
+        status: 'Active'
+      });
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create batch');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // OPEN EDIT MODAL
   const handleOpenEdit = (batch) => {
@@ -249,6 +398,7 @@ const parseScheduleToTimes = (scheduleStr) => {
     }
   };
 
+  // FILTERED BATCH LIST
   const filteredBatches = batches.filter(batch => {
     const isAssigned = batch.trainers?.some(t => {
       const tId = typeof t === 'object' ? t?._id : t;
@@ -282,21 +432,474 @@ const parseScheduleToTimes = (scheduleStr) => {
     return matchesSearch && matchesDomain;
   });
 
+  const getDomainText = (course) => {
+    if (course?.includes('Communication')) return 'Communication';
+    if (course?.includes('Aptitude')) return 'Aptitude';
+    return 'Technical';
+  };
+
+  const otherDomainBatches = batches.filter(b => {
+    if (!selectedBatchForStudents) return false;
+    // Must be same course domain
+    const isSameDomain = getDomainText(b.course) === getDomainText(selectedBatchForStudents.course);
+    // Exclude source batch itself
+    return isSameDomain && String(b._id) !== String(selectedBatchForStudents._id);
+  });
+
+  // LOCAL STUDENT SEARCH IN BATCH
+  const filteredStudentsInBatch = batchStudents.filter(s => {
+    const term = studentSearchText.toLowerCase();
+    return (
+      s.name?.toLowerCase().includes(term) ||
+      s.email?.toLowerCase().includes(term) ||
+      s.mobile?.toLowerCase().includes(term) ||
+      s.slaeId?.toLowerCase().includes(term)
+    );
+  });
+
+  const handleSelectStudentToggle = (id) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllToggle = () => {
+    if (selectedStudentIds.length === filteredStudentsInBatch.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(filteredStudentsInBatch.map(s => s._id));
+    }
+  };
+
+  // --- RENDER BATCH STUDENT ALLOCATION SUB-VIEW ---
+  if (selectedBatchForStudents) {
+    return (
+      <div className="space-y-6">
+        {/* Sub Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSelectedBatchForStudents(null)}
+              className="p-2 rounded-xl bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 hover:border-indigo-500 transition cursor-pointer"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white font-sans">
+                  {selectedBatchForStudents.name}
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/20 text-[#4648d4] text-[10px] font-extrabold uppercase">
+                  {getDomainText(selectedBatchForStudents.course)}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5 font-semibold">
+                Batch ID: <span className="font-bold font-mono text-indigo-600">{selectedBatchForStudents.batchId}</span> • {selectedBatchForStudents.schedule}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setShowAssignModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>Add Student</span>
+            </button>
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Upload size={14} />
+              <span>Bulk Excel Import</span>
+            </button>
+            <button
+              disabled={selectedStudentIds.length === 0}
+              onClick={() => setShowTransferModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Share2 size={14} />
+              <span>Transfer ({selectedStudentIds.length})</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Local Search Toolbar */}
+        <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by Name, EID, or Mobile..."
+              value={studentSearchText}
+              onChange={(e) => setStudentSearchText(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
+            />
+          </div>
+          <div className="text-xs text-slate-500 font-semibold">
+            Total active students in batch: <span className="font-bold text-indigo-600 dark:text-indigo-400">{batchStudents.length}</span>
+          </div>
+        </div>
+
+        {/* Students Table */}
+        <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+                  <th className="px-6 py-4 w-12 text-center">
+                    <input
+                      type="checkbox"
+                      className="cursor-pointer"
+                      checked={filteredStudentsInBatch.length > 0 && selectedStudentIds.length === filteredStudentsInBatch.length}
+                      onChange={handleSelectAllToggle}
+                    />
+                  </th>
+                  <th className="px-6 py-4">EID / SlaeID</th>
+                  <th className="px-6 py-4">Student Name</th>
+                  <th className="px-6 py-4">Email Address</th>
+                  <th className="px-6 py-4">Mobile Number</th>
+                  <th className="px-6 py-4">Enrolled Date</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+                {loadingStudents ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold">
+                      Loading batch allocations...
+                    </td>
+                  </tr>
+                ) : filteredStudentsInBatch.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold italic">
+                      No students actively assigned to this batch.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudentsInBatch.map((student) => (
+                    <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          className="cursor-pointer"
+                          checked={selectedStudentIds.includes(student._id)}
+                          onChange={() => handleSelectStudentToggle(student._id)}
+                        />
+                      </td>
+                      <td className="px-6 py-4 font-mono font-bold text-slate-700 dark:text-slate-300">
+                        {student.slaeId || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 font-extrabold text-slate-900 dark:text-white">
+                        {student.name}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 font-medium">
+                        {student.email}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-mono">
+                        {student.mobile || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 font-semibold">
+                        {student.enrolledAt ? new Date(student.enrolledAt).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleRemoveStudent(student._id, student.name)}
+                          title="Remove from Batch"
+                          className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition cursor-pointer"
+                        >
+                          <UserMinus size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* --- ASSIGN STUDENT SEARCH MODAL --- */}
+        <AnimatePresence>
+          {showAssignModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 w-full max-w-lg my-8"
+              >
+                <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                      <Users size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Add Student to Batch</h3>
+                      <p className="text-xs text-slate-500">Search student registry by Name, EID, or Mobile</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowAssignModal(false);
+                      setAssignSearchQuery('');
+                      setAssignSearchResults([]);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Type name, EID (e.g. 5810), or mobile number..."
+                      value={assignSearchQuery}
+                      onChange={(e) => setAssignSearchQuery(e.target.value)}
+                      className="pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto space-y-2 divide-y divide-slate-100 dark:divide-slate-800">
+                    {searchingAllStudents ? (
+                      <div className="text-center text-slate-400 text-xs py-4">Searching student database...</div>
+                    ) : assignSearchQuery.trim() && assignSearchResults.length === 0 ? (
+                      <div className="text-center text-slate-400 text-xs py-4 italic">No matching students found.</div>
+                    ) : (
+                      assignSearchResults.map(student => (
+                        <div key={student._id} className="pt-2 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 p-2 rounded-xl transition-colors">
+                          <div>
+                            <div className="font-extrabold text-xs text-slate-800 dark:text-white">{student.name}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5 font-mono">EID: {student.slaeId || 'N/A'} • {student.mobile || 'N/A'}</div>
+                          </div>
+                          <button
+                            onClick={() => handleAssignStudent(student)}
+                            disabled={assigningStudent}
+                            className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/60 text-[#4648d4] text-[10px] font-extrabold transition cursor-pointer"
+                          >
+                            Assign
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- TRANSFER MODAL --- */}
+        <AnimatePresence>
+          {showTransferModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 w-full max-w-md my-8"
+              >
+                <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500">
+                      <Share2 size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Transfer Students</h3>
+                      <p className="text-xs text-slate-500">Move selected students to a different batch</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowTransferModal(false)}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleTransferStudents} className="mt-4 space-y-4">
+                  <div className="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-xl flex gap-2">
+                    <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={16} />
+                    <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                      You are transferring <span className="font-bold">{selectedStudentIds.length}</span> students. Their old enrollment will be marked as Completed, and new active enrollments will be created in the destination batch.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                      Destination Batch *
+                    </label>
+                    <select
+                      required
+                      value={destBatchId}
+                      onChange={(e) => setDestBatchId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    >
+                      <option value="">Select destination batch...</option>
+                      {otherDomainBatches.map(b => (
+                        <option key={b._id} value={b._id}>
+                          {b.name} ({b.batchId})
+                        </option>
+                      ))}
+                    </select>
+                    {otherDomainBatches.length === 0 && (
+                      <p className="text-[10px] text-rose-500 font-medium mt-1.5">
+                        No other active batches found in your course domain. Please create a destination batch first.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowTransferModal(false)}
+                      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={transferring || otherDomainBatches.length === 0}
+                      className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    >
+                      {transferring ? 'Transferring...' : 'Execute Transfer'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* --- BULK EXCEL IMPORT MODAL --- */}
+        <AnimatePresence>
+          {showImportModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 w-full max-w-md my-8"
+              >
+                <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/40 text-slate-600 dark:text-slate-400">
+                      <Upload size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Bulk Excel Import</h3>
+                      <p className="text-xs text-slate-500">Assign students to batch via EID list</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowImportModal(false);
+                      setImportFile(null);
+                      setImportStats(null);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleBulkImport} className="mt-4 space-y-4">
+                  <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-2xl p-6 text-center cursor-pointer relative transition">
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Upload className="mx-auto text-slate-400 mb-2" size={24} />
+                    <p className="text-xs font-bold text-slate-800 dark:text-white">
+                      {importFile ? importFile.name : 'Click or Drag Excel File Here'}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1">Supports column header: EID</p>
+                  </div>
+
+                  {importStats && (
+                    <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-850 space-y-2">
+                      <h5 className="text-xs font-bold text-slate-800 dark:text-white">Import Summary:</h5>
+                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                          <div className="font-extrabold">{importStats.successCount}</div>
+                          <div className="text-[9px] uppercase font-bold mt-0.5">Success</div>
+                        </div>
+                        <div className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl">
+                          <div className="font-extrabold">{importStats.skippedCount}</div>
+                          <div className="text-[9px] uppercase font-bold mt-0.5">Skipped</div>
+                        </div>
+                        <div className="p-2 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-xl">
+                          <div className="font-extrabold">{importStats.failedCount}</div>
+                          <div className="text-[9px] uppercase font-bold mt-0.5">Failed</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowImportModal(false);
+                        setImportFile(null);
+                        setImportStats(null);
+                      }}
+                      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={importing}
+                      className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    >
+                      {importing ? 'Processing...' : 'Upload & Process'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // --- STANDARD BATCH DIRECTORY VIEW ---
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
-            Batches & Trainer Allocation
+            My Batches
           </h1>
           <p className="text-sm text-slate-500 mt-1 font-sans">
-            Map batches to Technical, Communication, and Aptitude trainers with dedicated time slots for multi-batch student enrollment.
+            Manage your batches, enroll students directly, perform transfers, and import cohort rosters.
           </p>
         </div>
 
         <button
-          onClick={handleOpenCreate}
+          onClick={() => {
+            setFormData({
+              batchId: '',
+              name: '',
+              course: getDefaultCourse(),
+              trainerName: user?.name || '',
+              startTime: '09:00',
+              endTime: '11:00',
+              days: 'Mon - Fri',
+              status: 'Active'
+            });
+            setShowAddModal(true);
+          }}
           className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
         >
           <Plus size={16} />
@@ -342,7 +945,7 @@ const parseScheduleToTimes = (scheduleStr) => {
             <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by Batch ID, Name, Domain, Trainer..."
+              placeholder="Search by Batch ID, Name, Course..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
@@ -350,7 +953,7 @@ const parseScheduleToTimes = (scheduleStr) => {
           </div>
 
           <div className="text-xs text-slate-500 font-semibold">
-            Showing <span className="font-bold text-indigo-600 dark:text-indigo-400">{filteredBatches.length}</span> mapped batch(es)
+            Showing <span className="font-bold text-indigo-600 dark:text-indigo-400">{filteredBatches.length}</span> active batch(es)
           </div>
         </div>
 
@@ -360,9 +963,10 @@ const parseScheduleToTimes = (scheduleStr) => {
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
                 <th className="px-6 py-4">Batch ID</th>
-                <th className="px-6 py-4">Batch Name & Domain</th>
-                <th className="px-6 py-4">Assigned Trainer</th>
-                <th className="px-6 py-4">Dedicated Time Slot</th>
+                <th className="px-6 py-4">Batch Name & Course</th>
+                <th className="px-6 py-4">Trainer</th>
+                <th className="px-6 py-4">Schedule</th>
+                <th className="px-6 py-4 text-center">Student Count</th>
                 <th className="px-6 py-4 text-center">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -370,14 +974,14 @@ const parseScheduleToTimes = (scheduleStr) => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-semibold">
-                    Loading batches & trainer allocation...
+                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold">
+                    Loading batches...
                   </td>
                 </tr>
               ) : filteredBatches.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-semibold italic">
-                    No batches found matching your filter criteria.
+                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold italic">
+                    No batches found.
                   </td>
                 </tr>
               ) : (
@@ -385,19 +989,8 @@ const parseScheduleToTimes = (scheduleStr) => {
                   const displayId = batch.batchId || `BATCH-${(idx + 1).toString().padStart(3, '0')}`;
                   const displayTime = batch.schedule || '09:00 AM - 11:00 AM (Mon - Fri)';
                   const displayStatus = batch.status || 'Active';
-                  let domainBadge = batch.course || 'Technical Training';
-                  if (batch.trainers && batch.trainers.length > 0) {
-                    const roles = batch.trainers.map(t => t.role);
-                    if (roles.includes(user?.role)) {
-                      if (user?.role === 'Communication Trainer') domainBadge = 'Communication Skills';
-                      else if (user?.role === 'Aptitude Trainer') domainBadge = 'Aptitude & Reasoning';
-                      else if (user?.role === 'Technical Trainer') domainBadge = 'Technical Training';
-                    } else {
-                      if (roles.includes('Communication Trainer')) domainBadge = 'Communication Skills';
-                      else if (roles.includes('Aptitude Trainer')) domainBadge = 'Aptitude & Reasoning';
-                      else if (roles.includes('Technical Trainer')) domainBadge = 'Technical Training';
-                    }
-                  }
+                  const domainBadge = batch.course || 'Technical Training';
+                  const studentCount = batch.students?.length || 0;
 
                   return (
                     <tr key={batch._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
@@ -447,6 +1040,9 @@ const parseScheduleToTimes = (scheduleStr) => {
                           <span>{displayTime}</span>
                         </div>
                       </td>
+                      <td className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-300">
+                        {studentCount}
+                      </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 ${
                           displayStatus === 'Active'
@@ -462,9 +1058,16 @@ const parseScheduleToTimes = (scheduleStr) => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => handleViewStudents(batch)}
+                            title="Manage Students"
+                            className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer"
+                          >
+                            <Users size={14} />
+                          </button>
+                          <button
                             onClick={() => handleOpenEdit(batch)}
                             title="Edit Batch"
-                            className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer"
+                            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
                           >
                             <Edit3 size={14} />
                           </button>
@@ -502,8 +1105,8 @@ const parseScheduleToTimes = (scheduleStr) => {
                     <FolderGit size={18} />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Create Batch & Allocate Trainer</h3>
-                    <p className="text-xs text-slate-500">Assign Domain Module, Trainer, and Schedule</p>
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Create Batch</h3>
+                    <p className="text-xs text-slate-500">Configure new cohort under your domain department</p>
                   </div>
                 </div>
                 <button
@@ -518,78 +1121,67 @@ const parseScheduleToTimes = (scheduleStr) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                      Batch ID (Custom)
+                      Batch ID *
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. TECH-A1, COMM-B1"
+                      placeholder="e.g. SLATC-01"
                       value={formData.batchId}
                       onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                      Domain Module *
+                      Batch Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Technical Batch A"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                      Course / Domain *
                     </label>
                     <select
                       value={formData.course}
                       onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                     >
-                      {(user?.role === 'Communication Trainer'
-                        ? ['Communication Skills']
-                        : user?.role === 'Aptitude Trainer'
-                        ? ['Aptitude & Reasoning']
-                        : user?.role === 'Technical Trainer'
-                        ? ['Technical Training']
-                        : ['Technical Training', 'Communication Skills', 'Aptitude & Reasoning']
-                      ).map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
+                      {user?.role === 'Communication Trainer' && <option value="Communication Skills">Communication Skills</option>}
+                      {user?.role === 'Aptitude Trainer' && <option value="Aptitude & Reasoning">Aptitude & Reasoning</option>}
+                      {user?.role === 'Technical Trainer' && <option value="Technical Training">Technical Training</option>}
+                      {(user?.role === 'Admin' || user?.role === 'Super Admin') && (
+                        <>
+                          <option value="Technical Training">Technical Training</option>
+                          <option value="Communication Skills">Communication Skills</option>
+                          <option value="Aptitude & Reasoning">Aptitude & Reasoning</option>
+                        </>
+                      )}
                     </select>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Batch Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Fullstack MERN Cohort 1"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Assigned Trainer Name *
-                  </label>
-                  <select
-                    required
-                    value={formData.trainerName}
-                    onChange={(e) => setFormData({ ...formData, trainerName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                  >
-                    <option value="">-- Choose Assigned Trainer --</option>
-                    {trainers
-                      .filter((t) => {
-                        if (user?.role === 'Communication Trainer') return t.role === 'Communication Trainer' || t.name === user?.name;
-                        if (user?.role === 'Aptitude Trainer') return t.role === 'Aptitude Trainer' || t.name === user?.name;
-                        if (user?.role === 'Technical Trainer') return t.role === 'Technical Trainer' || t.name === user?.name;
-                        return true;
-                      })
-                      .map((t) => (
-                        <option key={t._id} value={`${t.name} (${t.role})`}>
-                          {t.name} — {t.role} {t.trainerId ? `[${t.trainerId}]` : ''}
-                        </option>
-                      ))}
-                  </select>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                      Trainer Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Trainer Name"
+                      value={formData.trainerName}
+                      onChange={(e) => setFormData({ ...formData, trainerName: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-sans"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -667,7 +1259,7 @@ const parseScheduleToTimes = (scheduleStr) => {
                     disabled={submitting}
                     className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
                   >
-                    {submitting ? 'Creating...' : 'Create & Allocate Batch'}
+                    {submitting ? 'Creating...' : 'Create Batch'}
                   </button>
                 </div>
               </form>
@@ -689,11 +1281,11 @@ const parseScheduleToTimes = (scheduleStr) => {
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
-                    <Edit3 size={18} />
+                    <FolderGit size={18} />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Edit Batch & Allocation</h3>
-                    <p className="text-xs text-slate-500">Update Domain, Trainer, and Schedule</p>
+                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Edit Batch Settings</h3>
+                    <p className="text-xs text-slate-500">Update cohort metadata and status</p>
                   </div>
                 </div>
                 <button
@@ -708,78 +1300,59 @@ const parseScheduleToTimes = (scheduleStr) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                      Batch ID
+                      Batch ID *
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. BATCH-101"
+                      required
                       value={editFormData.batchId}
                       onChange={(e) => setEditFormData({ ...editFormData, batchId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-mono"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                      Domain Module *
+                      Batch Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                      Course / Domain *
                     </label>
                     <select
                       value={editFormData.course}
                       onChange={(e) => setEditFormData({ ...editFormData, course: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                     >
-                      {(user?.role === 'Communication Trainer'
-                        ? ['Communication Skills']
-                        : user?.role === 'Aptitude Trainer'
-                        ? ['Aptitude & Reasoning']
-                        : user?.role === 'Technical Trainer'
-                        ? ['Technical Training']
-                        : ['Technical Training', 'Communication Skills', 'Aptitude & Reasoning']
-                      ).map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
+                      <option value="Technical Training">Technical Training</option>
+                      <option value="Communication Skills">Communication Skills</option>
+                      <option value="Aptitude & Reasoning">Aptitude & Reasoning</option>
                     </select>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Batch Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Fullstack MERN Cohort 1"
-                    value={editFormData.name}
-                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    Assigned Trainer Name *
-                  </label>
-                  <select
-                    required
-                    value={editFormData.trainerName}
-                    onChange={(e) => setEditFormData({ ...editFormData, trainerName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                  >
-                    <option value="">-- Choose Assigned Trainer --</option>
-                    {trainers
-                      .filter((t) => {
-                        if (user?.role === 'Communication Trainer') return t.role === 'Communication Trainer' || t.name === user?.name;
-                        if (user?.role === 'Aptitude Trainer') return t.role === 'Aptitude Trainer' || t.name === user?.name;
-                        if (user?.role === 'Technical Trainer') return t.role === 'Technical Trainer' || t.name === user?.name;
-                        return true;
-                      })
-                      .map((t) => (
-                        <option key={t._id} value={`${t.name} (${t.role})`}>
-                          {t.name} — {t.role} {t.trainerId ? `[${t.trainerId}]` : ''}
-                        </option>
-                      ))}
-                  </select>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">
+                      Trainer Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Trainer Name"
+                      value={editFormData.trainerName}
+                      onChange={(e) => setEditFormData({ ...editFormData, trainerName: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-sans"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

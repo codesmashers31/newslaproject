@@ -401,190 +401,43 @@ export default function ProfileScreen() {
             <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Assigned Cohorts & Trainers</Text>
 
             {/* Technical Domain */}
-            <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
-              <Text className="text-white font-extrabold text-xs mb-3 text-indigo-400 uppercase tracking-wide">Technical Training</Text>
-              
-              <View className="mb-3">
-                <TextInput
-                  value={techSearch}
-                  onChangeText={setTechSearch}
-                  placeholder="🔍 Search by trainer or batch name..."
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
+            <View className="mb-4 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
+              <Text className="text-white font-extrabold text-xs mb-2.5 text-indigo-400 uppercase tracking-wide">Technical Training</Text>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
+                <Text className="text-white text-xs font-bold">{profileData.technicalBatch || 'Unassigned'}</Text>
               </View>
-
-              {techBatches.length > 0 ? (
-                <View className="space-y-2 mb-3">
-                  {techBatches.map((b: any) => {
-                    const trainerName = b.trainers && b.trainers.length > 0 ? b.trainers.map((t: any) => t.name).join(', ') : 'No Trainer';
-                    const isSelected = profileData.technicalBatch.split(',').map(s => s.trim()).includes(b.name);
-                    return (
-                      <TouchableOpacity
-                        key={b._id}
-                        onPress={() => toggleBatchSelection('technical', b.name, b.trainers?.[0]?.name)}
-                        className={`flex-row justify-between items-center p-3 rounded-2xl border mb-2 ${isSelected ? 'bg-indigo-600/10 border-indigo-500' : 'bg-slate-950/60 border-slate-800'}`}
-                      >
-                        <View className="flex-1 pr-3">
-                          <Text className="text-white font-bold text-xs">{b.name}</Text>
-                          <Text className="text-slate-400 text-[10px] mt-0.5">Trainer: {trainerName}</Text>
-                        </View>
-                        <View className={`h-5 w-5 rounded-md border items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-500' : 'border-slate-700'}`}>
-                          {isSelected && <Text className="text-white text-[10px] font-bold">✓</Text>}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ) : (
-                <Text className="text-[10px] text-slate-500 italic mb-3">No active Technical batches found.</Text>
-              )}
-              {/* Fallback Text Fields */}
-              <View className="mb-3">
-                <Text className="text-[9px] font-bold text-slate-400 uppercase mb-1.5">Selected Technical Batches (Manual Override)</Text>
-                <TextInput
-                  value={profileData.technicalBatch}
-                  onChangeText={(text) => setProfileData({ ...profileData, technicalBatch: text })}
-                  placeholder="e.g. Batch A, Batch B"
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
-              </View>
-              <View>
-                <Text className="text-[9px] font-bold text-slate-400 uppercase mb-1.5">Selected Technical Trainers (Manual Override)</Text>
-                <TextInput
-                  value={profileData.technicalTrainer}
-                  onChangeText={(text) => setProfileData({ ...profileData, technicalTrainer: text })}
-                  placeholder="Trainer names"
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
+              <View className="flex-row justify-between">
+                <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
+                <Text className="text-white text-xs font-bold">{profileData.technicalTrainer || 'Unassigned'}</Text>
               </View>
             </View>
 
             {/* Communication Domain */}
-            <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
-              <Text className="text-white font-extrabold text-xs mb-3 text-indigo-400 uppercase tracking-wide">Communication Skills</Text>
-              
-              <View className="mb-3">
-                <TextInput
-                  value={commSearch}
-                  onChangeText={setCommSearch}
-                  placeholder="🔍 Search by trainer or batch name..."
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
+            <View className="mb-4 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
+              <Text className="text-white font-extrabold text-xs mb-2.5 text-indigo-400 uppercase tracking-wide">Communication Skills</Text>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
+                <Text className="text-white text-xs font-bold">{profileData.communicationBatch || 'Unassigned'}</Text>
               </View>
-
-              {commBatches.length > 0 ? (
-                <View className="space-y-2 mb-3">
-                  {commBatches.map((b: any) => {
-                    const trainerName = b.trainers && b.trainers.length > 0 ? b.trainers.map((t: any) => t.name).join(', ') : 'No Trainer';
-                    const isSelected = profileData.communicationBatch.split(',').map(s => s.trim()).includes(b.name);
-                    return (
-                      <TouchableOpacity
-                        key={b._id}
-                        onPress={() => toggleBatchSelection('communication', b.name, b.trainers?.[0]?.name)}
-                        className={`flex-row justify-between items-center p-3 rounded-2xl border mb-2 ${isSelected ? 'bg-indigo-600/10 border-indigo-500' : 'bg-slate-950/60 border-slate-800'}`}
-                      >
-                        <View className="flex-1 pr-3">
-                          <Text className="text-white font-bold text-xs">{b.name}</Text>
-                          <Text className="text-slate-400 text-[10px] mt-0.5">Trainer: {trainerName}</Text>
-                        </View>
-                        <View className={`h-5 w-5 rounded-md border items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-500' : 'border-slate-700'}`}>
-                          {isSelected && <Text className="text-white text-[10px] font-bold">✓</Text>}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ) : (
-                <Text className="text-[10px] text-slate-500 italic mb-3">No active Communication batches found.</Text>
-              )}
-              {/* Fallback Text Fields */}
-              <View className="mb-3">
-                <Text className="text-[9px] font-bold text-slate-400 uppercase mb-1.5">Selected Communication Batches (Manual Override)</Text>
-                <TextInput
-                  value={profileData.communicationBatch}
-                  onChangeText={(text) => setProfileData({ ...profileData, communicationBatch: text })}
-                  placeholder="e.g. Batch A"
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
-              </View>
-              <View>
-                <Text className="text-[9px] font-bold text-slate-400 uppercase mb-1.5">Selected Communication Trainers (Manual Override)</Text>
-                <TextInput
-                  value={profileData.communicationTrainer}
-                  onChangeText={(text) => setProfileData({ ...profileData, communicationTrainer: text })}
-                  placeholder="Trainer names"
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
+              <View className="flex-row justify-between">
+                <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
+                <Text className="text-white text-xs font-bold">{profileData.communicationTrainer || 'Unassigned'}</Text>
               </View>
             </View>
 
             {/* Aptitude Domain */}
             <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
-              <Text className="text-white font-extrabold text-xs mb-3 text-indigo-400 uppercase tracking-wide">Aptitude & Reasoning</Text>
-              
-              <View className="mb-3">
-                <TextInput
-                  value={aptiSearch}
-                  onChangeText={setAptiSearch}
-                  placeholder="🔍 Search by trainer or batch name..."
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
+              <Text className="text-white font-extrabold text-xs mb-2.5 text-indigo-400 uppercase tracking-wide">Aptitude & Reasoning</Text>
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
+                <Text className="text-white text-xs font-bold">{profileData.aptitudeBatch || 'Unassigned'}</Text>
               </View>
-
-              {aptiBatches.length > 0 ? (
-                <View className="space-y-2 mb-3">
-                  {aptiBatches.map((b: any) => {
-                    const trainerName = b.trainers && b.trainers.length > 0 ? b.trainers.map((t: any) => t.name).join(', ') : 'No Trainer';
-                    const isSelected = profileData.aptitudeBatch.split(',').map(s => s.trim()).includes(b.name);
-                    return (
-                      <TouchableOpacity
-                        key={b._id}
-                        onPress={() => toggleBatchSelection('aptitude', b.name, b.trainers?.[0]?.name)}
-                        className={`flex-row justify-between items-center p-3 rounded-2xl border mb-2 ${isSelected ? 'bg-indigo-600/10 border-indigo-500' : 'bg-slate-950/60 border-slate-800'}`}
-                      >
-                        <View className="flex-1 pr-3">
-                          <Text className="text-white font-bold text-xs">{b.name}</Text>
-                          <Text className="text-slate-400 text-[10px] mt-0.5">Trainer: {trainerName}</Text>
-                        </View>
-                        <View className={`h-5 w-5 rounded-md border items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-500' : 'border-slate-700'}`}>
-                          {isSelected && <Text className="text-white text-[10px] font-bold">✓</Text>}
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ) : (
-                <Text className="text-[10px] text-slate-500 italic mb-3">No active Aptitude batches found.</Text>
-              )}
-              {/* Fallback Text Fields */}
-              <View className="mb-3">
-                <Text className="text-[9px] font-bold text-slate-400 uppercase mb-1.5">Selected Aptitude Batches (Manual Override)</Text>
-                <TextInput
-                  value={profileData.aptitudeBatch}
-                  onChangeText={(text) => setProfileData({ ...profileData, aptitudeBatch: text })}
-                  placeholder="e.g. Batch A"
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
+              <View className="flex-row justify-between">
+                <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
+                <Text className="text-white text-xs font-bold">{profileData.aptitudeTrainer || 'Unassigned'}</Text>
               </View>
-              <View>
-                <Text className="text-[9px] font-bold text-slate-400 uppercase mb-1.5">Selected Aptitude Trainers (Manual Override)</Text>
-                <TextInput
-                  value={profileData.aptitudeTrainer}
-                  onChangeText={(text) => setProfileData({ ...profileData, aptitudeTrainer: text })}
-                  placeholder="Trainer names"
-                  placeholderTextColor="#475569"
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 h-10 text-white text-xs font-semibold"
-                />
-              </View>
-            </View>
+            </View>        </View>
 
             {/* Academic Info Header */}
             <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Academic Details</Text>

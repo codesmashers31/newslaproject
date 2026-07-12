@@ -13,7 +13,13 @@ import {
   deleteBatchByTrainer,
   addStudentByTrainer,
   updateStudentByTrainer,
-  deleteStudentByTrainer
+  deleteStudentByTrainer,
+  getBatchStudents,
+  addStudentToBatch,
+  removeStudentFromBatch,
+  transferStudents,
+  bulkImportStudents,
+  searchStudents
 } from '../controllers/trainerController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -33,6 +39,7 @@ import upload from '../middleware/upload.js';
 
 router.get('/dashboard-stats', getTrainerDashboardStats);
 router.get('/students', getAssignedStudents);
+router.get('/students/search', searchStudents);
 router.post('/students', addStudentByTrainer);
 router.put('/students/:id', updateStudentByTrainer);
 router.delete('/students/:id', deleteStudentByTrainer);
@@ -45,6 +52,11 @@ router.delete('/trainers/:id', deleteTrainer);
 
 router.get('/batches', getTrainerBatches);
 router.post('/batches', createBatchByTrainer);
+router.post('/batches/transfer', transferStudents);
+router.get('/batches/:id/students', getBatchStudents);
+router.post('/batches/:id/students', addStudentToBatch);
+router.delete('/batches/:id/students/:studentId', removeStudentFromBatch);
+router.post('/batches/:id/students/import', upload.single('file'), bulkImportStudents);
 router.put('/batches/:id', updateBatchByTrainer);
 router.delete('/batches/:id', deleteBatchByTrainer);
 router.get('/attendance', getBatchAttendance);

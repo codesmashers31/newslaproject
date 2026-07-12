@@ -9,6 +9,8 @@ import AttendanceSession from '../models/AttendanceSession.js';
 import jwt from 'jsonwebtoken';
 import { syncStudentTrainers, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
 import Enrollment from '../models/Enrollment.js';
+import fs from 'fs';
+import * as xlsx from 'xlsx';
 
 // Helper to map trainer role to score category
 const getCategoryByRole = (role) => {
@@ -770,6 +772,254 @@ export const deleteStudentByTrainer = async (req, res) => {
     await Batch.updateMany({ students: id }, { $pull: { students: id } });
 
     res.status(200).json({ message: 'Student deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getBatchStudents = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const enrollments = await Enrollment.find({ batchId: id, status: 'Active' })
+      .populate('studentId', 'name email mobile status slaeId')
+      .lean();
+    const students = enrollments.map(e => ({
+      ...e.studentId,
+      enrollmentId: e._id,
+      enrolledAt: e.enrolledAt,
+    }));
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const addStudentToBatch = async (req, res) => {
+  const { id } = req.params;
+  const { slaeId } = req.body;
+  try {
+    const student = await User.findOne({ slaeId, role: 'Student' });
+    if (!student) {
+      return res.status(404).json({ message: `Student with EID "${slaeId}" not found.` });
+    }
+
+    const batch = await Batch.findById(id);
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found.' });
+    }
+
+    let dept = 'Technical';
+    if (batch.course.includes('Communication')) dept = 'Communication';
+    if (batch.course.includes('Aptitude')) dept = 'Aptitude';
+
+    const existing = await Enrollment.findOne({ studentId: student._id, batchId: batch._id, status: 'Active' });
+    if (existing) {
+      return res.status(400).json({ message: 'Student is already actively enrolled in this batch.' });
+    }
+
+    if (dept === 'Communication' || dept === 'Aptitude') {
+      const activeEnroll = await Enrollment.findOne({ studentId: student._id, department: dept, status: 'Active' });
+      if (activeEnroll) {
+        activeEnroll.status = 'Completed';
+        activeEnroll.completedAt = new Date();
+        await activeEnroll.save();
+        await Batch.findByIdAndUpdate(activeEnroll.batchId, { $pull: { students: student._id } });
+      }
+    }
+
+    const trainerId = batch.trainers?.[0] || req.user._id;
+    await Enrollment.create({
+      studentId: student._id,
+      batchId: batch._id,
+      trainerId,
+      department: dept,
+      course: batch.course,
+      status: 'Active',
+      enrolledAt: new Date()
+    });
+
+    await Batch.findByIdAndUpdate(id, { $addToSet: { students: student._id } });
+
+    res.status(201).json({ message: 'Student assigned to batch successfully', student });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const removeStudentFromBatch = async (req, res) => {
+  const { id, studentId } = req.params;
+  try {
+    const enroll = await Enrollment.findOne({ studentId, batchId: id, status: 'Active' });
+    if (enroll) {
+      enroll.status = 'Completed';
+      enroll.completedAt = new Date();
+      await enroll.save();
+    }
+
+    await Batch.findByIdAndUpdate(id, { $pull: { students: studentId } });
+    res.json({ message: 'Student removed from batch successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const transferStudents = async (req, res) => {
+  const { sourceBatchId, destBatchId, studentIds } = req.body;
+  try {
+    const sourceBatch = await Batch.findById(sourceBatchId);
+    const destBatch = await Batch.findById(destBatchId);
+    if (!sourceBatch || !destBatch) {
+      return res.status(404).json({ message: 'Source or destination batch not found.' });
+    }
+
+    let dept = 'Technical';
+    if (destBatch.course.includes('Communication')) dept = 'Communication';
+    if (destBatch.course.includes('Aptitude')) dept = 'Aptitude';
+
+    const trainerId = destBatch.trainers?.[0] || req.user._id;
+
+    for (const studentId of studentIds) {
+      const oldEnroll = await Enrollment.findOne({ studentId, batchId: sourceBatchId, status: 'Active' });
+      if (oldEnroll) {
+        oldEnroll.status = 'Completed';
+        oldEnroll.completedAt = new Date();
+        await oldEnroll.save();
+      }
+      await Batch.findByIdAndUpdate(sourceBatchId, { $pull: { students: studentId } });
+
+      if (dept === 'Communication' || dept === 'Aptitude') {
+        const activeEnroll = await Enrollment.findOne({ studentId, department: dept, status: 'Active' });
+        if (activeEnroll) {
+          activeEnroll.status = 'Completed';
+          activeEnroll.completedAt = new Date();
+          await activeEnroll.save();
+          await Batch.findByIdAndUpdate(activeEnroll.batchId, { $pull: { students: studentId } });
+        }
+      }
+
+      await Enrollment.findOneAndUpdate(
+        { studentId, batchId: destBatchId, department: dept },
+        {
+          trainerId,
+          course: destBatch.course,
+          status: 'Active',
+          enrolledAt: new Date()
+        },
+        { upsert: true, new: true }
+      );
+
+      await Batch.findByIdAndUpdate(destBatchId, { $addToSet: { students: studentId } });
+    }
+
+    res.json({ message: `Successfully transferred ${studentIds.length} students.` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const bulkImportStudents = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an Excel file' });
+    }
+
+    const batch = await Batch.findById(id);
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found.' });
+    }
+
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    let successCount = 0;
+    let skippedCount = 0;
+    let failedCount = 0;
+
+    let dept = 'Technical';
+    if (batch.course.includes('Communication')) dept = 'Communication';
+    if (batch.course.includes('Aptitude')) dept = 'Aptitude';
+
+    const trainerId = batch.trainers?.[0] || req.user._id;
+
+    for (const row of data) {
+      const rowKeys = Object.keys(row);
+      const getVal = (possibleKeys) => {
+        const matchingKey = rowKeys.find(k => {
+          const cleanK = k.replace(/[\s\-_]+/g, '').toLowerCase();
+          return possibleKeys.includes(cleanK);
+        });
+        return matchingKey ? String(row[matchingKey]).trim() : '';
+      };
+
+      const slaeId = getVal(['eid', 'slaeid', 'id', 'studentworkid']);
+      if (!slaeId) {
+        failedCount++;
+        continue;
+      }
+
+      const student = await User.findOne({ slaeId, role: 'Student' });
+      if (!student) {
+        failedCount++;
+        continue;
+      }
+
+      const existing = await Enrollment.findOne({ studentId: student._id, batchId: id, status: 'Active' });
+      if (existing) {
+        skippedCount++;
+        continue;
+      }
+
+      if (dept === 'Communication' || dept === 'Aptitude') {
+        const activeEnroll = await Enrollment.findOne({ studentId: student._id, department: dept, status: 'Active' });
+        if (activeEnroll) {
+          activeEnroll.status = 'Completed';
+          activeEnroll.completedAt = new Date();
+          await activeEnroll.save();
+          await Batch.findByIdAndUpdate(activeEnroll.batchId, { $pull: { students: student._id } });
+        }
+      }
+
+      await Enrollment.create({
+        studentId: student._id,
+        batchId: id,
+        trainerId,
+        department: dept,
+        course: batch.course,
+        status: 'Active',
+        enrolledAt: new Date()
+      });
+
+      await Batch.findByIdAndUpdate(id, { $addToSet: { students: student._id } });
+      successCount++;
+    }
+
+    res.json({ successCount, skippedCount, failedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const searchStudents = async (req, res) => {
+  const { query } = req.query;
+  try {
+    if (!query) {
+      return res.json([]);
+    }
+    const students = await User.find({
+      role: 'Student',
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } },
+        { slaeId: { $regex: query, $options: 'i' } },
+        { mobile: { $regex: query, $options: 'i' } }
+      ]
+    }).select('name email mobile slaeId').limit(10).lean();
+    
+    res.json(students);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
