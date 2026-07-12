@@ -41,7 +41,7 @@ export default function LoginScreen() {
     try {
       const { data } = await API.post('/auth/login', {
         email: email.trim(),
-        password: password,
+        password: password.trim(),
       });
       await AsyncStorage.setItem('student_token', data.token);
       await AsyncStorage.setItem('student_profile', JSON.stringify(data));
