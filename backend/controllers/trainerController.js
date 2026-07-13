@@ -563,7 +563,18 @@ export const getTrainerDashboardStats = async (req, res) => {
 
 export const getTrainerBatches = async (req, res) => {
   try {
-    const batches = await Batch.find({}).sort({ createdAt: -1 }).lean();
+    const role = req.user.role;
+    let filter = {};
+
+    if (role === 'Technical Trainer') {
+      filter.course = { $regex: /Technical/i };
+    } else if (role === 'Communication Trainer') {
+      filter.course = { $regex: /Communication/i };
+    } else if (role === 'Aptitude Trainer') {
+      filter.course = { $regex: /Aptitude/i };
+    }
+
+    const batches = await Batch.find(filter).sort({ createdAt: -1 }).lean();
     res.json(batches);
   } catch (error) {
     res.status(500).json({ message: error.message });
