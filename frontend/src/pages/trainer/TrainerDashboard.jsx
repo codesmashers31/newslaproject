@@ -495,26 +495,37 @@ const TrainerDashboard = () => {
     fetchAndInitializeAttendance();
   }, [selectedBatchId, attendanceDate, students]);
 
-  const handleAttendanceChange = (studentId, status) => {
+  const handleAttendanceChange = async (studentId, status) => {
+    // 1. Instantly update UI state for responsive click feel
     setAttendanceState(prev => ({ ...prev, [studentId]: status }));
-  };
 
-  const handleSingleMarkAttendance = async (studentId) => {
+    // 2. Make API call in background
     try {
+      const targetBatchId = selectedBatchId === 'all' ? '' : selectedBatchId;
       await API.post('/trainer/attendance', {
-        batchId: selectedBatchId,
+        batchId: targetBatchId,
         date: attendanceDate,
         records: [{
           studentId,
-          status: attendanceState[studentId] || 'Present',
+          status,
           remarks: attendanceRemarks[studentId] || '',
           timeIn: checkInTimes[studentId] || '09:00 AM'
         }]
       });
-      toast.success('Attendance updated successfully');
-      loadStats(selectedBatchId);
+      toast.success(`Marked ${status} successfully`);
+      
+      // Refresh todayRecords to update UI check-in timestamps
+      const fetchBatchId = selectedBatchId === 'all' ? '' : selectedBatchId;
+      if (fetchBatchId) {
+        const { data: existingRecords } = await API.get(`/trainer/attendance?batchId=${fetchBatchId}&date=${attendanceDate}`);
+        setTodayRecords(existingRecords);
+      }
+      
+      if (isCommunicationTrainer) {
+        loadStats(selectedBatchId);
+      }
     } catch (error) {
-      toast.error('Failed to save attendance');
+      toast.error('Failed to save attendance automatically');
     }
   };
 
@@ -1241,16 +1252,6 @@ const TrainerDashboard = () => {
                     ))}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={submitAttendance}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition cursor-pointer flex items-center gap-1.5"
-                  >
-                    <CheckCircle size={14} />
-                    <span>Save Attendance</span>
-                  </button>
-                </div>
               </div>
 
               {/* Advanced Single Table */}
@@ -1265,13 +1266,12 @@ const TrainerDashboard = () => {
                       <th className="px-5 py-4">Batch</th>
                       <th className="px-5 py-4 text-center">Interactive Status</th>
                       <th className="px-5 py-4">Time & Date</th>
-                      <th className="px-5 py-4">Remarks</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
                     {paginatedAttendanceStudents.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="px-6 py-12 text-center text-slate-400 italic">
+                        <td colSpan="7" className="px-6 py-12 text-center text-slate-400 italic">
                           No students found matching your search or batch selection.
                         </td>
                       </tr>
@@ -1350,15 +1350,6 @@ const TrainerDashboard = () => {
                               ) : (
                                 <span className="text-slate-400 italic">Not Submitted Today</span>
                               )}
-                            </td>
-                            <td className="px-5 py-4">
-                              <input
-                                type="text"
-                                placeholder="Add remark..."
-                                value={attendanceRemarks[student._id] || ''}
-                                onChange={(e) => setAttendanceRemarks({ ...attendanceRemarks, [student._id]: e.target.value })}
-                                className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50 text-xs w-full max-w-[160px] text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                              />
                             </td>
                           </tr>
                         );
@@ -1744,12 +1735,6 @@ const TrainerDashboard = () => {
                     className="px-3 py-1.5 border dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none text-gray-700 dark:text-gray-300"
                   />
                 </div>
-                <button
-                  onClick={submitAttendance}
-                  className="bg-[#4648d4] hover:bg-[#393bb3] text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/20 cursor-pointer"
-                >
-                  Submit Attendance Book
-                </button>
               </div>
 
               <div className="bg-white/60 dark:bg-[#12131a]/60 border border-[#c7c4d7] dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
