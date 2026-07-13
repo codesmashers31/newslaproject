@@ -252,14 +252,14 @@ export default function TrainingScreen() {
             </TouchableOpacity>
           </View>
           
-          <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 mb-4">
-            <Search size={18} color="#94a3b8" />
+          <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 mb-4">
+            <Search size={14} color="#94a3b8" />
             <TextInput 
               placeholder="Search batches by name or trainer..."
               placeholderTextColor="#64748b"
               value={techSearchQuery}
               onChangeText={setTechSearchQuery}
-              className="flex-1 text-white ml-3"
+              className="flex-1 text-white text-xs ml-2"
             />
           </View>
           
@@ -285,15 +285,15 @@ export default function TrainingScreen() {
               )
             })}
           </ScrollView>
-          <View className="flex-row space-x-3 mt-4">
-            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-slate-800 border border-slate-700 p-4 rounded-xl items-center">
-              {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold">Save Temporarily</Text>}
+          <View className="flex-row gap-4 mt-4">
+            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-slate-800 border border-slate-700 py-3 rounded-xl items-center">
+              {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-white text-xs font-bold">Save Temporarily</Text>}
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-indigo-500 p-4 rounded-xl items-center flex-row justify-center">
-              {saving ? <ActivityIndicator color="#fff" /> : (
+            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-indigo-500 py-3 rounded-xl items-center flex-row justify-center">
+              {saving ? <ActivityIndicator size="small" color="#fff" /> : (
                 <>
-                  <Lock size={16} color="#fff" />
-                  <Text className="text-white font-black ml-2">Lock Selection</Text>
+                  <Lock size={14} color="#fff" />
+                  <Text className="text-white text-xs font-black ml-1.5">Lock Selection</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -314,14 +314,14 @@ export default function TrainingScreen() {
             </TouchableOpacity>
           </View>
           
-          <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 mb-4">
-            <Search size={18} color="#94a3b8" />
+          <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 mb-4">
+            <Search size={14} color="#94a3b8" />
             <TextInput 
               placeholder="Search batches by name or trainer..."
               placeholderTextColor="#64748b"
               value={aptiSearchQuery}
               onChangeText={setAptiSearchQuery}
-              className="flex-1 text-white ml-3"
+              className="flex-1 text-white text-xs ml-2"
             />
           </View>
           
@@ -347,15 +347,15 @@ export default function TrainingScreen() {
               )
             })}
           </ScrollView>
-          <View className="flex-row space-x-3 mt-4">
-            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-slate-800 border border-slate-700 p-4 rounded-xl items-center">
-              {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold">Save Temporarily</Text>}
+          <View className="flex-row gap-4 mt-4">
+            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-slate-800 border border-slate-700 py-3 rounded-xl items-center">
+              {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-white text-xs font-bold">Save Temporarily</Text>}
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-fuchsia-500 p-4 rounded-xl items-center flex-row justify-center">
-              {saving ? <ActivityIndicator color="#fff" /> : (
+            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-fuchsia-500 py-3 rounded-xl items-center flex-row justify-center">
+              {saving ? <ActivityIndicator size="small" color="#fff" /> : (
                 <>
-                  <Lock size={16} color="#fff" />
-                  <Text className="text-white font-black ml-2">Lock Selection</Text>
+                  <Lock size={14} color="#fff" />
+                  <Text className="text-white text-xs font-black ml-1.5">Lock Selection</Text>
                 </>
               )}
             </TouchableOpacity>
