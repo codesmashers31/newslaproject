@@ -183,13 +183,13 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View className="space-y-2.5 pt-1 text-xs">
-            <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
-              <Text className="font-semibold text-slate-400">Assigned Batch:</Text>
-              <Text className="font-bold text-white">{profile.technicalBatch || 'Unassigned'}</Text>
+            <View className="flex-row justify-between items-start border-b pb-2.5 border-slate-800 mb-2">
+              <Text className="font-semibold text-slate-400 mt-0.5">Assigned Batch:</Text>
+              <Text className="font-bold text-white flex-1 text-right ml-4">{profile.technicalBatch || 'Unassigned'}</Text>
             </View>
-            <View className="flex-row justify-between pb-1">
-              <Text className="font-semibold text-slate-400">Trainer:</Text>
-              <Text className="font-bold text-indigo-400">{profile.technicalTrainer || 'Unassigned'}</Text>
+            <View className="flex-row justify-between items-start pb-1">
+              <Text className="font-semibold text-slate-400 mt-0.5">Trainer:</Text>
+              <Text className="font-bold text-indigo-400 flex-1 text-right ml-4">{profile.technicalTrainer || 'Unassigned'}</Text>
             </View>
           </View>
         </View>
@@ -206,13 +206,13 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View className="space-y-2.5 pt-1 text-xs">
-            <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
-              <Text className="font-semibold text-slate-400">Assigned Batch:</Text>
-              <Text className="font-bold text-white">{profile.communicationBatch || 'Unassigned'}</Text>
+            <View className="flex-row justify-between items-start border-b pb-2.5 border-slate-800 mb-2">
+              <Text className="font-semibold text-slate-400 mt-0.5">Assigned Batch:</Text>
+              <Text className="font-bold text-white flex-1 text-right ml-4">{profile.communicationBatch || 'Unassigned'}</Text>
             </View>
-            <View className="flex-row justify-between pb-1">
-              <Text className="font-semibold text-slate-400">Trainer:</Text>
-              <Text className="font-bold text-indigo-400">{profile.communicationTrainer || 'Unassigned'}</Text>
+            <View className="flex-row justify-between items-start pb-1">
+              <Text className="font-semibold text-slate-400 mt-0.5">Trainer:</Text>
+              <Text className="font-bold text-indigo-400 flex-1 text-right ml-4">{profile.communicationTrainer || 'Unassigned'}</Text>
             </View>
           </View>
         </View>
@@ -229,13 +229,13 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View className="space-y-2.5 pt-1 text-xs">
-            <View className="flex-row justify-between border-b pb-2.5 border-slate-800 mb-2">
-              <Text className="font-semibold text-slate-400">Assigned Batch:</Text>
-              <Text className="font-bold text-white">{profile.aptitudeBatch || 'Unassigned'}</Text>
+            <View className="flex-row justify-between items-start border-b pb-2.5 border-slate-800 mb-2">
+              <Text className="font-semibold text-slate-400 mt-0.5">Assigned Batch:</Text>
+              <Text className="font-bold text-white flex-1 text-right ml-4">{profile.aptitudeBatch || 'Unassigned'}</Text>
             </View>
-            <View className="flex-row justify-between pb-1">
-              <Text className="font-semibold text-slate-400">Trainer:</Text>
-              <Text className="font-bold text-indigo-400">{profile.aptitudeTrainer || 'Unassigned'}</Text>
+            <View className="flex-row justify-between items-start pb-1">
+              <Text className="font-semibold text-slate-400 mt-0.5">Trainer:</Text>
+              <Text className="font-bold text-indigo-400 flex-1 text-right ml-4">{profile.aptitudeTrainer || 'Unassigned'}</Text>
             </View>
           </View>
         </View>
