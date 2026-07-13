@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
-import { Home, Camera, FileText, CalendarRange, User } from 'lucide-react-native';
+import { Home, Camera, FileText, CalendarRange, User, BookOpen } from 'lucide-react-native';
 
 export default function TabLayout() {
   const scheme = useColorScheme();
@@ -57,6 +57,13 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => <User size={20} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="training"
+        options={{
+          title: 'Training',
+          tabBarIcon: ({ color }) => <BookOpen size={20} color={color} />,
         }}
       />
     </Tabs>

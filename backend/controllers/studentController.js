@@ -916,3 +916,80 @@ export const getAvailableTrainers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Update student enrollments (Technical multi, Aptitude single, Comm read-only)
+// @route   POST /api/student/enrollments
+// @access  Private (Student only)
+export const updateStudentEnrollments = async (req, res) => {
+  try {
+    const studentId = req.user._id;
+    const { technicalBatchIds, aptitudeBatchId } = req.body;
+
+    // 1. Technical Batches (Multi-Select)
+    if (technicalBatchIds && Array.isArray(technicalBatchIds)) {
+      const activeTechEnrollments = await Enrollment.find({ studentId, department: 'Technical', status: 'Active' });
+      
+      for (const batchId of technicalBatchIds) {
+        const batch = await Batch.findById(batchId);
+        if (batch && batch.course.includes('Technical')) {
+          // Auto assign trainer from batch
+          const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
+          
+          await Enrollment.findOneAndUpdate(
+            { studentId, batchId: batch._id, department: 'Technical' },
+            {
+              trainerId: trainerId,
+              course: batch.course,
+              status: 'Active',
+              enrolledAt: new Date()
+            },
+            { upsert: true, new: true }
+          );
+        }
+      }
+      
+      // Close unselected active technical enrollments
+      for (const old of activeTechEnrollments) {
+        if (!technicalBatchIds.includes(old.batchId.toString())) {
+          await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' });
+        }
+      }
+    }
+
+    // 2. Aptitude Batch (Single-Select)
+    if (aptitudeBatchId) {
+      const batch = await Batch.findById(aptitudeBatchId);
+      if (batch && batch.course.includes('Aptitude')) {
+        const activeAptiEnrollments = await Enrollment.find({ studentId, department: 'Aptitude', status: 'Active' });
+        const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
+
+        // Is it different?
+        let isDifferent = true;
+        for (const old of activeAptiEnrollments) {
+          if (old.batchId.toString() === aptitudeBatchId) {
+            isDifferent = false; // Already active
+          } else {
+            await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' }); // Close other
+          }
+        }
+
+        if (isDifferent) {
+          await Enrollment.findOneAndUpdate(
+            { studentId, batchId: batch._id, department: 'Aptitude' },
+            {
+              trainerId: trainerId,
+              course: batch.course,
+              status: 'Active',
+              enrolledAt: new Date()
+            },
+            { upsert: true, new: true }
+          );
+        }
+      }
+    }
+
+    res.json({ message: 'Enrollments updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

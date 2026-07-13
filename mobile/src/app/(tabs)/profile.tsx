@@ -397,48 +397,6 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* Assigned Cohort Batches & Trainers Header */}
-            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Assigned Cohorts & Trainers</Text>
-
-            {/* Technical Domain */}
-            <View className="mb-4 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
-              <Text className="text-white font-extrabold text-xs mb-2.5 text-indigo-400 uppercase tracking-wide">Technical Training</Text>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
-                <Text className="text-white text-xs font-bold">{profileData.technicalBatch || 'Unassigned'}</Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
-                <Text className="text-white text-xs font-bold">{profileData.technicalTrainer || 'Unassigned'}</Text>
-              </View>
-            </View>
-
-            {/* Communication Domain */}
-            <View className="mb-4 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
-              <Text className="text-white font-extrabold text-xs mb-2.5 text-indigo-400 uppercase tracking-wide">Communication Skills</Text>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
-                <Text className="text-white text-xs font-bold">{profileData.communicationBatch || 'Unassigned'}</Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
-                <Text className="text-white text-xs font-bold">{profileData.communicationTrainer || 'Unassigned'}</Text>
-              </View>
-            </View>
-
-            {/* Aptitude Domain */}
-            <View className="mb-6 bg-slate-900/40 border border-slate-900 rounded-3xl p-4">
-              <Text className="text-white font-extrabold text-xs mb-2.5 text-indigo-400 uppercase tracking-wide">Aptitude & Reasoning</Text>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
-                <Text className="text-white text-xs font-bold">{profileData.aptitudeBatch || 'Unassigned'}</Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-slate-400 text-xs font-semibold">Trainer:</Text>
-                <Text className="text-white text-xs font-bold">{profileData.aptitudeTrainer || 'Unassigned'}</Text>
-              </View>
-            </View>
-
             {/* Academic Info Header */}
             <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Academic Details</Text>
 
