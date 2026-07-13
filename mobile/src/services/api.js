@@ -11,7 +11,7 @@ const getBaseURL = () => {
 
 const API = axios.create({
   baseURL: getBaseURL(),
-  timeout: 10000,
+  timeout: 60000, // Increased to 60s to handle Render free tier cold starts
 });
 
 // Interceptor to add student token to headers
