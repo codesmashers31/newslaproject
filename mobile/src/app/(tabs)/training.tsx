@@ -8,14 +8,17 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
-  Modal
+  Modal,
+  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../services/api';
 import { 
   BookOpen,
   CheckCircle2,
-  X
+  X,
+  Search,
+  Lock
 } from 'lucide-react-native';
 
 export default function TrainingScreen() {
@@ -34,6 +37,13 @@ export default function TrainingScreen() {
   const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
   const [selectedAptiId, setSelectedAptiId] = useState<string | null>(null);
 
+  // Search State
+  const [techSearchQuery, setTechSearchQuery] = useState('');
+  const [aptiSearchQuery, setAptiSearchQuery] = useState('');
+  
+  // Lock State
+  const [isLocked, setIsLocked] = useState(false);
+
   const loadData = async () => {
     try {
       const [dashRes, batchRes] = await Promise.all([
@@ -44,6 +54,7 @@ export default function TrainingScreen() {
       const myBatches = dashRes.data?.batches || [];
       setBatches(myBatches);
       setAvailableBatches(batchRes.data || []);
+      setIsLocked(dashRes.data?.user?.isBatchesLocked || false);
       
       // Initialize selected tech ids
       const tech = myBatches.filter((b: any) => b.course?.includes('Technical'));
@@ -71,12 +82,13 @@ export default function TrainingScreen() {
     loadData();
   };
 
-  const handleSaveBatches = async () => {
+  const handleSaveBatches = async (isPermanent = false) => {
     setSaving(true);
     try {
       await API.post('/student/enrollments', {
         technicalBatchIds: selectedTechIds,
-        aptitudeBatchId: selectedAptiId
+        aptitudeBatchId: selectedAptiId,
+        isPermanent
       });
       setTechModalVisible(false);
       setAptiModalVisible(false);
@@ -88,6 +100,17 @@ export default function TrainingScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLockBatches = () => {
+    Alert.alert(
+      "Lock Batches?",
+      "Once you lock your batch selection, you will NOT be able to change it later. Are you sure you want to proceed?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Lock Forever", style: "destructive", onPress: () => handleSaveBatches(true) }
+      ]
+    );
   };
 
   const toggleTechBatch = (id: string) => {
@@ -110,8 +133,13 @@ export default function TrainingScreen() {
   const commBatch = batches.find(b => b.course?.includes('Communication'));
   const aptiBatch = batches.find(b => b.course?.includes('Aptitude'));
 
-  const availTechBatches = availableBatches.filter(b => b.course?.includes('Technical'));
-  const availAptiBatches = availableBatches.filter(b => b.course?.includes('Aptitude'));
+  const availTechBatches = availableBatches
+    .filter(b => b.course?.includes('Technical'))
+    .filter(b => b.name?.toLowerCase().includes(techSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(techSearchQuery.toLowerCase())));
+    
+  const availAptiBatches = availableBatches
+    .filter(b => b.course?.includes('Aptitude'))
+    .filter(b => b.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(aptiSearchQuery.toLowerCase())));
 
   return (
     <SafeAreaView className="flex-1 bg-slate-950">
@@ -137,9 +165,16 @@ export default function TrainingScreen() {
         <View className="mb-4 bg-slate-900/40 border border-slate-900 rounded-3xl p-5">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-white font-extrabold text-xs text-indigo-400 uppercase tracking-wide">Technical Training</Text>
-            <TouchableOpacity onPress={() => setTechModalVisible(true)} className="bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
-              <Text className="text-indigo-400 text-xs font-bold">Manage</Text>
-            </TouchableOpacity>
+            {isLocked ? (
+              <View className="bg-slate-800/50 px-3 py-1.5 rounded-lg flex-row items-center">
+                <Lock size={12} color="#94a3b8" />
+                <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wider ml-1">Locked</Text>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => setTechModalVisible(true)} className="bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20">
+                <Text className="text-indigo-400 text-xs font-bold">Manage</Text>
+              </TouchableOpacity>
+            )}
           </View>
           
           {techBatches.length > 0 ? techBatches.map((b, idx) => (
@@ -180,9 +215,16 @@ export default function TrainingScreen() {
         <View className="mb-8 bg-slate-900/40 border border-slate-900 rounded-3xl p-5">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-white font-extrabold text-xs text-fuchsia-400 uppercase tracking-wide">Aptitude & Reasoning</Text>
-            <TouchableOpacity onPress={() => setAptiModalVisible(true)} className="bg-fuchsia-500/10 px-3 py-1.5 rounded-lg border border-fuchsia-500/20">
-              <Text className="text-fuchsia-400 text-xs font-bold">Change</Text>
-            </TouchableOpacity>
+            {isLocked ? (
+              <View className="bg-slate-800/50 px-3 py-1.5 rounded-lg flex-row items-center">
+                <Lock size={12} color="#94a3b8" />
+                <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wider ml-1">Locked</Text>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => setAptiModalVisible(true)} className="bg-fuchsia-500/10 px-3 py-1.5 rounded-lg border border-fuchsia-500/20">
+                <Text className="text-fuchsia-400 text-xs font-bold">Change</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <View className="flex-row justify-between mb-2">
             <Text className="text-slate-400 text-xs font-semibold">Assigned Batch:</Text>
@@ -204,12 +246,23 @@ export default function TrainingScreen() {
             <Text className="text-lg font-black text-white">Manage Technical Batches</Text>
             <TouchableOpacity onPress={() => {
               setTechModalVisible(false);
-              // reset selections to original on cancel
               setSelectedTechIds(techBatches.map(b => b._id));
             }}>
               <X size={24} color="#94a3b8" />
             </TouchableOpacity>
           </View>
+          
+          <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 mb-4">
+            <Search size={18} color="#94a3b8" />
+            <TextInput 
+              placeholder="Search batches by name or trainer..."
+              placeholderTextColor="#64748b"
+              value={techSearchQuery}
+              onChangeText={setTechSearchQuery}
+              className="flex-1 text-white ml-3"
+            />
+          </View>
+          
           <Text className="text-slate-400 text-xs mb-4">You can select multiple technical batches. Trainers will be assigned automatically.</Text>
           
           <ScrollView className="flex-1">
@@ -232,9 +285,19 @@ export default function TrainingScreen() {
               )
             })}
           </ScrollView>
-          <TouchableOpacity onPress={handleSaveBatches} disabled={saving} className="bg-indigo-500 p-4 rounded-xl items-center mt-4">
-            {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-black">Save Technical Enrollments</Text>}
-          </TouchableOpacity>
+          <View className="flex-row space-x-3 mt-4">
+            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-slate-800 border border-slate-700 p-4 rounded-xl items-center">
+              {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold">Save Temporarily</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-indigo-500 p-4 rounded-xl items-center flex-row justify-center">
+              {saving ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <Lock size={16} color="#fff" />
+                  <Text className="text-white font-black ml-2">Lock Selection</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
@@ -250,6 +313,18 @@ export default function TrainingScreen() {
               <X size={24} color="#94a3b8" />
             </TouchableOpacity>
           </View>
+          
+          <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 mb-4">
+            <Search size={18} color="#94a3b8" />
+            <TextInput 
+              placeholder="Search batches by name or trainer..."
+              placeholderTextColor="#64748b"
+              value={aptiSearchQuery}
+              onChangeText={setAptiSearchQuery}
+              className="flex-1 text-white ml-3"
+            />
+          </View>
+          
           <Text className="text-slate-400 text-xs mb-4">You can only select one aptitude batch at a time. Selecting a new one will replace the current one.</Text>
           
           <ScrollView className="flex-1">
@@ -272,9 +347,19 @@ export default function TrainingScreen() {
               )
             })}
           </ScrollView>
-          <TouchableOpacity onPress={handleSaveBatches} disabled={saving} className="bg-fuchsia-500 p-4 rounded-xl items-center mt-4">
-            {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-black">Save Aptitude Enrollment</Text>}
-          </TouchableOpacity>
+          <View className="flex-row space-x-3 mt-4">
+            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-slate-800 border border-slate-700 p-4 rounded-xl items-center">
+              {saving ? <ActivityIndicator color="#fff" /> : <Text className="text-white font-bold">Save Temporarily</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-fuchsia-500 p-4 rounded-xl items-center flex-row justify-center">
+              {saving ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <Lock size={16} color="#fff" />
+                  <Text className="text-white font-black ml-2">Lock Selection</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 

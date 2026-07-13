@@ -24,10 +24,10 @@ export const getStudentDashboard = async (req, res) => {
 
     // 1. Fetch Profile
     let profile = await Student.findOne({ user: studentId })
-      .populate('user', 'name email mobile role')
+      .populate('user', 'name email mobile role isBatchesLocked')
       .lean();
     if (!profile) {
-      const userObj = await User.findById(studentId).select('name email mobile role').lean();
+      const userObj = await User.findById(studentId).select('name email mobile role isBatchesLocked').lean();
       profile = { user: userObj };
     }
 
@@ -923,7 +923,14 @@ export const getAvailableTrainers = async (req, res) => {
 export const updateStudentEnrollments = async (req, res) => {
   try {
     const studentId = req.user._id;
-    const { technicalBatchIds, aptitudeBatchId } = req.body;
+    const { technicalBatchIds, aptitudeBatchId, isPermanent } = req.body;
+
+    const studentUser = await User.findById(studentId);
+    if (!studentUser) return res.status(404).json({ message: 'User not found' });
+    
+    if (studentUser.isBatchesLocked) {
+      return res.status(403).json({ message: 'Your batch selections are permanently locked and cannot be changed.' });
+    }
 
     // 1. Technical Batches (Multi-Select)
     if (technicalBatchIds && Array.isArray(technicalBatchIds)) {
@@ -986,6 +993,11 @@ export const updateStudentEnrollments = async (req, res) => {
           );
         }
       }
+    }
+
+    if (isPermanent) {
+      studentUser.isBatchesLocked = true;
+      await studentUser.save();
     }
 
     res.json({ message: 'Enrollments updated successfully' });
