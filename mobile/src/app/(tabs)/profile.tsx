@@ -147,7 +147,7 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setSelectedPhoto(result.assets[0].uri);
+      setSelectedPhoto(result.assets[0]);
     }
   };
 
@@ -192,12 +192,12 @@ export default function ProfileScreen() {
 
       // Append photo if selected
       if (selectedPhoto) {
-        const filename = selectedPhoto.split('/').pop() || 'photo.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image/jpeg`;
+        const uri = selectedPhoto.uri || selectedPhoto;
+        const filename = selectedPhoto.fileName || uri.split('/').pop() || 'photo.jpg';
+        const type = selectedPhoto.mimeType || 'image/jpeg';
         
         formData.append('photo', {
-          uri: Platform.OS === 'ios' ? selectedPhoto.replace('file://', '') : selectedPhoto,
+          uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
           name: filename,
           type: type,
         } as any);
@@ -258,7 +258,7 @@ export default function ProfileScreen() {
   }
 
   const avatarSource = selectedPhoto 
-    ? { uri: selectedPhoto } 
+    ? { uri: selectedPhoto.uri || selectedPhoto } 
     : currentPhotoPath 
     ? { uri: `${getServerRoot()}${currentPhotoPath}` } 
     : null;
