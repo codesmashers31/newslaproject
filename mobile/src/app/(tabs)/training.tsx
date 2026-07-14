@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../services/api';
+import { 
   BookOpen,
   CheckCircle2,
   ArrowLeft,
