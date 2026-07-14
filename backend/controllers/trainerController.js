@@ -11,6 +11,7 @@ import { syncStudentTrainers, syncStudentBatchesFromStrings } from '../utils/tra
 import Enrollment from '../models/Enrollment.js';
 import fs from 'fs';
 import * as xlsx from 'xlsx';
+import Placement from '../models/Placement.js';
 
 // Helper to map trainer role to score category
 const getCategoryByRole = (role) => {
@@ -972,10 +973,32 @@ export const bulkImportStudents = async (req, res) => {
         continue;
       }
 
-      const student = await User.findOne({ slaeId, role: 'Student' });
+      const nameVal = getVal(['name', 'studentname', 'fullname', 'username']);
+
+      let student = await User.findOne({ slaeId, role: 'Student' });
       if (!student) {
-        failedCount++;
-        continue;
+        const name = nameVal || `Student ${slaeId}`;
+        const email = `${slaeId.toLowerCase()}@lcp.com`;
+        
+        student = await User.create({
+          name,
+          email,
+          mobile: '9999999999',
+          password: slaeId.toLowerCase(),
+          role: 'Student',
+          status: 'Active',
+          slaeId,
+        });
+
+        await Student.create({
+          user: student._id,
+          collegeName: '',
+          degree: '',
+          department: '',
+          yearOfPassing: '',
+        });
+
+        await Placement.create({ student: student._id });
       }
 
       const existing = await Enrollment.findOne({ studentId: student._id, batchId: id, status: 'Active' });
