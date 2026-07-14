@@ -15,12 +15,14 @@ import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import API from '../../services/api';
 import { 
-  Camera as CameraIcon, 
-  AlertCircle, 
-  CheckCircle, 
-  Key, 
-  Info, 
-  ArrowLeft 
+  Camera as CameraIcon,
+  AlertCircle,
+  CheckCircle,
+  Key,
+  Info,
+  ArrowLeft,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react-native';
 
 export default function QRScannerScreen() {
@@ -29,6 +31,10 @@ export default function QRScannerScreen() {
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [zoom, setZoom] = useState(0);
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 1));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0));
 
   useEffect(() => {
     if (permission?.granted) {
@@ -121,6 +127,7 @@ export default function QRScannerScreen() {
           {cameraActive && !scanResult && !loading ? (
             <View style={styles.cameraViewport}>
               <CameraView
+                zoom={zoom}
                 onBarcodeScanned={handleBarCodeScanned}
                 barcodeScannerSettings={{
                   barcodeTypes: ['qr'],
@@ -131,6 +138,15 @@ export default function QRScannerScreen() {
                 <Text style={styles.cameraOverlayText}>
                   Align QR Code inside camera feed
                 </Text>
+              </View>
+              <View style={styles.zoomControls}>
+                <TouchableOpacity onPress={handleZoomOut} style={styles.zoomBtn}>
+                  <ZoomOut size={20} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.zoomText}>{Math.round(zoom * 10)}x</Text>
+                <TouchableOpacity onPress={handleZoomIn} style={styles.zoomBtn}>
+                  <ZoomIn size={20} color="#fff" />
+                </TouchableOpacity>
               </View>
             </View>
           ) : (
@@ -365,6 +381,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 9999,
+  },
+  zoomControls: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    alignItems: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  zoomBtn: {
+    padding: 8,
+  },
+  zoomText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginVertical: 4,
   },
   standbyContainer: {
     width: '100%',
