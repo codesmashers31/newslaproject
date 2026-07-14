@@ -220,40 +220,12 @@ export default function QRScannerScreen() {
             </View>
           )}
 
-          {/* 2. Developer Sandbox Token Fallback */}
+          {/* 
+          2. Developer Sandbox Token Fallback 
           <View style={styles.sandboxSection}>
-            <View style={styles.sandboxBanner}>
-              <Info size={14} color="#818cf8" style={{ marginRight: 8, flexShrink: 0 }} />
-              <Text style={styles.sandboxBannerText}>
-                Sandbox Mode: If testing in simulator or camera isn't accessible, paste the session token here.
-              </Text>
-            </View>
-
-            <View style={styles.inputRow}>
-              <View style={styles.textInputContainer}>
-                <Key size={14} color="#64748b" style={{ marginRight: 8 }} />
-                <TextInput
-                  placeholder="Paste JWT Session Token..."
-                  placeholderTextColor="#475569"
-                  value={tokenInput}
-                  onChangeText={setTokenInput}
-                  style={styles.textInput}
-                />
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  if (tokenInput) {
-                    handleMarkAttendance(tokenInput);
-                    setTokenInput('');
-                  }
-                }}
-                disabled={loading}
-                style={styles.submitButton}
-              >
-                <Text style={styles.submitButtonText}>Submit</Text>
-              </TouchableOpacity>
-            </View>
+            ...
           </View>
+          */}
 
         </View>
       </ScrollView>
