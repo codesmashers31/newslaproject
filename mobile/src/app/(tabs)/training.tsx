@@ -13,10 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../services/api';
-import { 
   BookOpen,
   CheckCircle2,
-  X,
+  ArrowLeft,
   Search,
   Lock
 } from 'lucide-react-native';
@@ -241,16 +240,17 @@ export default function TrainingScreen() {
 
       {/* Tech Batches Modal */}
       <Modal visible={techModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setTechModalVisible(false)}>
-        <View className="flex-1 bg-slate-950 p-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-lg font-black text-white">Manage Technical Batches</Text>
-            <TouchableOpacity onPress={() => {
-              setTechModalVisible(false);
-              setSelectedTechIds(techBatches.map(b => b._id));
-            }}>
-              <X size={24} color="#94a3b8" />
-            </TouchableOpacity>
-          </View>
+        <SafeAreaView className="flex-1 bg-slate-950">
+          <View className="flex-1 px-6 pt-4 pb-6">
+            <View className="flex-row items-center mb-6">
+              <TouchableOpacity onPress={() => {
+                setTechModalVisible(false);
+                setSelectedTechIds(techBatches.map(b => b._id));
+              }} className="mr-4">
+                <ArrowLeft size={24} color="#94a3b8" />
+              </TouchableOpacity>
+              <Text className="text-lg font-black text-white flex-1">Manage Technical Batches</Text>
+            </View>
           
           <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 mb-4">
             <Search size={14} color="#94a3b8" />
@@ -297,22 +297,24 @@ export default function TrainingScreen() {
                 </>
               )}
             </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
 
       {/* Aptitude Batch Modal */}
       <Modal visible={aptiModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setAptiModalVisible(false)}>
-        <View className="flex-1 bg-slate-950 p-6">
-          <View className="flex-row justify-between items-center mb-6">
-            <Text className="text-lg font-black text-white">Select Aptitude Batch</Text>
-            <TouchableOpacity onPress={() => {
-              setAptiModalVisible(false);
-              setSelectedAptiId(aptiBatch ? aptiBatch._id : null);
-            }}>
-              <X size={24} color="#94a3b8" />
-            </TouchableOpacity>
-          </View>
+        <SafeAreaView className="flex-1 bg-slate-950">
+          <View className="flex-1 px-6 pt-4 pb-6">
+            <View className="flex-row items-center mb-6">
+              <TouchableOpacity onPress={() => {
+                setAptiModalVisible(false);
+                setSelectedAptiId(aptiBatch ? aptiBatch._id : null);
+              }} className="mr-4">
+                <ArrowLeft size={24} color="#94a3b8" />
+              </TouchableOpacity>
+              <Text className="text-lg font-black text-white flex-1">Select Aptitude Batch</Text>
+            </View>
           
           <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 mb-4">
             <Search size={14} color="#94a3b8" />
@@ -360,7 +362,8 @@ export default function TrainingScreen() {
               )}
             </TouchableOpacity>
           </View>
-        </View>
+          </View>
+        </SafeAreaView>
       </Modal>
 
     </SafeAreaView>
