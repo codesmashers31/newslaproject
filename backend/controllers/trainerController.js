@@ -676,13 +676,14 @@ export const addStudentByTrainer = async (req, res) => {
       name,
       email,
       mobile: mobile || '',
-      password: password || 'slastudent123',
+      password: password || (generatedSlaeId ? generatedSlaeId.toLowerCase() : 'password123'),
       role: 'Student',
       slaeId: generatedSlaeId,
       status: status || 'Active'
     });
 
     await Student.create({ user: user._id });
+    await Placement.create({ student: user._id });
 
     if (batchId) {
       await Batch.findByIdAndUpdate(batchId, { $addToSet: { students: user._id } });

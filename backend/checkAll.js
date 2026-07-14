@@ -1,0 +1,1 @@
+import bcrypt from 'bcryptjs'; const h = '/7Vo/r5Ot9km9luO6XBMX5DqXtnGbMNluoSKb2u'; async function test() { console.log('sla004:', await bcrypt.compare('sla004', h)); console.log('SLA004:', await bcrypt.compare('SLA004', h)); console.log('password123:', await bcrypt.compare('password123', h)); console.log('sla004@lcp.com:', await bcrypt.compare('sla004@lcp.com', h)); } test();
