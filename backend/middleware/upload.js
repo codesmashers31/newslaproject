@@ -19,20 +19,20 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const filetypes = /jpeg|jpg|png|pdf|msword|wordprocessingml|spreadsheetml|xlsx|xls|excel|octet-stream/;
+  const filetypes = /jpeg|jpg|png|webp|pdf|msword|wordprocessingml|spreadsheetml|xlsx|xls|excel|octet-stream/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb(new Error('Supported formats: Images (JPEG, PNG), PDFs, Word Documents, Excel sheets'));
+    cb(new Error('Supported formats: Images (JPEG, JPG, PNG, WEBP), PDFs, Word Documents, Excel sheets'));
   }
 };
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
   fileFilter,
 });
 
