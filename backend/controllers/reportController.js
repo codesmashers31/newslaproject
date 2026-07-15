@@ -1,6 +1,7 @@
 import RoomAllocation from '../models/RoomAllocation.js';
 import Room from '../models/Room.js';
 import Batch from '../models/Batch.js';
+import User from '../models/User.js';
 
 // Helper to compute duration in decimal hours from HH:MM strings
 const getDurationInHours = (start, end) => {
@@ -168,6 +169,14 @@ export const getDailyUsageReport = async (req, res) => {
         totalHours += getDurationInHours(a.startTime, a.endTime);
       });
 
+      const formatBatchNames = (batchField) => {
+        if (!batchField) return 'Unknown Batch';
+        if (Array.isArray(batchField)) {
+          return batchField.map(b => b.name).filter(Boolean).join(', ');
+        }
+        return batchField.name || 'Unknown Batch';
+      };
+
       return {
         roomName: room.name,
         roomNumber: room.roomNumber,
@@ -176,7 +185,7 @@ export const getDailyUsageReport = async (req, res) => {
         totalClassesToday: roomAllocs.length,
         totalHoursUsed: Number(totalHours.toFixed(1)),
         scheduleList: roomAllocs.map(a => ({
-          batchName: a.batch?.name || 'Deleted Batch',
+          batchName: formatBatchNames(a.batch),
           trainerName: a.trainer?.name || 'Deleted Trainer',
           timeSlot: `${a.startTime} - ${a.endTime}`,
           duration: getDurationInHours(a.startTime, a.endTime)
@@ -236,6 +245,88 @@ export const getMonthlyUsageReport = async (req, res) => {
       totalMonthlyAllocations: allocations.length,
       dailyStats
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get trainer availability and schedule report
+// @route   GET /api/reports/trainers
+// @access  Private/SuperAdmin
+export const getTrainerReport = async (req, res) => {
+  const { date } = req.query;
+
+  try {
+    const queryDate = date ? new Date(date) : new Date();
+    const startOfToday = new Date(queryDate);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(queryDate);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeek = days[queryDate.getDay()];
+
+    const trainers = await User.find({
+      role: { $in: ['Trainer', 'Technical Trainer', 'Communication Trainer', 'Aptitude Trainer'] }
+    });
+
+    const allocations = await RoomAllocation.find({
+      date: { $gte: startOfToday, $lte: endOfToday }
+    }).populate('room batch trainer');
+
+    const report = trainers.map(trainer => {
+      // Find allocations for this trainer
+      const trainerAllocs = allocations.filter(a => a.trainer?._id.toString() === trainer._id.toString());
+      
+      // Calculate total hours allocated
+      let totalHours = 0;
+      trainerAllocs.forEach(a => {
+        totalHours += getDurationInHours(a.startTime, a.endTime);
+      });
+
+      // Get configured availability slots for this day of week
+      const daySlots = trainer.trainerAvailability 
+        ? trainer.trainerAvailability.filter(s => s.dayOfWeek.toLowerCase() === dayOfWeek.toLowerCase())
+        : [];
+
+      const availabilityText = daySlots.length > 0 
+        ? daySlots.map(s => `${s.startTime} - ${s.endTime}`).join(', ')
+        : '24/7 Available (No constraints)';
+
+      // Determine trainer status
+      let status = 'Free / No Class';
+      if (trainerAllocs.length > 0) {
+        status = 'Scheduled';
+      }
+
+      return {
+        trainerId: trainer._id,
+        trainerName: trainer.name,
+        trainerRole: trainer.role,
+        status,
+        totalHoursUsed: Number(totalHours.toFixed(1)),
+        availabilitySlots: availabilityText,
+        scheduleList: trainerAllocs.map(a => {
+          const formatBatchNames = (batchField) => {
+            if (!batchField) return 'Unknown Batch';
+            if (Array.isArray(batchField)) {
+              return batchField.map(b => b.name).filter(Boolean).join(', ');
+            }
+            return batchField.name || 'Unknown Batch';
+          };
+          return {
+            roomName: a.room?.name || 'Deleted Room',
+            roomNumber: a.room?.roomNumber || 'N/A',
+            batchName: formatBatchNames(a.batch),
+            timeSlot: `${a.startTime} - ${a.endTime}`,
+            duration: getDurationInHours(a.startTime, a.endTime)
+          };
+        })
+      };
+    });
+
+    res.json(report);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });

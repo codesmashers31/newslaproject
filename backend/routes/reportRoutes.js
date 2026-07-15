@@ -3,7 +3,8 @@ import {
   getDashboardStats, 
   getUtilizationReport, 
   getDailyUsageReport, 
-  getMonthlyUsageReport 
+  getMonthlyUsageReport,
+  getTrainerReport
 } from '../controllers/reportController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -17,5 +18,6 @@ router.get('/dashboard-stats', getDashboardStats);
 router.get('/utilization', getUtilizationReport);
 router.get('/daily', getDailyUsageReport);
 router.get('/monthly', getMonthlyUsageReport);
+router.get('/trainers', getTrainerReport);
 
 export default router;

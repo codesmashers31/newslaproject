@@ -30,7 +30,7 @@ import {
 import { motion } from 'framer-motion';
 
 const Reports = () => {
-  const [reportType, setReportType] = useState('utilization'); // 'utilization', 'daily', 'monthly'
+  const [reportType, setReportType] = useState('utilization'); // 'utilization', 'daily', 'monthly', 'trainers'
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
@@ -63,6 +63,11 @@ const Reports = () => {
           params: { year, month }
         });
         setReportData(data.dailyStats || []);
+      } else if (reportType === 'trainers') {
+        const { data } = await API.get('/reports/trainers', {
+          params: { date: selectedDate }
+        });
+        setReportData(data);
       }
     } catch (error) {
       console.error(error);
@@ -119,6 +124,16 @@ const Reports = () => {
           'Total Hours Allocated': r.totalHours
         }));
         filename = `Monthly_Usage_Report_${year}_Month_${month + 1}`;
+      } else if (reportType === 'trainers') {
+        dataToExport = reportData.map(r => ({
+          'Trainer Name': r.trainerName,
+          'Role': r.trainerRole,
+          'Status': r.status,
+          'Allocated Hours Today': r.totalHoursUsed,
+          'Availability Shift Slots': r.availabilitySlots,
+          'Scheduled Classes Today': r.scheduleList.map(s => `${s.timeSlot} [Room ${s.roomNumber}: ${s.batchName}]`).join('; ')
+        }));
+        filename = `Trainer_Availability_Report_${selectedDate}`;
       }
 
       const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -180,6 +195,17 @@ const Reports = () => {
           `${r.totalHours} hrs`
         ]);
         filename = `Monthly_Classroom_Allocations`;
+      } else if (reportType === 'trainers') {
+        title = `Trainer Availability & Schedules (${selectedDate})`;
+        headers = ['Trainer Name', 'Role', 'Status', 'Allocated Hours', 'Availability'];
+        rows = reportData.map(r => [
+          r.trainerName,
+          r.trainerRole,
+          r.status,
+          `${r.totalHoursUsed} hrs`,
+          r.availabilitySlots
+        ]);
+        filename = `Trainer_Schedules_Report`;
       }
 
       // Draw custom beautiful PDF header
@@ -250,14 +276,14 @@ const Reports = () => {
         <div className="flex gap-3">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-750 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition-all select-none"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-755 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition-all select-none cursor-pointer"
           >
             <FileSpreadsheet size={15} />
             Export Excel
           </button>
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-750 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition-all select-none"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-755 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition-all select-none cursor-pointer"
           >
             <FileText size={15} />
             Export PDF
@@ -277,11 +303,12 @@ const Reports = () => {
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value="utilization">Room Space Utilization</option>
               <option value="daily">Daily Usage Summary</option>
               <option value="monthly">Monthly Usage Trends</option>
+              <option value="trainers">Trainer Availability & Utilization</option>
             </select>
           </div>
 
@@ -315,7 +342,7 @@ const Reports = () => {
             </>
           )}
 
-          {reportType === 'daily' && (
+          {(reportType === 'daily' || reportType === 'trainers') && (
             <div className="space-y-1.5 col-span-2">
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar size={12} />
@@ -408,6 +435,15 @@ const Reports = () => {
                     <Legend />
                     <Line type="monotone" dataKey="totalHours" name="Allocated Hours" stroke="#4f46e5" strokeWidth={3} activeDot={{ r: 6 }} />
                   </LineChart>
+                ) : reportType === 'trainers' ? (
+                  <BarChart data={reportData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="trainerName" stroke="#94a3b8" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} label={{ value: 'Hours Allocated Today', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip cursor={{ fill: 'rgba(79, 70, 229, 0.03)' }} />
+                    <Legend />
+                    <Bar dataKey="totalHoursUsed" name="Hours Allocated" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={28} />
+                  </BarChart>
                 ) : (
                   <BarChart data={reportData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -433,7 +469,7 @@ const Reports = () => {
               {reportType === 'utilization' && reportData.map((r, idx) => (
                 <div key={idx} className="p-3 border border-slate-100 dark:border-slate-800/50 rounded-xl flex justify-between items-center text-xs font-semibold">
                   <div>
-                    <h4 className="font-bold text-slate-850 dark:text-slate-250">{r.roomName}</h4>
+                    <h4 className="font-bold text-slate-855 dark:text-slate-250">{r.roomName}</h4>
                     <span className="text-[10px] text-slate-400">Room {r.roomNumber}</span>
                   </div>
                   <div className="text-right">
@@ -446,7 +482,7 @@ const Reports = () => {
               {reportType === 'daily' && reportData.map((r, idx) => (
                 <div key={idx} className="p-3 border border-slate-100 dark:border-slate-800/50 rounded-xl space-y-2 text-xs">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-bold text-slate-850 dark:text-slate-250">{r.roomName} ({r.roomNumber})</h4>
+                    <h4 className="font-bold text-slate-855 dark:text-slate-250">{r.roomName} ({r.roomNumber})</h4>
                     <span className="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded text-[10px]">
                       {r.totalClassesToday} classes
                     </span>
@@ -464,9 +500,37 @@ const Reports = () => {
                 <div key={idx} className="p-3 border border-slate-100 dark:border-slate-800/50 rounded-xl flex justify-between items-center text-xs font-semibold">
                   <span>Day {r.day}</span>
                   <div className="text-right font-bold">
-                    <span className="text-slate-950 dark:text-white block">{r.totalAllocations} Classes</span>
+                    <span className="text-slate-955 dark:text-white block">{r.totalAllocations} Classes</span>
                     <span className="text-[10px] text-slate-400 block mt-0.5">{r.totalHours} hrs allocated</span>
                   </div>
+                </div>
+              ))}
+
+              {reportType === 'trainers' && reportData.map((r, idx) => (
+                <div key={idx} className="p-4 border border-slate-100 dark:border-slate-800/50 rounded-xl space-y-2.5 text-xs">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-850 dark:text-slate-250">{r.trainerName}</h4>
+                      <span className="text-[10px] text-slate-400">{r.trainerRole}</span>
+                    </div>
+                    <span className={`font-bold px-2.5 py-0.5 rounded-full text-[9px] uppercase tracking-wider ${
+                      r.status === 'Free / No Class'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400'
+                    }`}>
+                      {r.status}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50/50 dark:bg-slate-950/20 p-2.5 rounded-xl space-y-1 text-[10px] font-bold text-slate-500">
+                    <p>Shift: <strong className="text-slate-700 dark:text-slate-300">{r.availabilitySlots}</strong></p>
+                    <p>Booked: <strong className="text-indigo-650 dark:text-indigo-400">{r.totalHoursUsed} hrs</strong></p>
+                  </div>
+                  {r.scheduleList.map((s, sIdx) => (
+                    <div key={sIdx} className="bg-indigo-50/20 dark:bg-indigo-950/5 p-2 rounded-lg text-[9px] font-bold text-slate-500 dark:text-slate-400 border-l-2 border-indigo-500 leading-normal">
+                      <p>{s.timeSlot} • Room {s.roomNumber} ({s.roomName})</p>
+                      <p className="text-slate-400 font-medium mt-0.5">Batch: {s.batchName}</p>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
