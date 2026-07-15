@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
+import { PinchGestureHandler, State } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import API from '../../services/api';
 import { 
@@ -32,9 +33,20 @@ export default function QRScannerScreen() {
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [zoom, setZoom] = useState(0);
+  const [baseZoom, setBaseZoom] = useState(0);
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 1));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0));
+  const onPinchStateChange = (event: any) => {
+    if (event.nativeEvent.oldState === State.ACTIVE) {
+      setBaseZoom(zoom);
+    }
+  };
+
+  const onPinchGestureEvent = (event: any) => {
+    const scale = event.nativeEvent.scale;
+    let newZoom = baseZoom + (scale - 1) * 0.1;
+    newZoom = Math.min(Math.max(newZoom, 0), 1);
+    setZoom(newZoom);
+  };
 
   useEffect(() => {
     if (permission?.granted) {
@@ -126,28 +138,26 @@ export default function QRScannerScreen() {
           {/* 1. Camera Viewport Panel */}
           {cameraActive && !scanResult && !loading ? (
             <View style={styles.cameraViewport}>
-              <CameraView
-                zoom={zoom}
-                onBarcodeScanned={handleBarCodeScanned}
-                barcodeScannerSettings={{
-                  barcodeTypes: ['qr'],
-                }}
-                style={styles.cameraFeed}
-              />
-              <View style={styles.cameraOverlay}>
-                <Text style={styles.cameraOverlayText}>
-                  Align QR Code inside camera feed
-                </Text>
-              </View>
-              <View style={styles.zoomControls}>
-                <TouchableOpacity onPress={handleZoomOut} style={styles.zoomBtn}>
-                  <ZoomOut size={20} color="#fff" />
-                </TouchableOpacity>
-                <Text style={styles.zoomText}>{Math.round(zoom * 10)}x</Text>
-                <TouchableOpacity onPress={handleZoomIn} style={styles.zoomBtn}>
-                  <ZoomIn size={20} color="#fff" />
-                </TouchableOpacity>
-              </View>
+              <PinchGestureHandler
+                onGestureEvent={onPinchGestureEvent}
+                onHandlerStateChange={onPinchStateChange}
+              >
+                <View style={styles.cameraFeed}>
+                  <CameraView
+                    zoom={zoom}
+                    onBarcodeScanned={handleBarCodeScanned}
+                    barcodeScannerSettings={{
+                      barcodeTypes: ['qr'],
+                    }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                  <View style={styles.cameraOverlay}>
+                    <Text style={styles.cameraOverlayText}>
+                      Align QR Code inside camera feed. Pinch to zoom.
+                    </Text>
+                  </View>
+                </View>
+              </PinchGestureHandler>
             </View>
           ) : (
             <View style={styles.standbyContainer}>
