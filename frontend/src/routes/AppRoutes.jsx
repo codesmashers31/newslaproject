@@ -48,7 +48,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* ADMIN DASHBOARDS */}
-      <Route element={<ProtectedRoute allowedRoles={['Super Admin']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin']} />}>
         <Route 
           path="/admin" 
           element={

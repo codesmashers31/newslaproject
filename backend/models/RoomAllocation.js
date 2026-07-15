@@ -6,11 +6,11 @@ const roomAllocationSchema = new mongoose.Schema({
     ref: 'Room',
     required: true,
   },
-  batch: {
+  batch: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Batch',
     required: true,
-  },
+  }],
   trainer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

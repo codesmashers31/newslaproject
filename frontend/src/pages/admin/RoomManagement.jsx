@@ -35,6 +35,7 @@ const RoomManagement = () => {
   const [floor, setFloor] = useState('');
   const [capacity, setCapacity] = useState('');
   const [facilities, setFacilities] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -60,6 +61,7 @@ const RoomManagement = () => {
 
   const handleAddRoom = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await API.post('/rooms', {
         name,
@@ -74,11 +76,14 @@ const RoomManagement = () => {
       fetchRooms();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error adding room');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleEditRoom = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       await API.put(`/rooms/${currentRoom._id}`, {
         name,
@@ -93,6 +98,8 @@ const RoomManagement = () => {
       fetchRooms();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error updating room');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -382,9 +389,14 @@ const RoomManagement = () => {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all"
+                    disabled={saving}
+                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center"
                   >
-                    Save Room
+                    {saving ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      'Save Room'
+                    )}
                   </button>
                 </div>
               </form>
@@ -478,9 +490,14 @@ const RoomManagement = () => {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all"
+                    disabled={saving}
+                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center"
                   >
-                    Update Room
+                    {saving ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      'Update Room'
+                    )}
                   </button>
                 </div>
               </form>

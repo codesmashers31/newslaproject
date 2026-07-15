@@ -20,7 +20,8 @@ import {
   updatePlacementDetails,
   getAttendanceLogs,
   importTrainersExcel,
-  importBatchesExcel
+  importBatchesExcel,
+  updateTrainerAvailability
 } from '../controllers/adminController.js';
 import { generateStudentAIRoadmapForAdmin } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -59,6 +60,7 @@ router.delete('/trainers/:id', deleteTrainer);
 router.put('/trainers/:id/status', updateTrainerStatus);
 router.put('/trainers/:id/reset-password', resetTrainerPassword);
 router.put('/trainers/:id/batches', updateTrainerBatches);
+router.put('/trainers/:id/availability', updateTrainerAvailability);
 
 // Placements
 router.put('/placements/:studentId', upload.single('offerLetter'), updatePlacementDetails);

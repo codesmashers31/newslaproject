@@ -40,16 +40,17 @@ const Login = () => {
     setLoading(false);
 
     if (result.success) {
+      toast.success('Logged in successfully!');
       const storedUser = localStorage.getItem('userInfo');
       if (storedUser) {
         const { role } = JSON.parse(storedUser);
-        if (role !== 'Super Admin') {
-          toast.error('Access denied. Only Super Admin can access the portal.');
-          localStorage.removeItem('userInfo');
-          return;
+        if (role === 'Admin' || role === 'Super Admin') {
+          navigate('/admin');
+        } else if (['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'].includes(role)) {
+          navigate('/trainer');
+        } else {
+          navigate('/student');
         }
-        toast.success('Logged in successfully!');
-        navigate('/admin');
       }
     } else {
       toast.error(result.message);

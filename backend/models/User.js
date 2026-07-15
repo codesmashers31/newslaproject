@@ -55,6 +55,20 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  trainerAvailability: [{
+    dayOfWeek: {
+      type: String, // 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+      required: true,
+    },
+    startTime: {
+      type: String, // HH:MM
+      required: true,
+    },
+    endTime: {
+      type: String, // HH:MM
+      required: true,
+    }
+  }],
   createdAt: {
     type: Date,
     default: Date.now,

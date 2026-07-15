@@ -31,20 +31,56 @@ const checkConflicts = async (roomId, trainerId, date, startTime, endTime, exclu
     isTimeOverlapping(startTime, endTime, a.startTime, a.endTime)
   );
 
+  const formatBatchNames = (batchField) => {
+    if (!batchField) return 'Unknown Batch';
+    if (Array.isArray(batchField)) {
+      return batchField.map(b => b.name).filter(Boolean).join(', ');
+    }
+    return batchField.name || 'Unknown Batch';
+  };
+
   return {
     roomConflict: roomConflict ? {
       allocationId: roomConflict._id,
-      batchName: roomConflict.batch?.name || 'Unknown Batch',
+      batchName: formatBatchNames(roomConflict.batch),
       trainerName: roomConflict.trainer?.name || 'Unknown Trainer',
       timeSlot: `${roomConflict.startTime} - ${roomConflict.endTime}`
     } : null,
     trainerConflict: trainerConflict ? {
       allocationId: trainerConflict._id,
       roomName: trainerConflict.room?.name || 'Unknown Room',
-      batchName: trainerConflict.batch?.name || 'Unknown Batch',
+      batchName: formatBatchNames(trainerConflict.batch),
       timeSlot: `${trainerConflict.startTime} - ${trainerConflict.endTime}`
     } : null,
   };
+};
+
+// Helper to check trainer availability slots
+const checkTrainerAvailability = async (trainerId, date, startTime, endTime) => {
+  const trainer = await User.findById(trainerId);
+  if (!trainer) return null;
+
+  // If trainer has no availability set, default to no warnings
+  if (!trainer.trainerAvailability || trainer.trainerAvailability.length === 0) {
+    return null;
+  }
+
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayOfWeek = days[new Date(date).getDay()];
+
+  const daySlots = trainer.trainerAvailability.filter(s => s.dayOfWeek.toLowerCase() === dayOfWeek.toLowerCase());
+
+  if (daySlots.length === 0) {
+    return `Trainer "${trainer.name}" has no availability slots configured on ${dayOfWeek}s.`;
+  }
+
+  const isAvailable = daySlots.some(s => startTime >= s.startTime && endTime <= s.endTime);
+  if (!isAvailable) {
+    const slotsText = daySlots.map(s => `${s.startTime} - ${s.endTime}`).join(', ');
+    return `Trainer "${trainer.name}" is scheduled outside their availability for ${dayOfWeek} (Preferred slots: ${slotsText}).`;
+  }
+
+  return null;
 };
 
 // @desc    Create a new room allocation
@@ -63,10 +99,15 @@ export const createAllocation = async (req, res) => {
       return res.status(400).json({ message: 'Cannot allocate inactive room' });
     }
 
-    // 2. Verify Batch & Trainer exists
-    const batch = await Batch.findById(batchId);
-    if (!batch) {
-      return res.status(404).json({ message: 'Batch not found' });
+    // 2. Verify Batch(es) & Trainer exists
+    const batchIds = Array.isArray(batchId) ? batchId : [batchId];
+    if (batchIds.length === 0 || !batchIds[0]) {
+      return res.status(400).json({ message: 'At least one batch must be selected' });
+    }
+
+    const batches = await Batch.find({ _id: { $in: batchIds } });
+    if (batches.length !== batchIds.length) {
+      return res.status(404).json({ message: 'One or more selected batches not found' });
     }
 
     const trainer = await User.findById(trainerId);
@@ -94,7 +135,7 @@ export const createAllocation = async (req, res) => {
     // 4. Create allocation
     const allocation = await RoomAllocation.create({
       room: roomId,
-      batch: batchId,
+      batch: batchIds,
       trainer: trainerId,
       date: new Date(date),
       startTime,
@@ -123,7 +164,10 @@ export const getAllocations = async (req, res) => {
 
     if (room) query.room = room;
     if (trainer) query.trainer = trainer;
-    if (batch) query.batch = batch;
+    if (batch) {
+      // Find allocations containing this batch in the batch array
+      query.batch = batch;
+    }
     
     if (date) {
       const startOfDay = new Date(date);
@@ -200,9 +244,18 @@ export const updateAllocation = async (req, res) => {
       }
     }
 
+    // If batch ID is provided, verify it
+    if (batchId) {
+      const batchIds = Array.isArray(batchId) ? batchId : [batchId];
+      const batches = await Batch.find({ _id: { $in: batchIds } });
+      if (batches.length !== batchIds.length) {
+        return res.status(404).json({ message: 'One or more selected batches not found' });
+      }
+      allocation.batch = batchIds;
+    }
+
     allocation.room = finalRoomId;
     allocation.trainer = finalTrainerId;
-    allocation.batch = finalBatchId;
     allocation.date = finalDate;
     allocation.startTime = finalStartTime;
     allocation.endTime = finalEndTime;
@@ -248,13 +301,12 @@ export const checkAvailability = async (req, res) => {
       return res.status(400).json({ message: 'Date, startTime, and endTime are required' });
     }
 
-    // Determine target capacity based on input or batch size
+    // Determine target capacity based on input or batch sizes
     let targetCapacity = Number(capacity) || 0;
     if (batchId) {
-      const batchObj = await Batch.findById(batchId);
-      if (batchObj && batchObj.students) {
-        targetCapacity = batchObj.students.length;
-      }
+      const batchIds = Array.isArray(batchId) ? batchId : [batchId];
+      const batchObjs = await Batch.find({ _id: { $in: batchIds } });
+      targetCapacity = batchObjs.reduce((sum, b) => sum + (b.students ? b.students.length : 0), 0);
     }
 
     // Fetch active rooms
@@ -274,7 +326,15 @@ export const checkAvailability = async (req, res) => {
       date: { $gte: startOfDay, $lte: endOfDay }
     }).populate('room batch trainer');
 
-    // Check if the trainer is busy
+    const formatBatchNames = (batchField) => {
+      if (!batchField) return 'Unknown Batch';
+      if (Array.isArray(batchField)) {
+        return batchField.map(b => b.name).filter(Boolean).join(', ');
+      }
+      return batchField.name || 'Unknown Batch';
+    };
+
+    // Check if the trainer has overlapping allocation conflict
     let trainerConflict = null;
     if (trainerId) {
       const trainerAlloc = dayAllocations.find(a => 
@@ -285,9 +345,16 @@ export const checkAvailability = async (req, res) => {
         trainerConflict = {
           trainerName: trainerAlloc.trainer?.name || 'Trainer',
           roomName: trainerAlloc.room?.name || 'Another Room',
-          timeSlot: `${trainerAlloc.startTime} - ${trainerAlloc.endTime}`
+          timeSlot: `${trainerAlloc.startTime} - ${trainerAlloc.endTime}`,
+          batchName: formatBatchNames(trainerAlloc.batch)
         };
       }
+    }
+
+    // Check trainer working hours / availability timeslots warning
+    let trainerAvailabilityWarning = null;
+    if (trainerId) {
+      trainerAvailabilityWarning = await checkTrainerAvailability(trainerId, date, startTime, endTime);
     }
 
     const availableRooms = [];
@@ -303,7 +370,7 @@ export const checkAvailability = async (req, res) => {
       );
 
       const statusInfo = overlappingAlloc 
-        ? { status: 'Occupied', color: 'Red', currentClass: overlappingAlloc.batch?.name || 'Class' }
+        ? { status: 'Occupied', color: 'Red', currentClass: formatBatchNames(overlappingAlloc.batch) }
         : roomAllocations.length > 0 
           ? { status: 'Reserved', color: 'Orange', currentClass: null }
           : { status: 'Available', color: 'Green', currentClass: null };
@@ -320,7 +387,7 @@ export const checkAvailability = async (req, res) => {
         currentClass: statusInfo.currentClass,
         allocationsToday: roomAllocations.map(a => ({
           timeSlot: `${a.startTime} - ${a.endTime}`,
-          batch: a.batch?.name,
+          batch: formatBatchNames(a.batch),
           trainer: a.trainer?.name
         }))
       };
@@ -329,7 +396,7 @@ export const checkAvailability = async (req, res) => {
         conflictRooms.push({
           ...roomData,
           conflictDetails: {
-            batchName: overlappingAlloc.batch?.name,
+            batchName: formatBatchNames(overlappingAlloc.batch),
             trainerName: overlappingAlloc.trainer?.name,
             timeSlot: `${overlappingAlloc.startTime} - ${overlappingAlloc.endTime}`
           }
@@ -341,7 +408,7 @@ export const checkAvailability = async (req, res) => {
         } else {
           alternativeRooms.push({
             ...roomData,
-            warning: `Capacity (${room.capacity}) is less than required capacity (${targetCapacity})`
+            warning: `Capacity (${room.capacity}) is less than combined batches size (${targetCapacity})`
           });
         }
       }
@@ -355,7 +422,8 @@ export const checkAvailability = async (req, res) => {
       availableRooms, // Rooms that fit capacity and have no conflicts
       alternativeRooms, // Rooms that have no conflicts but are too small
       conflictRooms, // Rooms that are occupied
-      trainerConflict
+      trainerConflict,
+      trainerAvailabilityWarning
     });
   } catch (error) {
     console.error(error);

@@ -39,7 +39,8 @@
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ]
@@ -51,8 +52,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5c37df44-0455-4cc1-99b6-2bd9290c5d36"
+        "projectId": "f13de560-d7f5-4327-a110-c5ba450eeb0a"
       }
-    }
+    },
+    "owner": "bsakthi691"
   }
 }

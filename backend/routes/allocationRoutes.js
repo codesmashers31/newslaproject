@@ -10,9 +10,9 @@ import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes are protected and restricted to Super Admin
+// All routes are protected and restricted to Super Admin & Admin
 router.use(protect);
-router.use(authorize('Super Admin'));
+router.use(authorize('Super Admin', 'Admin'));
 
 router.route('/')
   .post(createAllocation)

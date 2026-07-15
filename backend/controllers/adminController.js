@@ -517,7 +517,7 @@ export const getTrainers = async (req, res) => {
 
     const result = trainers.map(trainer => {
       const assignedBatches = batches
-        .filter(b => b.trainers.some(tId => tId.toString() === trainer._id.toString()))
+        .filter(b => b.trainers && Array.isArray(b.trainers) && b.trainers.some(tId => tId.toString() === trainer._id.toString()))
         .map(b => ({ _id: b._id, name: b.name }));
 
       return {
@@ -840,6 +840,24 @@ export const importBatchesExcel = async (req, res) => {
     res.json({ message: `Successfully imported ${importCount} batches` });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateTrainerAvailability = async (req, res) => {
+  const { availability } = req.body;
+  try {
+    const trainer = await User.findById(req.params.id);
+    if (!trainer) {
+      return res.status(404).json({ message: 'Trainer not found' });
+    }
+    trainer.trainerAvailability = availability || [];
+    await trainer.save();
+    res.json({ 
+      message: 'Trainer availability updated successfully', 
+      availability: trainer.trainerAvailability 
+    });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };

@@ -12,7 +12,11 @@ import {
   ArrowRight,
   School,
   Sparkles,
-  Info
+  Info,
+  X,
+  Plus,
+  Trash2,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -22,7 +26,7 @@ const RoomAllocation = () => {
   const [trainers, setTrainers] = useState([]);
   
   // Selection states
-  const [selectedBatch, setSelectedBatch] = useState('');
+  const [selectedBatches, setSelectedBatches] = useState([]);
   const [selectedTrainer, setSelectedTrainer] = useState('');
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
@@ -34,23 +38,30 @@ const RoomAllocation = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load initial dropdown data
-  useEffect(() => {
-    const loadDropdownData = async () => {
-      try {
-        const [batchesRes, trainersRes] = await Promise.all([
-          API.get('/admin/batches'),
-          API.get('/admin/trainers')
-        ]);
-        setBatches(batchesRes.data || []);
-        // Only active trainers or trainers with valid roles
-        setTrainers(trainersRes.data || []);
-      } catch (error) {
-        console.error(error);
-        toast.error('Failed to load batches or trainers data');
-      }
-    };
+  // Trainer Availability Modal states
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [tempAvailability, setTempAvailability] = useState([]);
+  const [newDay, setNewDay] = useState('Monday');
+  const [newStart, setNewStart] = useState('09:00');
+  const [newEnd, setNewEnd] = useState('17:00');
+  const [savingAvailability, setSavingAvailability] = useState(false);
 
+  // Load initial dropdown data
+  const loadDropdownData = async () => {
+    try {
+      const [batchesRes, trainersRes] = await Promise.all([
+        API.get('/admin/batches'),
+        API.get('/admin/trainers')
+      ]);
+      setBatches(batchesRes.data || []);
+      setTrainers(trainersRes.data || []);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to load batches or trainers data');
+    }
+  };
+
+  useEffect(() => {
     loadDropdownData();
   }, []);
 
@@ -59,7 +70,7 @@ const RoomAllocation = () => {
     if (date && startTime && endTime) {
       handleCheckAvailability();
     }
-  }, [date, startTime, endTime, selectedTrainer, selectedBatch]);
+  }, [date, startTime, endTime, selectedTrainer, selectedBatches]);
 
   const handleCheckAvailability = async () => {
     setChecking(true);
@@ -70,7 +81,7 @@ const RoomAllocation = () => {
         startTime,
         endTime,
         trainerId: selectedTrainer,
-        batchId: selectedBatch
+        batchId: selectedBatches
       };
 
       const { data } = await API.post('/allocations/check-availability', payload);
@@ -91,12 +102,16 @@ const RoomAllocation = () => {
       toast.error('Please select a classroom first');
       return;
     }
+    if (selectedBatches.length === 0) {
+      toast.error('Please select at least one batch');
+      return;
+    }
 
     setLoading(true);
     try {
       await API.post('/allocations', {
         room: selectedRoom._id,
-        batch: selectedBatch,
+        batch: selectedBatches,
         trainer: selectedTrainer,
         date,
         startTime,
@@ -105,7 +120,7 @@ const RoomAllocation = () => {
       
       toast.success('Room allocated successfully!');
       // Reset form
-      setSelectedBatch('');
+      setSelectedBatches([]);
       setSelectedTrainer('');
       setDate('');
       setStartTime('');
@@ -116,6 +131,51 @@ const RoomAllocation = () => {
       toast.error(error.response?.data?.message || 'Failed to create allocation');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Availability Modal Handlers
+  const openAvailabilityModal = () => {
+    if (!selectedTrainer) {
+      toast.error('Please select a trainer first');
+      return;
+    }
+    const trainerObj = trainers.find(t => t._id === selectedTrainer);
+    setTempAvailability(trainerObj?.trainerAvailability || []);
+    setShowAvailabilityModal(true);
+  };
+
+  const handleAddSlot = () => {
+    if (newStart >= newEnd) {
+      toast.error('End time must be after start time');
+      return;
+    }
+    setTempAvailability([...tempAvailability, { dayOfWeek: newDay, startTime: newStart, endTime: newEnd }]);
+  };
+
+  const handleRemoveSlot = (idx) => {
+    setTempAvailability(tempAvailability.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveAvailability = async () => {
+    setSavingAvailability(true);
+    try {
+      await API.put(`/admin/trainers/${selectedTrainer}/availability`, {
+        availability: tempAvailability
+      });
+      toast.success('Trainer availability updated!');
+      // Update local trainers state
+      setTrainers(trainers.map(t => t._id === selectedTrainer ? { ...t, trainerAvailability: tempAvailability } : t));
+      setShowAvailabilityModal(false);
+      // Refresh check availability if fields are set
+      if (date && startTime && endTime) {
+        handleCheckAvailability();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save trainer availability');
+    } finally {
+      setSavingAvailability(false);
     }
   };
 
@@ -141,32 +201,57 @@ const RoomAllocation = () => {
           </h2>
           
           <div className="space-y-4">
-            {/* Batch Selection */}
+            {/* Batch Selection (Multi-Select checkboxes) */}
             <div className="space-y-1.5">
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <FolderGit size={12} />
-                Select Batch
+                Select Batches (Multi-Select)
               </label>
-              <select
-                value={selectedBatch}
-                onChange={(e) => setSelectedBatch(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Choose Batch...</option>
-                {batches.map(b => (
-                  <option key={b._id} value={b._id}>
-                    {b.name} ({b.course}) - {b.students?.length || 0} Students
-                  </option>
-                ))}
-              </select>
+              <div className="w-full border border-slate-250 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 p-3.5 max-h-40 overflow-y-auto space-y-2">
+                {batches.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">No batches available.</p>
+                ) : (
+                  batches.map(b => {
+                    const isChecked = selectedBatches.includes(b._id);
+                    return (
+                      <label key={b._id} className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 dark:text-slate-350 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setSelectedBatches(selectedBatches.filter(id => id !== b._id));
+                            } else {
+                              setSelectedBatches([...selectedBatches, b._id]);
+                            }
+                          }}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                        />
+                        <span>{b.name} ({b.course}) - {b.students?.length || 0} Students</span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             {/* Trainer Selection */}
             <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                <User size={12} />
-                Select Trainer
-              </label>
+              <div className="flex justify-between items-center">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <User size={12} />
+                  Select Trainer
+                </label>
+                {selectedTrainer && (
+                  <button
+                    onClick={openAvailabilityModal}
+                    className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                  >
+                    <Settings size={12} />
+                    Trainer Working Hours
+                  </button>
+                )}
+              </div>
               <select
                 value={selectedTrainer}
                 onChange={(e) => setSelectedTrainer(e.target.value)}
@@ -229,15 +314,21 @@ const RoomAllocation = () => {
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/50">
             <button
               onClick={handleBookRoom}
-              disabled={loading || !selectedRoom || !selectedBatch || !selectedTrainer}
+              disabled={loading || !selectedRoom || selectedBatches.length === 0 || !selectedTrainer}
               className={`w-full py-4 rounded-2xl font-bold text-xs select-none transition-all flex items-center justify-center gap-2 ${
-                selectedRoom && selectedBatch && selectedTrainer
+                selectedRoom && selectedBatches.length > 0 && selectedTrainer
                   ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20'
                   : 'bg-slate-100 dark:bg-slate-850 text-slate-400 dark:text-slate-600 cursor-not-allowed'
               }`}
             >
-              Book Classroom
-              <ArrowRight size={14} />
+              {loading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  Book Classroom
+                  <ArrowRight size={14} />
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -250,203 +341,298 @@ const RoomAllocation = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-sm h-full"
+                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-12 text-center shadow-sm h-[400px] flex flex-col justify-center items-center"
               >
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mb-4"></div>
-                <h3 className="font-bold text-slate-900 dark:text-white">Querying Availability...</h3>
-                <p className="text-xs text-slate-500 mt-1.5">Checking schedules, double bookings, and room conflicts</p>
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Analyzing schedules...</h3>
+                <p className="text-xs text-slate-400 mt-1">Resolving room usage and checking trainer availability slots</p>
               </motion.div>
-            ) : !availabilityResult ? (
+            ) : availabilityResult ? (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-12 py-16 flex flex-col items-center justify-center text-center shadow-sm"
-              >
-                <Info size={40} className="text-slate-300 dark:text-slate-700 mb-4" />
-                <h3 className="font-bold text-slate-900 dark:text-white">Awaiting Schedule Details</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                  Specify date, start/end time, trainer, and batch on the left. The live checker will automatically scan rooms and trainer workloads.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
+                exit={{ opacity: 0, y: 10 }}
                 className="space-y-6"
               >
-                {/* Conflict Warnings */}
-                {availabilityResult.trainerConflict && (
-                  <div className="bg-rose-50 border border-rose-200/50 dark:bg-rose-950/15 dark:border-rose-900/35 p-4 rounded-2xl flex gap-3 text-rose-800 dark:text-rose-400">
-                    <AlertTriangle size={18} className="shrink-0 text-rose-600 dark:text-rose-400" />
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider">Trainer Schedule Overlap</h4>
-                      <p className="text-xs font-medium mt-1 leading-relaxed">
-                        Trainer <strong>{availabilityResult.trainerConflict.trainerName}</strong> is already teaching in Room <strong>{availabilityResult.trainerConflict.roomName}</strong> from {availabilityResult.trainerConflict.timeSlot}.
-                      </p>
+                {/* Warnings / Alerts Panel */}
+                {(availabilityResult.trainerConflict || availabilityResult.trainerAvailabilityWarning) && (
+                  <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-500/10 rounded-2xl p-4 space-y-2">
+                    <div className="flex gap-2.5 text-xs font-bold text-rose-700 dark:text-rose-450 items-start">
+                      <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                      <div>
+                        {availabilityResult.trainerConflict && (
+                          <p>
+                            Trainer Conflict: Already allocated to Room "{availabilityResult.trainerConflict.roomName}" for Batch "{availabilityResult.trainerConflict.batchName}" at {availabilityResult.trainerConflict.timeSlot}.
+                          </p>
+                        )}
+                        {availabilityResult.trainerAvailabilityWarning && (
+                          <p className="mt-1">
+                            Trainer Hours Warning: {availabilityResult.trainerAvailabilityWarning}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Suggested Room Card */}
+                {/* Main Recommendation Widget */}
                 {availabilityResult.suggestedRoom ? (
-                  <div className="bg-indigo-600 text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-indigo-600/15 relative overflow-hidden">
-                    <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-5 pointer-events-none">
-                      <School size={200} />
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-200/50 dark:border-indigo-850/50 rounded-3xl p-6 md:p-8 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase select-none">
+                        <Sparkles size={12} />
+                        Recommended Classroom
+                      </div>
+                      <span className="text-xs text-slate-400 font-bold flex items-center gap-1">
+                        <Info size={12} />
+                        Best capacity fit
+                      </span>
                     </div>
-                    <div className="flex justify-between items-start gap-4 mb-6">
+
+                    <div className="flex justify-between items-start">
                       <div>
-                        <span className="bg-white/20 text-white text-[9px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-md flex items-center gap-1.5 w-max">
-                          <Sparkles size={11} />
-                          Suggested Classroom
-                        </span>
-                        <h3 className="text-2xl font-black mt-3">
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-baseline gap-2">
                           {availabilityResult.suggestedRoom.name}
+                          <span className="text-sm font-semibold text-slate-500">Floor {availabilityResult.suggestedRoom.floor}</span>
                         </h3>
-                        <p className="text-xs text-indigo-100 font-semibold mt-1">
-                          Room {availabilityResult.suggestedRoom.roomNumber} • Floor {availabilityResult.suggestedRoom.floor === 0 ? 'G' : availabilityResult.suggestedRoom.floor}
-                        </p>
+                        <p className="text-xs text-slate-400 font-semibold mt-1">Room Number: {availabilityResult.suggestedRoom.roomNumber}</p>
                       </div>
-                      <div className="bg-white/10 p-2 rounded-xl border border-white/15">
-                        <CheckCircle size={24} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl text-xs font-bold mb-6">
-                      <div>
-                        <span className="text-indigo-200 text-[10px] block">Room Capacity</span>
-                        <span className="text-sm mt-0.5 block">{availabilityResult.suggestedRoom.capacity} Students</span>
-                      </div>
-                      <div>
-                        <span className="text-indigo-200 text-[10px] block">Room Status</span>
-                        <span className="text-sm mt-0.5 block">100% Available</span>
+                      
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-slate-500 uppercase block tracking-wider">Capacity</span>
+                        <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{availabilityResult.suggestedRoom.capacity} Students</span>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => setSelectedRoom(availabilityResult.suggestedRoom)}
-                      className={`w-full py-3.5 rounded-xl font-bold text-xs shadow-md transition-all select-none ${
-                        selectedRoom?._id === availabilityResult.suggestedRoom._id
-                          ? 'bg-white text-indigo-600 hover:bg-slate-50'
-                          : 'bg-indigo-700/60 hover:bg-indigo-700 text-white border border-indigo-500/20'
-                      }`}
-                    >
-                      {selectedRoom?._id === availabilityResult.suggestedRoom._id
-                        ? 'Room Selected for Booking'
-                        : 'Select Suggested Room'}
-                    </button>
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-indigo-200/20">
+                      {availabilityResult.suggestedRoom.facilities.map((fac, idx) => (
+                        <span key={idx} className="bg-white/80 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-lg">
+                          {fac}
+                        </span>
+                      ))}
+                    </div>
+
+                    {selectedRoom?._id === availabilityResult.suggestedRoom._id ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 select-none">
+                        <CheckCircle size={16} />
+                        Selected for Booking
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedRoom(availabilityResult.suggestedRoom)}
+                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                      >
+                        Select Recommended Room
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div className="bg-amber-50 border border-amber-200/50 dark:bg-amber-950/15 dark:border-amber-900/35 p-6 rounded-3xl text-center">
-                    <AlertTriangle size={32} className="mx-auto text-amber-600 dark:text-amber-500 mb-2" />
-                    <h3 className="font-bold text-amber-800 dark:text-amber-400">No Optimal Rooms Available</h3>
-                    <p className="text-xs text-amber-600 dark:text-amber-500/80 mt-1 max-w-sm mx-auto">
-                      All active classrooms with matching capacities are fully booked at this hour. Check the alternatives below.
+                  <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-500/10 rounded-3xl p-8 text-center">
+                    <AlertTriangle size={32} className="mx-auto text-amber-500 mb-3" />
+                    <h3 className="font-extrabold text-amber-800 dark:text-amber-400 text-sm">No classrooms fit this capacity</h3>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                      All available rooms during this timeslot are smaller than the required total capacity.
                     </p>
                   </div>
                 )}
 
-                {/* Alternative Rooms List */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-extrabold uppercase text-slate-400 tracking-wider">
-                    Alternative Classrooms ({availabilityResult.availableRooms?.filter(r => r._id !== availabilityResult.suggestedRoom?._id).length || 0})
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {availabilityResult.availableRooms
-                      ?.filter(r => r._id !== availabilityResult.suggestedRoom?._id)
-                      .map((room) => (
-                        <div 
-                          key={room._id}
-                          onClick={() => setSelectedRoom(room)}
-                          className={`p-5 rounded-2xl border bg-white dark:bg-slate-900 cursor-pointer hover:shadow-xs transition-all relative overflow-hidden ${
-                            selectedRoom?._id === room._id
-                              ? 'border-indigo-500 ring-2 ring-indigo-500/10'
-                              : 'border-slate-200/80 dark:border-slate-800/80'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start gap-2 mb-2">
-                            <div>
-                              <h4 className="font-bold text-slate-900 dark:text-white text-sm">{room.name}</h4>
-                              <span className="text-[10px] text-slate-400 font-bold block mt-0.5">Room {room.roomNumber}</span>
+                {/* Alternatives and Conflicts Lists */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Free Alternative Rooms (Capacity warning) */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-3xl space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <School size={14} className="text-amber-500" />
+                      Smaller Classrooms ({availabilityResult.alternativeRooms.length})
+                    </h4>
+                    <div className="space-y-3.5 max-h-60 overflow-y-auto pr-1">
+                      {availabilityResult.alternativeRooms.length === 0 ? (
+                        <p className="text-[11px] text-slate-400 italic">No alternative vacant rooms.</p>
+                      ) : (
+                        availabilityResult.alternativeRooms.map(room => (
+                          <div 
+                            key={room._id} 
+                            onClick={() => setSelectedRoom(room)}
+                            className={`p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                              selectedRoom?._id === room._id
+                                ? 'bg-indigo-50/50 border-indigo-500/30 text-indigo-900'
+                                : 'bg-slate-50/50 border-slate-100 dark:border-slate-800/50 dark:bg-slate-950/20 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center font-bold">
+                              <span>{room.name} ({room.roomNumber})</span>
+                              <span className="text-[10px] text-amber-600">Cap: {room.capacity}</span>
                             </div>
-                            <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-bold text-[9px] px-2 py-0.5 rounded border border-emerald-500/10">
-                              Free
-                            </span>
+                            <span className="text-[10px] text-amber-500 block mt-1">Warning: Under target capacity</span>
                           </div>
-                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                            <span>Floor {room.floor}</span>
-                            <span>Cap: {room.capacity}</span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Occupied Classrooms */}
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-5 rounded-3xl space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <School size={14} className="text-rose-500" />
+                      Occupied Classrooms ({availabilityResult.conflictRooms.length})
+                    </h4>
+                    <div className="space-y-3.5 max-h-60 overflow-y-auto pr-1">
+                      {availabilityResult.conflictRooms.length === 0 ? (
+                        <p className="text-[11px] text-slate-400 italic">No rooms occupied at this time.</p>
+                      ) : (
+                        availabilityResult.conflictRooms.map(room => (
+                          <div key={room._id} className="p-3 bg-slate-50/30 dark:bg-slate-950/10 border border-slate-100 dark:border-slate-800/50 rounded-xl text-xs font-semibold text-slate-500">
+                            <div className="flex justify-between items-center font-bold">
+                              <span className="text-slate-700 dark:text-slate-350">{room.name} ({room.roomNumber})</span>
+                              <span className="text-[10px] text-rose-500 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded">Occupied</span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1">Booked: {room.conflictDetails?.batchName} ({room.conflictDetails?.timeSlot})</p>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Capacity Mismatch Warnings */}
-                {availabilityResult.alternativeRooms && availabilityResult.alternativeRooms.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-extrabold uppercase text-slate-400 tracking-wider">
-                      Size Mismatch Warnings ({availabilityResult.alternativeRooms.length})
-                    </h3>
-                    <div className="space-y-2.5">
-                      {availabilityResult.alternativeRooms.map((room) => (
-                        <div 
-                          key={room._id}
-                          onClick={() => setSelectedRoom(room)}
-                          className={`p-4 rounded-xl border bg-white dark:bg-slate-900 cursor-pointer flex justify-between items-center ${
-                            selectedRoom?._id === room._id
-                              ? 'border-indigo-500 ring-2 ring-indigo-500/10'
-                              : 'border-slate-200/80 dark:border-slate-800/80'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <AlertTriangle size={15} className="text-amber-500" />
-                            <div>
-                              <h4 className="font-bold text-slate-900 dark:text-white text-xs">{room.name} (Room {room.roomNumber})</h4>
-                              <span className="text-[10px] text-amber-600 block mt-0.5 font-semibold">{room.warning}</span>
-                            </div>
-                          </div>
-                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Cap: {room.capacity}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Occupied Rooms / Conflicts list */}
-                {availabilityResult.conflictRooms && availabilityResult.conflictRooms.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-extrabold uppercase text-slate-400 tracking-wider">
-                      Occupied Classrooms ({availabilityResult.conflictRooms.length})
-                    </h3>
-                    
-                    <div className="space-y-2.5">
-                      {availabilityResult.conflictRooms.map((room) => (
-                        <div 
-                          key={room._id}
-                          className="p-4 rounded-xl border border-rose-200/50 bg-rose-50/10 dark:border-rose-950/20 dark:bg-rose-950/5 flex justify-between items-center opacity-70"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
-                            <div>
-                              <h4 className="font-bold text-slate-800 dark:text-slate-350 text-xs">{room.name} (Room {room.roomNumber})</h4>
-                              <span className="text-[10px] text-rose-600 dark:text-rose-400 block mt-0.5 font-semibold">
-                                Class: <strong>{room.conflictDetails.batchName}</strong> with {room.conflictDetails.trainerName} ({room.conflictDetails.timeSlot})
-                              </span>
-                            </div>
-                          </div>
-                          <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide">In Use</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-16 text-center shadow-sm h-[400px] flex flex-col justify-center items-center"
+              >
+                <Calendar size={48} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Awaiting Schedule Details</h3>
+                <p className="text-xs text-slate-450 mt-1.5 max-w-sm">
+                  Fill in the Date, Start Time, and End Time to run automatic conflict checking and view recommended rooms.
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Trainer Availability / Working Hours Modal */}
+      <AnimatePresence>
+        {showAvailabilityModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAvailabilityModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs" 
+            />
+            {/* Modal Body */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative z-10 space-y-6"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Configure Working Hours</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Define available teaching timeslots for this trainer</p>
+                </div>
+                <button onClick={() => setShowAvailabilityModal(false)} className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-350">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Add New Slot form */}
+              <div className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-850 space-y-4">
+                <h4 className="text-xs font-bold text-slate-850 dark:text-slate-200 flex items-center gap-1">
+                  <Plus size={14} className="text-indigo-650" />
+                  Add Availability Slot
+                </h4>
+                <div className="grid grid-cols-3 gap-3 items-end">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Day</label>
+                    <select
+                      value={newDay}
+                      onChange={(e) => setNewDay(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start Time</label>
+                    <input
+                      type="time"
+                      value={newStart}
+                      onChange={(e) => setNewStart(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">End Time</label>
+                    <input
+                      type="time"
+                      value={newEnd}
+                      onChange={(e) => setNewEnd(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleAddSlot}
+                  className="w-full py-2 bg-slate-900 hover:bg-slate-950 dark:bg-indigo-600 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                >
+                  Add Timeslot
+                </button>
+              </div>
+
+              {/* Current Slots List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Configured Preferred Hours</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {tempAvailability.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic py-2 text-center">No working hours slots configured. Defaults to 24/7 availability.</p>
+                  ) : (
+                    tempAvailability.map((slot, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350">
+                        <span>{slot.dayOfWeek} • {slot.startTime} - {slot.endTime}</span>
+                        <button 
+                          onClick={() => handleRemoveSlot(idx)}
+                          className="text-rose-500 hover:text-rose-700 transition-all p-1"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Save / Close buttons */}
+              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+                <button
+                  onClick={() => setShowAvailabilityModal(false)}
+                  className="flex-1 py-3 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-slate-50 dark:hover:bg-slate-850 transition-all select-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAvailability}
+                  disabled={savingAvailability}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-650/20 transition-all select-none flex items-center justify-center"
+                >
+                  {savingAvailability ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    'Save Working Hours'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
