@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
 import { PinchGestureHandler, State } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import API from '../../services/api';
 import { 
   Camera as CameraIcon,
@@ -48,14 +48,16 @@ export default function QRScannerScreen() {
     setZoom(newZoom);
   };
 
-  useEffect(() => {
-    if (permission?.granted) {
-      setCameraActive(true);
-    }
-    return () => {
-      setCameraActive(false);
-    };
-  }, [permission]);
+  useFocusEffect(
+    useCallback(() => {
+      if (permission?.granted) {
+        setCameraActive(true);
+      }
+      return () => {
+        setCameraActive(false);
+      };
+    }, [permission])
+  );
 
   const handleMarkAttendance = async (tokenString: string) => {
     if (!tokenString) return;
@@ -142,9 +144,10 @@ export default function QRScannerScreen() {
                 onGestureEvent={onPinchGestureEvent}
                 onHandlerStateChange={onPinchStateChange}
               >
-                <View style={styles.cameraFeed}>
+                <View style={styles.cameraFeed} collapsable={false}>
                   <CameraView
                     zoom={zoom}
+                    facing="back"
                     onBarcodeScanned={handleBarCodeScanned}
                     barcodeScannerSettings={{
                       barcodeTypes: ['qr'],
