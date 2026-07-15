@@ -11,10 +11,23 @@ const BatchManagement = () => {
   const [batches, setBatches] = useState([]);
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (modalOpen || importModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [modalOpen, importModalOpen]);
 
   const downloadTemplate = () => {
     const templateData = [
@@ -161,6 +174,7 @@ const BatchManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitLoading(true);
     try {
       const selectedTrainers = [
         formData.technicalTrainer,
@@ -200,6 +214,8 @@ const BatchManagement = () => {
       loadData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error processing batch request');
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -360,50 +376,67 @@ const BatchManagement = () => {
       <AnimatePresence>
         {modalOpen && (
           <>
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setModalOpen(false)} />
+            {/* Dark blur backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40" 
+              onClick={() => setModalOpen(false)} 
+            />
+            {/* Modal Body */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 m-auto max-w-md h-fit bg-white dark:bg-[#12131a] rounded-[24px] shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 space-y-6"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="fixed inset-x-4 md:inset-x-auto top-6 bottom-6 md:top-auto md:bottom-auto m-auto max-w-md w-full max-h-[90vh] bg-white dark:bg-[#12131a] rounded-[28px] shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 flex flex-col focus:outline-none"
             >
-              <div className="flex items-center justify-between border-b pb-3 border-gray-200 dark:border-gray-800">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editingBatch ? 'Edit Batch Details' : 'Create New Batch'}</h3>
+              {/* Fixed Header */}
+              <div className="flex items-center justify-between border-b pb-4 border-gray-200 dark:border-gray-800 shrink-0">
+                <div>
+                  <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                    {editingBatch ? 'Edit Batch Details' : 'Create New Batch'}
+                  </h3>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Configure schedule parameters and select trainers</p>
+                </div>
                 <button onClick={() => setModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500 duration-200 cursor-pointer">
                   <X size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              {/* Form wrapper */}
+              <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 mt-4 justify-between">
+                
+                {/* Scrollable Form Body */}
+                <div className="flex-1 overflow-y-auto pr-1.5 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
                   <div>
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch ID</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch ID</label>
                     <input
                       type="text"
                       required
                       value={formData.batchId}
                       onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
                       placeholder="e.g. MERN001"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch Name</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch Name</label>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
                       placeholder="e.g. Elite Full Stack Web Dev Batch A"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch Status</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch Status</label>
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
                     >
                       <option value="Active">Active</option>
                       <option value="Inactive">Inactive</option>
@@ -413,21 +446,21 @@ const BatchManagement = () => {
                   {/* Start Date & End Date fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Start Date</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Start Date</label>
                       <input
                         type="date"
                         value={formData.startDate}
                         onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">End Date</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">End Date</label>
                       <input
                         type="date"
                         value={formData.endDate}
                         onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
                       />
                     </div>
                   </div>
@@ -435,26 +468,26 @@ const BatchManagement = () => {
                   {/* Start Time & End Time fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Start Time</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Start Time</label>
                       <input
                         type="time"
                         value={formData.startTime}
                         onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">End Time</label>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">End Time</label>
                       <input
                         type="time"
                         value={formData.endTime}
                         onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white font-semibold"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 pt-2">
                     <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Trainers (Multiple Select)</label>
                     
                     {/* Technical Trainer Select */}
@@ -463,7 +496,7 @@ const BatchManagement = () => {
                       <select
                         value={formData.technicalTrainer}
                         onChange={(e) => setFormData({ ...formData, technicalTrainer: e.target.value })}
-                        className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
                       >
                         <option value="">Select Technical Trainer (Optional)</option>
                         {trainers.filter(t => t.role === 'Technical Trainer').map(t => (
@@ -478,7 +511,7 @@ const BatchManagement = () => {
                       <select
                         value={formData.communicationTrainer}
                         onChange={(e) => setFormData({ ...formData, communicationTrainer: e.target.value })}
-                        className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
                       >
                         <option value="">Select Communication Trainer (Optional)</option>
                         {trainers.filter(t => t.role === 'Communication Trainer').map(t => (
@@ -493,7 +526,7 @@ const BatchManagement = () => {
                       <select
                         value={formData.aptitudeTrainer}
                         onChange={(e) => setFormData({ ...formData, aptitudeTrainer: e.target.value })}
-                        className="w-full px-3.5 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer"
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
                       >
                         <option value="">Select Aptitude Trainer (Optional)</option>
                         {trainers.filter(t => t.role === 'Aptitude Trainer').map(t => (
@@ -504,12 +537,20 @@ const BatchManagement = () => {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 cursor-pointer"
-                >
-                  {editingBatch ? 'Save Changes' : 'Create Batch'}
-                </button>
+                {/* Fixed Footer with submit loader */}
+                <div className="pt-4 border-t border-gray-250 dark:border-gray-800 shrink-0 mt-4">
+                  <button
+                    type="submit"
+                    disabled={submitLoading}
+                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-550 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 cursor-pointer flex items-center justify-center gap-2 text-xs"
+                  >
+                    {submitLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      editingBatch ? 'Save Changes' : 'Create Batch'
+                    )}
+                  </button>
+                </div>
               </form>
             </motion.div>
           </>
