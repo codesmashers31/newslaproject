@@ -7,3 +7,8 @@ ios
 dist
 build
 coverage
+
+
+
+android/.gradle
+android/build

@@ -15,7 +15,9 @@ import {
   Sparkles,
   UserCheck,
   Upload,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Clock,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
@@ -136,6 +138,53 @@ const TrainerManagement = () => {
     status: 'Active'
   });
   const [updating, setUpdating] = useState(false);
+
+  // Shift Time Availability Modal State
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [selectedTrainerForAvailability, setSelectedTrainerForAvailability] = useState(null);
+  const [tempAvailability, setTempAvailability] = useState([]);
+  const [newDay, setNewDay] = useState('Monday');
+  const [newStart, setNewStart] = useState('09:00');
+  const [newEnd, setNewEnd] = useState('17:00');
+  const [savingAvailability, setSavingAvailability] = useState(false);
+
+  const openAvailabilityModal = (trainer) => {
+    setSelectedTrainerForAvailability(trainer);
+    setTempAvailability(trainer.trainerAvailability || []);
+    setShowAvailabilityModal(true);
+  };
+
+  const handleAddSlot = () => {
+    if (newStart >= newEnd) {
+      toast.error('End time must be after start time');
+      return;
+    }
+    setTempAvailability([...tempAvailability, { dayOfWeek: newDay, startTime: newStart, endTime: newEnd }]);
+  };
+
+  const handleRemoveSlot = (idx) => {
+    setTempAvailability(tempAvailability.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveAvailability = async () => {
+    if (!selectedTrainerForAvailability) return;
+    setSavingAvailability(true);
+    try {
+      await API.put(`/admin/trainers/${selectedTrainerForAvailability._id}/availability`, {
+        availability: tempAvailability
+      });
+      toast.success('Trainer Shift/Availability Times updated!');
+      // Update local state
+      setTrainers(trainers.map(t => t._id === selectedTrainerForAvailability._id ? { ...t, trainerAvailability: tempAvailability } : t));
+      setShowAvailabilityModal(false);
+      setSelectedTrainerForAvailability(null);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to save trainer availability');
+    } finally {
+      setSavingAvailability(false);
+    }
+  };
 
   const fetchTrainers = async () => {
     setLoading(true);
@@ -448,6 +497,13 @@ const TrainerManagement = () => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => openAvailabilityModal(trainer)}
+                            title="Shift & Availability Hours"
+                            className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition cursor-pointer"
+                          >
+                            <Clock size={14} />
+                          </button>
+                          <button
                             onClick={() => handleOpenEdit(trainer)}
                             title="Edit Trainer"
                             className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer"
@@ -457,7 +513,7 @@ const TrainerManagement = () => {
                           <button
                             onClick={() => handleDeleteTrainer(trainer._id, trainer.name)}
                             title="Delete Trainer"
-                            className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition cursor-pointer"
+                            className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-450 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition cursor-pointer"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -895,6 +951,129 @@ const TrainerManagement = () => {
           </div>
         </>
       )}
+      {/* Trainer Shift / Availability Modal */}
+      <AnimatePresence>
+        {showAvailabilityModal && selectedTrainerForAvailability && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAvailabilityModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative z-10 space-y-6"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white font-sans">
+                    Configure Shift Times
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5 font-sans">
+                    Define shift hours & availability slots for <strong>{selectedTrainerForAvailability.name}</strong>
+                  </p>
+                </div>
+                <button onClick={() => setShowAvailabilityModal(false)} className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-350">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Add New Slot form */}
+              <div className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-850 space-y-4">
+                <h4 className="text-xs font-bold text-slate-850 dark:text-slate-200 flex items-center gap-1">
+                  <Plus size={14} className="text-indigo-655" />
+                  Add Availability Slot
+                </h4>
+                <div className="grid grid-cols-3 gap-3 items-end">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Day</label>
+                    <select
+                      value={newDay}
+                      onChange={(e) => setNewDay(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start Time</label>
+                    <input
+                      type="time"
+                      value={newStart}
+                      onChange={(e) => setNewStart(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">End Time</label>
+                    <input
+                      type="time"
+                      value={newEnd}
+                      onChange={(e) => setNewEnd(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleAddSlot}
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-950 dark:bg-indigo-600 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                >
+                  Add Timeslot
+                </button>
+              </div>
+
+              {/* Current Slots List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Configured Shift Slots</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {tempAvailability.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic py-2 text-center">No Shift Slots configured. Defaults to 24/7 availability.</p>
+                  ) : (
+                    tempAvailability.map((slot, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-800/80 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350">
+                        <span>{slot.dayOfWeek} • {slot.startTime} - {slot.endTime}</span>
+                        <button 
+                          onClick={() => handleRemoveSlot(idx)}
+                          className="text-rose-500 hover:text-rose-700 transition-all p-1"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Save / Close buttons */}
+              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-850">
+                <button
+                  onClick={() => setShowAvailabilityModal(false)}
+                  className="flex-1 py-3 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-slate-50 dark:hover:bg-slate-850 transition-all select-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAvailability}
+                  disabled={savingAvailability}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-650/20 transition-all select-none flex items-center justify-center"
+                >
+                  {savingAvailability ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    'Save Shift Times'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
