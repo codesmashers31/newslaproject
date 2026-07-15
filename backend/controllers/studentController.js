@@ -952,6 +952,7 @@ export const updateStudentEnrollments = async (req, res) => {
             },
             { upsert: true, new: true }
           );
+          await Batch.findByIdAndUpdate(batch._id, { $addToSet: { students: studentId } });
         }
       }
       
@@ -959,6 +960,7 @@ export const updateStudentEnrollments = async (req, res) => {
       for (const old of activeTechEnrollments) {
         if (!technicalBatchIds.includes(old.batchId.toString())) {
           await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' });
+          await Batch.findByIdAndUpdate(old.batchId, { $pull: { students: studentId } });
         }
       }
     }
@@ -977,6 +979,7 @@ export const updateStudentEnrollments = async (req, res) => {
             isDifferent = false; // Already active
           } else {
             await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' }); // Close other
+            await Batch.findByIdAndUpdate(old.batchId, { $pull: { students: studentId } });
           }
         }
 
@@ -991,6 +994,7 @@ export const updateStudentEnrollments = async (req, res) => {
             },
             { upsert: true, new: true }
           );
+          await Batch.findByIdAndUpdate(batch._id, { $addToSet: { students: studentId } });
         }
       }
     }
