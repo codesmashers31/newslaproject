@@ -1,26 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
   TouchableOpacity, 
   ActivityIndicator, 
-  TextInput, 
-  ScrollView,
-  StatusBar,
-  StyleSheet,
+  StatusBar, 
+  StyleSheet, 
   Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
-import { PinchGestureHandler, State } from 'react-native-gesture-handler';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router, useFocusEffect } from 'expo-router';
 import API from '../../services/api';
 import { 
   Camera as CameraIcon,
   AlertCircle,
   CheckCircle,
-  Key,
-  Info,
   ArrowLeft,
   ZoomIn,
   ZoomOut
@@ -28,42 +23,27 @@ import {
 
 export default function QRScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [tokenInput, setTokenInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
-  const [cameraActive, setCameraActive] = useState(false);
   const [zoom, setZoom] = useState(0);
-  const [baseZoom, setBaseZoom] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const onPinchStateChange = (event: any) => {
-    if (event.nativeEvent.oldState === State.ACTIVE) {
-      setBaseZoom(zoom);
-    }
-  };
-
-  const onPinchGestureEvent = (event: any) => {
-    const scale = event.nativeEvent.scale;
-    let newZoom = baseZoom + (scale - 1) * 0.1;
-    newZoom = Math.min(Math.max(newZoom, 0), 1);
-    setZoom(newZoom);
-  };
+  // Computed camera active state
+  const cameraActive = isFocused && permission?.granted && !scanResult && !loading;
 
   useFocusEffect(
     useCallback(() => {
-      if (permission?.granted) {
-        setCameraActive(true);
-      }
+      setIsFocused(true);
       return () => {
-        setCameraActive(false);
+        setIsFocused(false);
       };
-    }, [permission])
+    }, [])
   );
 
   const handleMarkAttendance = async (tokenString: string) => {
     if (!tokenString) return;
     setLoading(true);
     setScanResult(null);
-    setCameraActive(false);
 
     try {
       const { data } = await API.post('/student/attendance/scan', { token: tokenString });
@@ -120,128 +100,118 @@ export default function QRScannerScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.content}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity 
-              onPress={() => router.replace('/(tabs)')}
-              style={styles.backButton}
-            >
-              <ArrowLeft size={16} color="#cbd5e1" />
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.headerTitle}>QR Code Scanner</Text>
-              <Text style={styles.headerSub}>Scan classroom slides to verify daily roll</Text>
-            </View>
+      <View style={styles.content}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => router.replace('/(tabs)')}
+            style={styles.backButton}
+          >
+            <ArrowLeft size={16} color="#cbd5e1" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.headerTitle}>QR Code Scanner</Text>
+            <Text style={styles.headerSub}>Scan classroom slides to verify daily roll</Text>
           </View>
-
-          {/* 1. Camera Viewport Panel */}
-          {cameraActive && !scanResult && !loading ? (
-            <View style={styles.cameraViewport}>
-              <CameraView
-                zoom={zoom}
-                facing="back"
-                onBarcodeScanned={handleBarCodeScanned}
-                barcodeScannerSettings={{
-                  barcodeTypes: ['qr'],
-                }}
-                style={StyleSheet.absoluteFillObject}
-              />
-              <PinchGestureHandler
-                onGestureEvent={onPinchGestureEvent}
-                onHandlerStateChange={onPinchStateChange}
-              >
-                <View style={StyleSheet.absoluteFillObject} collapsable={false}>
-                  <View style={styles.cameraOverlay}>
-                    <Text style={styles.cameraOverlayText}>
-                      Align QR Code inside camera feed. Pinch to zoom.
-                    </Text>
-                  </View>
-                </View>
-              </PinchGestureHandler>
-            </View>
-          ) : (
-            <View style={styles.standbyContainer}>
-              {loading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#6366f1" />
-                  <Text style={styles.loadingText}>Verifying code with server...</Text>
-                </View>
-              ) : scanResult ? (
-                <View style={styles.resultContainer}>
-                  <View style={styles.resultIconBg}>
-                    {scanResult.success ? (
-                      <CheckCircle size={32} color="#34d399" />
-                    ) : (
-                      <AlertCircle size={32} color="#f43f5e" />
-                    )}
-                  </View>
-                  <View>
-                    <Text style={styles.resultTitle}>
-                      {scanResult.success ? 'Attendance Success' : 'Scan Failed'}
-                    </Text>
-                    <Text style={styles.resultMessage}>
-                      {scanResult.message}
-                    </Text>
-                  </View>
-
-                  {scanResult.success && scanResult.details && (
-                    <View style={styles.detailsCard}>
-                      <View>
-                        <Text style={styles.detailsLabel}>Status</Text>
-                        <Text style={styles.detailsValueStatus}>{scanResult.details.status}</Text>
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.detailsLabel}>Marked Date</Text>
-                        <Text style={styles.detailsValue}>
-                          {new Date(scanResult.details.date).toLocaleDateString()}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  <TouchableOpacity
-                    onPress={() => {
-                      setScanResult(null);
-                      setCameraActive(true);
-                    }}
-                    style={styles.scanButton}
-                  >
-                    <Text style={styles.scanButtonText}>Scan New QR Code</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.resultContainer}>
-                  <TouchableOpacity
-                    onPress={() => setCameraActive(true)}
-                    style={styles.cameraStartIconBg}
-                  >
-                    <CameraIcon size={24} color="#818cf8" />
-                  </TouchableOpacity>
-                  <Text style={styles.standbyTitle}>Camera Feed Idle</Text>
-                  <Text style={styles.standbySubText}>Start camera scanner to check in</Text>
-                  <TouchableOpacity
-                    onPress={() => setCameraActive(true)}
-                    style={styles.scanButton}
-                  >
-                    <Text style={styles.scanButtonText}>Start Camera Scanner</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          )}
-
-          {/* 
-          2. Developer Sandbox Token Fallback 
-          <View style={styles.sandboxSection}>
-            ...
-          </View>
-          */}
-
         </View>
-      </ScrollView>
+
+        {/* 1. Camera Viewport Panel */}
+        {cameraActive ? (
+          <View style={styles.cameraViewport}>
+            <CameraView
+              zoom={zoom}
+              facing="back"
+              onBarcodeScanned={handleBarCodeScanned}
+              barcodeScannerSettings={{
+                barcodeTypes: ['qr'],
+              }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            
+            {/* Overlay instruction */}
+            <View style={styles.cameraOverlay}>
+              <Text style={styles.cameraOverlayText}>
+                Align QR Code inside camera feed
+              </Text>
+            </View>
+
+            {/* Manual Zoom Controls overlay */}
+            <View style={styles.zoomControls}>
+              <TouchableOpacity 
+                onPress={() => setZoom(prev => Math.min(prev + 0.1, 1))} 
+                style={styles.zoomBtn}
+              >
+                <ZoomIn size={20} color="#ffffff" />
+              </TouchableOpacity>
+              <Text style={styles.zoomText}>{Math.round(zoom * 10)}x</Text>
+              <TouchableOpacity 
+                onPress={() => setZoom(prev => Math.max(prev - 0.1, 0))} 
+                style={styles.zoomBtn}
+              >
+                <ZoomOut size={20} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.standbyContainer}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#6366f1" />
+                <Text style={styles.loadingText}>Verifying code with server...</Text>
+              </View>
+            ) : scanResult ? (
+              <View style={styles.resultContainer}>
+                <View style={styles.resultIconBg}>
+                  {scanResult.success ? (
+                    <CheckCircle size={32} color="#34d399" />
+                  ) : (
+                    <AlertCircle size={32} color="#f43f5e" />
+                  )}
+                </View>
+                <View>
+                  <Text style={styles.resultTitle}>
+                    {scanResult.success ? 'Attendance Success' : 'Scan Failed'}
+                  </Text>
+                  <Text style={styles.resultMessage}>
+                    {scanResult.message}
+                  </Text>
+                </View>
+
+                {scanResult.success && scanResult.details && (
+                  <View style={styles.detailsCard}>
+                    <View>
+                      <Text style={styles.detailsLabel}>Status</Text>
+                      <Text style={styles.detailsValueStatus}>{scanResult.details.status}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={styles.detailsLabel}>Marked Date</Text>
+                      <Text style={styles.detailsValue}>
+                        {new Date(scanResult.details.date).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setScanResult(null);
+                  }}
+                  style={styles.scanButton}
+                >
+                  <Text style={styles.scanButtonText}>Scan New QR Code</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.resultContainer}>
+                <ActivityIndicator size="large" color="#6366f1" />
+                <Text style={styles.loadingText}>Starting Camera...</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+      </View>
     </SafeAreaView>
   );
 }
