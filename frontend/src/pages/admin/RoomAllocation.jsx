@@ -274,8 +274,8 @@ const RoomAllocation = () => {
                       selectedBatches.map(id => {
                         const b = batches.find(x => x._id === id);
                         return (
-                          <span key={id} className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-750 dark:text-indigo-400 px-2.5 py-0.5 rounded-md font-bold text-[10px] flex items-center gap-1">
-                            {b ? b.name : id}
+                          <span key={id} className="bg-indigo-55 dark:bg-indigo-955/40 text-indigo-750 dark:text-indigo-400 px-2.5 py-0.5 rounded-md font-bold text-[10px] flex items-center gap-1">
+                            {b ? (b.batchId || b.name) : id}
                             <X 
                               size={10} 
                               className="cursor-pointer hover:text-indigo-900" 
@@ -331,7 +331,7 @@ const RoomAllocation = () => {
                                   : 'text-slate-700 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-900'
                               }`}
                             >
-                              <span>{b.name} ({b.course})</span>
+                              <span>{b.batchId || b.name} ({b.course || 'General'})</span>
                               {isChecked && <Check size={14} className="text-indigo-600" />}
                             </div>
                           );
