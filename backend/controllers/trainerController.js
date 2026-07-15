@@ -58,8 +58,16 @@ export const getAssignedStudents = async (req, res) => {
       }
     }
 
-    // Also fetch all students created/assigned in User table so non-batched students appear too
-    const allStudentUsers = await User.find({ role: 'Student' })
+    // Get unique students that this trainer actually teaches
+    const batchStudentIds = batches.flatMap(b => b.students?.map(s => s._id?.toString() || s.toString()) || []);
+    
+    // Also find students who are enrolled directly with this trainer
+    const directEnrollments = await Enrollment.find({ trainerId: req.user._id, status: 'Active' }).lean();
+    const enrolledStudentIds = directEnrollments.map(e => e.studentId.toString());
+    
+    const uniqueStudentIds = [...new Set([...batchStudentIds, ...enrolledStudentIds])];
+
+    const allStudentUsers = await User.find({ _id: { $in: uniqueStudentIds }, role: 'Student' })
       .select('name email mobile status slaeId')
       .lean();
 
