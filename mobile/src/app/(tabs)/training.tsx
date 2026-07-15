@@ -12,6 +12,7 @@ import {
   TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { useFocusEffect } from 'expo-router';
 import API from '../../services/api';
 import { 
@@ -67,7 +68,11 @@ export default function TrainingScreen() {
       
     } catch (error) {
       console.error('Failed to load training data', error);
-      Alert.alert('Error', 'Could not load your training data.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not load your training data.',
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -95,11 +100,19 @@ export default function TrainingScreen() {
       });
       setTechModalVisible(false);
       setAptiModalVisible(false);
-      Alert.alert('Success', 'Your enrollments have been updated successfully.');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Your enrollments have been updated successfully.',
+      });
       loadData();
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'Failed to update enrollments';
-      Alert.alert('Error', msg);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: msg,
+      });
     } finally {
       setSaving(false);
     }

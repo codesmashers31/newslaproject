@@ -22,6 +22,7 @@ import {
   ArrowRight,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../services/api';
@@ -34,7 +35,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Missing Details', 'Please enter both your EID/email and password.');
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Details',
+        text2: 'Please enter both your EID/email and password.',
+      });
       return;
     }
     setLoading(true);
@@ -48,7 +53,11 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'Login failed. Please verify your credentials.';
-      Alert.alert('Login Error', msg);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Error',
+        text2: msg,
+      });
     } finally {
       setLoading(false);
     }

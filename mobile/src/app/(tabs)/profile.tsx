@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import Toast from 'react-native-toast-message';
 import API from '../../services/api';
 import { 
   User, 
@@ -117,7 +118,11 @@ export default function ProfileScreen() {
 
     } catch (error: any) {
       console.error('Failed to load profile details', error?.message);
-      Alert.alert('Error', 'Could not load profile details.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not load profile details.',
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -138,7 +143,11 @@ export default function ProfileScreen() {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'We need camera roll permissions to select a photo.');
+      Toast.show({
+        type: 'error',
+        text1: 'Permission Denied',
+        text2: 'We need camera roll permissions to select a photo.',
+      });
       return;
     }
 
@@ -156,7 +165,11 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     if (!profileData.name.trim() || !profileData.mobile.trim()) {
-      Alert.alert('Validation Error', 'Name and Mobile Number are required.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Name and Mobile Number are required.',
+      });
       return;
     }
 
@@ -219,12 +232,20 @@ export default function ProfileScreen() {
         mobile: profileData.mobile,
       });
 
-      Alert.alert('Success', 'Your profile details have been saved successfully.');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Your profile details have been saved successfully.',
+      });
       loadProfileData();
     } catch (error: any) {
       console.error('Failed to update student profile', error);
       const msg = error?.response?.data?.message || 'Error updating profile details.';
-      Alert.alert('Error', msg);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: msg,
+      });
     } finally {
       setSaving(false);
     }
