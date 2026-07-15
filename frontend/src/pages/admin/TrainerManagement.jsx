@@ -159,7 +159,21 @@ const TrainerManagement = () => {
       toast.error('End time must be after start time');
       return;
     }
-    setTempAvailability([...tempAvailability, { dayOfWeek: newDay, startTime: newStart, endTime: newEnd }]);
+    if (newDay === 'All Days (Mon - Sun)') {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const newSlots = days.map(d => ({ dayOfWeek: d, startTime: newStart, endTime: newEnd }));
+      setTempAvailability([...tempAvailability, ...newSlots]);
+    } else if (newDay === 'Weekdays (Mon - Fri)') {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      const newSlots = days.map(d => ({ dayOfWeek: d, startTime: newStart, endTime: newEnd }));
+      setTempAvailability([...tempAvailability, ...newSlots]);
+    } else if (newDay === 'Weekends (Sat - Sun)') {
+      const days = ['Saturday', 'Sunday'];
+      const newSlots = days.map(d => ({ dayOfWeek: d, startTime: newStart, endTime: newEnd }));
+      setTempAvailability([...tempAvailability, ...newSlots]);
+    } else {
+      setTempAvailability([...tempAvailability, { dayOfWeek: newDay, startTime: newStart, endTime: newEnd }]);
+    }
   };
 
   const handleRemoveSlot = (idx) => {
@@ -996,9 +1010,16 @@ const TrainerManagement = () => {
                       onChange={(e) => setNewDay(e.target.value)}
                       className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
-                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
+                      <option value="Monday">Monday</option>
+                      <option value="Tuesday">Tuesday</option>
+                      <option value="Wednesday">Wednesday</option>
+                      <option value="Thursday">Thursday</option>
+                      <option value="Friday">Friday</option>
+                      <option value="Saturday">Saturday</option>
+                      <option value="Sunday">Sunday</option>
+                      <option value="All Days (Mon - Sun)">All Days (Mon - Sun)</option>
+                      <option value="Weekdays (Mon - Fri)">Weekdays (Mon - Fri)</option>
+                      <option value="Weekends (Sat - Sun)">Weekends (Sat - Sun)</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -1028,9 +1049,23 @@ const TrainerManagement = () => {
                 </button>
               </div>
 
-              {/* Current Slots List */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Configured Shift Slots</h4>
+                <div className="flex justify-between items-center">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Configured Shift Slots</h4>
+                  {tempAvailability.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to remove all configured shift slots?')) {
+                          setTempAvailability([]);
+                        }
+                      }}
+                      className="text-[10px] text-rose-600 dark:text-rose-450 hover:underline font-bold flex items-center gap-1"
+                    >
+                      <Trash2 size={12} />
+                      Remove All
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                   {tempAvailability.length === 0 ? (
                     <p className="text-xs text-slate-400 italic py-2 text-center">No Shift Slots configured. Defaults to 24/7 availability.</p>
