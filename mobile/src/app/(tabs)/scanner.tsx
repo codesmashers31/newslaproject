@@ -140,20 +140,20 @@ export default function QRScannerScreen() {
           {/* 1. Camera Viewport Panel */}
           {cameraActive && !scanResult && !loading ? (
             <View style={styles.cameraViewport}>
+              <CameraView
+                zoom={zoom}
+                facing="back"
+                onBarcodeScanned={handleBarCodeScanned}
+                barcodeScannerSettings={{
+                  barcodeTypes: ['qr'],
+                }}
+                style={StyleSheet.absoluteFillObject}
+              />
               <PinchGestureHandler
                 onGestureEvent={onPinchGestureEvent}
                 onHandlerStateChange={onPinchStateChange}
               >
-                <View style={styles.cameraFeed} collapsable={false}>
-                  <CameraView
-                    zoom={zoom}
-                    facing="back"
-                    onBarcodeScanned={handleBarCodeScanned}
-                    barcodeScannerSettings={{
-                      barcodeTypes: ['qr'],
-                    }}
-                    style={StyleSheet.absoluteFillObject}
-                  />
+                <View style={StyleSheet.absoluteFillObject} collapsable={false}>
                   <View style={styles.cameraOverlay}>
                     <Text style={styles.cameraOverlayText}>
                       Align QR Code inside camera feed. Pinch to zoom.
