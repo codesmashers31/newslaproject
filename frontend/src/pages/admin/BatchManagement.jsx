@@ -389,7 +389,7 @@ const BatchManagement = () => {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="fixed inset-x-4 md:inset-x-auto top-6 bottom-6 md:top-auto md:bottom-auto m-auto max-w-md w-full max-h-[90vh] bg-white dark:bg-[#12131a] rounded-[28px] shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 flex flex-col focus:outline-none"
+              className="fixed inset-0 m-auto max-w-md w-[calc(100%-2rem)] md:w-full h-fit max-h-[90vh] bg-white dark:bg-[#12131a] rounded-[28px] shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 flex flex-col focus:outline-none"
             >
               {/* Fixed Header */}
               <div className="flex items-center justify-between border-b pb-4 border-gray-200 dark:border-gray-800 shrink-0">
