@@ -16,7 +16,8 @@ import {
   X,
   Plus,
   Trash2,
-  Settings
+  Settings,
+  ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,6 +32,9 @@ const RoomAllocation = () => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+
+  // Dropdown toggles
+  const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
 
   // Availability query response states
   const [checking, setChecking] = useState(false);
@@ -179,6 +183,25 @@ const RoomAllocation = () => {
     }
   };
 
+  // Helper to resolve Trainer shift info for displaying inline availability
+  const getTrainerShiftForSelectedDate = () => {
+    if (!selectedTrainer || !date) return null;
+    const trainerObj = trainers.find(t => t._id === selectedTrainer);
+    if (!trainerObj) return null;
+    if (!trainerObj.trainerAvailability || trainerObj.trainerAvailability.length === 0) {
+      return '24/7 Shift (No constraints)';
+    }
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayOfWeek = days[new Date(date).getDay()];
+    const slots = trainerObj.trainerAvailability.filter(s => s.dayOfWeek.toLowerCase() === dayOfWeek.toLowerCase());
+    if (slots.length === 0) {
+      return `No shifts scheduled for ${dayOfWeek}`;
+    }
+    return slots.map(s => `${s.startTime} - ${s.endTime}`).join(', ');
+  };
+
+  const shiftInfo = getTrainerShiftForSelectedDate();
+
   return (
     <div className="space-y-8 p-1">
       {/* Header */}
@@ -201,36 +224,77 @@ const RoomAllocation = () => {
           </h2>
           
           <div className="space-y-4">
-            {/* Batch Selection (Multi-Select checkboxes) */}
+            {/* Batch Selection (Premium Dropdown Multi-Select) */}
             <div className="space-y-1.5">
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                 <FolderGit size={12} />
                 Select Batches (Multi-Select)
               </label>
-              <div className="w-full border border-slate-250 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/50 p-3.5 max-h-40 overflow-y-auto space-y-2">
-                {batches.length === 0 ? (
-                  <p className="text-[11px] text-slate-400 italic">No batches available.</p>
-                ) : (
-                  batches.map(b => {
-                    const isChecked = selectedBatches.includes(b._id);
-                    return (
-                      <label key={b._id} className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 dark:text-slate-350 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => {
-                            if (isChecked) {
-                              setSelectedBatches(selectedBatches.filter(id => id !== b._id));
-                            } else {
-                              setSelectedBatches([...selectedBatches, b._id]);
-                            }
-                          }}
-                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                        />
-                        <span>{b.name} ({b.course}) - {b.students?.length || 0} Students</span>
-                      </label>
-                    );
-                  })
+              
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setBatchDropdownOpen(!batchDropdownOpen)}
+                  className="w-full min-h-[46px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 flex flex-wrap items-center gap-1.5 justify-between cursor-pointer"
+                >
+                  <div className="flex flex-wrap gap-1">
+                    {selectedBatches.length === 0 ? (
+                      <span className="text-slate-400">Choose Batches...</span>
+                    ) : (
+                      selectedBatches.map(id => {
+                        const b = batches.find(x => x._id === id);
+                        return (
+                          <span key={id} className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-750 dark:text-indigo-400 px-2 py-0.5 rounded-md font-bold text-[10px] flex items-center gap-1">
+                            {b ? b.name : id}
+                            <X 
+                              size={10} 
+                              className="cursor-pointer hover:text-indigo-900" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedBatches(selectedBatches.filter(x => x !== id));
+                              }}
+                            />
+                          </span>
+                        );
+                      })
+                    )}
+                  </div>
+                  <ChevronDown size={14} className="text-slate-400" />
+                </button>
+
+                {batchDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setBatchDropdownOpen(false)} />
+                    <div className="absolute left-0 right-0 mt-2 z-20 max-h-60 overflow-y-auto rounded-xl border border-slate-205 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xl p-2 space-y-1">
+                      {batches.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic p-3">No batches available.</p>
+                      ) : (
+                        batches.map(b => {
+                          const isChecked = selectedBatches.includes(b._id);
+                          return (
+                            <div
+                              key={b._id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setSelectedBatches(selectedBatches.filter(id => id !== b._id));
+                                } else {
+                                  setSelectedBatches([...selectedBatches, b._id]);
+                                }
+                              }}
+                              className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                                isChecked 
+                                  ? 'bg-indigo-55/60 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400' 
+                                  : 'text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900'
+                              }`}
+                            >
+                              <span>{b.name} ({b.course})</span>
+                              {isChecked && <Check size={14} className="text-indigo-600" />}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -248,7 +312,7 @@ const RoomAllocation = () => {
                     className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
                   >
                     <Settings size={12} />
-                    Trainer Working Hours
+                    Trainer Shift
                   </button>
                 )}
               </div>
@@ -265,6 +329,14 @@ const RoomAllocation = () => {
                 ))}
               </select>
             </div>
+
+            {/* Shift Times indicator under selection */}
+            {shiftInfo && (
+              <div className="bg-indigo-50/50 dark:bg-indigo-950/10 text-indigo-650 dark:text-indigo-400 p-3 rounded-xl text-[10px] font-bold flex items-center gap-2 border border-indigo-500/5">
+                <Clock size={12} className="shrink-0" />
+                <span>Trainer shift hours on selected date: <strong className="text-indigo-700 dark:text-indigo-300">{shiftInfo}</strong></span>
+              </div>
+            )}
 
             {/* Date Selection */}
             <div className="space-y-1.5">
@@ -355,14 +427,19 @@ const RoomAllocation = () => {
                 className="space-y-6"
               >
                 {/* Warnings / Alerts Panel */}
-                {(availabilityResult.trainerConflict || availabilityResult.trainerAvailabilityWarning) && (
-                  <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-500/10 rounded-2xl p-4 space-y-2">
+                {(availabilityResult.trainerConflict || availabilityResult.batchConflict || availabilityResult.trainerAvailabilityWarning) && (
+                  <div className="bg-rose-50/50 dark:bg-rose-955/10 border border-rose-500/10 rounded-2xl p-4 space-y-2">
                     <div className="flex gap-2.5 text-xs font-bold text-rose-700 dark:text-rose-450 items-start">
                       <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                       <div>
                         {availabilityResult.trainerConflict && (
                           <p>
                             Trainer Conflict: Already allocated to Room "{availabilityResult.trainerConflict.roomName}" for Batch "{availabilityResult.trainerConflict.batchName}" at {availabilityResult.trainerConflict.timeSlot}.
+                          </p>
+                        )}
+                        {availabilityResult.batchConflict && (
+                          <p className="mt-1">
+                            Batch Conflict: Batch "{availabilityResult.batchConflict.batchName}" is already scheduled in Room "{availabilityResult.batchConflict.roomName}" at {availabilityResult.batchConflict.timeSlot}.
                           </p>
                         )}
                         {availabilityResult.trainerAvailabilityWarning && (
@@ -393,7 +470,7 @@ const RoomAllocation = () => {
                       <div>
                         <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-baseline gap-2">
                           {availabilityResult.suggestedRoom.name}
-                          <span className="text-sm font-semibold text-slate-500">Floor {availabilityResult.suggestedRoom.floor}</span>
+                          <span className="text-sm font-semibold text-slate-50">Floor {availabilityResult.suggestedRoom.floor}</span>
                         </h3>
                         <p className="text-xs text-slate-400 font-semibold mt-1">Room Number: {availabilityResult.suggestedRoom.roomNumber}</p>
                       </div>
@@ -455,7 +532,7 @@ const RoomAllocation = () => {
                             className={`p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
                               selectedRoom?._id === room._id
                                 ? 'bg-indigo-50/50 border-indigo-500/30 text-indigo-900'
-                                : 'bg-slate-50/50 border-slate-100 dark:border-slate-800/50 dark:bg-slate-950/20 text-slate-700 dark:text-slate-300'
+                                : 'bg-slate-50/50 border-slate-100 dark:border-slate-800/50 dark:bg-slate-950/20 text-slate-700 dark:text-slate-330'
                             }`}
                           >
                             <div className="flex justify-between items-center font-bold">
@@ -480,7 +557,7 @@ const RoomAllocation = () => {
                         <p className="text-[11px] text-slate-400 italic">No rooms occupied at this time.</p>
                       ) : (
                         availabilityResult.conflictRooms.map(room => (
-                          <div key={room._id} className="p-3 bg-slate-50/30 dark:bg-slate-950/10 border border-slate-100 dark:border-slate-800/50 rounded-xl text-xs font-semibold text-slate-500">
+                          <div key={room._id} className="p-3 bg-slate-50/30 dark:bg-slate-950/10 border border-slate-100 dark:border-slate-800/50 rounded-xl text-xs font-semibold text-slate-505">
                             <div className="flex justify-between items-center font-bold">
                               <span className="text-slate-700 dark:text-slate-350">{room.name} ({room.roomNumber})</span>
                               <span className="text-[10px] text-rose-500 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded">Occupied</span>
@@ -542,18 +619,18 @@ const RoomAllocation = () => {
               </div>
 
               {/* Add New Slot form */}
-              <div className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-850 space-y-4">
-                <h4 className="text-xs font-bold text-slate-850 dark:text-slate-200 flex items-center gap-1">
+              <div className="bg-slate-50 dark:bg-slate-955/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-850 space-y-4">
+                <h4 className="text-xs font-bold text-slate-855 dark:text-slate-200 flex items-center gap-1">
                   <Plus size={14} className="text-indigo-650" />
                   Add Availability Slot
                 </h4>
                 <div className="grid grid-cols-3 gap-3 items-end">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Day</label>
+                    <label className="text-[10px] font-bold text-slate-505 uppercase tracking-wider">Day</label>
                     <select
                       value={newDay}
                       onChange={(e) => setNewDay(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
                       {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
                         <option key={d} value={d}>{d}</option>
@@ -561,27 +638,27 @@ const RoomAllocation = () => {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start Time</label>
+                    <label className="text-[10px] font-bold text-slate-505 uppercase tracking-wider">Start Time</label>
                     <input
                       type="time"
                       value={newStart}
                       onChange={(e) => setNewStart(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-955 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">End Time</label>
+                    <label className="text-[10px] font-bold text-slate-505 uppercase tracking-wider">End Time</label>
                     <input
                       type="time"
                       value={newEnd}
                       onChange={(e) => setNewEnd(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-955 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
                 <button
                   onClick={handleAddSlot}
-                  className="w-full py-2 bg-slate-900 hover:bg-slate-950 dark:bg-indigo-600 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-950 dark:bg-indigo-600 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
                 >
                   Add Timeslot
                 </button>

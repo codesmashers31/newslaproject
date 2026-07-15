@@ -8,8 +8,8 @@ const isTimeOverlapping = (startA, endA, startB, endB) => {
   return startA < endB && endA > startB;
 };
 
-// Helper to check room and trainer conflicts
-const checkConflicts = async (roomId, trainerId, date, startTime, endTime, excludeAllocationId = null) => {
+// Helper to check room, trainer and batch conflicts
+const checkConflicts = async (roomId, trainerId, batchIds, date, startTime, endTime, excludeAllocationId = null) => {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date(date);
@@ -28,6 +28,12 @@ const checkConflicts = async (roomId, trainerId, date, startTime, endTime, exclu
 
   const trainerConflict = dayAllocations.find(a => 
     a.trainer._id.toString() === trainerId.toString() &&
+    isTimeOverlapping(startTime, endTime, a.startTime, a.endTime)
+  );
+
+  const stringBatchIds = batchIds.map(id => id.toString());
+  const batchConflict = dayAllocations.find(a => 
+    a.batch && Array.isArray(a.batch) && a.batch.some(b => stringBatchIds.includes(b._id.toString())) &&
     isTimeOverlapping(startTime, endTime, a.startTime, a.endTime)
   );
 
@@ -52,6 +58,12 @@ const checkConflicts = async (roomId, trainerId, date, startTime, endTime, exclu
       batchName: formatBatchNames(trainerConflict.batch),
       timeSlot: `${trainerConflict.startTime} - ${trainerConflict.endTime}`
     } : null,
+    batchConflict: batchConflict ? {
+      allocationId: batchConflict._id,
+      roomName: batchConflict.room?.name || 'Unknown Room',
+      batchName: formatBatchNames(batchConflict.batch),
+      timeSlot: `${batchConflict.startTime} - ${batchConflict.endTime}`
+    } : null
   };
 };
 
@@ -116,7 +128,7 @@ export const createAllocation = async (req, res) => {
     }
 
     // 3. Check conflicts
-    const { roomConflict, trainerConflict } = await checkConflicts(roomId, trainerId, date, startTime, endTime);
+    const { roomConflict, trainerConflict, batchConflict } = await checkConflicts(roomId, trainerId, batchIds, date, startTime, endTime);
 
     if (roomConflict) {
       return res.status(400).json({ 
@@ -129,6 +141,13 @@ export const createAllocation = async (req, res) => {
       return res.status(400).json({ 
         message: `Trainer Conflict: Trainer "${trainer.name}" is already allocated to Room "${trainerConflict.roomName}" at ${trainerConflict.timeSlot}.`,
         conflict: trainerConflict
+      });
+    }
+
+    if (batchConflict) {
+      return res.status(400).json({ 
+        message: `Batch Conflict: Selected batch "${batchConflict.batchName}" is already scheduled in Room "${batchConflict.roomName}" at ${batchConflict.timeSlot}.`,
+        conflict: batchConflict
       });
     }
 
@@ -165,7 +184,6 @@ export const getAllocations = async (req, res) => {
     if (room) query.room = room;
     if (trainer) query.trainer = trainer;
     if (batch) {
-      // Find allocations containing this batch in the batch array
       query.batch = batch;
     }
     
@@ -212,10 +230,13 @@ export const updateAllocation = async (req, res) => {
     const finalStartTime = startTime || allocation.startTime;
     const finalEndTime = endTime || allocation.endTime;
 
+    const finalBatchIds = Array.isArray(finalBatchId) ? finalBatchId : [finalBatchId];
+
     // Check conflicts excluding the current allocation itself
-    const { roomConflict, trainerConflict } = await checkConflicts(
+    const { roomConflict, trainerConflict, batchConflict } = await checkConflicts(
       finalRoomId, 
       finalTrainerId, 
+      finalBatchIds,
       finalDate, 
       finalStartTime, 
       finalEndTime, 
@@ -236,6 +257,13 @@ export const updateAllocation = async (req, res) => {
       });
     }
 
+    if (batchConflict) {
+      return res.status(400).json({ 
+        message: `Conflict: Selected batch "${batchConflict.batchName}" is already scheduled in Room "${batchConflict.roomName}" at ${batchConflict.timeSlot}.`,
+        conflict: batchConflict
+      });
+    }
+
     // Verify room is active if room changed
     if (roomId && roomId !== allocation.room.toString()) {
       const roomObj = await Room.findById(roomId);
@@ -246,12 +274,11 @@ export const updateAllocation = async (req, res) => {
 
     // If batch ID is provided, verify it
     if (batchId) {
-      const batchIds = Array.isArray(batchId) ? batchId : [batchId];
-      const batches = await Batch.find({ _id: { $in: batchIds } });
-      if (batches.length !== batchIds.length) {
+      const batches = await Batch.find({ _id: { $in: finalBatchIds } });
+      if (batches.length !== finalBatchIds.length) {
         return res.status(404).json({ message: 'One or more selected batches not found' });
       }
-      allocation.batch = batchIds;
+      allocation.batch = finalBatchIds;
     }
 
     allocation.room = finalRoomId;
@@ -303,8 +330,8 @@ export const checkAvailability = async (req, res) => {
 
     // Determine target capacity based on input or batch sizes
     let targetCapacity = Number(capacity) || 0;
-    if (batchId) {
-      const batchIds = Array.isArray(batchId) ? batchId : [batchId];
+    const batchIds = Array.isArray(batchId) ? batchId : batchId ? [batchId] : [];
+    if (batchIds.length > 0) {
       const batchObjs = await Batch.find({ _id: { $in: batchIds } });
       targetCapacity = batchObjs.reduce((sum, b) => sum + (b.students ? b.students.length : 0), 0);
     }
@@ -347,6 +374,23 @@ export const checkAvailability = async (req, res) => {
           roomName: trainerAlloc.room?.name || 'Another Room',
           timeSlot: `${trainerAlloc.startTime} - ${trainerAlloc.endTime}`,
           batchName: formatBatchNames(trainerAlloc.batch)
+        };
+      }
+    }
+
+    // Check if any of the selected batches are busy
+    let batchConflict = null;
+    if (batchIds.length > 0) {
+      const stringBatchIds = batchIds.map(id => id.toString());
+      const busyAlloc = dayAllocations.find(a => 
+        a.batch && Array.isArray(a.batch) && a.batch.some(b => stringBatchIds.includes(b._id.toString())) &&
+        isTimeOverlapping(startTime, endTime, a.startTime, a.endTime)
+      );
+      if (busyAlloc) {
+        batchConflict = {
+          batchName: formatBatchNames(busyAlloc.batch),
+          roomName: busyAlloc.room?.name || 'Another Room',
+          timeSlot: `${busyAlloc.startTime} - ${busyAlloc.endTime}`
         };
       }
     }
@@ -423,6 +467,7 @@ export const checkAvailability = async (req, res) => {
       alternativeRooms, // Rooms that have no conflicts but are too small
       conflictRooms, // Rooms that are occupied
       trainerConflict,
+      batchConflict,
       trainerAvailabilityWarning
     });
   } catch (error) {
