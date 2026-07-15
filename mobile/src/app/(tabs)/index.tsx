@@ -81,7 +81,7 @@ export default function DashboardScreen() {
       <View className="flex-row justify-between items-center px-6 py-4 border-b border-slate-900 bg-slate-950">
         <View className="flex-row items-center space-x-2">
           <Sparkles size={16} color="#f59e0b" style={{ marginRight: 4 }} />
-          <Text className="text-sm font-black text-white tracking-wide uppercase">LCP Student Space</Text>
+          <Text className="text-sm font-black text-white tracking-wide uppercase">Sla BuildX</Text>
         </View>
         <TouchableOpacity 
           onPress={handleSignOut}

@@ -12,17 +12,31 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#020617', // Slate 950
-          borderTopColor: '#1e293b', // Slate 800
-          paddingBottom: Math.max(insets.bottom, 12),
-          paddingTop: 8,
-          height: 60 + Math.max(insets.bottom, 12),
+          backgroundColor: '#0f172a', // slate-900
+          borderTopWidth: 1,
+          borderTopColor: '#1e293b',
+          borderWidth: 1,
+          borderColor: '#1e293b',
+          marginBottom: Math.max(insets.bottom, 16),
+          marginHorizontal: 16,
+          borderRadius: 30,
+          height: 64,
+          paddingBottom: 0,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.4,
+          shadowRadius: 15,
+          elevation: 10,
         },
-        tabBarActiveTintColor: '#6366f1', // Indigo 500
+        tabBarItemStyle: {
+          paddingVertical: 8,
+        },
+        tabBarActiveTintColor: '#818cf8', // Indigo 400
         tabBarInactiveTintColor: '#64748b', // Slate 500
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: 'bold',
+          marginTop: 2,
         },
       }}
     >
