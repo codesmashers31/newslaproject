@@ -15,6 +15,11 @@ import BatchManagement from '../pages/admin/BatchManagement';
 import TrainerManagement from '../pages/admin/TrainerManagement';
 import AttendanceManagement from '../pages/admin/AttendanceManagement';
 import PlacementManagement from '../pages/admin/PlacementManagement';
+import RoomManagement from '../pages/admin/RoomManagement';
+import RoomAllocation from '../pages/admin/RoomAllocation';
+import RoomAvailability from '../pages/admin/RoomAvailability';
+import ScheduleCalendar from '../pages/admin/ScheduleCalendar';
+import Reports from '../pages/admin/Reports';
 
 // Trainer Pages
 import TrainerDashboard from '../pages/trainer/TrainerDashboard';
@@ -43,7 +48,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* ADMIN DASHBOARDS */}
-      <Route element={<ProtectedRoute allowedRoles={['Admin', 'Super Admin']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['Super Admin']} />}>
         <Route 
           path="/admin" 
           element={
@@ -89,6 +94,46 @@ const AppRoutes = () => {
           element={
             <DashboardLayout>
               <PlacementManagement />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/admin/rooms" 
+          element={
+            <DashboardLayout>
+              <RoomManagement />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/admin/allocations" 
+          element={
+            <DashboardLayout>
+              <RoomAllocation />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/admin/availability" 
+          element={
+            <DashboardLayout>
+              <RoomAvailability />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/admin/calendar" 
+          element={
+            <DashboardLayout>
+              <ScheduleCalendar />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/admin/reports" 
+          element={
+            <DashboardLayout>
+              <Reports />
             </DashboardLayout>
           } 
         />

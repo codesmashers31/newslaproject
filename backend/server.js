@@ -10,6 +10,9 @@ import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import trainerRoutes from './routes/trainerRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
+import roomRoutes from './routes/roomRoutes.js';
+import allocationRoutes from './routes/allocationRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 
 dotenv.config();
 
@@ -36,6 +39,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/trainer', trainerRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/allocations', allocationRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

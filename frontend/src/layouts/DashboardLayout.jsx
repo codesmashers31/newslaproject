@@ -21,7 +21,12 @@ import {
   Sparkles,
   Camera,
   Trophy,
-  FileText
+  FileText,
+  School,
+  CalendarDays,
+  Layers,
+  CalendarRange,
+  BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoSla from '../assets/logosla.png';
@@ -134,6 +139,11 @@ const DashboardLayout = ({ children }) => {
         makeLink('/admin/students', <Users size={17} />, 'Students Directory'),
         makeLink('/admin/attendance', <CalendarCheck size={17} />, 'Attendance'),
         makeLink('/admin/placement', <Briefcase size={17} />, 'Placement'),
+        makeLink('/admin/rooms', <School size={17} />, 'Room Directory'),
+        makeLink('/admin/allocations', <Layers size={17} />, 'Book Classroom'),
+        makeLink('/admin/availability', <CalendarDays size={17} />, 'Room Availability'),
+        makeLink('/admin/calendar', <CalendarRange size={17} />, 'Schedule Calendar'),
+        makeLink('/admin/reports', <BarChart3 size={17} />, 'Analytics & Reports'),
       ]);
     } else if (['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'].includes(user?.role || '')) {
       return renderSection('Trainer Portal', [

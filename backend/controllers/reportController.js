@@ -1,0 +1,243 @@
+import RoomAllocation from '../models/RoomAllocation.js';
+import Room from '../models/Room.js';
+import Batch from '../models/Batch.js';
+
+// Helper to compute duration in decimal hours from HH:MM strings
+const getDurationInHours = (start, end) => {
+  const [startH, startM] = start.split(':').map(Number);
+  const [endH, endM] = end.split(':').map(Number);
+  const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+  return Math.max(0, durationMin / 60);
+};
+
+// @desc    Get dashboard stats for Super Admin
+// @route   GET /api/reports/dashboard-stats
+// @access  Private/SuperAdmin
+export const getDashboardStats = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    // 1. Total rooms
+    const totalRooms = await Room.countDocuments();
+    
+    // Start/End of today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    // Fetch all allocations for today
+    const todayAllocations = await RoomAllocation.find({
+      date: { $gte: startOfToday, $lte: endOfToday }
+    }).populate('room batch trainer');
+
+    // Get current time string (HH:MM)
+    const currentHourStr = String(now.getHours()).padStart(2, '0');
+    const currentMinStr = String(now.getMinutes()).padStart(2, '0');
+    const currentTimeStr = `${currentHourStr}:${currentMinStr}`;
+
+    let occupiedCount = 0;
+    let reservedCount = 0;
+    let runningClasses = [];
+    let upcomingClasses = [];
+
+    todayAllocations.forEach(alloc => {
+      const isOverlapping = currentTimeStr >= alloc.startTime && currentTimeStr <= alloc.endTime;
+      if (isOverlapping) {
+        occupiedCount++;
+        runningClasses.push({
+          roomName: alloc.room?.name,
+          roomNumber: alloc.room?.roomNumber,
+          batchName: alloc.batch?.name,
+          trainerName: alloc.trainer?.name,
+          timeSlot: `${alloc.startTime} - ${alloc.endTime}`
+        });
+      } else if (alloc.startTime > currentTimeStr) {
+        reservedCount++;
+        upcomingClasses.push({
+          roomName: alloc.room?.name,
+          roomNumber: alloc.room?.roomNumber,
+          batchName: alloc.batch?.name,
+          trainerName: alloc.trainer?.name,
+          timeSlot: `${alloc.startTime} - ${alloc.endTime}`
+        });
+      }
+    });
+
+    const availableCount = totalRooms - occupiedCount;
+
+    res.json({
+      totalRooms,
+      availableRooms: Math.max(0, availableCount),
+      occupiedRooms: occupiedCount,
+      todayAllocationsCount: todayAllocations.length,
+      currentRunningClasses: runningClasses,
+      upcomingClasses: upcomingClasses.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot)),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get room utilization report
+// @route   GET /api/reports/utilization
+// @access  Private/SuperAdmin
+export const getUtilizationReport = async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  try {
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Count days in range (minimum 1)
+    const timeDiff = Math.abs(end.getTime() - start.getTime());
+    const daysCount = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1);
+
+    // Assume 8 operational hours per room per day (e.g. 09:00 - 17:00)
+    const OPERATIONAL_HOURS_PER_DAY = 8;
+    const totalOperationalHours = daysCount * OPERATIONAL_HOURS_PER_DAY;
+
+    const rooms = await Room.find();
+    const allocations = await RoomAllocation.find({
+      date: { $gte: start, $lte: end }
+    }).populate('room');
+
+    const reportData = rooms.map(room => {
+      // Filter allocations for this room
+      const roomAllocs = allocations.filter(a => a.room?._id.toString() === room._id.toString());
+      
+      // Calculate total allocated hours
+      let totalAllocatedHours = 0;
+      roomAllocs.forEach(a => {
+        totalAllocatedHours += getDurationInHours(a.startTime, a.endTime);
+      });
+
+      // Calculate utilization percentage
+      const utilizationRate = totalOperationalHours > 0 
+        ? Math.min(100, Math.round((totalAllocatedHours / totalOperationalHours) * 100))
+        : 0;
+
+      return {
+        roomId: room._id,
+        roomName: room.name,
+        roomNumber: room.roomNumber,
+        floor: room.floor,
+        capacity: room.capacity,
+        totalAllocations: roomAllocs.length,
+        allocatedHours: Number(totalAllocatedHours.toFixed(1)),
+        operationalHours: totalOperationalHours,
+        utilizationRate,
+      };
+    });
+
+    res.json(reportData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get daily usage report summary
+// @route   GET /api/reports/daily
+// @access  Private/SuperAdmin
+export const getDailyUsageReport = async (req, res) => {
+  const { date } = req.query;
+
+  try {
+    const queryDate = date ? new Date(date) : new Date();
+    const startOfToday = new Date(queryDate);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(queryDate);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const rooms = await Room.find({ status: 'Active' });
+    const allocations = await RoomAllocation.find({
+      date: { $gte: startOfToday, $lte: endOfToday }
+    }).populate('room batch trainer');
+
+    const report = rooms.map(room => {
+      const roomAllocs = allocations.filter(a => a.room?._id.toString() === room._id.toString());
+      let totalHours = 0;
+      
+      roomAllocs.forEach(a => {
+        totalHours += getDurationInHours(a.startTime, a.endTime);
+      });
+
+      return {
+        roomName: room.name,
+        roomNumber: room.roomNumber,
+        floor: room.floor,
+        capacity: room.capacity,
+        totalClassesToday: roomAllocs.length,
+        totalHoursUsed: Number(totalHours.toFixed(1)),
+        scheduleList: roomAllocs.map(a => ({
+          batchName: a.batch?.name || 'Deleted Batch',
+          trainerName: a.trainer?.name || 'Deleted Trainer',
+          timeSlot: `${a.startTime} - ${a.endTime}`,
+          duration: getDurationInHours(a.startTime, a.endTime)
+        }))
+      };
+    });
+
+    res.json(report);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get monthly usage summary (grouped by day for charts)
+// @route   GET /api/reports/monthly
+// @access  Private/SuperAdmin
+export const getMonthlyUsageReport = async (req, res) => {
+  const { year, month } = req.query;
+
+  try {
+    const y = Number(year) || new Date().getFullYear();
+    const m = Number(month) !== undefined ? Number(month) : new Date().getMonth(); // 0-indexed
+
+    const startDate = new Date(y, m, 1);
+    const endDate = new Date(y, m + 1, 0, 23, 59, 59, 999);
+
+    const allocations = await RoomAllocation.find({
+      date: { $gte: startDate, $lte: endDate }
+    }).populate('room');
+
+    const daysInMonth = endDate.getDate();
+    const dailyStats = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const checkDate = new Date(y, m, day);
+      const dayAllocs = allocations.filter(a => {
+        const d = new Date(a.date);
+        return d.getDate() === day && d.getMonth() === m && d.getFullYear() === y;
+      });
+
+      let totalHours = 0;
+      dayAllocs.forEach(a => {
+        totalHours += getDurationInHours(a.startTime, a.endTime);
+      });
+
+      dailyStats.push({
+        day: `${m + 1}/${day}`,
+        totalAllocations: dayAllocs.length,
+        totalHours: Number(totalHours.toFixed(1))
+      });
+    }
+
+    res.json({
+      year: y,
+      month: m + 1,
+      totalMonthlyAllocations: allocations.length,
+      dailyStats
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
