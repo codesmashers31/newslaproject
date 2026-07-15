@@ -389,10 +389,10 @@ const BatchManagement = () => {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="fixed inset-0 m-auto max-w-md w-[calc(100%-2rem)] md:w-full h-fit max-h-[90vh] bg-white dark:bg-[#12131a] rounded-[28px] shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 flex flex-col focus:outline-none"
+              className="fixed inset-0 m-auto max-w-md w-[calc(100%-2rem)] md:w-full h-fit max-h-[90vh] bg-white dark:bg-[#12131a] rounded-[28px] shadow-2xl z-50 border border-gray-200 dark:border-gray-800 p-6 overflow-y-auto focus:outline-none scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800"
             >
-              {/* Fixed Header */}
-              <div className="flex items-center justify-between border-b pb-4 border-gray-200 dark:border-gray-800 shrink-0">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b pb-4 border-gray-200 dark:border-gray-800">
                 <div>
                   <h3 className="text-lg font-black text-gray-900 dark:text-white">
                     {editingBatch ? 'Edit Batch Details' : 'Create New Batch'}
@@ -405,140 +405,136 @@ const BatchManagement = () => {
               </div>
 
               {/* Form wrapper */}
-              <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 mt-4 justify-between">
-                
-                {/* Scrollable Form Body */}
-                <div className="flex-1 overflow-y-auto pr-1.5 space-y-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch ID</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.batchId}
+                    onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
+                    placeholder="e.g. MERN001"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
+                    placeholder="e.g. Elite Full Stack Web Dev Batch A"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* Start Date & End Date fields */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch ID</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Start Date</label>
                     <input
-                      type="text"
-                      required
-                      value={formData.batchId}
-                      onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
-                      placeholder="e.g. MERN001"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch Name</label>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">End Date</label>
                     <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
-                      placeholder="e.g. Elite Full Stack Web Dev Batch A"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
                     />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Batch Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </div>
-
-                  {/* Start Date & End Date fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Start Date</label>
-                      <input
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">End Date</label>
-                      <input
-                        type="date"
-                        value={formData.endDate}
-                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Start Time & End Time fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Start Time</label>
-                      <input
-                        type="time"
-                        value={formData.startTime}
-                        onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">End Time</label>
-                      <input
-                        type="time"
-                        value={formData.endTime}
-                        onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-2">
-                    <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Trainers (Multiple Select)</label>
-                    
-                    {/* Technical Trainer Select */}
-                    <div>
-                      <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Technical Trainer</label>
-                      <select
-                        value={formData.technicalTrainer}
-                        onChange={(e) => setFormData({ ...formData, technicalTrainer: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
-                      >
-                        <option value="">Select Technical Trainer (Optional)</option>
-                        {trainers.filter(t => t.role === 'Technical Trainer').map(t => (
-                          <option key={t._id} value={t._id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Communication Trainer Select */}
-                    <div>
-                      <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Communication Trainer</label>
-                      <select
-                        value={formData.communicationTrainer}
-                        onChange={(e) => setFormData({ ...formData, communicationTrainer: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
-                      >
-                        <option value="">Select Communication Trainer (Optional)</option>
-                        {trainers.filter(t => t.role === 'Communication Trainer').map(t => (
-                          <option key={t._id} value={t._id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Aptitude Trainer Select */}
-                    <div>
-                      <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Aptitude Trainer</label>
-                      <select
-                        value={formData.aptitudeTrainer}
-                        onChange={(e) => setFormData({ ...formData, aptitudeTrainer: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
-                      >
-                        <option value="">Select Aptitude Trainer (Optional)</option>
-                        {trainers.filter(t => t.role === 'Aptitude Trainer').map(t => (
-                          <option key={t._id} value={t._id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
 
-                {/* Fixed Footer with submit loader */}
-                <div className="pt-4 border-t border-gray-250 dark:border-gray-800 shrink-0 mt-4">
+                {/* Start Time & End Time fields */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Start Time</label>
+                    <input
+                      type="time"
+                      value={formData.startTime}
+                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">End Time</label>
+                    <input
+                      type="time"
+                      value={formData.endTime}
+                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Trainers (Multiple Select)</label>
+                  
+                  {/* Technical Trainer Select */}
+                  <div>
+                    <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Technical Trainer</label>
+                    <select
+                      value={formData.technicalTrainer}
+                      onChange={(e) => setFormData({ ...formData, technicalTrainer: e.target.value })}
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                    >
+                      <option value="">Select Technical Trainer (Optional)</option>
+                      {trainers.filter(t => t.role === 'Technical Trainer').map(t => (
+                        <option key={t._id} value={t._id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Communication Trainer Select */}
+                  <div>
+                    <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Communication Trainer</label>
+                    <select
+                      value={formData.communicationTrainer}
+                      onChange={(e) => setFormData({ ...formData, communicationTrainer: e.target.value })}
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                    >
+                      <option value="">Select Communication Trainer (Optional)</option>
+                      {trainers.filter(t => t.role === 'Communication Trainer').map(t => (
+                        <option key={t._id} value={t._id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Aptitude Trainer Select */}
+                  <div>
+                    <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Aptitude Trainer</label>
+                    <select
+                      value={formData.aptitudeTrainer}
+                      onChange={(e) => setFormData({ ...formData, aptitudeTrainer: e.target.value })}
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                    >
+                      <option value="">Select Aptitude Trainer (Optional)</option>
+                      {trainers.filter(t => t.role === 'Aptitude Trainer').map(t => (
+                        <option key={t._id} value={t._id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Footer submit button naturally following content */}
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-800 mt-6 font-sans">
                   <button
                     type="submit"
                     disabled={submitLoading}
