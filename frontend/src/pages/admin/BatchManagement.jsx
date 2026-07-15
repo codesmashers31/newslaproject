@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet, GraduationCap } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet, GraduationCap, Calendar, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import { useAuth } from '../../context/AuthContext';
@@ -73,6 +73,10 @@ const BatchManagement = () => {
     technicalTrainer: '',
     communicationTrainer: '',
     aptitudeTrainer: '',
+    startDate: '',
+    endDate: '',
+    startTime: '',
+    endTime: '',
   });
 
   const loadData = async () => {
@@ -120,6 +124,10 @@ const BatchManagement = () => {
       technicalTrainer: '',
       communicationTrainer: '',
       aptitudeTrainer: '',
+      startDate: '',
+      endDate: '',
+      startTime: '',
+      endTime: '',
     });
     setModalOpen(true);
   };
@@ -131,6 +139,11 @@ const BatchManagement = () => {
     const commT = trainerList.find(t => t.role === 'Communication Trainer')?._id || '';
     const aptiT = trainerList.find(t => t.role === 'Aptitude Trainer')?._id || '';
 
+    const formatDate = (dateVal) => {
+      if (!dateVal) return '';
+      return new Date(dateVal).toISOString().split('T')[0];
+    };
+
     setFormData({
       name: batch.name,
       batchId: batch.batchId || '',
@@ -138,6 +151,10 @@ const BatchManagement = () => {
       technicalTrainer: techT,
       communicationTrainer: commT,
       aptitudeTrainer: aptiT,
+      startDate: formatDate(batch.startDate),
+      endDate: formatDate(batch.endDate),
+      startTime: batch.startTime || '',
+      endTime: batch.endTime || '',
     });
     setModalOpen(true);
   };
@@ -166,6 +183,10 @@ const BatchManagement = () => {
         course: courseValue,
         status: formData.status,
         trainers: selectedTrainers,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
+        startTime: formData.startTime || '',
+        endTime: formData.endTime || '',
       };
 
       if (editingBatch) {
@@ -299,6 +320,22 @@ const BatchManagement = () => {
                   </span>
                 </div>
 
+                {/* Schedule Details Box */}
+                <div className="mt-3 bg-indigo-50/20 dark:bg-indigo-950/5 border border-indigo-100/50 dark:border-indigo-900/30 p-3.5 rounded-xl text-xs space-y-2">
+                  <div className="flex justify-between items-center text-gray-600 dark:text-gray-400 font-semibold">
+                    <span className="flex items-center gap-1.5"><Calendar size={13} className="text-indigo-500" /> Duration Dates</span>
+                    <span className="font-extrabold text-gray-850 dark:text-gray-200">
+                      {batch.startDate ? new Date(batch.startDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) : 'N/A'} - {batch.endDate ? new Date(batch.endDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-gray-600 dark:text-gray-400 font-semibold">
+                    <span className="flex items-center gap-1.5"><Clock size={13} className="text-indigo-500" /> Daily Shift Hours</span>
+                    <span className="font-extrabold text-gray-850 dark:text-gray-200">
+                      {batch.startTime ? batch.startTime : 'N/A'} - {batch.endTime ? batch.endTime : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Allotments Trainers List Box */}
                 <div className="mt-3 bg-gray-50/20 dark:bg-[#181922]/40 p-3.5 rounded-xl border border-gray-200 dark:border-gray-800/60 text-xs">
                   <p className="text-[10px] font-extrabold text-indigo-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
@@ -338,7 +375,7 @@ const BatchManagement = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
                   <div>
                     <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Batch ID</label>
                     <input
@@ -372,6 +409,51 @@ const BatchManagement = () => {
                       <option value="Inactive">Inactive</option>
                     </select>
                   </div>
+
+                  {/* Start Date & End Date fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Start Date</label>
+                      <input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">End Date</label>
+                      <input
+                        type="date"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Start Time & End Time fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">Start Time</label>
+                      <input
+                        type="time"
+                        value={formData.startTime}
+                        onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1">End Time</label>
+                      <input
+                        type="time"
+                        value={formData.endTime}
+                        onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-950 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-3">
                     <label className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider block">Assign Trainers (Multiple Select)</label>
                     

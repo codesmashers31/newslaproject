@@ -429,7 +429,7 @@ export const getBatches = async (req, res) => {
 };
 
 export const createBatch = async (req, res) => {
-  const { name, batchId, course, trainers, students, startDate, endDate, status } = req.body;
+  const { name, batchId, course, trainers, students, startDate, endDate, startTime, endTime, status } = req.body;
 
   try {
     const batchExists = await Batch.findOne({ name });
@@ -445,6 +445,8 @@ export const createBatch = async (req, res) => {
       students: students || [],
       startDate,
       endDate,
+      startTime,
+      endTime,
       status: status || 'Active',
     });
 
@@ -460,7 +462,7 @@ export const createBatch = async (req, res) => {
 
 export const editBatch = async (req, res) => {
   const { id } = req.params;
-  const { name, batchId, course, trainers, students, startDate, endDate, status } = req.body;
+  const { name, batchId, course, trainers, students, startDate, endDate, startTime, endTime, status } = req.body;
 
   try {
     const batch = await Batch.findById(id);
@@ -475,6 +477,8 @@ export const editBatch = async (req, res) => {
     batch.students = students || batch.students;
     batch.startDate = startDate || batch.startDate;
     batch.endDate = endDate || batch.endDate;
+    batch.startTime = startTime !== undefined ? startTime : batch.startTime;
+    batch.endTime = endTime !== undefined ? endTime : batch.endTime;
     batch.status = status || batch.status;
 
     await batch.save();

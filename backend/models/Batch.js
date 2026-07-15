@@ -38,6 +38,14 @@ const batchSchema = new mongoose.Schema({
   endDate: {
     type: Date,
   },
+  startTime: {
+    type: String,
+    trim: true,
+  },
+  endTime: {
+    type: String,
+    trim: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
