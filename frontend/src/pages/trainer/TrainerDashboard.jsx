@@ -50,6 +50,7 @@ const TrainerDashboard = () => {
 
   const [students, setStudents] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [allBatches, setAllBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState('all');
   const [loading, setLoading] = useState(true);
 
@@ -347,13 +348,7 @@ const TrainerDashboard = () => {
       let relevantBatches = batchData || [];
       let relevantStudents = data || [];
 
-      if (user?.role === 'Communication Trainer') {
-        relevantStudents = relevantStudents.filter(s => Boolean(s.communicationBatch));
-      } else if (user?.role === 'Aptitude Trainer') {
-        relevantStudents = relevantStudents.filter(s => Boolean(s.aptitudeBatch));
-      } else if (user?.role === 'Technical Trainer') {
-        relevantStudents = relevantStudents.filter(s => Boolean(s.technicalBatch));
-      }
+      setAllBatches(batchData || []);
 
       // Collect all unique batches the loaded relevantStudents belong to
       const studentBatchNamesAndIds = new Set();
@@ -529,7 +524,7 @@ const TrainerDashboard = () => {
 
   const getBatchIdByName = (batchName) => {
     if (!batchName) return null;
-    const b = batches.find(x => x.name.toLowerCase() === batchName.toLowerCase());
+    const b = allBatches.find(x => x.name.toLowerCase() === batchName.toLowerCase());
     return b ? b._id : null;
   };
 

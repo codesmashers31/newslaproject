@@ -358,13 +358,6 @@ const TrainerStudentsPage = () => {
   };
 
   const filteredStudents = students.filter(student => {
-    if (user?.role === 'Communication Trainer') {
-      if (!student.communicationBatch) return false;
-    } else if (user?.role === 'Aptitude Trainer') {
-      if (!student.aptitudeBatch) return false;
-    } else if (user?.role === 'Technical Trainer') {
-      if (!student.technicalBatch) return false;
-    }
 
     const matchesSearch =
       student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
