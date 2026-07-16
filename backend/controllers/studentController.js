@@ -494,30 +494,28 @@ export const scanQR = async (req, res) => {
       return res.status(400).json({ message: 'Class session is no longer active' });
     }
 
-    // 4. Verify student is enrolled in the session's batch
-    const batch = await Batch.findById(session.batch);
-    if (!batch) {
-      return res.status(400).json({ message: 'Batch not found' });
-    }
-    const isEnrolled = batch.students.some(id => id.toString() === studentId.toString());
-    if (!isEnrolled) {
-      await AttendanceLog.create({
-        student: studentId,
-        session: session._id,
-        scannedToken: token,
-        status: 'Failed',
-        reason: 'Student not enrolled in batch',
-        ipAddress: req.ip || ''
-      });
-      return res.status(400).json({ message: 'You are not registered in this batch' });
+    // 4. Find student's actual enrolled batch
+    let studentBatch = await Batch.findOne({ students: studentId, status: 'Active' });
+    if (!studentBatch) {
+      studentBatch = await Batch.findOne({ students: studentId });
     }
 
-    // 5. Verify student has not marked attendance for this session already
+    const sessionBatch = await Batch.findById(session.batch);
+    if (!sessionBatch) {
+      return res.status(400).json({ message: 'Session batch not found' });
+    }
+
+    // Fallback to session batch if student is not registered in any batch
+    if (!studentBatch) {
+      studentBatch = sessionBatch;
+    }
+
+    // 5. Verify student has not marked attendance for this session already (based on actual batch and date)
     const existingAttendance = await Attendance.findOne({
       student: studentId,
       $or: [
         { session: session._id },
-        { batch: session.batch, date: {
+        { batch: studentBatch._id, date: {
           $gte: new Date(new Date(session.startTime).setHours(0,0,0,0)),
           $lt: new Date(new Date(session.startTime).setHours(23,59,59,999))
         } }
@@ -595,7 +593,8 @@ export const scanQR = async (req, res) => {
     // 7. Save Attendance record
     const attendance = await Attendance.create({
       student: studentId,
-      batch: session.batch,
+      batch: studentBatch._id,
+      scannedBatch: sessionBatch._id,
       date: session.startTime,
       status,
       session: session._id,

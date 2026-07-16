@@ -237,12 +237,20 @@ export const markAttendance = async (req, res) => {
         effectiveBatchId = foundBatchId;
       }
 
+      // Find student's actual enrolled batch
+      let saveBatchId = effectiveBatchId;
+      const studentBatch = await Batch.findOne({ students: rec.studentId });
+      if (studentBatch) {
+        saveBatchId = studentBatch._id;
+      }
+
       // Upsert attendance
       const record = await Attendance.findOneAndUpdate(
-        { student: rec.studentId, batch: effectiveBatchId, date: formattedDate },
+        { student: rec.studentId, batch: saveBatchId, date: formattedDate },
         { 
           status: rec.status || 'Present', 
           remarks: rec.remarks || '',
+          scannedBatch: effectiveBatchId,
           markedBy: req.user._id 
         },
         { new: true, upsert: true }
@@ -608,7 +616,11 @@ export const getBatchAttendance = async (req, res) => {
       date: { $gte: startOfDay, $lte: endOfDay }
     };
 
-    const records = await Attendance.find(query).lean();
+    const records = await Attendance.find(query)
+      .populate('student', 'name email slaeId batches communicationBatch technicalBatch aptitudeBatch')
+      .populate('batch', 'name')
+      .populate('scannedBatch', 'name')
+      .lean();
 
     res.json(records);
   } catch (error) {

@@ -696,13 +696,42 @@ const TrainerDashboard = () => {
     : '0.0';
   const completedModulesCount = students.reduce((acc, s) => acc + (s.scores?.filter(sc => sc.status === 'Completed').length || 0), 0);
 
-  // Filters for Communication Trainer views
-  const filteredAttendanceStudents = batchStudents.filter(s => {
-    const matchSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                        `STU-${s._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStatus = attendanceStatusFilter === 'All' || attendanceState[s._id] === attendanceStatusFilter;
-    return matchSearch && matchStatus;
-  });
+  // Filters for Communication Trainer views (including cross-attendance guest scans)
+  const getFilteredAttendanceStudents = () => {
+    const list = batchStudents.filter(s => {
+      const matchSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          `STU-${s._id.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchStatus = attendanceStatusFilter === 'All' || (attendanceState[s._id] || 'Absent') === attendanceStatusFilter;
+      return matchSearch && matchStatus;
+    });
+
+    if (selectedBatchId && selectedBatchId !== 'all') {
+      todayRecords?.forEach(record => {
+        const scannedId = record.scannedBatch?._id || record.scannedBatch;
+        if (scannedId && String(scannedId) === String(selectedBatchId)) {
+          const isEnrolledInCurrent = batchStudents.some(s => String(s._id) === String(record.student?._id || record.student));
+          if (!isEnrolledInCurrent && record.student) {
+            const studentObj = typeof record.student === 'object' ? record.student : { _id: record.student, name: 'Unknown Student' };
+            const matchesSearch = studentObj.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                 `STU-${studentObj._id?.slice(-5)}`.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesStatus = attendanceStatusFilter === 'All' || record.status === attendanceStatusFilter;
+            
+            if (matchesSearch && matchesStatus) {
+              list.push({
+                ...studentObj,
+                isGuest: true,
+                guestRecord: record
+              });
+            }
+          }
+        }
+      });
+    }
+
+    return list;
+  };
+
+  const filteredAttendanceStudents = getFilteredAttendanceStudents();
   const attendanceTotalPages = Math.ceil(filteredAttendanceStudents.length / itemsPerPage);
   const attendanceIndexOfLastItem = currentPage * itemsPerPage;
   const attendanceIndexOfFirstItem = attendanceIndexOfLastItem - itemsPerPage;
@@ -1277,31 +1306,49 @@ const TrainerDashboard = () => {
                       </tr>
                     ) : (
                       paginatedAttendanceStudents.map(student => {
-                        const currentStatus = attendanceState[student._id] || 'Present';
-                        const record = todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
+                        const isGuest = student.isGuest;
+                        const record = isGuest 
+                          ? student.guestRecord 
+                          : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
+                        const currentStatus = isGuest
+                          ? student.guestRecord.status
+                          : (attendanceState[student._id] || 'Absent');
                         
                         let studentBatches = 'Unassigned';
                         let displayTrainer = 'Assigned Trainer';
-                        if (user?.role === 'Communication Trainer') {
-                          studentBatches = student.communicationBatch || 'Unassigned';
-                          displayTrainer = student.communicationTrainer || 'Assigned Trainer';
-                        } else if (user?.role === 'Aptitude Trainer') {
-                          studentBatches = student.aptitudeBatch || 'Unassigned';
-                          displayTrainer = student.aptitudeTrainer || 'Assigned Trainer';
+                        
+                        if (isGuest) {
+                          studentBatches = student.guestRecord.batch?.name || 'Unassigned';
+                          displayTrainer = student.guestRecord.markedBy?.name || 'Assigned Trainer';
                         } else {
-                          studentBatches = student.technicalBatch || 'Unassigned';
-                          displayTrainer = student.technicalTrainer || 'Assigned Trainer';
+                          if (user?.role === 'Communication Trainer') {
+                            studentBatches = student.communicationBatch || 'Unassigned';
+                            displayTrainer = student.communicationTrainer || 'Assigned Trainer';
+                          } else if (user?.role === 'Aptitude Trainer') {
+                            studentBatches = student.aptitudeBatch || 'Unassigned';
+                            displayTrainer = student.aptitudeTrainer || 'Assigned Trainer';
+                          } else {
+                            studentBatches = student.technicalBatch || 'Unassigned';
+                            displayTrainer = student.technicalTrainer || 'Assigned Trainer';
+                          }
                         }
 
                         const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
                         
                         return (
-                          <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                          <tr key={student._id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors ${isGuest ? 'bg-amber-500/5 dark:bg-amber-500/[0.02]' : ''}`}>
                             <td className="px-5 py-4 font-mono font-bold text-purple-600 dark:text-purple-400">
                               {displaySlaeId}
                             </td>
                             <td className="px-5 py-4">
-                              <div className="font-extrabold text-slate-800 dark:text-white text-sm">{student.name}</div>
+                              <div className="flex items-center gap-2">
+                                <div className="font-extrabold text-slate-800 dark:text-white text-sm">{student.name}</div>
+                                {isGuest && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    Cross-Attend
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-[11px] text-slate-400 mt-0.5">{student.email}</div>
                             </td>
                             <td className="px-5 py-4 font-bold text-slate-700 dark:text-slate-300">
@@ -1311,9 +1358,16 @@ const TrainerDashboard = () => {
                               {student.technicalTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
                             </td>
                             <td className="px-5 py-4">
-                              <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/50 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
-                                {studentBatches}
-                              </span>
+                              <div className="space-y-1">
+                                <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/50 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
+                                  {studentBatches}
+                                </span>
+                                {isGuest && (
+                                  <span className="block text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/10 px-1.5 py-0.5 rounded border border-indigo-500/10 w-fit">
+                                    Scanned: {student.guestRecord.scannedBatch?.name || 'This Batch'}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-5 py-4">
                               <div className="flex items-center justify-center gap-1.5">

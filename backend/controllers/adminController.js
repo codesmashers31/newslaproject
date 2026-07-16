@@ -735,6 +735,7 @@ export const getAttendanceLogs = async (req, res) => {
     const attendance = await Attendance.find({})
       .populate('student', 'name email mobile')
       .populate('batch', 'name course')
+      .populate('scannedBatch', 'name course')
       .populate('markedBy', 'name role')
       .sort({ date: -1 });
     res.json(attendance);

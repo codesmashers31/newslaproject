@@ -29,6 +29,11 @@ const attendanceSchema = new mongoose.Schema({
     ref: 'AttendanceSession',
     default: null,
   },
+  scannedBatch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Batch',
+    default: null,
+  },
   markedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
