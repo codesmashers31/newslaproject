@@ -152,9 +152,8 @@ const DashboardLayout = ({ children }) => {
         );
       }
 
-      adminLinks.push(makeLink('/admin/reports', <BarChart3 size={17} />, 'Analytics & Reports'));
-
       if (isSuper) {
+        adminLinks.push(makeLink('/admin/reports', <BarChart3 size={17} />, 'Analytics & Reports'));
         adminLinks.push(makeLink('/admin/device-resets', <ShieldAlert size={17} />, 'Device Security'));
       }
 

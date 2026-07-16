@@ -71,7 +71,7 @@ export const getDashboardStats = async (req, res) => {
     // Additional stats for Admin dashboard
     const [totalStudents, totalTrainers, totalBatches, todayAttendanceCount] = await Promise.all([
       User.countDocuments({ role: 'Student' }),
-      User.countDocuments({ role: 'Trainer' }),
+      User.countDocuments({ role: { $regex: 'Trainer', $options: 'i' } }),
       Batch.countDocuments(),
       Attendance.countDocuments({ date: { $gte: startOfToday, $lte: endOfToday } })
     ]);
