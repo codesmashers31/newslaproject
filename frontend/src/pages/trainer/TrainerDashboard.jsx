@@ -374,19 +374,8 @@ const TrainerDashboard = () => {
         }
       });
 
-      relevantBatches = relevantBatches.filter(b => {
-        // Direct assignment check
-        const isAssigned = b.trainers?.some(t => {
-          const tId = typeof t === 'object' ? t?._id : t;
-          return String(tId) === String(user?._id);
-        }) || b.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
-
-        // Student presence check
-        const hasStudents = studentBatchNamesAndIds.has(String(b._id)) || 
-                            studentBatchNamesAndIds.has(b.name?.trim()?.toLowerCase());
-
-        return isAssigned || hasStudents;
-      });
+      // Allow trainers to see all batches by not filtering relevantBatches
+      // relevantBatches = relevantBatches.filter(...)
 
       setStudents(relevantStudents);
       setBatches(relevantBatches);

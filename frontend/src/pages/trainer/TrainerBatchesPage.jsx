@@ -405,16 +405,8 @@ const TrainerBatchesPage = () => {
       return String(tId) === String(user?._id);
     }) || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
 
-    if (user?.role === 'Communication Trainer') {
-      const isComm = batch.course?.includes('Communication') || isAssigned;
-      if (!isComm) return false;
-    } else if (user?.role === 'Aptitude Trainer') {
-      const isApti = batch.course?.includes('Aptitude') || isAssigned;
-      if (!isApti) return false;
-    } else if (user?.role === 'Technical Trainer') {
-      const isTech = batch.course === 'Technical Training' || (!batch.course?.includes('Communication') && !batch.course?.includes('Aptitude')) || isAssigned;
-      if (!isTech) return false;
-    }
+    // Allow trainers to see ALL batches, matching Admin view
+    // Removed strict role-based restriction here
 
     const matchesSearch =
       batch.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

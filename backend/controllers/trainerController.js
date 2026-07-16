@@ -32,8 +32,8 @@ export const getAssignedStudents = async (req, res) => {
       return res.status(403).json({ message: 'User is not a valid trainer' });
     }
 
-    // Find batches where this trainer is assigned
-    const batches = await Batch.find({ trainers: req.user._id })
+    // Find all batches so trainers can see all batches (like admin)
+    const batches = await Batch.find({})
       .populate('students', 'name email mobile status slaeId technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
       .lean();
 
@@ -407,8 +407,8 @@ export const getTrainerDashboardStats = async (req, res) => {
   try {
     const trainerId = req.user._id;
 
-    // Find batches where this trainer is assigned
-    const batches = await Batch.find({ trainers: trainerId }).lean();
+    // Find all batches so trainer can see all batches in dashboard
+    const batches = await Batch.find({}).lean();
     const batchIds = batches.map(b => b._id);
 
     if (batches.length === 0) {
