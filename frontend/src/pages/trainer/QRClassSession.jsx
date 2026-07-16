@@ -116,7 +116,7 @@ const QRClassSession = () => {
   };
 
   const qrImageUrl = qrToken
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrToken)}`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(qrToken)}`
     : '';
 
   const selectedBatchObj = batches.find(b => b._id === selectedBatch);
@@ -128,7 +128,7 @@ const QRClassSession = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4 space-y-8">
+    <div className="w-full py-8 px-4 space-y-8">
       {/* Header section with sparkles */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -147,7 +147,7 @@ const QRClassSession = () => {
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/70 dark:bg-[#12131a]/85 border border-gray-200 dark:border-gray-800 rounded-[28px] p-8 backdrop-blur-md shadow-xl max-w-3xl mx-auto"
+          className="bg-white/70 dark:bg-[#12131a]/85 border border-gray-200 dark:border-gray-800 rounded-[28px] p-8 backdrop-blur-md shadow-xl w-full"
         >
           <div className="flex items-center gap-3 border-b border-gray-150 dark:border-gray-800 pb-5 mb-6">
             <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shrink-0">
@@ -310,22 +310,22 @@ const QRClassSession = () => {
               </span>
             </div>
 
-            <div className="relative p-6 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-inner max-w-sm mx-auto">
+            <div className="relative p-8 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-[36px] shadow-inner w-full max-w-md mx-auto flex items-center justify-center">
               {qrLoading && (
-                <div className="absolute inset-0 bg-white/80 dark:bg-[#0c0d12]/90 flex items-center justify-center rounded-3xl z-10">
+                <div className="absolute inset-0 bg-white/80 dark:bg-[#0c0d12]/90 flex items-center justify-center rounded-[36px] z-10">
                   <RefreshCw className="h-8 w-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
                 </div>
               )}
               {qrImageUrl ? (
-                <img src={qrImageUrl} alt="Rotating QR Code" className="w-72 h-72 select-none rounded-xl" />
+                <img src={qrImageUrl} alt="Rotating QR Code" className="w-96 h-96 select-none rounded-2xl" />
               ) : (
-                <div className="w-72 h-72 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-400">
+                <div className="w-96 h-96 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-400">
                   Initializing token...
                 </div>
               )}
             </div>
 
-            <div className="mt-6 w-full max-w-xs">
+            <div className="mt-6 w-full max-w-md mx-auto">
               <div className="flex justify-between text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">
                 <span>Rotating QR Token</span>
                 <span>{countdown}s remaining</span>
@@ -338,7 +338,7 @@ const QRClassSession = () => {
               </div>
             </div>
 
-            <div className="mt-6 flex items-center gap-2.5 text-xs text-rose-500 dark:text-rose-450 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/20">
+            <div className="mt-6 flex items-center gap-2.5 text-xs text-rose-500 dark:text-rose-450 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/20 w-full max-w-md mx-auto justify-center">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>Screenshots or shared copies expire automatically within 15 seconds.</span>
             </div>
