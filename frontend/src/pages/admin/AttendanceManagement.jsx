@@ -3,6 +3,7 @@ import API from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { Calendar, Search, ShieldCheck, Download, Users, Clock, AlertCircle, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AttendanceDrillDown from './AttendanceDrillDown';
 
 const AttendanceManagement = () => {
   const [logs, setLogs] = useState([]);
@@ -384,6 +385,10 @@ const AttendanceManagement = () => {
           </table>
         </div>
       </div>
+
+      {/* NEW DRILL-DOWN ANALYTICS SECTION */}
+      <AttendanceDrillDown logs={logs} />
+      
     </div>
   );
 };
