@@ -510,9 +510,10 @@ export const scanQR = async (req, res) => {
       studentBatch = sessionBatch;
     }
 
-    // 5. Verify student has not marked attendance for this session already (based on session batch and date)
+    // 5. Verify student has not marked attendance for this session already (based on session batch, date, and subject)
     const existingAttendance = await Attendance.findOne({
       student: studentId,
+      subject: session.subject,
       $or: [
         { session: session._id },
         { batch: sessionBatch._id, date: {
@@ -596,6 +597,7 @@ export const scanQR = async (req, res) => {
       batch: sessionBatch._id,
       scannedBatch: sessionBatch._id,
       date: session.startTime,
+      subject: session.subject,
       status,
       session: session._id,
       markedBy: session.trainer

@@ -24,6 +24,10 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  subject: {
+    type: String,
+    required: true,
+  },
   session: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'AttendanceSession',
@@ -43,8 +47,8 @@ const attendanceSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Compound index to ensure a student only gets one attendance record per day per batch
-attendanceSchema.index({ student: 1, batch: 1, date: 1 }, { unique: true });
+// Compound index to ensure a student only gets one attendance record per day per batch per subject
+attendanceSchema.index({ student: 1, batch: 1, date: 1, subject: 1 }, { unique: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 export default Attendance;
