@@ -60,10 +60,11 @@ const AttendanceManagement = () => {
       toast.error('No logs to export');
       return;
     }
-    const headers = 'Student Name,Email,Batch,Course,Date,Status,Marked By\n';
-    const rows = filteredLogs.map(log => 
-      `"${log.student?.name}","${log.student?.email}","${log.batch?.name}","${log.batch?.course}","${new Date(log.date).toLocaleDateString()}","${log.status}","${log.markedBy?.name}"`
-    ).join('\n');
+    const headers = 'Student Name,Email,Batch,Course,Date,Time,Status,Marked By\n';
+    const rows = filteredLogs.map(log => {
+      const d = new Date(log.date);
+      return `"${log.student?.name}","${log.student?.email}","${log.batch?.name}","${log.batch?.course}","${d.toLocaleDateString()}","${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}","${log.status}","${log.markedBy?.name}"`;
+    }).join('\n');
     
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -356,10 +357,16 @@ const AttendanceManagement = () => {
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">{log.batch?.course}</p>
                     </td>
                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={13} className="text-indigo-500" />
-                        {new Date(log.date).toLocaleDateString()}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={13} className="text-indigo-500" />
+                          {new Date(log.date).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                          <Clock size={11} />
+                          {new Date(log.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2.5 py-0.5 rounded-full font-bold uppercase text-[9px] ${
