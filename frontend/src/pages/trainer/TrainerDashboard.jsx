@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import { 
   Users, 
   Calendar, 
@@ -588,6 +589,55 @@ const TrainerDashboard = () => {
     } catch (error) {
       toast.error('Failed to save score');
     }
+  };
+
+  // Excel Exporter for daily attendance logs
+  const exportAttendanceToExcel = () => {
+    if (filteredAttendanceStudents.length === 0) {
+      toast.error("No attendance data to export");
+      return;
+    }
+
+    const dataToExport = filteredAttendanceStudents.map(student => {
+      const isGuest = student.isGuest;
+      const record = isGuest 
+        ? student.guestRecord 
+        : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
+      const currentStatus = isGuest
+        ? student.guestRecord.status
+        : (attendanceState[student._id] || 'Absent');
+
+      let commBatch = isGuest ? (student.guestRecord.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned');
+      let techBatch = student.technicalBatch || 'Unassigned';
+      let aptiBatch = student.aptitudeBatch || 'Unassigned';
+
+      return {
+        'SLAEID': student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`,
+        'Student Name': student.name,
+        'Student Email': student.email,
+        'Technical Trainer': student.technicalTrainer || 'Unassigned',
+        'Technical Batch': techBatch,
+        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+        'Communication Batch': commBatch,
+        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
+        'Aptitude Batch': aptiBatch,
+        'Status': currentStatus,
+        'Time': record ? new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+        'Date': record ? new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'N/A',
+        'Scanned Batch': record?.scannedBatch?.name || (record?.scannedBatch ? 'Yes' : 'N/A'),
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Daily Attendance');
+    
+    // Auto-fit column widths
+    worksheet['!cols'] = Object.keys(dataToExport[0]).map(() => ({ wch: 22 }));
+
+    XLSX.writeFile(workbook, `Attendance_Report_${attendanceDate}.xlsx`);
+    toast.success("Attendance Excel report downloaded successfully!");
   };
 
   // CSV Exporter helper
@@ -1281,6 +1331,13 @@ const TrainerDashboard = () => {
                     ))}
                   </div>
                 </div>
+                <button
+                  onClick={exportAttendanceToExcel}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm shadow-emerald-600/10 cursor-pointer transition select-none self-end lg:self-auto shrink-0"
+                >
+                  <FileSpreadsheet size={14} />
+                  <span>Export Excel</span>
+                </button>
               </div>
 
               {/* Advanced Single Table */}
@@ -1289,10 +1346,10 @@ const TrainerDashboard = () => {
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
                       <th className="px-5 py-4">SLAEID</th>
-                      <th className="px-5 py-4">Student Name</th>
-                      <th className="px-5 py-4">Trainer Name</th>
-                      <th className="px-5 py-4">Technical Trainer</th>
-                      <th className="px-5 py-4">Batch</th>
+                      <th className="px-5 py-4">Student Details</th>
+                      <th className="px-5 py-4">Technical Training</th>
+                      <th className="px-5 py-4">Communication Skills</th>
+                      <th className="px-5 py-4">Aptitude & Reasoning</th>
                       <th className="px-5 py-4 text-center">Interactive Status</th>
                       <th className="px-5 py-4">Time & Date</th>
                     </tr>
@@ -1351,22 +1408,41 @@ const TrainerDashboard = () => {
                               </div>
                               <div className="text-[11px] text-slate-400 mt-0.5">{student.email}</div>
                             </td>
-                            <td className="px-5 py-4 font-bold text-slate-700 dark:text-slate-300">
-                              {displayTrainer}
-                            </td>
-                            <td className="px-5 py-4 font-bold text-slate-600 dark:text-slate-400">
-                              {student.technicalTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
-                            </td>
+                            {/* Technical Training */}
                             <td className="px-5 py-4">
-                              <div className="space-y-1">
-                                <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/50 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300">
-                                  {studentBatches}
-                                </span>
-                                {isGuest && (
-                                  <span className="block text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/10 px-1.5 py-0.5 rounded border border-indigo-500/10 w-fit">
-                                    Scanned: {student.guestRecord.scannedBatch?.name || 'This Batch'}
-                                  </span>
+                              <div className="font-bold text-slate-800 dark:text-slate-200">
+                                {student.technicalTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
+                              </div>
+                              <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-bold">
+                                {student.technicalBatch || 'No Batch'}
+                              </div>
+                            </td>
+                            {/* Communication Skills */}
+                            <td className="px-5 py-4">
+                              <div className="font-bold text-slate-800 dark:text-slate-200">
+                                {isGuest ? (
+                                  <span className="text-amber-600 dark:text-amber-400 font-extrabold">Guest Scan</span>
+                                ) : (
+                                  student.communicationTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>
                                 )}
+                              </div>
+                              <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-bold">
+                                {isGuest ? (
+                                  <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-455">
+                                    {student.guestRecord.batch?.name || 'Unassigned'}
+                                  </span>
+                                ) : (
+                                  student.communicationBatch || 'No Batch'
+                                )}
+                              </div>
+                            </td>
+                            {/* Aptitude & Reasoning */}
+                            <td className="px-5 py-4">
+                              <div className="font-bold text-slate-800 dark:text-slate-200">
+                                {student.aptitudeTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
+                              </div>
+                              <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-bold">
+                                {student.aptitudeBatch || 'No Batch'}
                               </div>
                             </td>
                             <td className="px-5 py-4">
