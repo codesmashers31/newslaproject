@@ -26,7 +26,8 @@ import {
   CalendarDays,
   Layers,
   CalendarRange,
-  BarChart3
+  BarChart3,
+  ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoSla from '../assets/logosla.png';
@@ -144,6 +145,7 @@ const DashboardLayout = ({ children }) => {
         makeLink('/admin/availability', <CalendarDays size={17} />, 'Room Availability'),
         makeLink('/admin/calendar', <CalendarRange size={17} />, 'Schedule Calendar'),
         makeLink('/admin/reports', <BarChart3 size={17} />, 'Analytics & Reports'),
+        makeLink('/admin/device-resets', <ShieldAlert size={17} />, 'Device Security'),
       ]);
     } else if (['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'].includes(user?.role || '')) {
       return renderSection('Trainer Portal', [

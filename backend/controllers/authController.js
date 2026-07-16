@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Student from '../models/Student.js';
 import Placement from '../models/Placement.js';
+import DeviceResetRequest from '../models/DeviceResetRequest.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'lcp_secret_key_123456', {
@@ -66,7 +67,7 @@ export const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 export const authUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, deviceId, deviceInfo } = req.body;
 
   try {
     const trimmedInput = email ? email.trim() : '';
@@ -115,6 +116,37 @@ export const authUser = async (req, res) => {
     if (user && (await user.matchPassword(password))) {
       if (user.status === 'Inactive') {
         return res.status(403).json({ message: 'Your account is deactivated. Please contact admin.' });
+      }
+
+      // Check if device is locked
+      if (user.isDeviceLocked) {
+        return res.status(403).json({ 
+          code: 'DEVICE_LOCKED', 
+          message: 'Access Blocked: Your device authentication access has been locked. Contact SLA support to resolve.' 
+        });
+      }
+
+      // Single Device Access logic
+      if (deviceId) {
+        if (!user.deviceId) {
+          // Link first device
+          user.deviceId = deviceId;
+          user.deviceInfo = deviceInfo || 'Unknown Web Browser';
+          user.deviceLastUsed = new Date();
+          await user.save();
+        } else if (user.deviceId !== deviceId) {
+          // Block access if device mismatch
+          return res.status(403).json({
+            code: 'UNAUTHORIZED_DEVICE',
+            message: 'Access Denied: This account is already registered and logged in on another device.',
+            registeredDevice: user.deviceInfo || 'Other Registered Device',
+            lastUsed: user.deviceLastUsed
+          });
+        } else {
+          // Same device, update last active timestamp
+          user.deviceLastUsed = new Date();
+          await user.save();
+        }
       }
 
       res.json({
@@ -188,6 +220,50 @@ export const updateUserProfile = async (req, res) => {
     } else {
       res.status(404).json({ message: 'User not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Request Registered Device Reset
+// @route   POST /api/auth/request-device-reset
+// @access  Public
+export const requestDeviceReset = async (req, res) => {
+  const { emailOrSlaeId, reason, requestedDevice } = req.body;
+
+  try {
+    if (!emailOrSlaeId || !reason || !requestedDevice) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const trimmedInput = emailOrSlaeId.trim();
+
+    const user = await User.findOne({
+      $or: [
+        { email: trimmedInput.toLowerCase() },
+        { slaeId: trimmedInput },
+        { slaeId: trimmedInput.toUpperCase() },
+        { slaeId: trimmedInput.toLowerCase() }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'No registered account found with that Email or SLAEID.' });
+    }
+
+    // Check if there is already a pending request
+    const existing = await DeviceResetRequest.findOne({ user: user._id, status: 'Pending' });
+    if (existing) {
+      return res.status(400).json({ message: 'You already have a pending device reset request. Please wait for admin approval.' });
+    }
+
+    await DeviceResetRequest.create({
+      user: user._id,
+      reason,
+      requestedDevice
+    });
+
+    res.status(201).json({ message: 'Device reset request submitted successfully. SLA Admins have been notified.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

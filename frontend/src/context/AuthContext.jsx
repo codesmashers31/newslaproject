@@ -23,15 +23,59 @@ export const AuthProvider = ({ children }) => {
     checkUserSession();
   }, []);
 
+  // Helper to generate/fetch device ID and OS details
+  const getDeviceCredentials = () => {
+    let devId = localStorage.getItem('deviceId');
+    if (!devId) {
+      devId = `DEV-${Math.random().toString(36).substring(2, 11)}-${Math.random().toString(36).substring(2, 11)}`.toUpperCase();
+      localStorage.setItem('deviceId', devId);
+    }
+
+    const ua = navigator.userAgent;
+    let os = 'Unknown OS';
+    if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Macintosh')) os = 'macOS';
+    else if (ua.includes('Linux')) os = 'Linux';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+    let browser = 'Unknown Browser';
+    if (ua.includes('Chrome')) browser = 'Chrome';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+    else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+    else if (ua.includes('Edge')) browser = 'Edge';
+
+    return {
+      deviceId: devId,
+      deviceInfo: `${os} / ${browser}`
+    };
+  };
+
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const { data } = await API.post('/auth/login', { email, password });
+      const { deviceId, deviceInfo } = getDeviceCredentials();
+      const { data } = await API.post('/auth/login', { 
+        email, 
+        password,
+        deviceId,
+        deviceInfo
+      });
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed. Please check credentials.';
+      const respData = error.response?.data;
+      if (respData?.code === 'UNAUTHORIZED_DEVICE' || respData?.code === 'DEVICE_LOCKED') {
+        return { 
+          success: false, 
+          code: respData.code, 
+          message: respData.message,
+          registeredDevice: respData.registeredDevice,
+          lastUsed: respData.lastUsed
+        };
+      }
+      const message = respData?.message || 'Login failed. Please check credentials.';
       return { success: false, message };
     } finally {
       setLoading(false);

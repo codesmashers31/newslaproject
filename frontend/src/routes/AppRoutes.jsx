@@ -20,6 +20,7 @@ import RoomAllocation from '../pages/admin/RoomAllocation';
 import RoomAvailability from '../pages/admin/RoomAvailability';
 import ScheduleCalendar from '../pages/admin/ScheduleCalendar';
 import Reports from '../pages/admin/Reports';
+import DeviceResetManagement from '../pages/admin/DeviceResetManagement';
 
 // Trainer Pages
 import TrainerDashboard from '../pages/trainer/TrainerDashboard';
@@ -134,6 +135,14 @@ const AppRoutes = () => {
           element={
             <DashboardLayout>
               <Reports />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/admin/device-resets" 
+          element={
+            <DashboardLayout>
+              <DeviceResetManagement />
             </DashboardLayout>
           } 
         />

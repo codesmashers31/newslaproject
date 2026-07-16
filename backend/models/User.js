@@ -55,6 +55,22 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  deviceId: {
+    type: String,
+    default: null,
+  },
+  deviceInfo: {
+    type: String,
+    default: '',
+  },
+  deviceLastUsed: {
+    type: Date,
+    default: null,
+  },
+  isDeviceLocked: {
+    type: Boolean,
+    default: false,
+  },
   trainerAvailability: [{
     dayOfWeek: {
       type: String, // 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'

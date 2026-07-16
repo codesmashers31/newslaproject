@@ -21,7 +21,11 @@ import {
   getAttendanceLogs,
   importTrainersExcel,
   importBatchesExcel,
-  updateTrainerAvailability
+  updateTrainerAvailability,
+  getDeviceResetRequests,
+  resolveDeviceResetRequest,
+  resetUserDevice,
+  toggleUserDeviceLock
 } from '../controllers/adminController.js';
 import { generateStudentAIRoadmapForAdmin } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -67,5 +71,11 @@ router.put('/placements/:studentId', upload.single('offerLetter'), updatePlaceme
 
 // Attendance logs
 router.get('/attendance', getAttendanceLogs);
+
+// Device Reset Requests & Lock Administration
+router.get('/device-resets', getDeviceResetRequests);
+router.post('/device-resets/:id/resolve', resolveDeviceResetRequest);
+router.post('/users/:id/reset-device', resetUserDevice);
+router.post('/users/:id/toggle-device-lock', toggleUserDeviceLock);
 
 export default router;

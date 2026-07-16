@@ -10,6 +10,7 @@ import * as xlsx from 'xlsx';
 import fs from 'fs';
 import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
 import Enrollment from '../models/Enrollment.js';
+import DeviceResetRequest from '../models/DeviceResetRequest.js';
 
 // ==========================================
 // DASHBOARD ANALYTICS
@@ -861,6 +862,97 @@ export const updateTrainerAvailability = async (req, res) => {
     res.json({ 
       message: 'Trainer availability updated successfully', 
       availability: trainer.trainerAvailability 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get Device Reset Requests
+// @route   GET /api/admin/device-resets
+// @access  Private (Admin only)
+export const getDeviceResetRequests = async (req, res) => {
+  try {
+    const requests = await DeviceResetRequest.find()
+      .populate('user', 'name email role mobile slaeId')
+      .sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Approve/Reject Device Reset Request
+// @route   POST /api/admin/device-resets/:id/resolve
+// @access  Private (Admin only)
+export const resolveDeviceResetRequest = async (req, res) => {
+  const { action, adminComment } = req.body; // action: 'Approve' | 'Reject'
+
+  try {
+    const request = await DeviceResetRequest.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    if (action === 'Approve') {
+      const user = await User.findById(request.user);
+      if (user) {
+        user.deviceId = null;
+        user.deviceInfo = '';
+        user.deviceLastUsed = null;
+        await user.save();
+      }
+      request.status = 'Approved';
+    } else {
+      request.status = 'Rejected';
+    }
+
+    request.adminComment = adminComment || '';
+    await request.save();
+
+    res.json({ message: `Request successfully ${action === 'Approve' ? 'approved' : 'rejected'}.`, request });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Directly Reset User Device ID
+// @route   POST /api/admin/users/:id/reset-device
+// @access  Private (Admin only)
+export const resetUserDevice = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.deviceId = null;
+    user.deviceInfo = '';
+    user.deviceLastUsed = null;
+    await user.save();
+
+    res.json({ message: `Device registered registration released for user ${user.name}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Toggle User Device Lock
+// @route   POST /api/admin/users/:id/toggle-device-lock
+// @access  Private (Admin only)
+export const toggleUserDeviceLock = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.isDeviceLocked = !user.isDeviceLocked;
+    await user.save();
+
+    res.json({ 
+      message: `Account is now ${user.isDeviceLocked ? 'Locked' : 'Unlocked'} for device authentication.`,
+      isDeviceLocked: user.isDeviceLocked
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
