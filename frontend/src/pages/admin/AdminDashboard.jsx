@@ -14,23 +14,16 @@ import {
   User,
   Plus
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Legend, 
-  Cell
-} from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const COLORS = ['#10b981', '#f43f5e', '#eab308', '#6366f1'];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [recentAllocations, setRecentAllocations] = useState([]);
   const [utilizationData, setUtilizationData] = useState([]);
@@ -38,6 +31,11 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      if (user?.role === 'Admin') {
+        setLoading(false);
+        return;
+      }
+      
       // 1. Fetch dashboard stats
       const statsRes = await API.get('/reports/dashboard-stats');
       setStats(statsRes.data);
@@ -102,6 +100,61 @@ const AdminDashboard = () => {
     { name: 'Available', value: dashboardStats.availableRooms },
     { name: 'Occupied', value: dashboardStats.occupiedRooms }
   ];
+
+  if (user?.role === 'Admin') {
+    return (
+      <div className="space-y-8 p-1">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+            <LayoutDashboard className="text-indigo-600 dark:text-indigo-400" />
+            Admin Dashboard
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+            Manage your academy's core operations, students, and attendance.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div whileHover={{ y: -5 }} onClick={() => navigate('/admin/students')} className="cursor-pointer bg-white dark:bg-[#12131a]/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:border-indigo-500 transition-all flex items-center justify-between group">
+             <div className="space-y-2">
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Students</span>
+               <h3 className="text-xl font-black text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 transition-colors">Directory</h3>
+             </div>
+             <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+               <Users size={26} />
+             </div>
+          </motion.div>
+          <motion.div whileHover={{ y: -5 }} transition={{ delay: 0.05 }} onClick={() => navigate('/admin/attendance')} className="cursor-pointer bg-white dark:bg-[#12131a]/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:border-emerald-500 transition-all flex items-center justify-between group">
+             <div className="space-y-2">
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Attendance</span>
+               <h3 className="text-xl font-black text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 transition-colors">Management</h3>
+             </div>
+             <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+               <Calendar size={26} />
+             </div>
+          </motion.div>
+          <motion.div whileHover={{ y: -5 }} transition={{ delay: 0.1 }} onClick={() => navigate('/admin/trainers')} className="cursor-pointer bg-white dark:bg-[#12131a]/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:border-orange-500 transition-all flex items-center justify-between group">
+             <div className="space-y-2">
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Trainers</span>
+               <h3 className="text-xl font-black text-orange-600 dark:text-orange-400 group-hover:text-orange-700 transition-colors">Directory</h3>
+             </div>
+             <div className="p-4 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+               <User size={26} />
+             </div>
+          </motion.div>
+          <motion.div whileHover={{ y: -5 }} transition={{ delay: 0.15 }} onClick={() => navigate('/admin/batches')} className="cursor-pointer bg-white dark:bg-[#12131a]/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:border-purple-500 transition-all flex items-center justify-between group">
+             <div className="space-y-2">
+               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Batches</span>
+               <h3 className="text-xl font-black text-purple-600 dark:text-purple-400 group-hover:text-purple-700 transition-colors">Directory</h3>
+             </div>
+             <div className="p-4 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+               <Layers size={26} />
+             </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 p-1">
