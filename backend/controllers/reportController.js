@@ -2,6 +2,7 @@ import RoomAllocation from '../models/RoomAllocation.js';
 import Room from '../models/Room.js';
 import Batch from '../models/Batch.js';
 import User from '../models/User.js';
+import Attendance from '../models/Attendance.js';
 
 // Helper to compute duration in decimal hours from HH:MM strings
 const getDurationInHours = (start, end) => {
@@ -67,6 +68,14 @@ export const getDashboardStats = async (req, res) => {
 
     const availableCount = totalRooms - occupiedCount;
 
+    // Additional stats for Admin dashboard
+    const [totalStudents, totalTrainers, totalBatches, todayAttendanceCount] = await Promise.all([
+      User.countDocuments({ role: 'Student' }),
+      User.countDocuments({ role: 'Trainer' }),
+      Batch.countDocuments(),
+      Attendance.countDocuments({ date: { $gte: startOfToday, $lte: endOfToday } })
+    ]);
+
     res.json({
       totalRooms,
       availableRooms: Math.max(0, availableCount),
@@ -74,6 +83,10 @@ export const getDashboardStats = async (req, res) => {
       todayAllocationsCount: todayAllocations.length,
       currentRunningClasses: runningClasses,
       upcomingClasses: upcomingClasses.sort((a, b) => a.timeSlot.localeCompare(b.timeSlot)),
+      totalStudents,
+      totalTrainers,
+      totalBatches,
+      todayAttendanceCount
     });
   } catch (error) {
     console.error(error);
