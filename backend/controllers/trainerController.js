@@ -237,11 +237,26 @@ export const markAttendance = async (req, res) => {
         effectiveBatchId = foundBatchId;
       }
 
-      // Find student's actual enrolled batch
+      // Find student's batch matching the course category / department
       let saveBatchId = effectiveBatchId;
-      const studentBatch = await Batch.findOne({ students: rec.studentId });
-      if (studentBatch) {
-        saveBatchId = studentBatch._id;
+      const targetBatch = await Batch.findById(effectiveBatchId);
+      if (targetBatch) {
+        saveBatchId = targetBatch._id;
+      } else {
+        // Fallback to active enrollment batch for this trainer's department
+        let dept = 'Technical';
+        if (req.user.role === 'Communication Trainer') dept = 'Communication';
+        if (req.user.role === 'Aptitude Trainer') dept = 'Aptitude';
+        
+        const enroll = await Enrollment.findOne({ studentId: rec.studentId, department: dept, status: 'Active' });
+        if (enroll) {
+          saveBatchId = enroll.batchId;
+        } else {
+          const studentBatch = await Batch.findOne({ students: rec.studentId });
+          if (studentBatch) {
+            saveBatchId = studentBatch._id;
+          }
+        }
       }
 
       // Upsert attendance

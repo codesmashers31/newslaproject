@@ -510,12 +510,12 @@ export const scanQR = async (req, res) => {
       studentBatch = sessionBatch;
     }
 
-    // 5. Verify student has not marked attendance for this session already (based on actual batch and date)
+    // 5. Verify student has not marked attendance for this session already (based on session batch and date)
     const existingAttendance = await Attendance.findOne({
       student: studentId,
       $or: [
         { session: session._id },
-        { batch: studentBatch._id, date: {
+        { batch: sessionBatch._id, date: {
           $gte: new Date(new Date(session.startTime).setHours(0,0,0,0)),
           $lt: new Date(new Date(session.startTime).setHours(23,59,59,999))
         } }
@@ -593,7 +593,7 @@ export const scanQR = async (req, res) => {
     // 7. Save Attendance record
     const attendance = await Attendance.create({
       student: studentId,
-      batch: studentBatch._id,
+      batch: sessionBatch._id,
       scannedBatch: sessionBatch._id,
       date: session.startTime,
       status,

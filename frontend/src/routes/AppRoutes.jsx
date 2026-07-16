@@ -98,51 +98,55 @@ const AppRoutes = () => {
             </DashboardLayout>
           } 
         />
-        <Route 
-          path="/admin/rooms" 
-          element={
-            <DashboardLayout>
-              <RoomManagement />
-            </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/admin/allocations" 
-          element={
-            <DashboardLayout>
-              <RoomAllocation />
-            </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/admin/availability" 
-          element={
-            <DashboardLayout>
-              <RoomAvailability />
-            </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/admin/calendar" 
-          element={
-            <DashboardLayout>
-              <ScheduleCalendar />
-            </DashboardLayout>
-          } 
-        />
+        {/* SUPER ADMIN ONLY FEATURES */}
+        <Route element={<ProtectedRoute allowedRoles={['Super Admin']} />}>
+          <Route 
+            path="/admin/rooms" 
+            element={
+              <DashboardLayout>
+                <RoomManagement />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/admin/allocations" 
+            element={
+              <DashboardLayout>
+                <RoomAllocation />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/admin/availability" 
+            element={
+              <DashboardLayout>
+                <RoomAvailability />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/admin/calendar" 
+            element={
+              <DashboardLayout>
+                <ScheduleCalendar />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/admin/device-resets" 
+            element={
+              <DashboardLayout>
+                <DeviceResetManagement />
+              </DashboardLayout>
+            } 
+          />
+        </Route>
+
         <Route 
           path="/admin/reports" 
           element={
             <DashboardLayout>
               <Reports />
-            </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/admin/device-resets" 
-          element={
-            <DashboardLayout>
-              <DeviceResetManagement />
             </DashboardLayout>
           } 
         />

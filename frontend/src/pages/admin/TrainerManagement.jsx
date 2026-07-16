@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { useAuth } from '../../context/AuthContext';
 
 const AVAILABLE_STACKS = [
   'MERN Stack',
@@ -50,6 +51,7 @@ const AVAILABLE_SKILLS = [
 ];
 
 const TrainerManagement = () => {
+  const { user } = useAuth();
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -510,13 +512,15 @@ const TrainerManagement = () => {
 
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openAvailabilityModal(trainer)}
-                            title="Shift & Availability Hours"
-                            className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition cursor-pointer"
-                          >
-                            <Clock size={14} />
-                          </button>
+                          {user?.role === 'Super Admin' && (
+                            <button
+                              onClick={() => openAvailabilityModal(trainer)}
+                              title="Shift & Availability Hours"
+                              className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition cursor-pointer"
+                            >
+                              <Clock size={14} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleOpenEdit(trainer)}
                             title="Edit Trainer"

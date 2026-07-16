@@ -133,20 +133,32 @@ const DashboardLayout = ({ children }) => {
     );
 
     if (user?.role === 'Admin' || user?.role === 'Super Admin') {
-      return renderSection('Administration', [
+      const isSuper = user?.role === 'Super Admin';
+      const adminLinks = [
         makeLink('/admin', <LayoutDashboard size={17} />, 'Dashboard'),
         makeLink('/admin/trainers', <GraduationCap size={17} />, 'Trainers Directory'),
         makeLink('/admin/batches', <FolderGit size={17} />, 'Batches Directory'),
         makeLink('/admin/students', <Users size={17} />, 'Students Directory'),
         makeLink('/admin/attendance', <CalendarCheck size={17} />, 'Attendance'),
         makeLink('/admin/placement', <Briefcase size={17} />, 'Placement'),
-        makeLink('/admin/rooms', <School size={17} />, 'Room Directory'),
-        makeLink('/admin/allocations', <Layers size={17} />, 'Book Classroom'),
-        makeLink('/admin/availability', <CalendarDays size={17} />, 'Room Availability'),
-        makeLink('/admin/calendar', <CalendarRange size={17} />, 'Schedule Calendar'),
-        makeLink('/admin/reports', <BarChart3 size={17} />, 'Analytics & Reports'),
-        makeLink('/admin/device-resets', <ShieldAlert size={17} />, 'Device Security'),
-      ]);
+      ];
+
+      if (isSuper) {
+        adminLinks.push(
+          makeLink('/admin/rooms', <School size={17} />, 'Room Directory'),
+          makeLink('/admin/allocations', <Layers size={17} />, 'Book Classroom'),
+          makeLink('/admin/availability', <CalendarDays size={17} />, 'Room Availability'),
+          makeLink('/admin/calendar', <CalendarRange size={17} />, 'Schedule Calendar')
+        );
+      }
+
+      adminLinks.push(makeLink('/admin/reports', <BarChart3 size={17} />, 'Analytics & Reports'));
+
+      if (isSuper) {
+        adminLinks.push(makeLink('/admin/device-resets', <ShieldAlert size={17} />, 'Device Security'));
+      }
+
+      return renderSection('Administration', adminLinks);
     } else if (['Aptitude Trainer', 'Communication Trainer', 'Technical Trainer'].includes(user?.role || '')) {
       return renderSection('Trainer Portal', [
         makeLink('/trainer', <LayoutDashboard size={17} />, 'Dashboard'),
