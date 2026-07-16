@@ -1400,6 +1400,11 @@ const TrainerDashboard = () => {
                                   <div className="text-[10px] text-slate-400">
                                     {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                   </div>
+                                  {record.scannedBatch && (
+                                    <div className="text-[9px] font-bold text-indigo-600 dark:text-indigo-455 bg-indigo-50 dark:bg-indigo-950/20 px-1.5 py-0.5 rounded border border-indigo-500/10 w-fit mt-1 uppercase tracking-wider">
+                                      Scanned: {record.scannedBatch.name || record.scannedBatch}
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
                                 <span className="text-slate-400 italic">Not Submitted Today</span>
