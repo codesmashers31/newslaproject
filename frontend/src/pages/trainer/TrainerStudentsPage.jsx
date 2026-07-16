@@ -162,6 +162,11 @@ const TrainerStudentsPage = () => {
                 {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
+            {record?.scannedBatch && (
+              <span className="text-[8px] font-black text-indigo-750 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-1 py-0.5 rounded border border-indigo-500/10 uppercase">
+                Scanned: {record.scannedBatch.name || record.scannedBatch}
+              </span>
+            )}
           </div>
         )}
       </div>

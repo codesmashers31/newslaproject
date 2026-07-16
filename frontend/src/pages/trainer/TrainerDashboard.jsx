@@ -640,8 +640,8 @@ const TrainerDashboard = () => {
               {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
             </span>
             {record.scannedBatch && (
-              <span className="ml-1 text-[8px] font-black text-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 px-1 py-0.2 rounded border border-indigo-500/10">
-                QR
+              <span className="ml-1 text-[8px] font-black text-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 px-1 py-0.5 rounded border border-indigo-500/10 uppercase tracking-wide">
+                Scanned: {record.scannedBatch.name || record.scannedBatch}
               </span>
             )}
           </div>
