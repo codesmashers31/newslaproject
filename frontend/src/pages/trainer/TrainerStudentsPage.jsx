@@ -390,15 +390,9 @@ const TrainerStudentsPage = () => {
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
                 <th className="px-5 py-4">SLAEID</th>
                 <th className="px-5 py-4">Student Name</th>
-                {(user?.role !== 'Communication Trainer' && user?.role !== 'Aptitude Trainer') && (
-                  <th className="px-5 py-4">Technical Batch & Time</th>
-                )}
-                {(user?.role !== 'Technical Trainer' && user?.role !== 'Aptitude Trainer') && (
-                  <th className="px-5 py-4">Communication Batch & Time</th>
-                )}
-                {(user?.role !== 'Technical Trainer' && user?.role !== 'Communication Trainer') && (
-                  <th className="px-5 py-4">Aptitude Batch & Time</th>
-                )}
+                <th className="px-5 py-4">Technical Batch & Time</th>
+                <th className="px-5 py-4">Communication Batch & Time</th>
+                <th className="px-5 py-4">Aptitude Batch & Time</th>
                 <th className="px-5 py-4 text-center">Status</th>
                 <th className="px-5 py-4 text-right">Actions</th>
               </tr>
@@ -438,49 +432,43 @@ const TrainerStudentsPage = () => {
                       </td>
 
                       {/* Technical Batch */}
-                      {(user?.role !== 'Communication Trainer' && user?.role !== 'Aptitude Trainer') && (
-                        <td className="px-5 py-4">
-                          <div className="font-extrabold text-indigo-700 dark:text-indigo-300 text-xs">
-                            {student.technicalBatch || 'Unassigned'}
+                      <td className="px-5 py-4">
+                        <div className="font-extrabold text-indigo-700 dark:text-indigo-300 text-xs">
+                          {student.technicalBatch || 'Unassigned'}
+                        </div>
+                        {student.technicalBatch && (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
+                            <Clock size={11} className="text-indigo-400" />
+                            <span>{techSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
                           </div>
-                          {student.technicalBatch && (
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                              <Clock size={11} className="text-indigo-400" />
-                              <span>{techSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
-                            </div>
-                          )}
-                        </td>
-                      )}
+                        )}
+                      </td>
 
                       {/* Communication Batch */}
-                      {(user?.role !== 'Technical Trainer' && user?.role !== 'Aptitude Trainer') && (
-                        <td className="px-5 py-4">
-                          <div className="font-extrabold text-emerald-700 dark:text-emerald-300 text-xs">
-                            {student.communicationBatch || 'Unassigned'}
+                      <td className="px-5 py-4">
+                        <div className="font-extrabold text-emerald-700 dark:text-emerald-300 text-xs">
+                          {student.communicationBatch || 'Unassigned'}
+                        </div>
+                        {student.communicationBatch && (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
+                            <Clock size={11} className="text-emerald-400" />
+                            <span>{commSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
                           </div>
-                          {student.communicationBatch && (
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                              <Clock size={11} className="text-emerald-400" />
-                              <span>{commSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
-                            </div>
-                          )}
-                        </td>
-                      )}
+                        )}
+                      </td>
 
                       {/* Aptitude Batch */}
-                      {(user?.role !== 'Technical Trainer' && user?.role !== 'Communication Trainer') && (
-                        <td className="px-5 py-4">
-                          <div className="font-extrabold text-amber-700 dark:text-amber-300 text-xs">
-                            {student.aptitudeBatch || 'Unassigned'}
+                      <td className="px-5 py-4">
+                        <div className="font-extrabold text-amber-700 dark:text-amber-300 text-xs">
+                          {student.aptitudeBatch || 'Unassigned'}
+                        </div>
+                        {student.aptitudeBatch && (
+                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
+                            <Clock size={11} className="text-amber-400" />
+                            <span>{aptiSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
                           </div>
-                          {student.aptitudeBatch && (
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                              <Clock size={11} className="text-amber-400" />
-                              <span>{aptiSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
-                            </div>
-                          )}
-                        </td>
-                      )}
+                        )}
+                      </td>
 
                       <td className="px-5 py-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 ${
