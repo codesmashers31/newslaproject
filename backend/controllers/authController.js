@@ -119,7 +119,7 @@ export const authUser = async (req, res) => {
       }
 
       // Check if device is locked
-      if (user.isDeviceLocked) {
+      if (user.role === 'Student' && user.isDeviceLocked) {
         return res.status(403).json({ 
           code: 'DEVICE_LOCKED', 
           message: 'Access Blocked: Your device authentication access has been locked. Contact SLA support to resolve.' 
@@ -127,7 +127,7 @@ export const authUser = async (req, res) => {
       }
 
       // Single Device Access logic
-      if (deviceId) {
+      if (user.role === 'Student' && deviceId) {
         if (!user.deviceId) {
           // Link first device
           user.deviceId = deviceId;
