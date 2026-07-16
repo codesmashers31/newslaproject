@@ -123,7 +123,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0c0d12] text-slate-800 dark:text-gray-100 selection:bg-indigo-500 selection:text-white p-4 relative overflow-y-auto">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0c0d12] text-slate-800 dark:text-gray-100 selection:bg-indigo-500 selection:text-white p-4 relative overflow-y-auto">
       
       <AnimatePresence mode="wait">
         {/* VIEW 1: NORMAL LOGIN SCREEN */}
@@ -134,7 +134,7 @@ const Login = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.98 }}
             transition={{ duration: 0.4 }}
-            className="w-full max-w-md p-8 py-10 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl space-y-6"
+            className="m-auto w-full max-w-md p-8 py-10 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl space-y-6"
           >
             {/* Top SLA Logo & Brand Header */}
             <div className="flex flex-col items-center text-center space-y-4">
@@ -316,7 +316,7 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6 text-center"
+            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6 text-center"
           >
             <div className="mx-auto w-16 h-16 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-3xl flex items-center justify-center text-rose-650 shrink-0 animate-pulse">
               <ShieldAlert size={36} />
@@ -351,7 +351,7 @@ const Login = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6"
+            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6"
           >
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white">Request Device Access Reset</h2>
@@ -429,7 +429,7 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6 text-center"
+            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6 text-center"
           >
             <div className="mx-auto w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 rounded-3xl flex items-center justify-center text-emerald-600 shrink-0">
               <CheckCircle2 size={36} />
