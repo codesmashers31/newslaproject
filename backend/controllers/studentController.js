@@ -89,7 +89,7 @@ export const getStudentDashboard = async (req, res) => {
     const today = new Date();
     const startOfToday = new Date(today.setHours(0,0,0,0));
     const endOfToday = new Date(today.setHours(23,59,59,999));
-    const todayRecord = attendanceRecords.find(r => {
+    const todayRecords = attendanceRecords.filter(r => {
       const rDate = new Date(r.date);
       return rDate >= startOfToday && rDate <= endOfToday;
     });
@@ -201,11 +201,12 @@ export const getStudentDashboard = async (req, res) => {
         percentage: attendancePercent,
         totalClasses: totalDays,
         presentCount: presentDays,
+        todayRecords: todayRecords.map(r => ({
+          time: r.date,
+          status: r.status,
+          subject: r.subject
+        })),
         monthlyGraph: monthlyAttendance,
-        todayRecord: todayRecord ? {
-          status: todayRecord.status,
-          time: todayRecord.createdAt
-        } : null,
         records: attendanceRecords.map(rec => ({
           _id: rec._id,
           date: rec.date,
@@ -494,20 +495,31 @@ export const scanQR = async (req, res) => {
       return res.status(400).json({ message: 'Class session is no longer active' });
     }
 
-    // 4. Find student's actual enrolled batch
-    let studentBatch = await Batch.findOne({ students: studentId, status: 'Active' });
-    if (!studentBatch) {
-      studentBatch = await Batch.findOne({ students: studentId });
-    }
-
+    // 4. Strict QR Code Allocation Check
     const sessionBatch = await Batch.findById(session.batch);
     if (!sessionBatch) {
       return res.status(400).json({ message: 'Session batch not found' });
     }
 
-    // Fallback to session batch if student is not registered in any batch
-    if (!studentBatch) {
-      studentBatch = sessionBatch;
+    // Check if the student has an Active Enrollment for this Batch AND this Subject
+    const activeEnrollment = await Enrollment.findOne({
+      studentId: studentId,
+      batchId: sessionBatch._id,
+      department: session.subject,
+      status: 'Active'
+    });
+
+    if (!activeEnrollment) {
+      await AttendanceLog.create({
+        student: studentId,
+        scannedToken: token,
+        status: 'Failed',
+        reason: `Student not allocated to ${session.subject} for this batch.`,
+        ipAddress: req.ip || ''
+      });
+      return res.status(403).json({ 
+        message: `Access Denied: You are not allocated to the ${session.subject} class for this Batch.` 
+      });
     }
 
     // 5. Verify student has not marked attendance for this session already (based on session batch, date, and subject)

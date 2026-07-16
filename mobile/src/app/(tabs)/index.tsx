@@ -71,7 +71,7 @@ export default function DashboardScreen() {
 
   const profile = data?.profile?.user || {};
   const batch = data?.batch || {};
-  const todayRecord = data?.attendance?.todayRecord || null;
+  const todayRecords = data?.attendance?.todayRecords || [];
 
   return (
     <SafeAreaView className="flex-1 bg-slate-950">
@@ -131,19 +131,27 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          {todayRecord ? (
+          {todayRecords.length > 0 ? (
             /* CASE: MARKED PRESENT / LATE */
-            <View className="items-center py-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4">
-              <View className="w-10 h-10 bg-emerald-500/20 rounded-full items-center justify-center mb-2.5">
-                <CheckCircle2 size={20} color="#34d399" />
-              </View>
-              <Text className="text-xs font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full">
-                {todayRecord.status}
-              </Text>
-              <Text className="text-[11px] text-slate-400 mt-2 font-medium">
-                Verified today at {new Date(todayRecord.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-              <Text className="text-[9px] text-slate-500 mt-1">Daily check-in logged successfully.</Text>
+            <View className="space-y-3">
+              {todayRecords.map((record: any, index: number) => (
+                <View key={index} className="flex-row items-center justify-between py-3 px-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                  <View className="flex-row items-center">
+                    <View className="w-8 h-8 bg-emerald-500/20 rounded-full items-center justify-center mr-3">
+                      <CheckCircle2 size={16} color="#34d399" />
+                    </View>
+                    <View>
+                      <Text className="text-xs font-bold text-white uppercase tracking-wider">{record.subject || 'Class'}</Text>
+                      <Text className="text-[10px] text-slate-400 mt-0.5">
+                        {new Date(record.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                    {record.status}
+                  </Text>
+                </View>
+              ))}
             </View>
           ) : (
             /* CASE: PENDING */
