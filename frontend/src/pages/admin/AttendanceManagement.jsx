@@ -8,12 +8,18 @@ const AttendanceManagement = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterCourse, setFilterCourse] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterDate, setFilterDate] = useState('');
+
+  const [totalStudents, setTotalStudents] = useState(0);
 
   const loadLogs = async () => {
     setLoading(true);
     try {
       const { data } = await API.get('/admin/attendance');
-      setLogs(data);
+      setLogs(data.logs || []);
+      setTotalStudents(data.totalStudents || 0);
     } catch (error) {
       toast.error('Failed to load attendance logs');
     } finally {
@@ -25,10 +31,27 @@ const AttendanceManagement = () => {
     loadLogs();
   }, []);
 
-  const filteredLogs = logs.filter(log => 
-    log.student?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    log.batch?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = log.student?.name?.toLowerCase().includes(search.toLowerCase()) || log.batch?.name?.toLowerCase().includes(search.toLowerCase());
+    
+    let matchesCourse = true;
+    if (filterCourse === 'Technical') {
+      matchesCourse = log.batch?.course === 'Technical Training' || (!log.batch?.course?.includes('Communication') && !log.batch?.course?.includes('Aptitude'));
+    } else if (filterCourse === 'Communication') {
+      matchesCourse = log.batch?.course?.includes('Communication');
+    } else if (filterCourse === 'Aptitude') {
+      matchesCourse = log.batch?.course?.includes('Aptitude');
+    }
+
+    const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
+    
+    let matchesDate = true;
+    if (filterDate) {
+      matchesDate = new Date(log.date).toISOString().split('T')[0] === filterDate;
+    }
+
+    return matchesSearch && matchesCourse && matchesStatus && matchesDate;
+  });
 
   // Helper to trigger CSV Export simulation
   const handleExportCSV = () => {
@@ -55,10 +78,12 @@ const AttendanceManagement = () => {
   const calculateKPIs = () => {
     if (!logs || logs.length === 0) {
       return [
-        { label: 'Total Records', value: '0', sub: 'No attendance logs', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
-        { label: 'Present Today', value: '0', sub: '0 Students', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
-        { label: 'Late Today', value: '0', sub: '0 Students', icon: Clock, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20' },
-        { label: 'Absent Today', value: '0', sub: '0 Students', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' }
+        { label: 'Academy Students', value: totalStudents || '0', sub: 'Total Enrolled', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
+        { label: 'Overall Present', value: '0', sub: 'Today', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
+        { label: 'Technical Present', value: '0', sub: 'Today', icon: ShieldCheck, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20' },
+        { label: 'Communication Present', value: '0', sub: 'Today', icon: Users, color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20' },
+        { label: 'Aptitude Present', value: '0', sub: 'Today', icon: TrendingUp, color: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20' },
+        { label: 'Absent/Late', value: '0', sub: 'Today', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' }
       ];
     }
 
@@ -69,11 +94,17 @@ const AttendanceManagement = () => {
     const lateCount = todayLogs.filter(log => log.status === 'Late').length;
     const absentCount = todayLogs.filter(log => log.status === 'Absent').length;
 
+    const techPresent = todayLogs.filter(log => log.status === 'Present' && (log.batch?.course === 'Technical Training' || (!log.batch?.course?.includes('Communication') && !log.batch?.course?.includes('Aptitude')))).length;
+    const commPresent = todayLogs.filter(log => log.status === 'Present' && log.batch?.course?.includes('Communication')).length;
+    const aptiPresent = todayLogs.filter(log => log.status === 'Present' && log.batch?.course?.includes('Aptitude')).length;
+
     return [
-      { label: 'Total Records', value: logs.length, sub: 'All-time logs', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
-      { label: 'Present Today', value: presentCount, sub: 'Checked in today', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
-      { label: 'Late Today', value: lateCount, sub: 'Arrived late today', icon: Clock, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20' },
-      { label: 'Absent Today', value: absentCount, sub: 'Missed class today', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' }
+      { label: 'Academy Students', value: totalStudents || '0', sub: 'Total Enrolled', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
+      { label: 'Overall Present', value: presentCount, sub: 'Today', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
+      { label: 'Technical Present', value: techPresent, sub: 'Today', icon: ShieldCheck, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20' },
+      { label: 'Communication Present', value: commPresent, sub: 'Today', icon: Users, color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20' },
+      { label: 'Aptitude Present', value: aptiPresent, sub: 'Today', icon: TrendingUp, color: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20' },
+      { label: 'Absent/Late', value: absentCount + lateCount, sub: 'Today', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' }
     ];
   };
 
@@ -150,7 +181,7 @@ const AttendanceManagement = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
@@ -218,21 +249,70 @@ const AttendanceManagement = () => {
       </div>
 
       {/* Filter and Search Box */}
-      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 p-4 rounded-[20px] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative max-w-md w-full">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search by student name or batch..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
-          />
+      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 p-4 rounded-[20px] shadow-sm flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative max-w-md w-full">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <Search size={16} />
+            </span>
+            <input
+              type="text"
+              placeholder="Search by student name or batch..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
+            />
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            />
+            
+            <select
+              value={filterCourse}
+              onChange={(e) => setFilterCourse(e.target.value)}
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            >
+              <option value="All">All Subjects</option>
+              <option value="Technical">Technical</option>
+              <option value="Communication">Communication</option>
+              <option value="Aptitude">Aptitude</option>
+            </select>
+            
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Present">Present</option>
+              <option value="Late">Late</option>
+              <option value="Absent">Absent</option>
+              <option value="Excused">Excused</option>
+            </select>
+            
+            <button
+              onClick={() => {
+                setFilterCourse('All');
+                setFilterStatus('All');
+                setFilterDate('');
+                setSearch('');
+              }}
+              className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold transition-colors"
+            >
+              Clear
+            </button>
+          </div>
         </div>
-        <div className="text-xs text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/20 px-3.5 py-2 rounded-xl border border-indigo-100/30 dark:border-indigo-900/10">
-          Filtered Records: {filteredLogs.length}
+        
+        <div className="flex justify-between items-center border-t border-gray-100 dark:border-gray-800/60 pt-3">
+          <div className="text-xs text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/20 px-3.5 py-1.5 rounded-lg border border-indigo-100/30 dark:border-indigo-900/10 inline-block">
+            Filtered Records: {filteredLogs.length}
+          </div>
         </div>
       </div>
 

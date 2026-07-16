@@ -738,8 +738,10 @@ export const getAttendanceLogs = async (req, res) => {
       .populate('batch', 'name course')
       .populate('scannedBatch', 'name course')
       .populate('markedBy', 'name role')
-      .sort({ date: -1 });
-    res.json(attendance);
+      .sort({ date: -1 })
+      .lean();
+    const totalStudents = await User.countDocuments({ role: 'Student', status: 'Active' });
+    res.json({ logs: attendance, totalStudents });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
