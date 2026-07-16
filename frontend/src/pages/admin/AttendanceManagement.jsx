@@ -51,16 +51,86 @@ const AttendanceManagement = () => {
     toast.success('Attendance report exported successfully!');
   };
 
-  // Mock heatmap dataset
-  const mockHeatmap = [
-    { day: 'Mon', count: 18, rate: 92 },
-    { day: 'Tue', count: 22, rate: 96 },
-    { day: 'Wed', count: 15, rate: 84 },
-    { day: 'Thu', count: 20, rate: 89 },
-    { day: 'Fri', count: 24, rate: 98 },
-    { day: 'Sat', count: 12, rate: 78 },
-    { day: 'Sun', count: 0, rate: 0 }
-  ];
+  // Calculate Dynamic KPIs
+  const calculateKPIs = () => {
+    if (!logs || logs.length === 0) {
+      return [
+        { label: 'Total Records', value: '0', sub: 'No attendance logs', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
+        { label: 'Present Today', value: '0', sub: '0 Students', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
+        { label: 'Late Today', value: '0', sub: '0 Students', icon: Clock, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20' },
+        { label: 'Absent Today', value: '0', sub: '0 Students', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' }
+      ];
+    }
+
+    const todayStr = new Date().toDateString();
+    const todayLogs = logs.filter(log => new Date(log.date).toDateString() === todayStr);
+    
+    const presentCount = todayLogs.filter(log => log.status === 'Present').length;
+    const lateCount = todayLogs.filter(log => log.status === 'Late').length;
+    const absentCount = todayLogs.filter(log => log.status === 'Absent').length;
+
+    return [
+      { label: 'Total Records', value: logs.length, sub: 'All-time logs', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
+      { label: 'Present Today', value: presentCount, sub: 'Checked in today', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
+      { label: 'Late Today', value: lateCount, sub: 'Arrived late today', icon: Clock, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20' },
+      { label: 'Absent Today', value: absentCount, sub: 'Missed class today', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' }
+    ];
+  };
+
+  const kpis = calculateKPIs();
+
+  const generateHeatmap = () => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const heatmap = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dayName = days[d.getDay()];
+      
+      const dayLogs = logs.filter(log => new Date(log.date).toDateString() === d.toDateString());
+      const total = dayLogs.length;
+      const present = dayLogs.filter(log => log.status === 'Present' || log.status === 'Late').length;
+      
+      const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+      
+      heatmap.push({
+        day: dayName,
+        count: total,
+        rate: rate
+      });
+    }
+    return heatmap;
+  };
+  
+  const heatmapData = generateHeatmap();
+
+  const liveFeed = logs.slice(0, 3).map(log => {
+    let actionStr = '';
+    let color = '';
+    
+    if (log.status === 'Present') {
+      actionStr = `marked Present by ${log.markedBy?.name}`;
+      color = 'bg-emerald-50/50 border-emerald-100 dark:border-emerald-950/20 text-emerald-600 dark:text-emerald-400';
+    } else if (log.status === 'Late') {
+      actionStr = `marked Late by ${log.markedBy?.name}`;
+      color = 'bg-amber-50/50 border-amber-100 dark:border-amber-950/20 text-amber-600 dark:text-amber-400';
+    } else {
+      actionStr = `marked Absent by ${log.markedBy?.name}`;
+      color = 'bg-rose-50/50 border-rose-100 dark:border-rose-950/20 text-rose-600 dark:text-rose-500';
+    }
+    
+    const timeDiff = Math.floor((new Date() - new Date(log.createdAt || log.date)) / 60000);
+    const timeStr = timeDiff < 60 ? `${timeDiff} mins ago` : `${Math.floor(timeDiff/60)} hrs ago`;
+    
+    return {
+      name: log.student?.name || 'Unknown Student',
+      action: actionStr,
+      time: timeStr,
+      color: color
+    };
+  });
 
   return (
     <div className="space-y-8">
@@ -81,12 +151,7 @@ const AttendanceManagement = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Present Rate', value: '88%', sub: 'Avg 44/50 Students', icon: Users, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
-          { label: 'Late Log Rate', value: '4%', sub: '2 Students Today', icon: Clock, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20' },
-          { label: 'Absent Rate', value: '8%', sub: '4 Students Today', icon: AlertCircle, color: 'text-rose-600 dark:text-rose-500 bg-rose-50 dark:bg-rose-950/20' },
-          { label: 'Calculated Grade', value: 'Excellent', sub: 'Batches synced', icon: TrendingUp, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' }
-        ].map((kpi, idx) => {
+        {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <div key={idx} className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 p-5 rounded-[24px] shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
@@ -112,7 +177,7 @@ const AttendanceManagement = () => {
             Weekly Attendance Heatmap
           </h4>
           <div className="flex justify-between items-end h-40 pt-4 px-2">
-            {mockHeatmap.map((item, i) => (
+            {heatmapData.map((item, i) => (
               <div key={i} className="flex flex-col items-center gap-2 w-full">
                 <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500">{item.rate}%</span>
                 <div 
@@ -132,11 +197,7 @@ const AttendanceManagement = () => {
           <div>
             <h4 className="font-bold text-sm text-gray-800 dark:text-white mb-4">Live Check-in Feed</h4>
             <div className="space-y-3.5 max-h-[160px] overflow-y-auto pr-1">
-              {[
-                { name: 'Elena Rodriguez', action: 'scanned QR code at Hall B', time: '2 mins ago', color: 'bg-emerald-50/50 border-emerald-100 dark:border-emerald-950/20 text-emerald-600 dark:text-emerald-400' },
-                { name: 'Kenji Yamamoto', action: 'marked Present by Trainer Marcus', time: '12 mins ago', color: 'bg-indigo-50/50 border-indigo-100 dark:border-indigo-950/20 text-indigo-600 dark:text-indigo-400' },
-                { name: 'Sarah Miller', action: 'marked Late - Lecture A', time: '20 mins ago', color: 'bg-amber-50/50 border-amber-100 dark:border-amber-950/20 text-amber-600 dark:text-amber-400' }
-              ].map((feed, i) => (
+              {liveFeed.length > 0 ? liveFeed.map((feed, i) => (
                 <div key={i} className="flex items-center justify-between text-xs p-2.5 bg-gray-50/50 dark:bg-[#181922] border border-gray-100 dark:border-gray-800/80 rounded-xl">
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${feed.color.includes('emerald') ? 'bg-emerald-500' : feed.color.includes('indigo') ? 'bg-indigo-500' : 'bg-amber-500'}`} />
@@ -145,7 +206,9 @@ const AttendanceManagement = () => {
                   </div>
                   <span className="text-[10px] text-gray-400 font-bold">{feed.time}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-4 text-xs text-gray-500">No recent check-ins</div>
+              )}
             </div>
           </div>
           <div className="text-[10px] text-gray-400 italic text-center border-t border-gray-100 dark:border-gray-800 pt-3 mt-4 font-semibold">
