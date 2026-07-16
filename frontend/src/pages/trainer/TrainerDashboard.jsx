@@ -457,10 +457,8 @@ const TrainerDashboard = () => {
   // Fetch existing attendance logs and initialize state
   useEffect(() => {
     const fetchAndInitializeAttendance = async () => {
-      if (!selectedBatchId) return;
-
       try {
-        const { data: existingRecords } = await API.get(`/trainer/attendance?batchId=${selectedBatchId}&date=${attendanceDate}`);
+        const { data: existingRecords } = await API.get(`/trainer/attendance?date=${attendanceDate}`);
         setTodayRecords(existingRecords);
         
         const nextState = {};
@@ -468,19 +466,15 @@ const TrainerDashboard = () => {
         const nextTimes = {};
         const nextOutTimes = {};
 
-        batchStudents.forEach(s => {
-          const record = existingRecords.find(r => String(r?.student?._id || r?.student) === String(s?._id));
-          
-          if (record) {
-            nextState[s._id] = record.status;
-            nextRemarks[s._id] = record.remarks || '';
-            nextTimes[s._id] = record.timeIn || '09:00 AM';
-            nextOutTimes[s._id] = record.timeOut || '05:00 PM';
-          } else {
-            nextState[s._id] = 'Absent';
-            nextRemarks[s._id] = '';
-            nextTimes[s._id] = '09:00 AM';
-            nextOutTimes[s._id] = '05:00 PM';
+        existingRecords.forEach(record => {
+          const sId = record.student?._id || record.student;
+          const bId = record.batch?._id || record.batch;
+          if (sId && bId) {
+            const key = `${sId}_${bId}`;
+            nextState[key] = record.status;
+            nextRemarks[key] = record.remarks || '';
+            nextTimes[key] = record.timeIn || '09:00 AM';
+            nextOutTimes[key] = record.timeOut || '05:00 PM';
           }
         });
 
@@ -494,33 +488,36 @@ const TrainerDashboard = () => {
     };
 
     fetchAndInitializeAttendance();
-  }, [selectedBatchId, attendanceDate, students]);
+  }, [attendanceDate, students]);
 
-  const handleAttendanceChange = async (studentId, status) => {
+  const handleAttendanceChange = async (studentId, batchId, status) => {
+    if (!batchId) {
+      toast.error('Student is not assigned to a batch for this subject');
+      return;
+    }
+
+    const key = `${studentId}_${batchId}`;
+
     // 1. Instantly update UI state for responsive click feel
-    setAttendanceState(prev => ({ ...prev, [studentId]: status }));
+    setAttendanceState(prev => ({ ...prev, [key]: status }));
 
     // 2. Make API call in background
     try {
-      const targetBatchId = selectedBatchId === 'all' ? '' : selectedBatchId;
       await API.post('/trainer/attendance', {
-        batchId: targetBatchId,
+        batchId: batchId,
         date: attendanceDate,
         records: [{
           studentId,
           status,
-          remarks: attendanceRemarks[studentId] || '',
-          timeIn: checkInTimes[studentId] || '09:00 AM'
+          remarks: attendanceRemarks[key] || '',
+          timeIn: checkInTimes[key] || '09:00 AM'
         }]
       });
       toast.success(`Marked ${status} successfully`);
       
       // Refresh todayRecords to update UI check-in timestamps
-      const fetchBatchId = selectedBatchId === 'all' ? '' : selectedBatchId;
-      if (fetchBatchId) {
-        const { data: existingRecords } = await API.get(`/trainer/attendance?batchId=${fetchBatchId}&date=${attendanceDate}`);
-        setTodayRecords(existingRecords);
-      }
+      const { data: existingRecords } = await API.get(`/trainer/attendance?date=${attendanceDate}`);
+      setTodayRecords(existingRecords);
       
       if (isCommunicationTrainer) {
         loadStats(selectedBatchId);
@@ -528,6 +525,87 @@ const TrainerDashboard = () => {
     } catch (error) {
       toast.error('Failed to save attendance automatically');
     }
+  };
+
+  const getBatchIdByName = (batchName) => {
+    if (!batchName) return null;
+    const b = batches.find(x => x.name.toLowerCase() === batchName.toLowerCase());
+    return b ? b._id : null;
+  };
+
+  const renderSubjectCell = (student, batchName, batchId, trainerName, isGuestValue = false) => {
+    const record = isGuestValue
+      ? student.guestRecord
+      : todayRecords?.find(r => 
+          String(r?.student?._id || r?.student) === String(student?._id) &&
+          String(r?.batch?._id || r?.batch) === String(batchId)
+        );
+
+    const currentStatus = record ? record.status : (attendanceState[`${student._id}_${batchId}`] || 'Absent');
+
+    return (
+      <div className="space-y-2">
+        {/* Trainer and Batch Info */}
+        <div>
+          <div className="font-extrabold text-slate-800 dark:text-slate-200">
+            {isGuestValue ? (
+              <span className="text-amber-600 dark:text-amber-400 font-extrabold">Guest Scan</span>
+            ) : (
+              trainerName || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>
+            )}
+          </div>
+          <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">
+            {batchName || 'No Batch'}
+          </div>
+        </div>
+
+        {/* Attendance Status Buttons */}
+        {batchId ? (
+          <div className="flex items-center gap-1">
+            {['Present', 'Absent', 'Late'].map(st => {
+              const isSelected = currentStatus === st;
+              const baseStyle = st === 'Present'
+                ? isSelected ? 'bg-emerald-650 text-white shadow-sm font-black' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/70'
+                : st === 'Absent'
+                ? isSelected ? 'bg-rose-600 text-white shadow-sm font-black' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70'
+                : isSelected ? 'bg-amber-500 text-white shadow-sm font-black' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70';
+
+              return (
+                <button
+                  key={st}
+                  onClick={() => handleAttendanceChange(student._id, batchId, st)}
+                  className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${baseStyle}`}
+                >
+                  {st}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-[9px] text-slate-400 italic">No Batch Configured</div>
+        )}
+
+        {/* Scan Details */}
+        {record ? (
+          <div className="text-[9px] text-slate-450 dark:text-slate-400 flex flex-wrap items-center gap-1 font-mono">
+            <span className="font-bold text-slate-700 dark:text-slate-300">
+              {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <span>•</span>
+            <span>
+              {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+            </span>
+            {record.scannedBatch && (
+              <span className="ml-1 text-[8px] font-black text-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 px-1 py-0.2 rounded border border-indigo-500/10">
+                QR
+              </span>
+            )}
+          </div>
+        ) : (
+          batchId && <div className="text-[9px] text-slate-400 italic">Not Checked In</div>
+        )}
+      </div>
+    );
   };
 
   // Submit attendance from Checklist view
@@ -1350,14 +1428,12 @@ const TrainerDashboard = () => {
                       <th className="px-5 py-4">Technical Training</th>
                       <th className="px-5 py-4">Communication Skills</th>
                       <th className="px-5 py-4">Aptitude & Reasoning</th>
-                      <th className="px-5 py-4 text-center">Interactive Status</th>
-                      <th className="px-5 py-4">Time & Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
                     {paginatedAttendanceStudents.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-slate-400 italic">
+                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic">
                           No students found matching your search or batch selection.
                         </td>
                       </tr>
@@ -1410,81 +1486,21 @@ const TrainerDashboard = () => {
                             </td>
                             {/* Technical Training */}
                             <td className="px-5 py-4">
-                              <div className="font-bold text-slate-800 dark:text-slate-200">
-                                {student.technicalTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
-                              </div>
-                              <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-bold">
-                                {student.technicalBatch || 'No Batch'}
-                              </div>
+                              {renderSubjectCell(student, student.technicalBatch, getBatchIdByName(student.technicalBatch), student.technicalTrainer)}
                             </td>
                             {/* Communication Skills */}
                             <td className="px-5 py-4">
-                              <div className="font-bold text-slate-800 dark:text-slate-200">
-                                {isGuest ? (
-                                  <span className="text-amber-600 dark:text-amber-400 font-extrabold">Guest Scan</span>
-                                ) : (
-                                  student.communicationTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>
-                                )}
-                              </div>
-                              <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-bold">
-                                {isGuest ? (
-                                  <span className="px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-455">
-                                    {student.guestRecord.batch?.name || 'Unassigned'}
-                                  </span>
-                                ) : (
-                                  student.communicationBatch || 'No Batch'
-                                )}
-                              </div>
+                              {renderSubjectCell(
+                                student, 
+                                isGuest ? (student.guestRecord.batch?.name || 'Unassigned') : student.communicationBatch, 
+                                isGuest ? student.guestRecord.batch?._id : getBatchIdByName(student.communicationBatch), 
+                                student.communicationTrainer, 
+                                isGuest
+                              )}
                             </td>
                             {/* Aptitude & Reasoning */}
                             <td className="px-5 py-4">
-                              <div className="font-bold text-slate-800 dark:text-slate-200">
-                                {student.aptitudeTrainer || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>}
-                              </div>
-                              <div className="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 font-bold">
-                                {student.aptitudeBatch || 'No Batch'}
-                              </div>
-                            </td>
-                            <td className="px-5 py-4">
-                              <div className="flex items-center justify-center gap-1.5">
-                                {['Present', 'Absent', 'Late'].map(st => {
-                                  const isSelected = currentStatus === st;
-                                  const baseStyle = st === 'Present'
-                                    ? isSelected ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100'
-                                    : st === 'Absent'
-                                    ? isSelected ? 'bg-rose-600 text-white shadow-sm' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100'
-                                    : isSelected ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-100';
-
-                                  return (
-                                    <button
-                                      key={st}
-                                      onClick={() => handleAttendanceChange(student._id, st)}
-                                      className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${baseStyle}`}
-                                    >
-                                      {st}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </td>
-                            <td className="px-5 py-4 font-mono text-[11px] text-slate-500">
-                              {record ? (
-                                <div>
-                                  <div className="font-bold text-slate-700 dark:text-slate-300">
-                                    {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </div>
-                                  <div className="text-[10px] text-slate-400">
-                                    {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                                  </div>
-                                  {record.scannedBatch && (
-                                    <div className="text-[9px] font-bold text-indigo-600 dark:text-indigo-455 bg-indigo-50 dark:bg-indigo-950/20 px-1.5 py-0.5 rounded border border-indigo-500/10 w-fit mt-1 uppercase tracking-wider">
-                                      Scanned: {record.scannedBatch.name || record.scannedBatch}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 italic">Not Submitted Today</span>
-                              )}
+                              {renderSubjectCell(student, student.aptitudeBatch, getBatchIdByName(student.aptitudeBatch), student.aptitudeTrainer)}
                             </td>
                           </tr>
                         );
