@@ -533,7 +533,33 @@ const TrainerDashboard = () => {
     return b ? b._id : null;
   };
 
-  const renderSubjectCell = (student, batchName, batchId, trainerName, isGuestValue = false) => {
+  const getColumnsConfig = (role) => {
+    const techCol = {
+      key: 'technical',
+      header: 'Technical Training',
+      isInteractive: role === 'Technical Trainer' || role === 'Super Admin' || role === 'Admin'
+    };
+    const commCol = {
+      key: 'communication',
+      header: 'Communication Skills',
+      isInteractive: role === 'Communication Trainer' || role === 'Super Admin' || role === 'Admin'
+    };
+    const aptiCol = {
+      key: 'aptitude',
+      header: 'Aptitude & Reasoning',
+      isInteractive: role === 'Aptitude Trainer' || role === 'Super Admin' || role === 'Admin'
+    };
+
+    if (role === 'Communication Trainer') {
+      return [commCol, techCol, aptiCol];
+    } else if (role === 'Aptitude Trainer') {
+      return [aptiCol, techCol, commCol];
+    } else {
+      return [techCol, commCol, aptiCol];
+    }
+  };
+
+  const renderSubjectCell = (student, batchName, batchId, trainerName, isInteractive, isGuestValue = false) => {
     const record = isGuestValue
       ? student.guestRecord
       : todayRecords?.find(r => 
@@ -554,39 +580,57 @@ const TrainerDashboard = () => {
               trainerName || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>
             )}
           </div>
-          <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-0.5">
+          <div className="text-[10px] text-indigo-650 dark:text-indigo-400 font-bold mt-0.5">
             {batchName || 'No Batch'}
           </div>
         </div>
 
-        {/* Attendance Status Buttons */}
+        {/* Attendance Status (Interactive or Static) */}
         {batchId ? (
-          <div className="flex items-center gap-1">
-            {['Present', 'Absent', 'Late'].map(st => {
-              const isSelected = currentStatus === st;
-              const baseStyle = st === 'Present'
-                ? isSelected ? 'bg-emerald-650 text-white shadow-sm font-black' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/70'
-                : st === 'Absent'
-                ? isSelected ? 'bg-rose-600 text-white shadow-sm font-black' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70'
-                : isSelected ? 'bg-amber-500 text-white shadow-sm font-black' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70';
+          isInteractive ? (
+            <div className="flex items-center gap-1">
+              {['Present', 'Absent', 'Late'].map(st => {
+                const isSelected = currentStatus === st;
+                const baseStyle = st === 'Present'
+                  ? isSelected ? 'bg-emerald-600 text-white shadow-sm font-black' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/70'
+                  : st === 'Absent'
+                  ? isSelected ? 'bg-rose-600 text-white shadow-sm font-black' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100/70'
+                  : isSelected ? 'bg-amber-500 text-white shadow-sm font-black' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-100/70';
 
-              return (
-                <button
-                  key={st}
-                  onClick={() => handleAttendanceChange(student._id, batchId, st)}
-                  className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${baseStyle}`}
-                >
-                  {st}
-                </button>
-              );
-            })}
-          </div>
+                return (
+                  <button
+                    key={st}
+                    onClick={() => handleAttendanceChange(student._id, batchId, st)}
+                    className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${baseStyle}`}
+                  >
+                    {st}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="w-fit">
+              {record ? (
+                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                  currentStatus === 'Present'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15'
+                    : currentStatus === 'Late'
+                    ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/15'
+                    : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-500/15'
+                }`}>
+                  {currentStatus}
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-400 italic">Not Checked In</span>
+              )}
+            </div>
+          )
         ) : (
           <div className="text-[9px] text-slate-400 italic">No Batch Configured</div>
         )}
 
         {/* Scan Details */}
-        {record ? (
+        {record && (
           <div className="text-[9px] text-slate-450 dark:text-slate-400 flex flex-wrap items-center gap-1 font-mono">
             <span className="font-bold text-slate-700 dark:text-slate-300">
               {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -601,8 +645,6 @@ const TrainerDashboard = () => {
               </span>
             )}
           </div>
-        ) : (
-          batchId && <div className="text-[9px] text-slate-400 italic">Not Checked In</div>
         )}
       </div>
     );
@@ -1425,9 +1467,9 @@ const TrainerDashboard = () => {
                     <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
                       <th className="px-5 py-4">SLAEID</th>
                       <th className="px-5 py-4">Student Details</th>
-                      <th className="px-5 py-4">Technical Training</th>
-                      <th className="px-5 py-4">Communication Skills</th>
-                      <th className="px-5 py-4">Aptitude & Reasoning</th>
+                      {getColumnsConfig(user?.role).map(c => (
+                        <th key={c.key} className="px-5 py-4">{c.header}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
@@ -1440,33 +1482,8 @@ const TrainerDashboard = () => {
                     ) : (
                       paginatedAttendanceStudents.map(student => {
                         const isGuest = student.isGuest;
-                        const record = isGuest 
-                          ? student.guestRecord 
-                          : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
-                        const currentStatus = isGuest
-                          ? student.guestRecord.status
-                          : (attendanceState[student._id] || 'Absent');
-                        
-                        let studentBatches = 'Unassigned';
-                        let displayTrainer = 'Assigned Trainer';
-                        
-                        if (isGuest) {
-                          studentBatches = student.guestRecord.batch?.name || 'Unassigned';
-                          displayTrainer = student.guestRecord.markedBy?.name || 'Assigned Trainer';
-                        } else {
-                          if (user?.role === 'Communication Trainer') {
-                            studentBatches = student.communicationBatch || 'Unassigned';
-                            displayTrainer = student.communicationTrainer || 'Assigned Trainer';
-                          } else if (user?.role === 'Aptitude Trainer') {
-                            studentBatches = student.aptitudeBatch || 'Unassigned';
-                            displayTrainer = student.aptitudeTrainer || 'Assigned Trainer';
-                          } else {
-                            studentBatches = student.technicalBatch || 'Unassigned';
-                            displayTrainer = student.technicalTrainer || 'Assigned Trainer';
-                          }
-                        }
-
                         const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
+                        const cols = getColumnsConfig(user?.role);
                         
                         return (
                           <tr key={student._id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors ${isGuest ? 'bg-amber-500/5 dark:bg-amber-500/[0.02]' : ''}`}>
@@ -1484,24 +1501,46 @@ const TrainerDashboard = () => {
                               </div>
                               <div className="text-[11px] text-slate-400 mt-0.5">{student.email}</div>
                             </td>
-                            {/* Technical Training */}
-                            <td className="px-5 py-4">
-                              {renderSubjectCell(student, student.technicalBatch, getBatchIdByName(student.technicalBatch), student.technicalTrainer)}
-                            </td>
-                            {/* Communication Skills */}
-                            <td className="px-5 py-4">
-                              {renderSubjectCell(
-                                student, 
-                                isGuest ? (student.guestRecord.batch?.name || 'Unassigned') : student.communicationBatch, 
-                                isGuest ? student.guestRecord.batch?._id : getBatchIdByName(student.communicationBatch), 
-                                student.communicationTrainer, 
-                                isGuest
-                              )}
-                            </td>
-                            {/* Aptitude & Reasoning */}
-                            <td className="px-5 py-4">
-                              {renderSubjectCell(student, student.aptitudeBatch, getBatchIdByName(student.aptitudeBatch), student.aptitudeTrainer)}
-                            </td>
+                            {cols.map(c => {
+                              if (c.key === 'technical') {
+                                return (
+                                  <td key={c.key} className="px-5 py-4">
+                                    {renderSubjectCell(
+                                      student, 
+                                      student.technicalBatch, 
+                                      getBatchIdByName(student.technicalBatch), 
+                                      student.technicalTrainer, 
+                                      c.isInteractive
+                                    )}
+                                  </td>
+                                );
+                              } else if (c.key === 'communication') {
+                                return (
+                                  <td key={c.key} className="px-5 py-4">
+                                    {renderSubjectCell(
+                                      student, 
+                                      isGuest ? (student.guestRecord.batch?.name || 'Unassigned') : student.communicationBatch, 
+                                      isGuest ? student.guestRecord.batch?._id : getBatchIdByName(student.communicationBatch), 
+                                      student.communicationTrainer, 
+                                      c.isInteractive,
+                                      isGuest
+                                    )}
+                                  </td>
+                                );
+                              } else {
+                                return (
+                                  <td key={c.key} className="px-5 py-4">
+                                    {renderSubjectCell(
+                                      student, 
+                                      student.aptitudeBatch, 
+                                      getBatchIdByName(student.aptitudeBatch), 
+                                      student.aptitudeTrainer, 
+                                      c.isInteractive
+                                    )}
+                                  </td>
+                                );
+                              }
+                            })}
                           </tr>
                         );
                       })

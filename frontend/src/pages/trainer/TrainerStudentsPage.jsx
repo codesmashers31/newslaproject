@@ -38,6 +38,7 @@ const TrainerStudentsPage = () => {
   const [importingExcel, setImportingExcel] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [todayRecords, setTodayRecords] = useState([]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -77,12 +78,15 @@ const TrainerStudentsPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [studentsRes, batchesRes] = await Promise.all([
+      const todayStr = new Date().toISOString().split('T')[0];
+      const [studentsRes, batchesRes, attendanceRes] = await Promise.all([
         API.get('/trainer/students'),
-        API.get('/trainer/batches')
+        API.get('/trainer/batches'),
+        API.get(`/trainer/attendance?date=${todayStr}`)
       ]);
       setStudents(studentsRes.data || []);
       setBatches(batchesRes.data || []);
+      setTodayRecords(attendanceRes.data || []);
     } catch (error) {
       toast.error('Failed to load students directory');
     } finally {
@@ -107,6 +111,67 @@ const TrainerStudentsPage = () => {
       String(b._id) === String(batchName)
     );
     return found?.schedule || '09:00 AM - 11:00 AM (Mon - Fri)';
+  };
+
+  const renderStudentBatchStatus = (student, batchName, trainerField) => {
+    const batchId = getBatchIdByName(batchName);
+    const record = todayRecords?.find(r => 
+      String(r?.student?._id || r?.student) === String(student?._id) &&
+      (batchId && String(r?.batch?._id || r?.batch) === String(batchId))
+    );
+
+    const schedule = getBatchSchedule(batchName);
+
+    return (
+      <div className="space-y-1.5">
+        <div>
+          <div className="font-extrabold text-slate-800 dark:text-white text-xs">
+            {batchName || 'Unassigned'}
+          </div>
+          <div className="text-[10px] text-slate-400 mt-0.5">
+            Trainer: {student[trainerField] || 'Unassigned'}
+          </div>
+          {batchName && (
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
+              <Clock size={11} className="text-indigo-400" />
+              <span>{schedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
+            </div>
+          )}
+        </div>
+
+        {batchId && (
+          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+            {record ? (
+              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                record.status === 'Present'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 border border-emerald-500/15'
+                  : record.status === 'Late'
+                  ? 'bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-450 border border-amber-500/15'
+                  : 'bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-450 border border-rose-500/15'
+              }`}>
+                {record.status}
+              </span>
+            ) : (
+              <span className="text-[9px] font-bold text-slate-450 dark:text-slate-500 italic bg-slate-50 dark:bg-slate-900/30 px-1.5 py-0.5 rounded border border-slate-200/50 dark:border-slate-800/50">
+                Not Checked In
+              </span>
+            )}
+            
+            {record && (
+              <span className="text-[9px] text-slate-500 dark:text-slate-400 font-mono font-bold">
+                {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const getBatchIdByName = (batchName) => {
+    if (!batchName) return null;
+    const b = batches.find(x => x.name.toLowerCase() === batchName.toLowerCase());
+    return b ? b._id : null;
   };
 
   const getDomainBatches = (domainType) => {
@@ -433,41 +498,17 @@ const TrainerStudentsPage = () => {
 
                       {/* Technical Batch */}
                       <td className="px-5 py-4">
-                        <div className="font-extrabold text-indigo-700 dark:text-indigo-300 text-xs">
-                          {student.technicalBatch || 'Unassigned'}
-                        </div>
-                        {student.technicalBatch && (
-                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                            <Clock size={11} className="text-indigo-400" />
-                            <span>{techSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
-                          </div>
-                        )}
+                        {renderStudentBatchStatus(student, student.technicalBatch, 'technicalTrainer')}
                       </td>
 
                       {/* Communication Batch */}
                       <td className="px-5 py-4">
-                        <div className="font-extrabold text-emerald-700 dark:text-emerald-300 text-xs">
-                          {student.communicationBatch || 'Unassigned'}
-                        </div>
-                        {student.communicationBatch && (
-                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                            <Clock size={11} className="text-emerald-400" />
-                            <span>{commSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
-                          </div>
-                        )}
+                        {renderStudentBatchStatus(student, student.communicationBatch, 'communicationTrainer')}
                       </td>
 
                       {/* Aptitude Batch */}
                       <td className="px-5 py-4">
-                        <div className="font-extrabold text-amber-700 dark:text-amber-300 text-xs">
-                          {student.aptitudeBatch || 'Unassigned'}
-                        </div>
-                        {student.aptitudeBatch && (
-                          <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-                            <Clock size={11} className="text-amber-400" />
-                            <span>{aptiSchedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
-                          </div>
-                        )}
+                        {renderStudentBatchStatus(student, student.aptitudeBatch, 'aptitudeTrainer')}
                       </td>
 
                       <td className="px-5 py-4 text-center">
