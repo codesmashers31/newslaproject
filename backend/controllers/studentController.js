@@ -501,11 +501,10 @@ export const scanQR = async (req, res) => {
       return res.status(400).json({ message: 'Session batch not found' });
     }
 
-    // Check if the student has an Active Enrollment for this Batch AND this Subject
+    // Check if the student has an Active Enrollment for this Batch (regardless of department)
     const activeEnrollment = await Enrollment.findOne({
       studentId: studentId,
       batchId: sessionBatch._id,
-      department: session.subject,
       status: 'Active'
     });
 
@@ -514,11 +513,11 @@ export const scanQR = async (req, res) => {
         student: studentId,
         scannedToken: token,
         status: 'Failed',
-        reason: `Student not allocated to ${session.subject} for this batch.`,
+        reason: `Student not allocated to this batch.`,
         ipAddress: req.ip || ''
       });
       return res.status(403).json({ 
-        message: `Access Denied: You are not allocated to the ${session.subject} class for this Batch.` 
+        message: `Access Denied: You are not allocated to this Batch.` 
       });
     }
 
