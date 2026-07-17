@@ -495,43 +495,58 @@ export const scanQR = async (req, res) => {
       return res.status(400).json({ message: 'Class session is no longer active' });
     }
 
-    // 4. Strict QR Code Allocation Check
+    // 4. QR Code Allocation Check
     const sessionBatch = await Batch.findById(session.batch);
     if (!sessionBatch) {
       return res.status(400).json({ message: 'Session batch not found' });
     }
 
-    // Check if the student has an Active Enrollment for this Batch (regardless of department)
-    const activeEnrollment = await Enrollment.findOne({
-      studentId: studentId,
-      batchId: sessionBatch._id,
-      status: 'Active'
-    });
+    let activeEnrollment = null;
+
+    if (session.subject === 'Technical Training') {
+      // STRICT CHECK: For Technical, student must be in this exact batch
+      activeEnrollment = await Enrollment.findOne({
+        studentId: studentId,
+        batchId: sessionBatch._id,
+        status: 'Active'
+      });
+    } else {
+      // FLEXIBLE CHECK: For Comm/Apti, student just needs ANY active enrollment
+      activeEnrollment = await Enrollment.findOne({
+        studentId: studentId,
+        status: 'Active'
+      });
+    }
 
     if (!activeEnrollment) {
       await AttendanceLog.create({
         student: studentId,
         scannedToken: token,
         status: 'Failed',
-        reason: `Student not allocated to this batch.`,
+        reason: session.subject === 'Technical Training' 
+          ? `Student not allocated to this Technical batch.` 
+          : `Student has no active enrollments.`,
         ipAddress: req.ip || ''
       });
       return res.status(403).json({ 
-        message: `Access Denied: You are not allocated to this Batch.` 
+        message: session.subject === 'Technical Training'
+          ? `Access Denied: You are not allocated to this Technical Batch.`
+          : `Access Denied: You do not have any active enrollments.`
       });
     }
 
-    // 5. Verify student has not marked attendance for this session already (based on session batch, date, and subject)
+    // 5. Verify student has not marked attendance for this subject today
+    // This ensures only ONE entry per day for Communication, ONE for Aptitude, etc.
+    const startOfDay = new Date(new Date(session.startTime).setHours(0,0,0,0));
+    const endOfDay = new Date(new Date(session.startTime).setHours(23,59,59,999));
+
     const existingAttendance = await Attendance.findOne({
       student: studentId,
       subject: session.subject,
-      $or: [
-        { session: session._id },
-        { batch: sessionBatch._id, date: {
-          $gte: new Date(new Date(session.startTime).setHours(0,0,0,0)),
-          $lt: new Date(new Date(session.startTime).setHours(23,59,59,999))
-        } }
-      ]
+      date: {
+        $gte: startOfDay,
+        $lt: endOfDay
+      }
     });
 
     if (existingAttendance) {
@@ -540,10 +555,10 @@ export const scanQR = async (req, res) => {
         session: session._id,
         scannedToken: token,
         status: 'Failed',
-        reason: 'Duplicate scan / Attendance already marked',
+        reason: 'Duplicate scan / Attendance already marked for this subject today',
         ipAddress: req.ip || ''
       });
-      return res.status(400).json({ message: 'You have already marked attendance for this class/day' });
+      return res.status(400).json({ message: `You have already marked attendance for ${session.subject} today` });
     }
 
     /*
