@@ -7,9 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const QRClassSession = () => {
   const [batches, setBatches] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('');
-  const [subject, setSubject] = useState('');
-  const [floorNumber, setFloorNumber] = useState('');
-  const [roomNumber, setRoomNumber] = useState('');
   
   const [activeSession, setActiveSession] = useState(null);
   const [qrToken, setQrToken] = useState('');
@@ -85,18 +82,21 @@ const QRClassSession = () => {
 
   const handleStartSession = async (e) => {
     e.preventDefault();
-    if (!selectedBatch || !subject || !floorNumber || !roomNumber) {
-      toast.error('Please fill in all session details');
+    if (!selectedBatch) {
+      toast.error('Please select a batch');
       return;
     }
 
     setLoading(true);
     try {
+      const selectedBatchObj = batches.find(b => b._id === selectedBatch);
+      const inferredSubject = selectedBatchObj?.course || 'General Class';
+
       const { data } = await API.post('/trainer/session/start', {
         batchId: selectedBatch,
-        subject,
-        floorNumber,
-        roomNumber
+        subject: inferredSubject,
+        floorNumber: 'N/A',
+        roomNumber: 'N/A'
       });
       setActiveSession(data);
       toast.success('Attendance session started successfully!');
@@ -223,54 +223,6 @@ const QRClassSession = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
-
-              {/* Subject / Topic Field */}
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
-                  <BookOpen size={14} className="text-indigo-500" />
-                  Subject / Topic Name *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. React Context API"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold text-gray-900 dark:text-white"
-                  required
-                />
-              </div>
-
-              {/* Floor Number */}
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
-                  <MapPin size={14} className="text-indigo-500" />
-                  Floor Number *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 2nd Floor"
-                  value={floorNumber}
-                  onChange={(e) => setFloorNumber(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold text-gray-900 dark:text-white"
-                  required
-                />
-              </div>
-
-              {/* Room Number */}
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
-                  <School size={14} className="text-indigo-500" />
-                  Room Number *
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Lab 4"
-                  value={roomNumber}
-                  onChange={(e) => setRoomNumber(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold text-gray-900 dark:text-white"
-                  required
-                />
               </div>
 
             </div>
