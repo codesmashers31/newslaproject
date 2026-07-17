@@ -112,8 +112,23 @@ export const authUser = async (req, res) => {
         });
       }
     }
+    let passwordMatches = false;
+    if (user) {
+      // Check original case
+      passwordMatches = await user.matchPassword(password);
+      
+      // If that fails, check lowercase (helps when default password is lowercased SLAE ID)
+      if (!passwordMatches) {
+        passwordMatches = await user.matchPassword(password.toLowerCase());
+      }
+      
+      // If that fails, check uppercase just in case
+      if (!passwordMatches) {
+        passwordMatches = await user.matchPassword(password.toUpperCase());
+      }
+    }
 
-    if (user && (await user.matchPassword(password))) {
+    if (user && passwordMatches) {
       if (user.status === 'Inactive') {
         return res.status(403).json({ message: 'Your account is deactivated. Please contact admin.' });
       }
