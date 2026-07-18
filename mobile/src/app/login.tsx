@@ -17,11 +17,15 @@ import {
   CheckCircle2,
   RotateCcw,
   AlertTriangle,
+  Mail,
+  Lock,
+  ArrowRight,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
+import { Image } from 'expo-image';
 import API from '../services/api';
 
 export default function LoginScreen() {
@@ -159,39 +163,49 @@ export default function LoginScreen() {
           {viewState === 'login' && (
             <View className="w-full">
               
-              {/* Logo Placeholder matching screenshot */}
+              {/* Real Logo Image matching screenshot */}
               <View className="items-center mb-4">
-                <View className="w-20 h-20 bg-[#C4BFB6] rounded-[20px] mb-5 shadow-sm" />
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={{ width: 80, height: 80, borderRadius: 20, marginBottom: 20 }}
+                  contentFit="contain"
+                />
                 
                 {/* Titles */}
                 <Text className="text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</Text>
                 <Text className="text-xs text-[#64748B] mt-1.5 font-semibold">Log in to continue your progress</Text>
               </View>
 
-              {/* Email Input Field */}
+              {/* Email Input Field with Icon */}
               <View className="mb-4">
-                <TextInput
-                  className="w-full px-4 border border-[#E2E8F0] rounded-2xl bg-white h-12 text-sm font-semibold text-[#0F172A]"
-                  placeholder="student@lcp.edu"
-                  placeholderTextColor="#94A3B8"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-12">
+                  <Mail size={18} color="#94A3B8" style={{ marginRight: 10 }} />
+                  <TextInput
+                    className="flex-1 text-sm font-semibold text-[#0F172A]"
+                    placeholder="student@lcp.edu"
+                    placeholderTextColor="#94A3B8"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
               </View>
 
-              {/* Password Input Field */}
+              {/* Password Input Field with Icon */}
               <View className="mb-2">
-                <TextInput
-                  className="w-full px-4 border border-[#E2E8F0] rounded-2xl bg-white h-12 text-sm font-semibold text-[#0F172A]"
-                  placeholder="••••••••••"
-                  placeholderTextColor="#94A3B8"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={true}
-                  autoCapitalize="none"
-                />
+                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-12">
+                  <Lock size={18} color="#94A3B8" style={{ marginRight: 10 }} />
+                  <TextInput
+                    className="flex-1 text-sm font-semibold text-[#0F172A]"
+                    placeholder="••••••••••"
+                    placeholderTextColor="#94A3B8"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={true}
+                    autoCapitalize="none"
+                  />
+                </View>
               </View>
 
               {/* Forgot Password Link */}
@@ -212,7 +226,10 @@ export default function LoginScreen() {
                 {loading ? (
                   <ActivityIndicator color="#ffffff" />
                 ) : (
-                  <Text className="text-white text-sm font-black">Login to Portal -></Text>
+                  <View className="flex-row items-center justify-center">
+                    <Text className="text-white text-sm font-black mr-2">Login to Portal</Text>
+                    <ArrowRight size={16} color="#ffffff" />
+                  </View>
                 )}
               </TouchableOpacity>
 
