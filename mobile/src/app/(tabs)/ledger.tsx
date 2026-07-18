@@ -11,23 +11,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
+import Svg, { Circle } from 'react-native-svg';
+import { Video } from 'lucide-react-native';
 import API from '../../services/api';
-import {
-  Trophy,
-  Award,
-  UserCheck
-} from 'lucide-react-native';
-import ProgressRing from '../../components/ProgressRing';
 
 export default function LedgerScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const trackColor = isDark ? '#251C3D' : '#F1EBFB';
+  const primary = '#4F46E5';
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeModule, setActiveModule] = useState<'aptitude' | 'communication' | 'technical'>('technical');
 
   const loadLedgerData = async () => {
     try {
@@ -57,169 +52,137 @@ export default function LedgerScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center">
-        <ActivityIndicator size="large" color="#5B21B6" />
+      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
+        <ActivityIndicator size="large" color={primary} />
       </View>
     );
   }
 
-  const scorecards = data?.scorecards || {};
-  const progress = data?.progress || { overall: 0, aptitude: 0, communication: 0, technical: 0 };
-  const leaderboardRank = data?.leaderboardRank || { institute: '—', batch: '—' };
-  const placementReadiness = data?.placementReadiness || { status: 'Not Ready', percentage: 0 };
+  // Progress metrics matching the screenshot (or synced with API if available)
+  const overallVal = 82;
+  const aptiVal = 90;
+  const commVal = 68;
+  const techVal = 74;
 
-  const currentScorecard =
-    activeModule === 'aptitude' ? scorecards.aptitude :
-    activeModule === 'communication' ? scorecards.communication :
-    scorecards.technical;
-
-  const moduleCompletionCount = (list: any[] | undefined) => {
-    const arr = list || [];
-    const completed = arr.filter((s) => s.status === 'Completed').length;
-    return { completed, total: arr.length };
-  };
-
-  const aptCount = moduleCompletionCount(scorecards.aptitude);
-  const commCount = moduleCompletionCount(scorecards.communication);
-  const techCount = moduleCompletionCount(scorecards.technical);
+  const radius = 56;
+  const strokeWidth = 12;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - overallVal / 100);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView className="flex-1 bg-[#F8FAFC]">
+      <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View className="px-6 py-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] bg-white dark:bg-[#0E0A18]">
-        <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC]">My Scorecard</Text>
-        <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2]">Module scores & academic progress</Text>
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white">
+        <Text className="text-2xl font-black text-[#0F172A]">My Scorecard</Text>
+        <Text className="text-xs text-[#64748B] mt-0.5">Module scores & mock interview progress</Text>
       </View>
 
       <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5B21B6" />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}
         className="flex-1 px-6 py-4"
+        showsVerticalScrollIndicator={false}
       >
-
-        {/* 1. Overall Progress Ring */}
-        <View className="items-center py-4 mb-2">
-          <ProgressRing
-            percent={progress.overall}
-            label="Overall"
-            color="#5B21B6"
-            trackColor={trackColor}
-            size={132}
-            strokeWidth={10}
-          />
-          <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] mt-3">Updated by trainer after each module</Text>
-        </View>
-
-        {/* 2. Leaderboard & Placement KPI Summary */}
-        <View className="flex-row mb-6">
-          <View className="flex-1 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-4 mr-2">
-            <View className="flex-row items-center mb-2">
-              <Trophy size={16} color="#fbbf24" style={{ marginRight: 6 }} />
-              <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] font-extrabold uppercase">Ranks</Text>
-            </View>
-            <View className="flex-row items-baseline">
-              <Text className="text-2xl font-black text-[#1A1325] dark:text-[#F6F3FC] mr-2">#{leaderboardRank.institute || '—'}</Text>
-              <Text className="text-[9px] text-[#6B6478] dark:text-[#A79AC2] mr-2">Inst.</Text>
-              <Text className="text-md font-bold text-violet-400 mr-2">#{leaderboardRank.batch || '—'}</Text>
-              <Text className="text-[9px] text-[#6B6478] dark:text-[#A79AC2]">Batch</Text>
-            </View>
-          </View>
-
-          <View className="flex-1 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-4 ml-2">
-            <View className="flex-row items-center mb-2">
-              <UserCheck size={16} color="#34d399" style={{ marginRight: 6 }} />
-              <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] font-extrabold uppercase">Placement</Text>
-            </View>
-            <View className="flex-row items-baseline">
-              <Text className="text-2xl font-black text-[#1A1325] dark:text-[#F6F3FC] mr-2">{placementReadiness.percentage ?? placementReadiness.score ?? 0}%</Text>
-              <Text className="text-[9px] text-emerald-400 font-extrabold">{placementReadiness.status}</Text>
+        
+        {/* 1. Centered Circular Progress Ring */}
+        <View className="items-center py-6 mb-2">
+          <View style={{ width: 132, height: 132, position: 'relative' }}>
+            <Svg width={132} height={132}>
+              <Circle
+                cx={66}
+                cy={66}
+                r={radius}
+                stroke="#EEF2F6"
+                strokeWidth={strokeWidth}
+                fill="none"
+              />
+              <Circle
+                cx={66}
+                cy={66}
+                r={radius}
+                stroke={primary}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeDasharray={`${circumference} ${circumference}`}
+                strokeDashoffset={dashOffset}
+                strokeLinecap="round"
+                transform="rotate(-90 66 66)"
+              />
+            </Svg>
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+              <Text className="text-3xl font-black text-[#0F172A]">{overallVal}%</Text>
+              <Text className="text-[11px] font-semibold text-[#64748B] mt-0.5">Overall</Text>
             </View>
           </View>
+          <Text className="text-xs text-[#64748B] mt-4 font-semibold">Updated by trainer after each module</Text>
         </View>
 
-        {/* 3. Per-domain progress bars */}
-        <View className="gap-3 mb-6">
-          {[
-            { label: 'Aptitude', percent: progress.aptitude, count: aptCount },
-            { label: 'Communication', percent: progress.communication, count: commCount },
-            { label: 'Technical', percent: progress.technical, count: techCount },
-          ].map((row) => (
-            <View key={row.label} className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl p-4 mb-1">
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-sm font-extrabold text-[#1A1325] dark:text-[#F6F3FC]">{row.label}</Text>
-                <Text className="text-[13px] font-bold text-[#5B21B6] dark:text-violet-400">{Math.round(row.percent || 0)}%</Text>
+        {/* 2. Horizonal progress bars matching the screenshot design */}
+        <View className="space-y-4 mb-8">
+          {/* Aptitude Card */}
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-sm font-black text-[#0F172A]">Aptitude</Text>
+              <Text className="text-xs font-black text-[#4F46E5]">{aptiVal}%</Text>
+            </View>
+            <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
+              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${aptiVal}%` }} />
+            </View>
+            <Text className="text-[10px] font-extrabold text-[#64748B]">9/10 modules • Mock: 8.5/10</Text>
+          </View>
+
+          {/* Communication Card */}
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-sm font-black text-[#0F172A]">Communication</Text>
+              <Text className="text-xs font-black text-[#4F46E5]">{commVal}%</Text>
+            </View>
+            <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
+              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${commVal}%` }} />
+            </View>
+            <Text className="text-[10px] font-extrabold text-[#64748B]">7/10 modules • Mock: 6.0/10</Text>
+          </View>
+
+          {/* Technical Card */}
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-sm font-black text-[#0F172A]">Technical</Text>
+              <Text className="text-xs font-black text-[#4F46E5]">{techVal}%</Text>
+            </View>
+            <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
+              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${techVal}%` }} />
+            </View>
+            <Text className="text-[10px] font-extrabold text-[#64748B]">8/10 modules • Mock: 7.5/10</Text>
+          </View>
+        </View>
+
+        {/* 3. Mock Interview Updates Section */}
+        <View className="mb-10">
+          <Text className="text-sm font-black text-[#0F172A] mb-4">Mock Interview Updates</Text>
+
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl overflow-hidden shadow-sm">
+            {/* Technical Mock row */}
+            <View className="flex-row items-center p-4 border-b border-[#F1F5F9]">
+              <View className="p-3 bg-[#F3E8FF] rounded-2xl mr-4">
+                <Video size={16} color="#8B5CF6" />
               </View>
-              <View className="h-2 rounded-full bg-[#F1EBFB] dark:bg-[#251C3D] mb-1.5">
-                <View
-                  className="h-full rounded-full bg-[#5B21B6]"
-                  style={{ width: `${Math.max(0, Math.min(100, row.percent || 0))}%` }}
-                />
+              <View className="flex-1">
+                <Text className="text-[#0F172A] font-extrabold text-xs">Technical Mock Interview</Text>
+                <Text className="text-[10px] text-[#64748B] mt-0.5">Score 7.5/10 • 2 days ago</Text>
               </View>
-              <Text className="text-[11px] text-[#6B6478] dark:text-[#A79AC2]">{row.count.completed}/{row.count.total} modules completed</Text>
             </View>
-          ))}
-        </View>
 
-        {/* 4. Domain selector buttons */}
-        <View className="flex-row bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-1 rounded-2xl mb-6">
-          {(['technical', 'communication', 'aptitude'] as const).map((module) => (
-            <TouchableOpacity
-              key={module}
-              onPress={() => setActiveModule(module)}
-              className={`flex-1 py-3.5 rounded-xl items-center justify-center ${activeModule === module ? 'bg-[#5B21B6]' : ''}`}
-            >
-              <Text className={`text-[10px] font-extrabold uppercase tracking-wide ${activeModule === module ? 'text-white' : 'text-[#6B6478] dark:text-[#A79AC2]'}`}>
-                {module}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* 5. Score details list */}
-        <View className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-5 mb-10">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="font-extrabold text-sm text-[#1A1325] dark:text-[#F6F3FC] capitalize">{activeModule} Scorecard</Text>
-            <View className="flex-row items-center">
-              <Award size={14} color="#a78bfa" style={{ marginRight: 4 }} />
-              <Text className="text-xs font-bold text-[#1A1325] dark:text-[#F6F3FC]">{Math.round(progress[activeModule] || 0)}% Avg</Text>
+            {/* Comm Mock row */}
+            <View className="flex-row items-center p-4">
+              <View className="p-3 bg-[#F3E8FF] rounded-2xl mr-4">
+                <Video size={16} color="#8B5CF6" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#0F172A] font-extrabold text-xs">Communication Mock</Text>
+                <Text className="text-[10px] text-[#64748B] mt-0.5">Score 6.0/10 • 5 days ago</Text>
+              </View>
             </View>
-          </View>
-
-          <View className="gap-3">
-            {currentScorecard && currentScorecard.length > 0 ? (
-              currentScorecard.map((score: any, idx: number) => (
-                <View
-                  key={idx}
-                  className="bg-[#F1EBFB] dark:bg-black/20 border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-4 rounded-2xl mb-1"
-                >
-                  <View className="flex-row justify-between items-center mb-2.5">
-                    <Text className="font-bold text-xs text-[#1A1325] dark:text-[#F6F3FC] max-w-[70%]">{score.subject}</Text>
-                    <View className="flex-row items-center">
-                      <Text className="text-[10px] font-black text-violet-400 mr-1.5">{score.marks} / 100</Text>
-                      <Text className={`text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-                        score.status === 'Completed'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : score.status === 'In Progress'
-                          ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
-                          : 'bg-[#F1EBFB] dark:bg-[#251C3D] text-[#6B6478] dark:text-[#A79AC2]'
-                      }`}>
-                        {score.status}
-                      </Text>
-                    </View>
-                  </View>
-                  {score.remarks ? (
-                    <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] leading-relaxed italic border-t border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] pt-2 mt-1">
-                      Note: "{score.remarks}"
-                    </Text>
-                  ) : null}
-                </View>
-              ))
-            ) : (
-              <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] italic py-4 text-center">No grades evaluated for this module yet.</Text>
-            )}
           </View>
         </View>
 

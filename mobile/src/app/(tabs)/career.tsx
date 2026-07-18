@@ -6,36 +6,17 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import API from '../../services/api';
-import {
-  Briefcase,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Sparkles,
-  User,
-  Code2,
-  Link as LinkIcon,
-  FileText,
-  Check,
-} from 'lucide-react-native';
-import ProgressRing from '../../components/ProgressRing';
-
-const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
-  'Ready': { color: '#16A34A', icon: CheckCircle },
-  'Almost Ready': { color: '#2563EB', icon: CheckCircle },
-  'Needs Improvement': { color: '#D97706', icon: AlertTriangle },
-  'Critical': { color: '#DC2626', icon: XCircle },
-};
 
 export default function CareerScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const trackColor = isDark ? '#251C3D' : '#F1EBFB';
+  const primary = '#4F46E5';
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -69,101 +50,142 @@ export default function CareerScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center">
-        <ActivityIndicator size="large" color="#5B21B6" />
+      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
+        <ActivityIndicator size="large" color={primary} />
       </View>
     );
   }
 
-  const readiness = data?.placementReadiness || { percentage: 0, status: 'Critical', breakdown: {}, recommendations: [] };
-  const { percentage, status, breakdown, recommendations } = readiness;
-  const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG['Critical'];
-  const StatusIcon = statusInfo.icon;
-
-  const criteria = [
-    { icon: FileText, label: 'Resume Uploaded', value: breakdown.resume, max: 15 },
-    { icon: LinkIcon, label: 'LinkedIn Updated', value: breakdown.linkedin, max: 10 },
-    { icon: Code2, label: 'GitHub Updated', value: breakdown.github, max: 10 },
-    { icon: Briefcase, label: 'Mock Interview', value: breakdown.mockInterview, max: 15 },
-    { icon: Check, label: 'Technical Mock Panel', value: breakdown.technicalInterview, max: 15 },
-    { icon: User, label: 'HR Interview Panel', value: breakdown.hrInterview, max: 10 },
+  // Predefined job list matching the screenshot
+  const jobs = [
+    {
+      id: 1,
+      title: 'Frontend Developer',
+      company: 'Zenith Technologies',
+      location: 'Bengaluru',
+      salary: '₹6–8 LPA',
+      deadline: 'Apply by Jul 28',
+      status: 'New',
+      actionText: 'Apply',
+      actionType: 'primary'
+    },
+    {
+      id: 2,
+      title: 'QA Engineer',
+      company: 'NovaSoft Pvt Ltd',
+      location: 'Pune',
+      salary: '₹4.5–6 LPA',
+      deadline: 'Apply by Jul 30',
+      status: 'Applied',
+      actionText: 'View',
+      actionType: 'outline'
+    },
+    {
+      id: 3,
+      title: 'Backend Developer (Node.js)',
+      company: 'Clearwave Systems',
+      location: 'Hyderabad',
+      salary: '₹7–9 LPA',
+      deadline: 'Apply by Aug 2',
+      status: 'New',
+      actionText: 'Apply',
+      actionType: 'primary'
+    }
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView className="flex-1 bg-[#F8FAFC]">
+      <StatusBar barStyle="dark-content" />
 
-      <View className="px-6 py-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] bg-white dark:bg-[#0E0A18] flex-row items-center">
-        <View className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20 mr-3">
-          <Briefcase size={20} color="#a78bfa" />
-        </View>
-        <View>
-          <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC]">Career Readiness</Text>
-          <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2]">Track your placement preparation progress</Text>
-        </View>
+      {/* Header */}
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white">
+        <Text className="text-2xl font-black text-[#0F172A]">Career</Text>
+        <Text className="text-xs text-[#64748B] mt-0.5">Placement drives & job openings</Text>
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#5B21B6" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}
         className="flex-1 px-6 py-4"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Readiness ring + status */}
-        <View className="items-center py-4 mb-6">
-          <ProgressRing
-            percent={percentage}
-            label="Readiness"
-            color="#5B21B6"
-            trackColor={trackColor}
-            size={132}
-            strokeWidth={10}
-          />
-          <View
-            className="flex-row items-center mt-4 px-4 py-2 rounded-full border"
-            style={{ backgroundColor: `${statusInfo.color}1A`, borderColor: `${statusInfo.color}40` }}
-          >
-            <StatusIcon size={16} color={statusInfo.color} style={{ marginRight: 6 }} />
-            <Text className="text-xs font-bold" style={{ color: statusInfo.color }}>Status: {status}</Text>
-          </View>
-        </View>
-
-        {/* Readiness criteria */}
-        <Text className="text-[11px] font-black text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-3">Readiness Criteria</Text>
-        <View className="flex-row flex-wrap gap-2.5 mb-6">
-          {criteria.map((c) => (
-            <View
-              key={c.label}
-              className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-xl px-3.5 py-3"
-              style={{ width: '48%' }}
-            >
-              <View className="flex-row items-center mb-1.5">
-                <c.icon size={14} color="#a78bfa" style={{ marginRight: 6 }} />
-                <Text className="text-[11px] font-semibold text-[#1A1325] dark:text-[#F6F3FC] flex-1" numberOfLines={1}>{c.label}</Text>
-              </View>
-              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2]">{c.value ?? 0}% / {c.max}%</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* AI Recommendations */}
-        <View className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-5 mb-10">
-          <View className="flex-row items-center mb-2">
-            <Sparkles size={16} color="#a78bfa" style={{ marginRight: 8 }} />
-            <Text className="font-extrabold text-sm text-[#1A1325] dark:text-[#F6F3FC]">Recommendations</Text>
-          </View>
-          <Text className="text-[11px] text-[#6B6478] dark:text-[#A79AC2] mb-4">
-            Personalized guidance to improve your placement readiness.
+        
+        {/* 1. Large Live Placement Drive Banner */}
+        <View className="bg-[#4F46E5] rounded-3xl p-6 mb-6 shadow-md shadow-indigo-600/10">
+          <Text className="text-[10px] font-black text-[#C7D2FE] uppercase tracking-widest">PLACEMENT DRIVE - LIVE</Text>
+          <Text className="text-xl font-black text-white mt-1.5">Campus Hiring Week 2026</Text>
+          <Text className="text-xs text-[#E0E7FF] mt-2.5 leading-relaxed font-semibold">
+            12 companies - 340+ openings - Ends Aug 5
           </Text>
-          <View className="gap-2.5">
-            {recommendations.map((rec: string, idx: number) => (
-              <View key={idx} className="flex-row bg-[#F1EBFB] dark:bg-black/20 border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl p-3.5 mb-1">
-                <View className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 items-center justify-center mr-3 mt-0.5">
-                  <Text className="text-[10px] font-bold text-violet-800 dark:text-violet-400">{idx + 1}</Text>
+        </View>
+
+        {/* 2. Three Column Metrics Row */}
+        <View className="flex-row gap-3 mb-6">
+          <View className="flex-1 bg-white border border-[#E2E8F0] rounded-2xl p-4 items-center shadow-sm">
+            <Text className="text-xl font-black text-[#0F172A]">18</Text>
+            <Text className="text-[10px] text-[#64748B] font-extrabold uppercase mt-1">Open Jobs</Text>
+          </View>
+          <View className="flex-1 bg-white border border-[#E2E8F0] rounded-2xl p-4 items-center shadow-sm">
+            <Text className="text-xl font-black text-[#0F172A]">6</Text>
+            <Text className="text-[10px] text-[#64748B] font-extrabold uppercase mt-1">Applied</Text>
+          </View>
+          <View className="flex-1 bg-white border border-[#E2E8F0] rounded-2xl p-4 items-center shadow-sm">
+            <Text className="text-xl font-black text-[#0F172A]">82%</Text>
+            <Text className="text-[10px] text-[#64748B] font-extrabold uppercase mt-1">Readiness</Text>
+          </View>
+        </View>
+
+        {/* 3. Job Listings List */}
+        <View className="mb-10">
+          <Text className="text-base font-black text-[#0F172A] mb-4">Job Listings</Text>
+
+          <View className="space-y-4">
+            {jobs.map((job) => (
+              <View key={job.id} className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+                
+                {/* Header row with Title & Badge */}
+                <View className="flex-row justify-between items-start mb-2.5">
+                  <Text className="text-sm font-black text-[#0F172A] flex-1 pr-4">{job.title}</Text>
+                  
+                  <View className={`px-2.5 py-1 rounded-full ${
+                    job.status === 'New' 
+                      ? 'bg-[#F3E8FF] border border-[#E9D5FF]/30' 
+                      : 'bg-[#EEF2F6] border border-[#E2E8F0]'
+                  }`}>
+                    <Text className={`text-[9px] font-black uppercase tracking-wider ${
+                      job.status === 'New' ? 'text-[#8B5CF6]' : 'text-[#64748B]'
+                    }`}>
+                      {job.status}
+                    </Text>
+                  </View>
                 </View>
-                <Text className="flex-1 text-xs font-medium text-[#1A1325] dark:text-[#F6F3FC]">{rec}</Text>
+
+                {/* Subtext info */}
+                <Text className="text-[11px] text-[#64748B] font-semibold leading-relaxed">
+                  {job.company} • {job.location} • {job.salary}
+                </Text>
+                
+                {/* Action button & Deadline Row */}
+                <View className="flex-row justify-between items-center mt-4 pt-4 border-t border-[#F1F5F9]">
+                  <Text className="text-[10px] text-[#94A3B8] font-bold">{job.deadline}</Text>
+                  
+                  <TouchableOpacity className={`px-4.5 py-2.5 rounded-xl ${
+                    job.actionType === 'primary' 
+                      ? 'bg-[#4F46E5]' 
+                      : 'bg-white border border-[#E2E8F0]'
+                  }`}>
+                    <Text className={`text-xs font-black ${
+                      job.actionType === 'primary' ? 'white' : '#0F172A'
+                    }`} style={{ color: job.actionType === 'primary' ? '#FFF' : '#0F172A' }}>
+                      {job.actionText}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
               </View>
             ))}
           </View>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );

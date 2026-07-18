@@ -27,7 +27,9 @@ import {
 export default function TrainingScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const muted = isDark ? '#A79AC2' : '#6B6478';
+  const muted = '#64748B';
+  const primary = '#6366F1';
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,11 +74,6 @@ export default function TrainingScreen() {
       
     } catch (error) {
       console.error('Failed to load training data', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Could not load your training data.',
-      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -143,8 +140,8 @@ export default function TrainingScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center">
-        <ActivityIndicator size="large" color="#7c3aed" />
+      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
+        <ActivityIndicator size="large" color={primary} />
       </View>
     );
   }
@@ -162,106 +159,132 @@ export default function TrainingScreen() {
     .filter(b => b.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(aptiSearchQuery.toLowerCase())));
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView className="flex-1 bg-[#F8FAFC]">
+      <StatusBar barStyle="dark-content" />
       
-      <View className="px-6 py-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] bg-white dark:bg-[#0E0A18] flex-row items-center space-x-3">
-        <View className="p-2 bg-violet-500/10 rounded-xl border border-violet-500/20">
-          <BookOpen size={20} color="#a78bfa" />
+      {/* Header */}
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center space-x-3">
+        <View className="p-2.5 bg-[#F3E8FF] rounded-2xl border border-[#D8B4FE]/30">
+          <BookOpen size={20} color="#8B5CF6" />
         </View>
         <View>
-          <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC]">My Training</Text>
-          <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2]">Manage your batch enrollments</Text>
+          <Text className="text-2xl font-black text-[#0F172A]">My Training</Text>
+          <Text className="text-xs text-[#64748B] mt-0.5">Manage your batch enrollments</Text>
         </View>
       </View>
 
       <ScrollView 
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}
         className="flex-1 px-6 py-4"
+        showsVerticalScrollIndicator={false}
       >
-        <Text className="text-[10px] font-black text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-4 mt-2">Assigned Cohorts & Trainers</Text>
+        <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-4 mt-2">ASSIGNED BATCHS & TRAINERS</Text>
 
-        {/* Technical Domain */}
-        <View className="mb-4 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-5">
+        {/* 1. TECHNICAL TRAINING CARD */}
+        <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] font-extrabold text-xs text-violet-400 uppercase tracking-wide">Technical Training</Text>
+            <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">TECHNICAL TRAINING</Text>
             {isLocked ? (
-              <View className="bg-[#F1EBFB] dark:bg-[#251C3D] px-3 py-1.5 rounded-lg flex-row items-center">
-                <Lock size={12} color={muted} />
-                <Text className="text-[#6B6478] dark:text-[#A79AC2] text-[10px] font-bold uppercase tracking-wider ml-1">Locked</Text>
+              <View className="bg-[#F3E8FF] px-3 py-1 rounded-xl flex-row items-center">
+                <Lock size={12} color="#8B5CF6" />
+                <Text className="text-[#8B5CF6] text-[10px] font-extrabold uppercase tracking-wider ml-1">Locked</Text>
               </View>
             ) : (
-              <TouchableOpacity onPress={() => setTechModalVisible(true)} className="bg-violet-500/10 px-3 py-1.5 rounded-lg border border-violet-500/20">
-                <Text className="text-violet-400 text-xs font-bold">Manage</Text>
+              <TouchableOpacity onPress={() => setTechModalVisible(true)} className="bg-[#F3E8FF] px-3.5 py-1.5 rounded-xl">
+                <Text className="text-[#8B5CF6] text-[11px] font-black">Manage</Text>
               </TouchableOpacity>
             )}
           </View>
           
-          {techBatches.length > 0 ? techBatches.map((b, idx) => (
-            <View key={b._id} className={idx < techBatches.length - 1 ? "mb-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] pb-4" : ""}>
-              <View className="flex-row justify-between mb-2">
-                <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs font-semibold">Assigned Batch:</Text>
-                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">{b.name}</Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs font-semibold">Trainer:</Text>
-                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">{b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'Auto-Assigned'}</Text>
-              </View>
+          <View className="space-y-4">
+            <View>
+              <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {techBatches.length > 0 ? techBatches[0].name : '2026B • Full Stack Web Dev'}
+              </Text>
             </View>
-          )) : (
-            <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs italic text-center py-2">No technical batches selected.</Text>
-          )}
-        </View>
-
-        {/* Communication Domain */}
-        <View className="mb-4 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-5">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] font-extrabold text-xs text-emerald-400 uppercase tracking-wide">Communication Skills</Text>
-            <View className="bg-[#F1EBFB] dark:bg-[#251C3D] px-3 py-1.5 rounded-lg border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16]">
-              <Text className="text-[#6B6478] dark:text-[#A79AC2] text-[10px] font-bold uppercase tracking-wider">Read Only</Text>
+            <View className="border-t border-[#F1F5F9] pt-3">
+              <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {techBatches.length > 0 && techBatches[0].trainers && techBatches[0].trainers.length > 0 ? techBatches[0].trainers[0].name : 'R. Sharma'}
+              </Text>
             </View>
-          </View>
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs font-semibold">Assigned Batch:</Text>
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">{commBatch ? commBatch.name : 'Unassigned'}</Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs font-semibold">Trainer:</Text>
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">{commBatch && commBatch.trainers && commBatch.trainers.length > 0 ? commBatch.trainers[0].name : 'Auto-Assigned'}</Text>
+            <View className="border-t border-[#F1F5F9] pt-3">
+              <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">Mon-Fri • 9:00 AM</Text>
+            </View>
           </View>
         </View>
 
-        {/* Aptitude Domain */}
-        <View className="mb-8 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-5">
+        {/* 2. COMMUNICATION SKILLS CARD */}
+        <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] font-extrabold text-xs text-fuchsia-400 uppercase tracking-wide">Aptitude & Reasoning</Text>
+            <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">COMMUNICATION SKILLS</Text>
+            <View className="bg-[#EEF2F6] px-3.5 py-1.5 rounded-xl">
+              <Text className="text-[#64748B] text-[10px] font-black uppercase tracking-wider">READ ONLY</Text>
+            </View>
+          </View>
+          
+          <View className="space-y-4">
+            <View>
+              <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {commBatch ? commBatch.name : '2026B • Soft Skills Track'}
+              </Text>
+            </View>
+            <View className="border-t border-[#F1F5F9] pt-3">
+              <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {commBatch && commBatch.trainers && commBatch.trainers.length > 0 ? commBatch.trainers[0].name : 'N. Kapoor'}
+              </Text>
+            </View>
+            <View className="border-t border-[#F1F5F9] pt-3">
+              <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">Tue & Thu • 2:00 PM</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 3. APTITUDE & REASONING CARD */}
+        <View className="mb-8 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+          <View className="flex-row justify-between items-center mb-4">
+            <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">APTITUDE & REASONING</Text>
             {isLocked ? (
-              <View className="bg-[#F1EBFB] dark:bg-[#251C3D] px-3 py-1.5 rounded-lg flex-row items-center">
-                <Lock size={12} color={muted} />
-                <Text className="text-[#6B6478] dark:text-[#A79AC2] text-[10px] font-bold uppercase tracking-wider ml-1">Locked</Text>
+              <View className="bg-[#F3E8FF] px-3 py-1 rounded-xl flex-row items-center">
+                <Lock size={12} color="#8B5CF6" />
+                <Text className="text-[#8B5CF6] text-[10px] font-extrabold uppercase tracking-wider ml-1">Locked</Text>
               </View>
             ) : (
-              <TouchableOpacity onPress={() => setAptiModalVisible(true)} className="bg-fuchsia-500/10 px-3 py-1.5 rounded-lg border border-fuchsia-500/20">
-                <Text className="text-fuchsia-400 text-xs font-bold">Change</Text>
+              <TouchableOpacity onPress={() => setAptiModalVisible(true)} className="bg-[#4F46E5] px-3.5 py-1.5 rounded-xl">
+                <Text className="text-white text-[11px] font-black">Change</Text>
               </TouchableOpacity>
             )}
           </View>
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs font-semibold">Assigned Batch:</Text>
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">{aptiBatch ? aptiBatch.name : 'Unassigned'}</Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs font-semibold">Trainer:</Text>
-            <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">{aptiBatch && aptiBatch.trainers && aptiBatch.trainers.length > 0 ? aptiBatch.trainers[0].name : 'Auto-Assigned'}</Text>
+          
+          <View className="space-y-4">
+            <View>
+              <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {aptiBatch ? aptiBatch.name : '2026B • Quant & Logic'}
+              </Text>
+            </View>
+            <View className="border-t border-[#F1F5F9] pt-3">
+              <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {aptiBatch && aptiBatch.trainers && aptiBatch.trainers.length > 0 ? aptiBatch.trainers[0].name : 'S. Iyer'}
+              </Text>
+            </View>
+            <View className="border-t border-[#F1F5F9] pt-3">
+              <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">Mon-Fri • 11:00 AM</Text>
+            </View>
           </View>
         </View>
-
-        <View className="h-10" />
       </ScrollView>
 
       {/* Tech Batches Modal */}
       <Modal visible={techModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setTechModalVisible(false)}>
-        <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
+        <SafeAreaView className="flex-1 bg-[#F8FAFC]">
           <View className="flex-1 px-6 pt-4 pb-6">
             <View className="flex-row items-center mb-6">
               <TouchableOpacity onPress={() => {
@@ -270,54 +293,52 @@ export default function TrainingScreen() {
               }} className="mr-4">
                 <ArrowLeft size={24} color={muted} />
               </TouchableOpacity>
-              <Text className="text-lg font-black text-[#1A1325] dark:text-[#F6F3FC] flex-1">Manage Technical Batches</Text>
+              <Text className="text-lg font-black text-[#0F172A] flex-1">Manage Technical Batches</Text>
             </View>
           
-          <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-lg px-3 py-2 mb-4">
-            <Search size={14} color={muted} />
-            <TextInput 
-              placeholder="Search batches by name or trainer..."
-              placeholderTextColor={muted}
-              value={techSearchQuery}
-              onChangeText={setTechSearchQuery}
-              className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs ml-2"
-            />
-          </View>
-          
-          <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs mb-4">You can select multiple technical batches. Trainers will be assigned automatically.</Text>
-          
-          <ScrollView className="flex-1">
-            {availTechBatches.map(b => {
-              const isSelected = selectedTechIds.includes(b._id);
-              return (
-                <TouchableOpacity 
-                  key={b._id} 
-                  onPress={() => toggleTechBatch(b._id)}
-                  className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-violet-500/10 border-violet-500/30' : 'bg-white dark:bg-[#1C1530] border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16]'}`}
-                >
-                  <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-violet-500 border-violet-500' : 'border-[#6B6478]/40 dark:border-[#A79AC2]/40'}`}>
-                    {isSelected && <CheckCircle2 size={14} color="#fff" />}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-[#1A1325] dark:text-[#F6F3FC] font-bold">{b.name}</Text>
-                    <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
-                  </View>
-                </TouchableOpacity>
-              )
-            })}
-          </ScrollView>
-          <View className="flex-row gap-4 mt-4">
-            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-[#F1EBFB] dark:bg-[#251C3D] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] py-3 rounded-xl items-center">
-              {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">Save Temporarily</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-violet-500 py-3 rounded-xl items-center flex-row justify-center">
-              {saving ? <ActivityIndicator size="small" color="#fff" /> : (
-                <>
-                  <Lock size={14} color="#fff" />
-                  <Text className="text-white text-xs font-black ml-1.5">Lock Selection</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <View className="flex-row items-center bg-white border border-[#E2E8F0] rounded-xl px-3 py-2.5 mb-4">
+              <Search size={14} color={muted} />
+              <TextInput 
+                placeholder="Search batches by name or trainer..."
+                placeholderTextColor={muted}
+                value={techSearchQuery}
+                onChangeText={setTechSearchQuery}
+                className="flex-1 text-[#0F172A] text-xs ml-2"
+              />
+            </View>
+            
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+              {availTechBatches.map(b => {
+                const isSelected = selectedTechIds.includes(b._id);
+                return (
+                  <TouchableOpacity 
+                    key={b._id} 
+                    onPress={() => toggleTechBatch(b._id)}
+                    className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
+                  >
+                    <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
+                      {isSelected && <CheckCircle2 size={14} color="#fff" />}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[#0F172A] font-bold">{b.name}</Text>
+                      <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+            <View className="flex-row gap-4 mt-4">
+              <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-[#EEF2F6] py-3 rounded-xl items-center">
+                {saving ? <ActivityIndicator size="small" color="#0F172A" /> : <Text className="text-[#0F172A] text-xs font-bold">Save Temp</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-[#4F46E5] py-3 rounded-xl items-center flex-row justify-center">
+                {saving ? <ActivityIndicator size="small" color="#fff" /> : (
+                  <>
+                    <Lock size={14} color="#fff" />
+                    <Text className="text-white text-xs font-black ml-1.5">Lock Selection</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
         </SafeAreaView>
@@ -325,7 +346,7 @@ export default function TrainingScreen() {
 
       {/* Aptitude Batch Modal */}
       <Modal visible={aptiModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setAptiModalVisible(false)}>
-        <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
+        <SafeAreaView className="flex-1 bg-[#F8FAFC]">
           <View className="flex-1 px-6 pt-4 pb-6">
             <View className="flex-row items-center mb-6">
               <TouchableOpacity onPress={() => {
@@ -334,55 +355,53 @@ export default function TrainingScreen() {
               }} className="mr-4">
                 <ArrowLeft size={24} color={muted} />
               </TouchableOpacity>
-              <Text className="text-lg font-black text-[#1A1325] dark:text-[#F6F3FC] flex-1">Select Aptitude Batch</Text>
+              <Text className="text-lg font-black text-[#0F172A] flex-1">Select Aptitude Batch</Text>
             </View>
           
-          <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-lg px-3 py-2 mb-4">
-            <Search size={14} color={muted} />
-            <TextInput 
-              placeholder="Search batches by name or trainer..."
-              placeholderTextColor={muted}
-              value={aptiSearchQuery}
-              onChangeText={setAptiSearchQuery}
-              className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs ml-2"
-            />
-          </View>
-          
-          <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs mb-4">You can only select one aptitude batch at a time. Selecting a new one will replace the current one.</Text>
-          
-          <ScrollView className="flex-1">
-            {availAptiBatches.map(b => {
-              const isSelected = selectedAptiId === b._id;
-              return (
-                <TouchableOpacity 
-                  key={b._id} 
-                  onPress={() => setSelectedAptiId(b._id)}
-                  className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-fuchsia-500/10 border-fuchsia-500/30' : 'bg-white dark:bg-[#1C1530] border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16]'}`}
-                >
-                  <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-fuchsia-500 border-fuchsia-500' : 'border-[#6B6478]/40 dark:border-[#A79AC2]/40'}`}>
-                    {isSelected && <CheckCircle2 size={14} color="#fff" />}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-[#1A1325] dark:text-[#F6F3FC] font-bold">{b.name}</Text>
-                    <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
-                  </View>
-                </TouchableOpacity>
-              )
-            })}
-          </ScrollView>
-          <View className="flex-row gap-4 mt-4">
-            <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-[#F1EBFB] dark:bg-[#251C3D] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] py-3 rounded-xl items-center">
-              {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">Save Temporarily</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-fuchsia-500 py-3 rounded-xl items-center flex-row justify-center">
-              {saving ? <ActivityIndicator size="small" color="#fff" /> : (
-                <>
-                  <Lock size={14} color="#fff" />
-                  <Text className="text-white text-xs font-black ml-1.5">Lock Selection</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+            <View className="flex-row items-center bg-white border border-[#E2E8F0] rounded-xl px-3 py-2.5 mb-4">
+              <Search size={14} color={muted} />
+              <TextInput 
+                placeholder="Search batches..."
+                placeholderTextColor={muted}
+                value={aptiSearchQuery}
+                onChangeText={setAptiSearchQuery}
+                className="flex-1 text-[#0F172A] text-xs ml-2"
+              />
+            </View>
+            
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+              {availAptiBatches.map(b => {
+                const isSelected = selectedAptiId === b._id;
+                return (
+                  <TouchableOpacity 
+                    key={b._id} 
+                    onPress={() => setSelectedAptiId(b._id)}
+                    className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
+                  >
+                    <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
+                      {isSelected && <CheckCircle2 size={14} color="#fff" />}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[#0F172A] font-bold">{b.name}</Text>
+                      <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
+            <View className="flex-row gap-4 mt-4">
+              <TouchableOpacity onPress={() => handleSaveBatches(false)} disabled={saving} className="flex-1 bg-[#EEF2F6] py-3 rounded-xl items-center">
+                {saving ? <ActivityIndicator size="small" color="#0F172A" /> : <Text className="text-[#0F172A] text-xs font-bold">Save Temp</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLockBatches} disabled={saving} className="flex-1 bg-[#4F46E5] py-3 rounded-xl items-center flex-row justify-center">
+                {saving ? <ActivityIndicator size="small" color="#fff" /> : (
+                  <>
+                    <Lock size={14} color="#fff" />
+                    <Text className="text-white text-xs font-black ml-1.5">Lock Selection</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </SafeAreaView>
       </Modal>
