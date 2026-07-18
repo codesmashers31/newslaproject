@@ -101,7 +101,7 @@ export default function DashboardScreen() {
           />
         </View>
         
-        <View className="flex-row space-x-3">
+        <View className="flex-row items-center gap-4">
           <TouchableOpacity 
             onPress={handleToggleTheme}
             className="p-2.5 bg-[#F1EBFB] rounded-xl"
