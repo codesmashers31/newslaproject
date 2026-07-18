@@ -4,9 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   StatusBar,
 } from 'react-native';
@@ -14,12 +11,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { router } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  ShieldCheck,
   ShieldAlert,
   Smartphone,
   Laptop,
@@ -29,7 +20,6 @@ import {
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
 import API from '../services/api';
@@ -37,10 +27,9 @@ import API from '../services/api';
 export default function LoginScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const muted = isDark ? '#A79AC2' : '#6B6478';
   const primary = '#5B21B6';
-  const danger = isDark ? '#F87171' : '#DC2626';
-  const success = isDark ? '#34D399' : '#16A34A';
+  const danger = '#DC2626';
+  const success = '#16A34A';
 
   // Page view states: 'login' | 'unauthorized_device' | 'device_locked' | 'request_reset' | 'reset_success'
   const [viewState, setViewState] = useState<'login' | 'unauthorized_device' | 'device_locked' | 'request_reset' | 'reset_success'>('login');
@@ -48,7 +37,6 @@ export default function LoginScreen() {
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Blocked device details
@@ -85,7 +73,7 @@ export default function LoginScreen() {
       Toast.show({
         type: 'error',
         text1: 'Missing Details',
-        text2: 'Please enter both your EID/email and password.',
+        text2: 'Please enter both your email and password.',
       });
       return;
     }
@@ -127,7 +115,6 @@ export default function LoginScreen() {
   const handleResetSubmit = async () => {
     setResetLoading(true);
     try {
-      const { deviceInfo } = await getDeviceCredentials();
       await API.post('/auth/request-device-reset', {
         emailOrSlaeId: email.trim(),
         reason: resetReason,
@@ -157,11 +144,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" />
       <KeyboardAwareScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 36, paddingBottom: 24, justifyContent: 'center' }}
+        className="flex-1 bg-white"
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24, justifyContent: 'center' }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -171,75 +158,53 @@ export default function LoginScreen() {
           {/* VIEW 1: LOGIN FORM */}
           {viewState === 'login' && (
             <View className="w-full">
-              {/* Header */}
-              <View className="items-center mb-5">
-                <Image
-                  source={require('../../assets/images/branding/logo-buildx.png')}
-                  style={{ height: 46, width: 100, marginBottom: 8 }}
-                  contentFit="contain"
+              
+              {/* Logo Placeholder matching screenshot */}
+              <View className="items-center mb-4">
+                <View className="w-20 h-20 bg-[#C4BFB6] rounded-[20px] mb-5 shadow-sm" />
+                
+                {/* Titles */}
+                <Text className="text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</Text>
+                <Text className="text-xs text-[#64748B] mt-1.5 font-semibold">Log in to continue your progress</Text>
+              </View>
+
+              {/* Email Input Field */}
+              <View className="mb-4">
+                <TextInput
+                  className="w-full px-4 border border-[#E2E8F0] rounded-2xl bg-white h-12 text-sm font-semibold text-[#0F172A]"
+                  placeholder="student@lcp.edu"
+                  placeholderTextColor="#94A3B8"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
                 />
-                <Text className="text-[13px] font-black text-[#6B6478] dark:text-[#A79AC2] tracking-[0.24em] -mt-1">SLA</Text>
-                <Text className="text-[11.5px] text-[#6B6478] dark:text-[#A79AC2] mb-3">Learning & Career Build App</Text>
-                <Text className="text-[22px] font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1.5 tracking-wide">Welcome back</Text>
-                <Text className="text-[13px] text-[#6B6478] dark:text-[#A79AC2] text-center px-3 leading-[18px]">
-                  Enter credentials to access your academic cohort dashboard.
-                </Text>
               </View>
 
-              {/* Single Device Notice */}
-              <View className="flex-row items-center bg-[#5B21B6]/[0.06] border border-[#5B21B6]/15 rounded-2xl p-3 mb-5">
-                <ShieldCheck size={20} color={primary} style={{ marginRight: 10 }} />
-                <Text className="flex-1 text-[11px] font-semibold text-[#6B6478] dark:text-[#A79AC2] leading-4">
-                  Protected by BuildX Single Device Authentication. Account is restricted to one hardware setup.
-                </Text>
+              {/* Password Input Field */}
+              <View className="mb-2">
+                <TextInput
+                  className="w-full px-4 border border-[#E2E8F0] rounded-2xl bg-white h-12 text-sm font-semibold text-[#0F172A]"
+                  placeholder="••••••••••"
+                  placeholderTextColor="#94A3B8"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={true}
+                  autoCapitalize="none"
+                />
               </View>
 
-              {/* Email Input */}
-              <View className="mb-4">
-                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Student EID / Email</Text>
-                <View className="flex-row items-center border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[50px]">
-                  <Mail size={18} color={muted} style={{ marginRight: 10 }} />
-                  <TextInput
-                    className="flex-1 text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
-                    placeholder="Enter EID (e.g. SLA001) or Email"
-                    placeholderTextColor={muted}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="default"
-                    autoCapitalize="none"
-                  />
-                </View>
-              </View>
+              {/* Forgot Password Link */}
+              <TouchableOpacity 
+                onPress={() => setViewState('request_reset')}
+                className="align-self-end items-end mb-6"
+              >
+                <Text className="text-[#5B21B6] text-xs font-black">Forgot password?</Text>
+              </TouchableOpacity>
 
-              {/* Password Input */}
-              <View className="mb-4">
-                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Password</Text>
-                <View className="flex-row items-center border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[50px]">
-                  <Lock size={18} color={muted} style={{ marginRight: 10 }} />
-                  <TextInput
-                    className="flex-1 text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
-                    placeholder="Enter your password"
-                    placeholderTextColor={muted}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    className="p-1.5"
-                  >
-                    {showPassword ? (
-                      <EyeOff size={18} color={muted} />
-                    ) : (
-                      <Eye size={18} color={muted} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Login Button */}
+              {/* Login Action Button */}
               <TouchableOpacity
-                className="bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5 shadow-md shadow-[#5B21B6]/25"
+                className="bg-[#5B21B6] rounded-2xl h-12 items-center justify-center mb-6 shadow-sm"
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.85}
@@ -247,41 +212,38 @@ export default function LoginScreen() {
                 {loading ? (
                   <ActivityIndicator color="#ffffff" />
                 ) : (
-                  <View className="flex-row items-center">
-                    <Text className="text-white text-sm font-bold mr-1.5">Login to Portal</Text>
-                    <ArrowRight size={18} color="#ffffff" />
-                  </View>
+                  <Text className="text-white text-sm font-black">Login to Portal -></Text>
                 )}
               </TouchableOpacity>
 
-              {/* Bottom Vector Illustration */}
-              <View className="items-center justify-center mt-6">
-                <Image
-                  source={require('../../assets/images/loginimage.svg')}
-                  style={{ width: '100%', height: 100 }}
-                  contentFit="contain"
-                />
+              {/* Policy Disclaimer Card */}
+              <View className="bg-[#FAF9FF] border border-[#E2E8F0] rounded-3xl p-4">
+                <Text className="text-xs font-black text-[#0F172A]">Before you continue</Text>
+                <Text className="text-[10.5px] text-[#64748B] mt-1.5 leading-[16px] font-semibold">
+                  By logging in you agree to mark attendance honestly via session QR codes, keep your profile info accurate, and follow your institute's code of conduct. Contact your trainer for login issues.
+                </Text>
               </View>
+
             </View>
           )}
 
           {/* VIEW 2: DEVICE BLOCKED ACCESS */}
           {viewState === 'unauthorized_device' && (
-            <View className="items-center w-full">
+            <View className="items-center w-full bg-white">
               <View className="w-[72px] h-[72px] rounded-[36px] bg-red-500/10 border-[1.5px] border-red-500/25 items-center justify-center mb-3">
                 <ShieldAlert size={36} color={danger} />
               </View>
-              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Access Blocked</Text>
+              <Text className="text-xl font-black text-[#0F172A] mb-1 text-center">Access Blocked</Text>
               <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>BuildX Device Authentication Mismatch</Text>
 
               {/* Device Info details */}
               <View className="w-full gap-3 mb-5">
-                <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-3.5 rounded-2xl">
-                  <Laptop size={20} color={muted} style={{ marginRight: 12 }} />
+                <View className="flex-row items-center bg-white border border-[#E2E8F0] p-3.5 rounded-2xl shadow-sm">
+                  <Laptop size={20} color="#64748B" style={{ marginRight: 12 }} />
                   <View className="flex-1">
-                    <Text className="text-[9px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase">Registered Device</Text>
-                    <Text className="text-[13px] font-black text-[#1A1325] dark:text-[#F6F3FC] mt-0.5">{blockedDetails.registeredDevice}</Text>
-                    <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] mt-0.5">{`Last sync: ${formatDateTime(blockedDetails.lastUsed)}`}</Text>
+                    <Text className="text-[9px] font-bold text-[#64748B] uppercase">Registered Device</Text>
+                    <Text className="text-[13px] font-black text-[#0F172A] mt-0.5">{blockedDetails.registeredDevice}</Text>
+                    <Text className="text-[10px] text-[#64748B] mt-0.5">{`Last sync: ${formatDateTime(blockedDetails.lastUsed)}`}</Text>
                   </View>
                 </View>
 
@@ -290,7 +252,7 @@ export default function LoginScreen() {
                   <View className="flex-1">
                     <Text className="text-[9px] font-bold uppercase" style={{ color: danger }}>Current Mobile Device</Text>
                     <Text className="text-[13px] font-black mt-0.5" style={{ color: danger }}>Unregistered Setup</Text>
-                    <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] mt-0.5">Signature mismatch detected</Text>
+                    <Text className="text-[10px] text-[#64748B] mt-0.5">Signature mismatch detected</Text>
                   </View>
                 </View>
               </View>
@@ -298,14 +260,14 @@ export default function LoginScreen() {
               {/* Information Alert Box */}
               <View className="flex-row bg-red-500/5 border border-red-500/15 rounded-2xl p-3.5 mb-6">
                 <AlertTriangle size={16} color={danger} style={{ marginRight: 10, marginTop: 2 }} />
-                <Text className="flex-1 text-[11px] text-[#6B6478] dark:text-[#A79AC2] leading-4 font-medium">
+                <Text className="flex-1 text-[11px] text-[#64748B] leading-4 font-medium">
                   Your account is restricted to a single hardware setup. Logging in from multiple screens or clearing browser storage triggers device security locks.
                 </Text>
               </View>
 
               {/* Action Buttons */}
               <TouchableOpacity
-                className="w-full bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5"
+                className="w-full bg-[#5B21B6] rounded-2xl h-12 items-center justify-center mt-2.5"
                 onPress={() => setViewState('request_reset')}
                 activeOpacity={0.85}
               >
@@ -316,75 +278,75 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="w-full h-[50px] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mt-2.5"
+                className="w-full h-12 border border-[#E2E8F0] rounded-2xl items-center justify-center mt-2.5"
                 onPress={() => setViewState('login')}
                 activeOpacity={0.8}
               >
-                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-[13px] font-bold">Return to Login</Text>
+                <Text className="text-[#0F172A] text-[13px] font-bold">Return to Login</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* VIEW 3: DEVICE LOCKED */}
           {viewState === 'device_locked' && (
-            <View className="items-center w-full">
+            <View className="items-center w-full bg-white">
               <View className="w-[72px] h-[72px] rounded-[36px] bg-red-500/10 border-[1.5px] border-red-500/25 items-center justify-center mb-3">
                 <ShieldAlert size={36} color={danger} />
               </View>
-              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Account Locked</Text>
+              <Text className="text-xl font-black text-[#0F172A] mb-1 text-center">Account Locked</Text>
               <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Device Access Locked</Text>
 
-              <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] text-center leading-[18px] px-3 mb-5 font-medium">
+              <Text className="text-xs text-[#64748B] text-center leading-[18px] px-3 mb-5 font-medium">
                 Your device authentication access has been locked by security protocols due to multiple unrecognized registration attempts or coordinator policies.
               </Text>
 
-              <View className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-3.5 rounded-2xl w-full mb-6">
-                <Text className="text-[11px] text-[#1A1325] dark:text-[#F6F3FC] text-center leading-4 font-semibold">
+              <View className="bg-white border border-[#E2E8F0] p-3.5 rounded-2xl w-full mb-6">
+                <Text className="text-[11px] text-[#0F172A] text-center leading-4 font-semibold">
                   Please contact the SLA operations coordinators or coordinate via your trainer to unlock your session credentials.
                 </Text>
               </View>
 
               <TouchableOpacity
-                className="w-full h-[50px] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mt-2.5"
+                className="w-full h-12 border border-[#E2E8F0] rounded-2xl items-center justify-center mt-2.5"
                 onPress={() => setViewState('login')}
                 activeOpacity={0.8}
               >
-                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-[13px] font-bold">Return to Login</Text>
+                <Text className="text-[#0F172A] text-[13px] font-bold">Return to Login</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* VIEW 4: REQUEST DEVICE RESET */}
           {viewState === 'request_reset' && (
-            <View className="w-full">
-              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Request Device Reset</Text>
-              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Submit change requests to LCP Administrators</Text>
+            <View className="w-full bg-white">
+              <Text className="text-xl font-black text-[#0F172A] mb-1 text-center">Request Device Reset</Text>
+              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Submit requests to LCP Administrators</Text>
 
               {/* Reset Reason Field */}
               <View className="mb-4">
-                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Reason for Device Change</Text>
-                <View className="flex-row items-center border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[50px]">
+                <Text className="text-[10px] font-bold text-[#64748B] mb-1.5 uppercase tracking-wider">Reason for Device Change</Text>
+                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-3.5 h-12">
                   <TextInput
-                    className="flex-1 text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
+                    className="flex-1 text-[13px] font-semibold text-[#0F172A]"
                     value={resetReason}
                     onChangeText={setResetReason}
                     placeholder="e.g. Changed my mobile phone"
-                    placeholderTextColor={muted}
+                    placeholderTextColor="#94A3B8"
                   />
                 </View>
               </View>
 
               {/* Details Field */}
               <View className="mb-4">
-                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Brief Explanation</Text>
-                <View className="border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[100px] items-start py-2.5">
+                <Text className="text-[10px] font-bold text-[#64748B] mb-1.5 uppercase tracking-wider">Brief Explanation</Text>
+                <View className="border border-[#E2E8F0] rounded-2xl bg-white px-3.5 h-24 items-start py-2">
                   <TextInput
-                    className="flex-1 w-full text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
+                    className="flex-1 w-full text-[13px] font-semibold text-[#0F172A]"
                     style={{ textAlignVertical: 'top' }}
                     value={resetExplanation}
                     onChangeText={setResetExplanation}
-                    placeholder="Provide additional context (e.g. phone stolen/upgraded)"
-                    placeholderTextColor={muted}
+                    placeholder="Provide additional context (e.g. phone upgraded)"
+                    placeholderTextColor="#94A3B8"
                     multiline
                     numberOfLines={4}
                   />
@@ -393,7 +355,7 @@ export default function LoginScreen() {
 
               {/* Actions */}
               <TouchableOpacity
-                className="bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5"
+                className="bg-[#5B21B6] rounded-2xl h-12 items-center justify-center mt-2.5"
                 onPress={handleResetSubmit}
                 disabled={resetLoading}
                 activeOpacity={0.85}
@@ -406,30 +368,30 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="w-full h-[50px] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mt-2.5"
-                onPress={() => setViewState('unauthorized_device')}
+                className="w-full h-12 border border-[#E2E8F0] rounded-2xl items-center justify-center mt-2.5"
+                onPress={() => setViewState('login')}
                 activeOpacity={0.8}
               >
-                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-[13px] font-bold">Cancel</Text>
+                <Text className="text-[#0F172A] text-[13px] font-bold">Cancel</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* VIEW 5: SUCCESS SUBMIT */}
           {viewState === 'reset_success' && (
-            <View className="items-center w-full">
+            <View className="items-center w-full bg-white">
               <View className="w-[72px] h-[72px] rounded-[36px] bg-emerald-500/10 border-[1.5px] border-emerald-500/25 items-center justify-center mb-3">
                 <CheckCircle2 size={36} color={success} />
               </View>
-              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Request Logged</Text>
-              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Awaiting Admin Review</Text>
+              <Text className="text-xl font-black text-[#0F172A] mb-1 text-center">Request Logged</Text>
+              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: success }}>Awaiting Admin Review</Text>
 
-              <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] text-center leading-[18px] px-3 mb-5 font-medium">
+              <Text className="text-xs text-[#64748B] text-center leading-[18px] px-3 mb-5 font-medium">
                 Your device reset request has been logged successfully. SLA Administrators will review your request and clear the locked device mapping within 1-2 hours.
               </Text>
 
               <TouchableOpacity
-                className="w-full bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5"
+                className="w-full bg-[#5B21B6] rounded-2xl h-12 items-center justify-center mt-2.5"
                 onPress={() => setViewState('login')}
                 activeOpacity={0.85}
               >
