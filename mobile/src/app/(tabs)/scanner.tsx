@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import API from '../../services/api';
 import {
   Camera as CameraIcon,
   AlertCircle,
   CheckCircle2,
-  BookOpen
+  BookOpen,
+  HelpCircle
 } from 'lucide-react-native';
 
 export default function QRScannerScreen() {
@@ -28,6 +29,22 @@ export default function QRScannerScreen() {
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+
+  const loadDashboardData = async () => {
+    try {
+      const { data } = await API.get('/student/dashboard');
+      setDashboardData(data);
+    } catch (e) {
+      console.log('Failed to fetch dashboard data in scanner', e);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+    }, [])
+  );
 
   const handleMarkAttendance = async (tokenString: string) => {
     if (!tokenString) return;
@@ -42,6 +59,7 @@ export default function QRScannerScreen() {
         message: data.message || 'Attendance marked successfully!',
         details: data.attendance
       });
+      loadDashboardData(); // Refresh history
     } catch (error: any) {
       console.error(error);
       const message = error.response?.data?.message || 'Failed to mark attendance. Expired or invalid code.';
@@ -87,6 +105,17 @@ export default function QRScannerScreen() {
     );
   }
 
+  // Active Cohort Mapping
+  const activeBatch = dashboardData?.batch;
+  const trainerName = activeBatch?.trainers && activeBatch.trainers.length > 0 
+    ? activeBatch.trainers[0].name 
+    : 'Auto-Assigned';
+
+  // Today's Attendance logs check
+  const todayRecords = dashboardData?.attendance?.todayRecords || [];
+  const hasCheckedInToday = todayRecords.length > 0;
+  const lastRecord = hasCheckedInToday ? todayRecords[0] : null;
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
@@ -110,13 +139,11 @@ export default function QRScannerScreen() {
                   }}
                   style={{ flex: 1 }}
                 />
-                {/* Corner brackets matching screenshot */}
                 <View pointerEvents="none" className="absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#8B5CF6] rounded-tl-lg" />
                 <View pointerEvents="none" className="absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#8B5CF6] rounded-tr-lg" />
                 <View pointerEvents="none" className="absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#8B5CF6] rounded-bl-lg" />
                 <View pointerEvents="none" className="absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#8B5CF6] rounded-br-lg" />
 
-                {/* Animated horizontal scanning line */}
                 <View className="absolute top-1/2 left-4 right-4 h-1 bg-[#8B5CF6] opacity-80 shadow-md shadow-purple-500" />
               </View>
             ) : (
@@ -188,20 +215,35 @@ export default function QRScannerScreen() {
                 <BookOpen size={20} color="#8B5CF6" />
               </View>
               <View className="flex-1">
-                <Text className="text-[#0F172A] font-extrabold text-sm">Web Development — Batch 2026B</Text>
-                <Text className="text-[11px] text-[#64748B] mt-0.5">Session started 09:15 AM • R. Sharma</Text>
+                <Text className="text-[#0F172A] font-extrabold text-sm">
+                  {activeBatch ? activeBatch.name : 'No Active Batch'}
+                </Text>
+                <Text className="text-[11px] text-[#64748B] mt-0.5">
+                  {activeBatch ? `${activeBatch.course} • Trainer: ${trainerName}` : 'Please contact administrator'}
+                </Text>
               </View>
             </View>
 
             {/* 3. Last check-in pill success banner */}
-            <View className="bg-[#DCFCE7] border border-[#BBF7D0]/40 py-3 px-4 rounded-2xl flex-row items-center space-x-2.5">
-              <View className="w-5 h-5 bg-[#22C55E] rounded-full items-center justify-center">
-                <Text className="text-white text-[10px] font-black">✓</Text>
+            {hasCheckedInToday && lastRecord ? (
+              <View className="bg-[#DCFCE7] border border-[#BBF7D0]/40 py-3 px-4 rounded-2xl flex-row items-center space-x-2.5">
+                <View className="w-5 h-5 bg-[#22C55E] rounded-full items-center justify-center">
+                  <Text className="text-white text-[10px] font-black">✓</Text>
+                </View>
+                <Text className="text-xs font-black text-[#15803D]">
+                  Last check-in: Today {new Date(lastRecord.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {lastRecord.status}
+                </Text>
               </View>
-              <Text className="text-xs font-black text-[#15803D]">
-                Last check-in: Today 09:16 AM — Present
-              </Text>
-            </View>
+            ) : (
+              <View className="bg-amber-50 border border-amber-100 py-3 px-4 rounded-2xl flex-row items-center space-x-2.5">
+                <View className="w-5 h-5 bg-amber-500 rounded-full items-center justify-center">
+                  <Text className="text-white text-[10px] font-black">!</Text>
+                </View>
+                <Text className="text-xs font-black text-amber-700">
+                  No check-ins logged today
+                </Text>
+              </View>
+            )}
           </View>
 
         </View>

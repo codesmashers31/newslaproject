@@ -62,7 +62,7 @@ export default function TrainingScreen() {
       const myBatches = dashRes.data?.batches || [];
       setBatches(myBatches);
       setAvailableBatches(batchRes.data || []);
-      setIsLocked(dashRes.data?.user?.isBatchesLocked || false);
+      setIsLocked(dashRes.data?.user?.isBatchesLocked || dashRes.data?.profile?.user?.isBatchesLocked || false);
       
       // Initialize selected tech ids
       const tech = myBatches.filter((b: any) => b.course?.includes('Technical'));
@@ -200,18 +200,22 @@ export default function TrainingScreen() {
             <View>
               <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
               <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {techBatches.length > 0 ? techBatches[0].name : '2026B • Full Stack Web Dev'}
+                {techBatches.length > 0 ? techBatches[0].name : 'Unassigned'}
               </Text>
             </View>
             <View className="border-t border-[#F1F5F9] pt-3">
               <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
               <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {techBatches.length > 0 && techBatches[0].trainers && techBatches[0].trainers.length > 0 ? techBatches[0].trainers[0].name : 'R. Sharma'}
+                {techBatches.length > 0 && techBatches[0].trainers && techBatches[0].trainers.length > 0 
+                  ? techBatches[0].trainers[0].name 
+                  : 'Auto-Assigned'}
               </Text>
             </View>
             <View className="border-t border-[#F1F5F9] pt-3">
               <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
-              <Text className="text-[#0F172A] text-xs font-black mt-1">Mon-Fri • 9:00 AM</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {techBatches.length > 0 ? techBatches[0].schedule || 'Mon-Fri • 9:00 AM' : 'N/A'}
+              </Text>
             </View>
           </View>
         </View>
@@ -229,18 +233,22 @@ export default function TrainingScreen() {
             <View>
               <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
               <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {commBatch ? commBatch.name : '2026B • Soft Skills Track'}
+                {commBatch ? commBatch.name : 'Unassigned'}
               </Text>
             </View>
             <View className="border-t border-[#F1F5F9] pt-3">
               <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
               <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {commBatch && commBatch.trainers && commBatch.trainers.length > 0 ? commBatch.trainers[0].name : 'N. Kapoor'}
+                {commBatch && commBatch.trainers && commBatch.trainers.length > 0 
+                  ? commBatch.trainers[0].name 
+                  : 'Auto-Assigned'}
               </Text>
             </View>
             <View className="border-t border-[#F1F5F9] pt-3">
               <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
-              <Text className="text-[#0F172A] text-xs font-black mt-1">Tue & Thu • 2:00 PM</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {commBatch ? commBatch.schedule || 'Tue & Thu • 2:00 PM' : 'N/A'}
+              </Text>
             </View>
           </View>
         </View>
@@ -265,18 +273,22 @@ export default function TrainingScreen() {
             <View>
               <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
               <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {aptiBatch ? aptiBatch.name : '2026B • Quant & Logic'}
+                {aptiBatch ? aptiBatch.name : 'Unassigned'}
               </Text>
             </View>
             <View className="border-t border-[#F1F5F9] pt-3">
               <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
               <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {aptiBatch && aptiBatch.trainers && aptiBatch.trainers.length > 0 ? aptiBatch.trainers[0].name : 'S. Iyer'}
+                {aptiBatch && aptiBatch.trainers && aptiBatch.trainers.length > 0 
+                  ? aptiBatch.trainers[0].name 
+                  : 'Auto-Assigned'}
               </Text>
             </View>
             <View className="border-t border-[#F1F5F9] pt-3">
               <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
-              <Text className="text-[#0F172A] text-xs font-black mt-1">Mon-Fri • 11:00 AM</Text>
+              <Text className="text-[#0F172A] text-xs font-black mt-1">
+                {aptiBatch ? aptiBatch.schedule || 'Mon-Fri • 11:00 AM' : 'N/A'}
+              </Text>
             </View>
           </View>
         </View>

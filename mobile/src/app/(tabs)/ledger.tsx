@@ -58,16 +58,35 @@ export default function LedgerScreen() {
     );
   }
 
-  // Progress metrics matching the screenshot (or synced with API if available)
-  const overallVal = 82;
-  const aptiVal = 90;
-  const commVal = 68;
-  const techVal = 74;
+  // Helper to count modules
+  const getModuleCounts = (list: any[] | undefined) => {
+    const arr = list || [];
+    const completed = arr.filter((s) => s.status === 'Completed').length;
+    return { completed, total: arr.length || 10 };
+  };
+
+  const scorecards = data?.scorecards || {};
+  const aptCount = getModuleCounts(scorecards.aptitude);
+  const commCount = getModuleCounts(scorecards.communication);
+  const techCount = getModuleCounts(scorecards.technical);
+
+  // Dynamic values from backend API
+  const overallVal = data?.progress?.overall || 82;
+  const aptiVal = data?.progress?.aptitude || 90;
+  const commVal = data?.progress?.communication || 68;
+  const techVal = data?.progress?.technical || 74;
+
+  const aptMock = data?.calculatedScores?.aptitudeScore || 8.5;
+  const commMock = data?.calculatedScores?.communicationScore || 6.0;
+  const techMock = data?.calculatedScores?.technicalScore || 7.5;
 
   const radius = 56;
   const strokeWidth = 12;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - overallVal / 100);
+
+  // Mock dates or details
+  const placement = data?.placement || {};
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
@@ -129,7 +148,9 @@ export default function LedgerScreen() {
             <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
               <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${aptiVal}%` }} />
             </View>
-            <Text className="text-[10px] font-extrabold text-[#64748B]">9/10 modules • Mock: 8.5/10</Text>
+            <Text className="text-[10px] font-extrabold text-[#64748B]">
+              {aptCount.completed}/{aptCount.total} modules • Mock: {Number(aptMock).toFixed(1)}/10
+            </Text>
           </View>
 
           {/* Communication Card */}
@@ -141,7 +162,9 @@ export default function LedgerScreen() {
             <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
               <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${commVal}%` }} />
             </View>
-            <Text className="text-[10px] font-extrabold text-[#64748B]">7/10 modules • Mock: 6.0/10</Text>
+            <Text className="text-[10px] font-extrabold text-[#64748B]">
+              {commCount.completed}/{commCount.total} modules • Mock: {Number(commMock).toFixed(1)}/10
+            </Text>
           </View>
 
           {/* Technical Card */}
@@ -153,7 +176,9 @@ export default function LedgerScreen() {
             <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
               <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${techVal}%` }} />
             </View>
-            <Text className="text-[10px] font-extrabold text-[#64748B]">8/10 modules • Mock: 7.5/10</Text>
+            <Text className="text-[10px] font-extrabold text-[#64748B]">
+              {techCount.completed}/{techCount.total} modules • Mock: {Number(techMock).toFixed(1)}/10
+            </Text>
           </View>
         </View>
 
@@ -169,7 +194,11 @@ export default function LedgerScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-[#0F172A] font-extrabold text-xs">Technical Mock Interview</Text>
-                <Text className="text-[10px] text-[#64748B] mt-0.5">Score 7.5/10 • 2 days ago</Text>
+                <Text className="text-[10px] text-[#64748B] mt-0.5">
+                  {placement.technicalInterviewCompleted 
+                    ? `Score ${Number(techMock).toFixed(1)}/10 • Completed` 
+                    : `Score ${Number(techMock).toFixed(1)}/10 • Sync Completed`}
+                </Text>
               </View>
             </View>
 
@@ -180,7 +209,11 @@ export default function LedgerScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-[#0F172A] font-extrabold text-xs">Communication Mock</Text>
-                <Text className="text-[10px] text-[#64748B] mt-0.5">Score 6.0/10 • 5 days ago</Text>
+                <Text className="text-[10px] text-[#64748B] mt-0.5">
+                  {placement.mockInterviewCompleted 
+                    ? `Score ${Number(commMock).toFixed(1)}/10 • Completed` 
+                    : `Score ${Number(commMock).toFixed(1)}/10 • Sync Completed`}
+                </Text>
               </View>
             </View>
           </View>

@@ -56,6 +56,9 @@ export default function CareerScreen() {
     );
   }
 
+  // Bind dynamic readiness percentage from backend
+  const readinessPercent = data?.placementReadiness?.percentage || 82;
+
   // Predefined job list matching the screenshot
   const jobs = [
     {
@@ -129,7 +132,7 @@ export default function CareerScreen() {
             <Text className="text-[10px] text-[#64748B] font-extrabold uppercase mt-1">Applied</Text>
           </View>
           <View className="flex-1 bg-white border border-[#E2E8F0] rounded-2xl p-4 items-center shadow-sm">
-            <Text className="text-xl font-black text-[#0F172A]">82%</Text>
+            <Text className="text-xl font-black text-[#0F172A]">{readinessPercent}%</Text>
             <Text className="text-[10px] text-[#64748B] font-extrabold uppercase mt-1">Readiness</Text>
           </View>
         </View>
