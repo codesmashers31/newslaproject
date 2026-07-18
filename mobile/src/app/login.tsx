@@ -164,10 +164,10 @@ export default function LoginScreen() {
             <View className="w-full">
               
               {/* Real Logo Image matching screenshot */}
-              <View className="items-center mb-4">
+              <View className="items-center mb-6">
                 <Image
                   source={require('../../assets/images/logo.png')}
-                  style={{ width: 80, height: 80, borderRadius: 20, marginBottom: 20 }}
+                  style={{ width: 120, height: 120, borderRadius: 24, marginBottom: 24 }}
                   contentFit="contain"
                 />
                 
@@ -178,10 +178,10 @@ export default function LoginScreen() {
 
               {/* Email Input Field with Icon */}
               <View className="mb-4">
-                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-12">
-                  <Mail size={18} color="#94A3B8" style={{ marginRight: 10 }} />
+                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14">
+                  <Mail size={20} color="#94A3B8" style={{ marginRight: 12 }} />
                   <TextInput
-                    className="flex-1 text-sm font-semibold text-[#0F172A]"
+                    className="flex-1 text-base font-semibold text-[#0F172A]"
                     placeholder="student@lcp.edu"
                     placeholderTextColor="#94A3B8"
                     value={email}
@@ -194,10 +194,10 @@ export default function LoginScreen() {
 
               {/* Password Input Field with Icon */}
               <View className="mb-2">
-                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-12">
-                  <Lock size={18} color="#94A3B8" style={{ marginRight: 10 }} />
+                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14">
+                  <Lock size={20} color="#94A3B8" style={{ marginRight: 12 }} />
                   <TextInput
-                    className="flex-1 text-sm font-semibold text-[#0F172A]"
+                    className="flex-1 text-base font-semibold text-[#0F172A]"
                     placeholder="••••••••••"
                     placeholderTextColor="#94A3B8"
                     value={password}
@@ -218,7 +218,7 @@ export default function LoginScreen() {
 
               {/* Login Action Button */}
               <TouchableOpacity
-                className="bg-[#5B21B6] rounded-2xl h-12 items-center justify-center mb-6 shadow-sm"
+                className="bg-[#5B21B6] rounded-2xl h-14 items-center justify-center mb-6 shadow-sm"
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.85}
@@ -227,14 +227,14 @@ export default function LoginScreen() {
                   <ActivityIndicator color="#ffffff" />
                 ) : (
                   <View className="flex-row items-center justify-center">
-                    <Text className="text-white text-sm font-black mr-2">Login to Portal</Text>
-                    <ArrowRight size={16} color="#ffffff" />
+                    <Text className="text-white text-base font-black mr-2.5">Login to Portal</Text>
+                    <ArrowRight size={18} color="#ffffff" />
                   </View>
                 )}
               </TouchableOpacity>
 
               {/* Policy Disclaimer Card */}
-              <View className="bg-[#FAF9FF] border border-[#E2E8F0] rounded-3xl p-4">
+              <View className="bg-white border border-[#E2E8F0] rounded-3xl p-4">
                 <Text className="text-xs font-black text-[#0F172A]">Before you continue</Text>
                 <Text className="text-[10.5px] text-[#64748B] mt-1.5 leading-[16px] font-semibold">
                   By logging in you agree to mark attendance honestly via session QR codes, keep your profile info accurate, and follow your institute's code of conduct. Contact your trainer for login issues.
