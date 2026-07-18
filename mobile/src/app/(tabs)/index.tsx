@@ -96,7 +96,7 @@ export default function DashboardScreen() {
         <View className="flex-row items-center">
           <Image
             source={require('../../../assets/images/branding/logo-buildx.png')}
-            style={{ height: 36, width: 85 }}
+            style={{ height: 42, width: 100 }}
             contentFit="contain"
           />
         </View>
