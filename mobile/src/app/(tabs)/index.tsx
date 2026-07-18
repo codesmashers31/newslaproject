@@ -88,15 +88,15 @@ export default function DashboardScreen() {
   const progress = data?.progress || { aptitude: 0, communication: 0, technical: 0 };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" />
       
       {/* Top Header Row */}
-      <View className="flex-row justify-between items-center px-6 py-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] bg-white dark:bg-[#0E0A18] shadow-sm z-10">
+      <View className="flex-row justify-between items-center px-6 py-5 border-b border-[#E2E8F0] bg-white shadow-sm z-10">
         <View className="flex-row items-center">
           <Image
             source={require('../../../assets/images/branding/logo-buildx.png')}
-            style={{ height: 26, width: 56 }}
+            style={{ height: 36, width: 85 }}
             contentFit="contain"
           />
         </View>
@@ -104,13 +104,13 @@ export default function DashboardScreen() {
         <View className="flex-row space-x-3">
           <TouchableOpacity 
             onPress={handleToggleTheme}
-            className="p-2.5 bg-[#F1EBFB] dark:bg-[#251C3D] rounded-xl"
+            className="p-2.5 bg-[#F1EBFB] rounded-xl"
           >
             {isDark ? <Sun size={16} color="#f59e0b" /> : <Moon size={16} color="#64748b" />}
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={handleSignOut}
-            className="p-2.5 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl"
+            className="p-2.5 bg-red-50 border border-red-100 rounded-xl"
           >
             <LogOut size={16} color="#ef4444" />
           </TouchableOpacity>
