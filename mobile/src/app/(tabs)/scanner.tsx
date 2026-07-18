@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  TextInput, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
   ScrollView,
   StatusBar,
-  StyleSheet,
-  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import API from '../../services/api';
-import { 
+import {
   Camera as CameraIcon,
   AlertCircle,
   CheckCircle,
-  Key,
-  Info,
   ArrowLeft,
   ZoomIn,
   ZoomOut
 } from 'lucide-react-native';
 
 export default function QRScannerScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const muted = isDark ? '#A79AC2' : '#6B6478';
+  const primary = '#5B21B6';
+
   const [permission, requestPermission] = useCameraPermissions();
-  const [tokenInput, setTokenInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -76,113 +76,119 @@ export default function QRScannerScreen() {
 
   if (!permission) {
     return (
-      <View style={styles.loadingScreen}>
-        <ActivityIndicator size="large" color="#6366f1" />
+      <View className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center">
+        <ActivityIndicator size="large" color={primary} />
       </View>
     );
   }
 
   if (!permission.granted) {
     return (
-      <SafeAreaView style={styles.permissionScreen}>
-        <StatusBar barStyle="light-content" />
-        <View style={styles.permissionIconBg}>
-          <CameraIcon size={28} color="#818cf8" />
+      <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center px-8">
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <View className="w-16 h-16 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mb-6">
+          <CameraIcon size={28} color={primary} />
         </View>
-        <Text style={styles.permissionTitle}>Camera Access Required</Text>
-        <Text style={styles.permissionText}>
+        <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] text-center mb-2">Camera Access Required</Text>
+        <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] text-center mb-6 leading-[18px]">
           We need your permission to use the camera. This is required to scan the class session QR codes projected by your trainer.
         </Text>
         <TouchableOpacity
           onPress={requestPermission}
-          style={styles.permissionBtn}
+          className="px-6 py-3.5 bg-[#5B21B6] rounded-xl shadow-md shadow-[#5B21B6]/25"
         >
-          <Text style={styles.permissionBtnText}>Grant Permission</Text>
+          <Text className="text-white font-bold text-xs uppercase tracking-wider">Grant Permission</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.content}>
-          
+    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="flex-1 px-6 py-6">
+
           {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity 
+          <View className="flex-row items-center mb-2">
+            <TouchableOpacity
               onPress={() => router.replace('/(tabs)')}
-              style={styles.backButton}
+              className="p-2 bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-xl mr-3"
             >
-              <ArrowLeft size={16} color="#cbd5e1" />
+              <ArrowLeft size={16} color={muted} />
             </TouchableOpacity>
             <View>
-              <Text style={styles.headerTitle}>QR Code Scanner</Text>
-              <Text style={styles.headerSub}>Scan classroom slides to verify daily roll</Text>
+              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC]">Scan Attendance</Text>
+              <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] mt-0.5">Point your camera at the trainer's session QR code</Text>
             </View>
           </View>
 
           {/* 1. Camera Viewport Panel */}
           {cameraActive && !scanResult && !loading ? (
-            <View style={styles.cameraViewport}>
+            <View className="w-full aspect-square bg-[#0A0712] rounded-3xl overflow-hidden border border-[#5B21B6]/20 relative mt-4">
               <CameraView
                 zoom={zoom}
                 onBarcodeScanned={handleBarCodeScanned}
                 barcodeScannerSettings={{
                   barcodeTypes: ['qr'],
                 }}
-                style={styles.cameraFeed}
+                style={{ flex: 1 }}
               />
-              <View style={styles.cameraOverlay}>
-                <Text style={styles.cameraOverlayText}>
+              {/* Corner brackets */}
+              <View pointerEvents="none" className="absolute top-5 left-5 w-8 h-8 border-t-[3px] border-l-[3px] border-[#5B21B6] rounded-tl-lg" />
+              <View pointerEvents="none" className="absolute top-5 right-5 w-8 h-8 border-t-[3px] border-r-[3px] border-[#5B21B6] rounded-tr-lg" />
+              <View pointerEvents="none" className="absolute bottom-5 left-5 w-8 h-8 border-b-[3px] border-l-[3px] border-[#5B21B6] rounded-bl-lg" />
+              <View pointerEvents="none" className="absolute bottom-5 right-5 w-8 h-8 border-b-[3px] border-r-[3px] border-[#5B21B6] rounded-br-lg" />
+
+              <View className="absolute left-0 right-0 bottom-4 items-center">
+                <Text className="text-[10px] text-white font-bold tracking-widest bg-[#5B21B6]/80 px-3 py-1.5 rounded-full">
                   Align QR Code inside camera feed
                 </Text>
               </View>
-              <View style={styles.zoomControls}>
-                <TouchableOpacity onPress={handleZoomOut} style={styles.zoomBtn}>
+              <View className="absolute right-4 bottom-6 items-center bg-black/40 rounded-full py-2 px-1">
+                <TouchableOpacity onPress={handleZoomOut} className="p-2">
                   <ZoomOut size={20} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.zoomText}>{Math.round(zoom * 10)}x</Text>
-                <TouchableOpacity onPress={handleZoomIn} style={styles.zoomBtn}>
+                <Text className="text-white text-xs font-bold my-1">{Math.round(zoom * 10)}x</Text>
+                <TouchableOpacity onPress={handleZoomIn} className="p-2">
                   <ZoomIn size={20} color="#fff" />
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
-            <View style={styles.standbyContainer}>
+            <View className="w-full aspect-square bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl items-center justify-center p-6 mt-4">
               {loading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#6366f1" />
-                  <Text style={styles.loadingText}>Verifying code with server...</Text>
+                <View className="items-center">
+                  <ActivityIndicator size="large" color={primary} />
+                  <Text className="text-xs font-semibold mt-3" style={{ color: primary }}>Verifying code with server...</Text>
                 </View>
               ) : scanResult ? (
-                <View style={styles.resultContainer}>
-                  <View style={styles.resultIconBg}>
+                <View className="items-center w-full">
+                  <View className="w-14 h-14 rounded-full items-center justify-center mb-4 bg-[#5B21B6]/10">
                     {scanResult.success ? (
-                      <CheckCircle size={32} color="#34d399" />
+                      <CheckCircle size={32} color={isDark ? '#34D399' : '#16A34A'} />
                     ) : (
-                      <AlertCircle size={32} color="#f43f5e" />
+                      <AlertCircle size={32} color={isDark ? '#F87171' : '#DC2626'} />
                     )}
                   </View>
                   <View>
-                    <Text style={styles.resultTitle}>
+                    <Text className="text-lg font-black text-[#1A1325] dark:text-[#F6F3FC] text-center">
                       {scanResult.success ? 'Attendance Success' : 'Scan Failed'}
                     </Text>
-                    <Text style={styles.resultMessage}>
+                    <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] text-center mt-1.5 px-4 leading-[18px]">
                       {scanResult.message}
                     </Text>
                   </View>
 
                   {scanResult.success && scanResult.details && (
-                    <View style={styles.detailsCard}>
+                    <View className="bg-[#F1EBFB] dark:bg-[#251C3D] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-3 rounded-2xl w-full flex-row justify-between mt-4 px-4">
                       <View>
-                        <Text style={styles.detailsLabel}>Status</Text>
-                        <Text style={styles.detailsValueStatus}>{scanResult.details.status}</Text>
+                        <Text className="text-[9px] text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider">Status</Text>
+                        <Text className="font-bold mt-0.5 text-xs" style={{ color: isDark ? '#34D399' : '#16A34A' }}>{scanResult.details.status}</Text>
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.detailsLabel}>Marked Date</Text>
-                        <Text style={styles.detailsValue}>
+                        <Text className="text-[9px] text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider">Marked Date</Text>
+                        <Text className="font-bold text-[#1A1325] dark:text-[#F6F3FC] mt-0.5 text-xs">
                           {new Date(scanResult.details.date).toLocaleDateString()}
                         </Text>
                       </View>
@@ -194,361 +200,34 @@ export default function QRScannerScreen() {
                       setScanResult(null);
                       setCameraActive(true);
                     }}
-                    style={styles.scanButton}
+                    className="px-6 py-3 bg-[#5B21B6] rounded-xl shadow-md shadow-[#5B21B6]/25 mt-4"
                   >
-                    <Text style={styles.scanButtonText}>Scan New QR Code</Text>
+                    <Text className="text-white font-bold text-xs">Scan New QR Code</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
-                <View style={styles.resultContainer}>
+                <View className="items-center w-full">
                   <TouchableOpacity
                     onPress={() => setCameraActive(true)}
-                    style={styles.cameraStartIconBg}
+                    className="w-16 h-16 bg-[#F8F6FC] dark:bg-[#0E0A18] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mb-4"
                   >
-                    <CameraIcon size={24} color="#818cf8" />
+                    <CameraIcon size={24} color={primary} />
                   </TouchableOpacity>
-                  <Text style={styles.standbyTitle}>Camera Feed Idle</Text>
-                  <Text style={styles.standbySubText}>Start camera scanner to check in</Text>
+                  <Text className="text-sm font-bold text-[#1A1325] dark:text-[#F6F3FC]">Camera Feed Idle</Text>
+                  <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] mt-1 mb-4">Start camera scanner to check in</Text>
                   <TouchableOpacity
                     onPress={() => setCameraActive(true)}
-                    style={styles.scanButton}
+                    className="px-6 py-3 bg-[#5B21B6] rounded-xl shadow-md shadow-[#5B21B6]/25"
                   >
-                    <Text style={styles.scanButtonText}>Start Camera Scanner</Text>
+                    <Text className="text-white font-bold text-xs">Start Camera Scanner</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </View>
           )}
 
-          {/* 
-          2. Developer Sandbox Token Fallback 
-          <View style={styles.sandboxSection}>
-            ...
-          </View>
-          */}
-
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#020617', // Slate 950
-  },
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-  },
-  loadingScreen: {
-    flex: 1,
-    backgroundColor: '#020617',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  permissionScreen: {
-    flex: 1,
-    backgroundColor: '#020617',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  permissionIconBg: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#0f172a',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  permissionTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  permissionText: {
-    fontSize: 12,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 18,
-  },
-  permissionBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    backgroundColor: '#4f46e5',
-    borderRadius: 12,
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-  permissionBtnText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  backButton: {
-    padding: 8,
-    backgroundColor: '#0f172a',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#ffffff',
-  },
-  headerSub: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 2,
-  },
-  cameraViewport: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#000000',
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderColor: 'rgba(99, 102, 241, 0.2)',
-    borderWidth: 1,
-    position: 'relative',
-  },
-  cameraFeed: {
-    flex: 1,
-  },
-  cameraOverlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 16,
-    alignItems: 'center',
-  },
-  cameraOverlayText: {
-    fontSize: 10,
-    color: '#ffffff',
-    fontWeight: 'bold',
-    letterSpacing: 1.5,
-    backgroundColor: 'rgba(79, 70, 229, 0.8)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 9999,
-  },
-  zoomControls: {
-    position: 'absolute',
-    right: 16,
-    bottom: 24,
-    alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
-    borderRadius: 24,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  zoomBtn: {
-    padding: 8,
-  },
-  zoomText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginVertical: 4,
-  },
-  standbyContainer: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#0f172a',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#818cf8',
-    marginTop: 12,
-  },
-  resultContainer: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  resultIconBg: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-    marginBottom: 16,
-  },
-  resultTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#ffffff',
-    textAlign: 'center',
-  },
-  resultMessage: {
-    fontSize: 12,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginTop: 6,
-    paddingHorizontal: 16,
-    lineHeight: 18,
-  },
-  detailsCard: {
-    backgroundColor: 'rgba(2, 6, 23, 0.6)',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    padding: 12,
-    borderRadius: 16,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    paddingHorizontal: 16,
-  },
-  detailsLabel: {
-    fontSize: 9,
-    color: '#64748b',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  detailsValue: {
-    fontWeight: 'bold',
-    color: '#e2e8f0',
-    marginTop: 2,
-    fontSize: 11,
-  },
-  detailsValueStatus: {
-    fontWeight: 'bold',
-    color: '#10b981',
-    marginTop: 2,
-    fontSize: 11,
-  },
-  scanButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#4f46e5',
-    borderRadius: 12,
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    marginTop: 16,
-  },
-  scanButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  cameraStartIconBg: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#020617',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  standbyTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#cbd5e1',
-  },
-  standbySubText: {
-    fontSize: 10,
-    color: '#64748b',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  sandboxSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#0f172a',
-    paddingTop: 24,
-    marginTop: 24,
-    width: '100%',
-  },
-  sandboxBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.05)',
-    borderColor: 'rgba(99, 102, 241, 0.1)',
-    borderWidth: 1,
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  sandboxBannerText: {
-    fontSize: 10,
-    color: '#94a3b8',
-    flex: 1,
-    lineHeight: 14,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-  },
-  textInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0f172a',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    flex: 1,
-    marginRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    color: '#ffffff',
-    fontSize: 12,
-    paddingVertical: 10,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  submitButton: {
-    backgroundColor: '#4f46e5',
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  }
-});

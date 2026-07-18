@@ -243,7 +243,7 @@ const BatchManagement = () => {
           <div className="flex gap-2">
             <button
               onClick={openAddModal}
-              className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
+              className="flex items-center space-x-2 bg-violet-800 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-violet-500/20 duration-200 cursor-pointer"
             >
               <Plus size={16} />
               <span>Create Batch</span>
@@ -278,7 +278,7 @@ const BatchManagement = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               key={batch._id}
-              className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 rounded-[24px] p-6 shadow-sm hover:shadow-md hover:shadow-indigo-500/5 hover:-translate-y-1 duration-300 transition-all flex flex-col justify-between"
+              className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 rounded-[24px] p-6 shadow-sm hover:shadow-md hover:shadow-violet-500/5 hover:-translate-y-1 duration-300 transition-all flex flex-col justify-between"
             >
               <div>
                 {/* Title & Actions */}
@@ -286,11 +286,11 @@ const BatchManagement = () => {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <BookOpen size={20} className="text-indigo-500" />
+                        <BookOpen size={20} className="text-violet-500" />
                         {batch.name}
                       </h3>
                       {batch.batchId && (
-                        <span className="bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                        <span className="bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
                           ID: {batch.batchId}
                         </span>
                       )}
@@ -307,7 +307,7 @@ const BatchManagement = () => {
                     <div className="flex space-x-1.5 bg-gray-50 dark:bg-[#181922] p-1 rounded-xl border border-gray-100 dark:border-gray-800">
                       <button
                         onClick={() => openEditModal(batch)}
-                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-500 transition-colors cursor-pointer"
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-violet-500 transition-colors cursor-pointer"
                         title="Edit Batch"
                       >
                         <Edit2 size={13} />
@@ -328,24 +328,24 @@ const BatchManagement = () => {
                 {/* Students Count Box */}
                 <div className="bg-gray-50/50 dark:bg-[#181922] p-4 rounded-xl border border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 font-bold text-gray-700 dark:text-gray-300">
-                    <Users size={16} className="text-indigo-500" />
+                    <Users size={16} className="text-violet-500" />
                     <span>Enrolled Students</span>
                   </div>
-                  <span className="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-lg font-extrabold text-[11px] shadow-sm">
+                  <span className="bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 px-3 py-1 rounded-lg font-extrabold text-[11px] shadow-sm">
                     {batch.students?.length || 0} Students
                   </span>
                 </div>
 
                 {/* Schedule Details Box */}
-                <div className="mt-3 bg-indigo-50/20 dark:bg-indigo-950/5 border border-indigo-100/50 dark:border-indigo-900/30 p-3.5 rounded-xl text-xs space-y-2">
+                <div className="mt-3 bg-violet-50/20 dark:bg-violet-950/5 border border-violet-100/50 dark:border-violet-950/30 p-3.5 rounded-xl text-xs space-y-2">
                   <div className="flex justify-between items-center text-gray-600 dark:text-gray-400 font-semibold">
-                    <span className="flex items-center gap-1.5"><Calendar size={13} className="text-indigo-500" /> Duration Dates</span>
+                    <span className="flex items-center gap-1.5"><Calendar size={13} className="text-violet-500" /> Duration Dates</span>
                     <span className="font-extrabold text-gray-850 dark:text-gray-200">
                       {batch.startDate ? new Date(batch.startDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) : 'N/A'} - {batch.endDate ? new Date(batch.endDate).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'}) : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-gray-600 dark:text-gray-400 font-semibold">
-                    <span className="flex items-center gap-1.5"><Clock size={13} className="text-indigo-500" /> Daily Shift Hours</span>
+                    <span className="flex items-center gap-1.5"><Clock size={13} className="text-violet-500" /> Daily Shift Hours</span>
                     <span className="font-extrabold text-gray-850 dark:text-gray-200">
                       {batch.startTime ? batch.startTime : 'N/A'} - {batch.endTime ? batch.endTime : 'N/A'}
                     </span>
@@ -354,7 +354,7 @@ const BatchManagement = () => {
 
                 {/* Allotments Trainers List Box */}
                 <div className="mt-3 bg-gray-50/20 dark:bg-[#181922]/40 p-3.5 rounded-xl border border-gray-200 dark:border-gray-800/60 text-xs">
-                  <p className="text-[10px] font-extrabold text-indigo-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                  <p className="text-[10px] font-extrabold text-violet-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                     <GraduationCap size={13} />
                     <span>Allotments Trainers List</span>
                   </p>
@@ -413,7 +413,7 @@ const BatchManagement = () => {
                     required
                     value={formData.batchId}
                     onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white font-semibold"
                     placeholder="e.g. MERN001"
                   />
                 </div>
@@ -424,7 +424,7 @@ const BatchManagement = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white font-semibold"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white font-semibold"
                     placeholder="e.g. Elite Full Stack Web Dev Batch A"
                   />
                 </div>
@@ -433,7 +433,7 @@ const BatchManagement = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                    className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white cursor-pointer font-semibold"
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
@@ -448,7 +448,7 @@ const BatchManagement = () => {
                       type="date"
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-955 dark:text-white font-semibold"
                     />
                   </div>
                   <div>
@@ -457,7 +457,7 @@ const BatchManagement = () => {
                       type="date"
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-955 dark:text-white font-semibold"
                     />
                   </div>
                 </div>
@@ -470,7 +470,7 @@ const BatchManagement = () => {
                       type="time"
                       value={formData.startTime}
                       onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-955 dark:text-white font-semibold"
                     />
                   </div>
                   <div>
@@ -479,7 +479,7 @@ const BatchManagement = () => {
                       type="time"
                       value={formData.endTime}
                       onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-955 dark:text-white font-semibold"
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-955 dark:text-white font-semibold"
                     />
                   </div>
                 </div>
@@ -489,11 +489,11 @@ const BatchManagement = () => {
                   
                   {/* Technical Trainer Select */}
                   <div>
-                    <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Technical Trainer</label>
+                    <label className="text-[10px] font-bold text-violet-500 uppercase tracking-wide block mb-1">Technical Trainer</label>
                     <select
                       value={formData.technicalTrainer}
                       onChange={(e) => setFormData({ ...formData, technicalTrainer: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white cursor-pointer font-semibold"
                     >
                       <option value="">Select Technical Trainer (Optional)</option>
                       {trainers.filter(t => t.role === 'Technical Trainer').map(t => (
@@ -504,11 +504,11 @@ const BatchManagement = () => {
 
                   {/* Communication Trainer Select */}
                   <div>
-                    <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Communication Trainer</label>
+                    <label className="text-[10px] font-bold text-violet-500 uppercase tracking-wide block mb-1">Communication Trainer</label>
                     <select
                       value={formData.communicationTrainer}
                       onChange={(e) => setFormData({ ...formData, communicationTrainer: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-805 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white cursor-pointer font-semibold"
                     >
                       <option value="">Select Communication Trainer (Optional)</option>
                       {trainers.filter(t => t.role === 'Communication Trainer').map(t => (
@@ -519,11 +519,11 @@ const BatchManagement = () => {
 
                   {/* Aptitude Trainer Select */}
                   <div>
-                    <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide block mb-1">Aptitude Trainer</label>
+                    <label className="text-[10px] font-bold text-violet-500 uppercase tracking-wide block mb-1">Aptitude Trainer</label>
                     <select
                       value={formData.aptitudeTrainer}
                       onChange={(e) => setFormData({ ...formData, aptitudeTrainer: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white cursor-pointer font-semibold"
+                      className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-850 rounded-xl bg-white dark:bg-[#12131a] text-xs focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white cursor-pointer font-semibold"
                     >
                       <option value="">Select Aptitude Trainer (Optional)</option>
                       {trainers.filter(t => t.role === 'Aptitude Trainer').map(t => (
@@ -538,7 +538,7 @@ const BatchManagement = () => {
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-550 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 cursor-pointer flex items-center justify-center gap-2 text-xs"
+                    className="w-full py-3.5 bg-violet-800 hover:bg-indigo-550 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg shadow-violet-500/20 cursor-pointer flex items-center justify-center gap-2 text-xs"
                   >
                     {submitLoading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -582,7 +582,7 @@ const BatchManagement = () => {
                 </button>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-indigo-50/10 transition-colors relative cursor-pointer">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-violet-50/10 transition-colors relative cursor-pointer">
                 <input
                   type="file"
                   accept=".xlsx, .xls"
@@ -590,7 +590,7 @@ const BatchManagement = () => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <div className="space-y-2">
-                  <div className="h-10 w-10 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto">
+                  <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl flex items-center justify-center mx-auto">
                     <FileSpreadsheet size={24} />
                   </div>
                   <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
@@ -603,7 +603,7 @@ const BatchManagement = () => {
               <button
                 type="submit"
                 disabled={!excelFile || importingExcel}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/10 flex items-center justify-center gap-2"
               >
                 {importingExcel ? (
                   <>

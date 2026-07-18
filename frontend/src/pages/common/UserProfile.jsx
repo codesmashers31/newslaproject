@@ -87,7 +87,7 @@ const UserProfile = () => {
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden bg-gradient-to-r from-[#4F46E5] via-indigo-600 to-purple-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg"
+        className="relative overflow-hidden bg-gradient-to-r from-[#4F46E5] via-violet-800 to-purple-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg"
       >
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -107,7 +107,7 @@ const UserProfile = () => {
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
                 {user?.name}
               </h1>
-              <p className="text-xs sm:text-sm text-indigo-100 opacity-90 mt-0.5">
+              <p className="text-xs sm:text-sm text-violet-100 opacity-90 mt-0.5">
                 {user?.email}
               </p>
             </div>
@@ -121,7 +121,7 @@ const UserProfile = () => {
         <div className="bg-white dark:bg-[#12131a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6 flex flex-col items-center text-center">
           {/* Avatar Picture */}
           <div className="relative group">
-            <div className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-lg relative">
+            <div className="h-28 w-28 rounded-full border-2 border-violet-500 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-lg relative">
               {currentPhoto ? (
                 <img src={currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
               ) : (
@@ -160,7 +160,7 @@ const UserProfile = () => {
           <hr className="w-full border-gray-200 dark:border-gray-800" />
 
           <div className="w-full flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-800 text-left">
-            <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-[#4F46E5] dark:text-indigo-400">
+            <div className="p-2.5 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-[#4F46E5] dark:text-violet-400">
               <User size={20} />
             </div>
             <div>
@@ -184,7 +184,7 @@ const UserProfile = () => {
             </div>
             <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800/60">
               <span className="text-gray-500 font-medium">Workspace Role</span>
-              <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-[#4F46E5] dark:text-indigo-400 font-extrabold">
+              <span className="px-2.5 py-0.5 rounded-lg bg-violet-50 dark:bg-violet-950/30 text-[#4F46E5] dark:text-violet-400 font-extrabold">
                 {user?.role}
               </span>
             </div>
@@ -296,7 +296,7 @@ const UserProfile = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338ca] text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#4F46E5] hover:bg-[#4c1d95] text-white text-xs font-bold shadow-md shadow-violet-500/20 transition-all cursor-pointer disabled:opacity-50"
               >
                 <Save size={16} />
                 {saving ? 'Saving Changes...' : 'Save Profile Changes'}

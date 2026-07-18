@@ -74,26 +74,26 @@ const AttendanceDrillDown = ({ logs }) => {
     <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 rounded-[24px] shadow-sm overflow-hidden flex flex-col">
       <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#161720]">
         <h3 className="font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-          <BarChart3 size={18} className="text-indigo-500" />
+          <BarChart3 size={18} className="text-violet-500" />
           Advanced Drill-Down Analytics
         </h3>
         <p className="text-xs text-gray-500 mt-1 font-medium">Select a path below to investigate specific batch attendance rates.</p>
         
         {/* Breadcrumb / Stepper */}
         <div className="flex items-center gap-2 mt-4 text-xs font-bold">
-          <span onClick={() => { setSelectedCourse(null); setSelectedTrainer(null); setSelectedBatch(null); }} className={`cursor-pointer px-3 py-1.5 rounded-lg transition-colors ${!selectedCourse ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300'}`}>
+          <span onClick={() => { setSelectedCourse(null); setSelectedTrainer(null); setSelectedBatch(null); }} className={`cursor-pointer px-3 py-1.5 rounded-lg transition-colors ${!selectedCourse ? 'bg-violet-800 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 hover:text-gray-800 dark:hover:text-gray-300'}`}>
             1. Course
           </span>
           <ChevronRight size={14} className="text-gray-400" />
-          <span onClick={() => { setSelectedTrainer(null); setSelectedBatch(null); }} className={`cursor-pointer px-3 py-1.5 rounded-lg transition-colors ${selectedCourse && !selectedTrainer ? 'bg-indigo-600 text-white' : (selectedTrainer ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 hover:text-gray-800' : 'text-gray-400')}`}>
+          <span onClick={() => { setSelectedTrainer(null); setSelectedBatch(null); }} className={`cursor-pointer px-3 py-1.5 rounded-lg transition-colors ${selectedCourse && !selectedTrainer ? 'bg-violet-800 text-white' : (selectedTrainer ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 hover:text-gray-800' : 'text-gray-400')}`}>
             2. Trainer
           </span>
           <ChevronRight size={14} className="text-gray-400" />
-          <span onClick={() => setSelectedBatch(null)} className={`cursor-pointer px-3 py-1.5 rounded-lg transition-colors ${selectedTrainer && !selectedBatch ? 'bg-indigo-600 text-white' : (selectedBatch ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 hover:text-gray-800' : 'text-gray-400')}`}>
+          <span onClick={() => setSelectedBatch(null)} className={`cursor-pointer px-3 py-1.5 rounded-lg transition-colors ${selectedTrainer && !selectedBatch ? 'bg-violet-800 text-white' : (selectedBatch ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 hover:text-gray-800' : 'text-gray-400')}`}>
             3. Batch
           </span>
           <ChevronRight size={14} className="text-gray-400" />
-          <span className={`px-3 py-1.5 rounded-lg transition-colors ${selectedBatch ? 'bg-indigo-600 text-white' : 'text-gray-400'}`}>
+          <span className={`px-3 py-1.5 rounded-lg transition-colors ${selectedBatch ? 'bg-violet-800 text-white' : 'text-gray-400'}`}>
             4. Students
           </span>
         </div>
@@ -123,8 +123,8 @@ const AttendanceDrillDown = ({ logs }) => {
                   <div className="col-span-full text-sm text-gray-500 italic py-4">No trainers found for this course.</div>
                 ) : (
                   derivedTrainers.map(trainer => (
-                    <div key={trainer._id} onClick={() => setSelectedTrainer(trainer)} className="p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700/60 rounded-xl cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold">
+                    <div key={trainer._id} onClick={() => setSelectedTrainer(trainer)} className="p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700/60 rounded-xl cursor-pointer hover:border-violet-500 dark:hover:border-violet-500 transition-colors flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-950/30 flex items-center justify-center text-violet-800 dark:text-violet-400 font-bold">
                         {trainer.name.charAt(0)}
                       </div>
                       <div>
@@ -146,14 +146,14 @@ const AttendanceDrillDown = ({ logs }) => {
                   <div className="col-span-full text-sm text-gray-500 italic py-4">No batches found for this trainer.</div>
                 ) : (
                   selectedTrainer.batches.map(batch => (
-                    <div key={batch._id} onClick={() => setSelectedBatch(batch)} className="p-5 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700/60 rounded-xl cursor-pointer hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors flex justify-between items-center group">
+                    <div key={batch._id} onClick={() => setSelectedBatch(batch)} className="p-5 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700/60 rounded-xl cursor-pointer hover:border-violet-500 dark:hover:border-violet-500 transition-colors flex justify-between items-center group">
                       <div>
-                        <h4 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">{batch.name}</h4>
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-white group-hover:text-violet-800 transition-colors">{batch.name}</h4>
                         <p className="text-xs text-gray-500 mt-1">{batch.course}</p>
                       </div>
                       <div className="flex flex-col items-end">
                         <span className="text-xs font-bold text-gray-400 flex items-center gap-1"><Users size={12}/> {batch.students?.length || 0} Students</span>
-                        <span className="text-[10px] text-indigo-500 font-semibold mt-1 flex items-center gap-1">View Analytics <ChevronRight size={10}/></span>
+                        <span className="text-[10px] text-violet-500 font-semibold mt-1 flex items-center gap-1">View Analytics <ChevronRight size={10}/></span>
                       </div>
                     </div>
                   ))

@@ -98,7 +98,7 @@ const StudentProfile = () => {
   if (loading) {
     return (
       <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl animate-pulse">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
       </div>
     );
   }
@@ -118,7 +118,7 @@ const StudentProfile = () => {
           
           {/* Avatar Picture */}
           <div className="relative group">
-            <div className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-gray-100 flex items-center justify-center shadow-lg relative">
+            <div className="h-28 w-28 rounded-full border-2 border-violet-500 overflow-hidden bg-gray-100 flex items-center justify-center shadow-lg relative">
               {currentPhoto ? (
                 <img src={currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
               ) : (
@@ -160,11 +160,11 @@ const StudentProfile = () => {
           {/* Resume Log */}
           <div className="w-full space-y-4">
             <h5 className="text-xs font-bold text-left text-gray-600 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-              <FileText size={14} className="text-indigo-500" />
+              <FileText size={14} className="text-violet-500" />
               Academic Resume (PDF)
             </h5>
             
-            <div className="border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 relative hover:bg-indigo-50/10 cursor-pointer">
+            <div className="border border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-4 relative hover:bg-violet-50/10 cursor-pointer">
               <input
                 type="file"
                 accept=".pdf"
@@ -175,7 +175,7 @@ const StudentProfile = () => {
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
               <div className="space-y-2 text-center text-xs text-gray-500">
-                <Upload size={18} className="mx-auto text-indigo-500" />
+                <Upload size={18} className="mx-auto text-violet-500" />
                 <span className="font-semibold block truncate">
                   {resumeFile ? resumeFile.name : 'Upload PDF Resume'}
                 </span>
@@ -187,7 +187,7 @@ const StudentProfile = () => {
                 href={`${BACKEND_URL}${currentResume}`}
                 target="_blank" 
                 rel="noreferrer"
-                className="text-xs text-indigo-600 hover:underline flex items-center gap-1 font-semibold justify-center"
+                className="text-xs text-violet-800 hover:underline flex items-center gap-1 font-semibold justify-center"
               >
                 <FileText size={12} />
                 <span>View current uploaded resume document</span>
@@ -312,7 +312,7 @@ const StudentProfile = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-1.5 uppercase flex items-center gap-1">
-                  <Linkedin size={13} className="text-indigo-500" />
+                  <Linkedin size={13} className="text-violet-500" />
                   <span>LinkedIn Profile Link</span>
                 </label>
                 <input
@@ -325,7 +325,7 @@ const StudentProfile = () => {
               </div>
               <div>
                 <label className="block mb-1.5 uppercase flex items-center gap-1">
-                  <Github size={13} className="text-indigo-500" />
+                  <Github size={13} className="text-violet-500" />
                   <span>GitHub Profile Link</span>
                 </label>
                 <input
@@ -341,7 +341,7 @@ const StudentProfile = () => {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-3 mt-4 bg-violet-800 hover:bg-violet-500 text-white font-semibold rounded-xl shadow-lg shadow-violet-500/20 disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-2"
             >
               {saving ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>

@@ -114,7 +114,7 @@ const AIRoadmap = () => {
   if (loading) {
     return (
       <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl animate-pulse">
-        <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400">
+        <div className="flex items-center space-x-2 text-violet-800 dark:text-violet-400">
           <RotateCcw className="animate-spin w-5 h-5" />
           <span className="text-sm font-semibold">Loading your learning plans...</span>
         </div>
@@ -131,7 +131,7 @@ const AIRoadmap = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white rounded-3xl p-6 lg:p-8 shadow-xl shadow-indigo-100 dark:shadow-none">
+      <div className="relative overflow-hidden bg-gradient-to-r from-violet-800 via-purple-600 to-violet-900 text-white rounded-3xl p-6 lg:p-8 shadow-xl shadow-violet-100 dark:shadow-none">
         <div className="absolute top-0 right-0 -mt-6 -mr-6 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
         <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-32 h-32 bg-purple-500/20 rounded-full blur-xl" />
         
@@ -142,7 +142,7 @@ const AIRoadmap = () => {
               <span>AI Learning Co-Pilot</span>
             </div>
             <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">Customized AI Study Planner</h1>
-            <p className="text-indigo-100 text-sm max-w-xl">
+            <p className="text-violet-100 text-sm max-w-xl">
               Accelerate your placement prep with custom roadmaps. By filtering out skills you already have, we tailor a target syllabus just for you.
             </p>
           </div>
@@ -171,9 +171,9 @@ const AIRoadmap = () => {
             className="p-8 lg:p-12 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl text-center space-y-6 shadow-sm"
           >
             <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-950/40 rounded-full animate-ping opacity-75" />
-              <div className="absolute inset-2 bg-indigo-50 dark:bg-indigo-900/40 rounded-full animate-pulse" />
-              <div className="relative w-14 h-14 bg-indigo-600 dark:bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg">
+              <div className="absolute inset-0 bg-violet-100 dark:bg-violet-950/40 rounded-full animate-ping opacity-75" />
+              <div className="absolute inset-2 bg-violet-50 dark:bg-violet-950/40 rounded-full animate-pulse" />
+              <div className="relative w-14 h-14 bg-violet-800 dark:bg-violet-500 rounded-full flex items-center justify-center text-white shadow-lg">
                 <Sparkles className="w-6 h-6 animate-spin" style={{ animationDuration: '4s' }} />
               </div>
             </div>
@@ -189,7 +189,7 @@ const AIRoadmap = () => {
                 <div 
                   key={i} 
                   className={`h-2 rounded-full transition-all duration-300 ${
-                    i === loadingStep ? 'w-6 bg-indigo-600' : 'w-2 bg-gray-200 dark:bg-gray-800'
+                    i === loadingStep ? 'w-6 bg-violet-800' : 'w-2 bg-gray-200 dark:bg-gray-800'
                   }`}
                 />
               ))}
@@ -219,7 +219,7 @@ const AIRoadmap = () => {
                   <select 
                     value={targetTrack}
                     onChange={(e) => setTargetTrack(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#181922] border border-gray-200 dark:border-gray-880 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#181922] border border-gray-200 dark:border-gray-880 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm"
                   >
                     <option value="MERN Full Stack Developer">MERN Full Stack Developer</option>
                     <option value="Python Data Scientist">Python Data Scientist</option>
@@ -238,7 +238,7 @@ const AIRoadmap = () => {
                     onChange={(e) => setFamiliarSkills(e.target.value)}
                     placeholder="E.g. HTML, CSS, React, Python basics..."
                     rows="3"
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#181922] border border-gray-200 dark:border-gray-880 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-[#181922] border border-gray-200 dark:border-gray-880 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-sm resize-none"
                   />
                   <p className="text-[10px] text-gray-400">
                     Entering skills you already know will automatically streamline your study plan and save estimated hours.
@@ -251,7 +251,7 @@ const AIRoadmap = () => {
                     <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                       Daily Study Hours
                     </label>
-                    <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-lg border border-indigo-100 dark:border-indigo-900">
+                    <span className="px-2 py-0.5 bg-violet-50 dark:bg-violet-950 text-violet-800 dark:text-violet-400 text-xs font-bold rounded-lg border border-violet-100 dark:border-violet-950">
                       {dailyHours} hours / day
                     </span>
                   </div>
@@ -261,7 +261,7 @@ const AIRoadmap = () => {
                     max="10" 
                     value={dailyHours}
                     onChange={(e) => setDailyHours(Number(e.target.value))}
-                    className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:accent-indigo-500"
+                    className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-violet-800 dark:accent-violet-500"
                   />
                   <div className="flex justify-between text-[10px] text-gray-400 px-1">
                     <span>1 hr (Casual)</span>
@@ -272,7 +272,7 @@ const AIRoadmap = () => {
 
                 <button 
                   type="submit"
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-indigo-100 dark:shadow-none"
+                  className="w-full py-3 bg-violet-800 hover:bg-violet-900 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-md shadow-violet-100 dark:shadow-none"
                 >
                   <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
                   <span>Build AI Customized Syllabus</span>
@@ -283,24 +283,24 @@ const AIRoadmap = () => {
             {/* Sidebar Guidelines */}
             <div className="bg-gray-50 dark:bg-[#181922] border border-gray-200 dark:border-gray-800 p-6 rounded-3xl space-y-6">
               <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2">
-                <GraduationCap className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
+                <GraduationCap className="w-4.5 h-4.5 text-violet-800 dark:text-violet-400" />
                 <span>How it works</span>
               </h4>
               <div className="space-y-4">
                 <div className="flex space-x-3">
-                  <div className="w-6 h-6 bg-indigo-100 dark:bg-indigo-950 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">1</div>
+                  <div className="w-6 h-6 bg-violet-100 dark:bg-violet-950 rounded-full flex items-center justify-center text-xs font-bold text-violet-800 dark:text-violet-400 shrink-0">1</div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                     <strong>Specify Track:</strong> Select the role/profile you are targeting for upcoming placement assessments.
                   </p>
                 </div>
                 <div className="flex space-x-3">
-                  <div className="w-6 h-6 bg-indigo-100 dark:bg-indigo-950 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">2</div>
+                  <div className="w-6 h-6 bg-violet-100 dark:bg-violet-950 rounded-full flex items-center justify-center text-xs font-bold text-violet-800 dark:text-violet-400 shrink-0">2</div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                     <strong>Map Familiarity:</strong> List technologies you already studied. The AI skips or shortens these modules.
                   </p>
                 </div>
                 <div className="flex space-x-3">
-                  <div className="w-6 h-6 bg-indigo-100 dark:bg-indigo-950 rounded-full flex items-center justify-center text-xs font-bold text-indigo-600 dark:text-indigo-400 shrink-0">3</div>
+                  <div className="w-6 h-6 bg-violet-100 dark:bg-violet-950 rounded-full flex items-center justify-center text-xs font-bold text-violet-800 dark:text-violet-400 shrink-0">3</div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                     <strong>Commit Hours:</strong> We calculate duration timelines dynamically using your daily time capacity.
                   </p>
@@ -333,7 +333,7 @@ const AIRoadmap = () => {
                 {/* Progress bar */}
                 <div className="mt-4 w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500" 
+                    className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-500" 
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
@@ -347,7 +347,7 @@ const AIRoadmap = () => {
                 <div className="space-y-1">
                   <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Time Remaining</span>
                   <div className="flex items-baseline space-x-1.5">
-                    <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{totalDays}</span>
+                    <span className="text-3xl font-black text-violet-800 dark:text-violet-400">{totalDays}</span>
                     <span className="text-xs text-gray-500 font-medium">Estimated Days</span>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ const AIRoadmap = () => {
             {/* Syllabus Checklist */}
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2">
-                <BookOpen className="w-5 h-5 text-indigo-600" />
+                <BookOpen className="w-5 h-5 text-violet-800" />
                 <span>Personalized Topics Checklist</span>
               </h3>
 
@@ -387,7 +387,7 @@ const AIRoadmap = () => {
                     className={`p-5 border rounded-2xl transition cursor-pointer flex items-start gap-4 select-none ${
                       topic.completed 
                         ? 'bg-emerald-50/40 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/50' 
-                        : 'bg-white dark:bg-[#12131a] border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-900'
+                        : 'bg-white dark:bg-[#12131a] border-gray-200 dark:border-gray-800 hover:border-violet-400 dark:hover:border-violet-950'
                     }`}
                   >
                     {/* Tick Checkbox */}
@@ -411,7 +411,7 @@ const AIRoadmap = () => {
                         <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-lg border uppercase tracking-wider shrink-0 w-fit ${
                           topic.completed
                             ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900 text-emerald-600 dark:text-emerald-500'
-                            : 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400'
+                            : 'bg-violet-50 dark:bg-violet-950/30 border-violet-100 dark:border-violet-950 text-violet-800 dark:text-violet-400'
                         }`}>
                           {topic.completed ? 'Topic Done' : `${topic.estimatedDays} Days`}
                         </span>

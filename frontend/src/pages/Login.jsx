@@ -123,7 +123,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0c0d12] text-slate-800 dark:text-gray-100 selection:bg-indigo-500 selection:text-white p-4 relative overflow-y-auto">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0c0d12] text-slate-800 dark:text-gray-100 selection:bg-violet-500 selection:text-white p-4 relative overflow-y-auto">
       
       <AnimatePresence mode="wait">
         {/* VIEW 1: NORMAL LOGIN SCREEN */}
@@ -151,7 +151,7 @@ const Login = () => {
 
             {/* Shield Notice indicating Single Device enforcement */}
             <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-3 flex items-center space-x-3 text-xs">
-              <ShieldCheck className="text-indigo-600 dark:text-indigo-400 h-5 w-5 shrink-0" />
+              <ShieldCheck className="text-violet-800 dark:text-violet-400 h-5 w-5 shrink-0" />
               <p className="text-slate-600 dark:text-gray-400 font-semibold leading-relaxed">
                 Protected by BuildX Single Device Authentication. Each student profile is restricted to one hardware setup.
               </p>
@@ -174,7 +174,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter email or SLAE-0001"
-                    className="w-full pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold placeholder-slate-400"
+                    className="w-full pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-semibold placeholder-slate-400"
                   />
                 </div>
               </div>
@@ -194,7 +194,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full pl-12 pr-12 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold placeholder-slate-400"
+                    className="w-full pl-12 pr-12 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-semibold placeholder-slate-400"
                   />
                   <button
                     type="button"
@@ -210,7 +210,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-md shadow-indigo-600/10 flex items-center justify-center space-x-2 transition disabled:opacity-50 cursor-pointer"
+                className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-violet-800 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-md shadow-violet-800/10 flex items-center justify-center space-x-2 transition disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -250,7 +250,7 @@ const Login = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Registered device */}
               <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex items-start space-x-3">
-                <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-xl shrink-0 mt-0.5">
+                <div className="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-xl shrink-0 mt-0.5">
                   <Laptop size={18} />
                 </div>
                 <div>
@@ -275,7 +275,7 @@ const Login = () => {
 
             <div className="text-xs text-slate-600 dark:text-gray-400 space-y-2 leading-relaxed bg-slate-50 dark:bg-[#0c0d12]/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-850">
               <p className="font-extrabold text-slate-800 dark:text-white mb-1 flex items-center gap-1.5">
-                <AlertCircle size={14} className="text-indigo-500" /> Why is my login blocked?
+                <AlertCircle size={14} className="text-violet-500" /> Why is my login blocked?
               </p>
               <p>Each SLA student/trainer account is linked to the first hardware device used during verification. Accessing from multiple screens, browsers, or clearing browser tokens triggers a device safety block to protect credential security.</p>
             </div>
@@ -284,7 +284,7 @@ const Login = () => {
             <div className="flex flex-col gap-2.5">
               <button
                 onClick={() => setViewState('request_reset')}
-                className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-violet-800 hover:bg-violet-500 text-white font-extrabold text-xs shadow-md shadow-violet-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <KeyRound size={14} />
                 <span>Request Device Reset Request</span>
@@ -368,7 +368,7 @@ const Login = () => {
                   <select
                     value={resetForm.reason}
                     onChange={(e) => setResetForm({ ...resetForm, reason: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-205 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold cursor-pointer appearance-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-205 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold cursor-pointer appearance-none"
                   >
                     <option value="Upgraded/Changed my Laptop">Upgraded/Changed my Laptop</option>
                     <option value="Upgraded/Changed my Mobile Phone">Upgraded/Changed my Mobile Phone</option>
@@ -390,7 +390,7 @@ const Login = () => {
                   value={resetForm.explanation}
                   onChange={(e) => setResetForm({ ...resetForm, explanation: e.target.value })}
                   placeholder="Explain why you are logging in from a different system..."
-                  className="w-full px-4 py-3 rounded-xl border border-slate-205 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold placeholder-slate-400"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-205 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold placeholder-slate-400"
                 />
               </div>
 
@@ -398,7 +398,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={resetLoading}
-                className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 rounded-xl bg-violet-800 hover:bg-violet-500 text-white font-extrabold text-xs shadow-md shadow-violet-500/20 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 {resetLoading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -446,7 +446,7 @@ const Login = () => {
 
             <button
               onClick={() => setViewState('login')}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-indigo-500/20 cursor-pointer"
+              className="w-full py-3 bg-violet-800 hover:bg-violet-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-violet-500/20 cursor-pointer"
             >
               Return to Login Page
             </button>

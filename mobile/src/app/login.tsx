@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -13,8 +12,8 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { router } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import {
-  GraduationCap,
   Mail,
   Lock,
   Eye,
@@ -36,6 +35,13 @@ import * as Device from 'expo-device';
 import API from '../services/api';
 
 export default function LoginScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const muted = isDark ? '#A79AC2' : '#6B6478';
+  const primary = '#5B21B6';
+  const danger = isDark ? '#F87171' : '#DC2626';
+  const success = isDark ? '#34D399' : '#16A34A';
+
   // Page view states: 'login' | 'unauthorized_device' | 'device_locked' | 'request_reset' | 'reset_success'
   const [viewState, setViewState] = useState<'login' | 'unauthorized_device' | 'device_locked' | 'request_reset' | 'reset_success'>('login');
 
@@ -67,7 +73,7 @@ export default function LoginScreen() {
     const deviceName = Device.modelName || 'Mobile';
     const osName = Device.osName || 'iOS/Android';
     const osVer = Device.osVersion || '';
-    
+
     return {
       deviceId: devId,
       deviceInfo: `${deviceName} (${osName} ${osVer})`,
@@ -151,50 +157,52 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <KeyboardAwareScrollView
-        style={styles.flex}
-        contentContainerStyle={styles.scrollContent}
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 36, paddingBottom: 24, justifyContent: 'center' }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         extraScrollHeight={20}
       >
-          
+
           {/* VIEW 1: LOGIN FORM */}
           {viewState === 'login' && (
-            <View style={styles.formContainer}>
+            <View className="w-full">
               {/* Header */}
-              <View style={styles.headerContainer}>
-                <View style={styles.iconCircle}>
-                  <GraduationCap size={36} color="#6366f1" />
-                </View>
-                <Text style={styles.title}>LCP Student Portal</Text>
-                <Text style={styles.subtitle}>
+              <View className="items-center mb-5">
+                <Image
+                  source={require('../../assets/images/branding/logo-buildx.png')}
+                  style={{ height: 46, width: 100, marginBottom: 8 }}
+                  contentFit="contain"
+                />
+                <Text className="text-[13px] font-black text-[#6B6478] dark:text-[#A79AC2] tracking-[0.24em] -mt-1">SLA</Text>
+                <Text className="text-[11.5px] text-[#6B6478] dark:text-[#A79AC2] mb-3">Learning & Career Build App</Text>
+                <Text className="text-[22px] font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1.5 tracking-wide">Welcome back</Text>
+                <Text className="text-[13px] text-[#6B6478] dark:text-[#A79AC2] text-center px-3 leading-[18px]">
                   Enter credentials to access your academic cohort dashboard.
                 </Text>
               </View>
 
               {/* Single Device Notice */}
-              <View style={styles.shieldNotice}>
-                <ShieldCheck size={20} color="#818cf8" style={styles.noticeIcon} />
-                <Text style={styles.noticeText}>
+              <View className="flex-row items-center bg-[#5B21B6]/[0.06] border border-[#5B21B6]/15 rounded-2xl p-3 mb-5">
+                <ShieldCheck size={20} color={primary} style={{ marginRight: 10 }} />
+                <Text className="flex-1 text-[11px] font-semibold text-[#6B6478] dark:text-[#A79AC2] leading-4">
                   Protected by BuildX Single Device Authentication. Account is restricted to one hardware setup.
                 </Text>
               </View>
 
               {/* Email Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Student EID / Email</Text>
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputIcon}>
-                    <Mail size={18} color="#64748b" />
-                  </View>
+              <View className="mb-4">
+                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Student EID / Email</Text>
+                <View className="flex-row items-center border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[50px]">
+                  <Mail size={18} color={muted} style={{ marginRight: 10 }} />
                   <TextInput
-                    style={styles.input}
+                    className="flex-1 text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
                     placeholder="Enter EID (e.g. SLA001) or Email"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={muted}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="default"
@@ -204,28 +212,26 @@ export default function LoginScreen() {
               </View>
 
               {/* Password Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputIcon}>
-                    <Lock size={18} color="#64748b" />
-                  </View>
+              <View className="mb-4">
+                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Password</Text>
+                <View className="flex-row items-center border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[50px]">
+                  <Lock size={18} color={muted} style={{ marginRight: 10 }} />
                   <TextInput
-                    style={styles.input}
+                    className="flex-1 text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
                     placeholder="Enter your password"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={muted}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                   />
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
+                    className="p-1.5"
                   >
                     {showPassword ? (
-                      <EyeOff size={18} color="#64748b" />
+                      <EyeOff size={18} color={muted} />
                     ) : (
-                      <Eye size={18} color="#64748b" />
+                      <Eye size={18} color={muted} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -233,7 +239,7 @@ export default function LoginScreen() {
 
               {/* Login Button */}
               <TouchableOpacity
-                style={styles.primaryButton}
+                className="bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5 shadow-md shadow-[#5B21B6]/25"
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.85}
@@ -241,18 +247,18 @@ export default function LoginScreen() {
                 {loading ? (
                   <ActivityIndicator color="#ffffff" />
                 ) : (
-                  <View style={styles.primaryButtonContent}>
-                    <Text style={styles.primaryButtonText}>Login to Portal</Text>
+                  <View className="flex-row items-center">
+                    <Text className="text-white text-sm font-bold mr-1.5">Login to Portal</Text>
                     <ArrowRight size={18} color="#ffffff" />
                   </View>
                 )}
               </TouchableOpacity>
 
               {/* Bottom Vector Illustration */}
-              <View style={styles.illustrationContainer}>
+              <View className="items-center justify-center mt-6">
                 <Image
                   source={require('../../assets/images/loginimage.svg')}
-                  style={styles.illustrationImage}
+                  style={{ width: '100%', height: 100 }}
                   contentFit="contain"
                 />
               </View>
@@ -261,123 +267,124 @@ export default function LoginScreen() {
 
           {/* VIEW 2: DEVICE BLOCKED ACCESS */}
           {viewState === 'unauthorized_device' && (
-            <View style={styles.securityContainer}>
-              <View style={[styles.iconCircle, styles.roseIconCircle]}>
-                <ShieldAlert size={36} color="#f43f5e" />
+            <View className="items-center w-full">
+              <View className="w-[72px] h-[72px] rounded-[36px] bg-red-500/10 border-[1.5px] border-red-500/25 items-center justify-center mb-3">
+                <ShieldAlert size={36} color={danger} />
               </View>
-              <Text style={styles.securityTitle}>Access Blocked</Text>
-              <Text style={styles.securitySubtitle}>BuildX Device Authentication Mismatch</Text>
+              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Access Blocked</Text>
+              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>BuildX Device Authentication Mismatch</Text>
 
               {/* Device Info details */}
-              <View style={styles.deviceInfoContainer}>
-                <View style={styles.deviceRow}>
-                  <Laptop size={20} color="#cbd5e1" style={styles.deviceIcon} />
-                  <View style={styles.deviceTextCol}>
-                    <Text style={styles.deviceLabel}>Registered Device</Text>
-                    <Text style={styles.deviceValue}>{blockedDetails.registeredDevice}</Text>
-                    <Text style={styles.deviceSub}>{`Last sync: ${formatDateTime(blockedDetails.lastUsed)}`}</Text>
+              <View className="w-full gap-3 mb-5">
+                <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-3.5 rounded-2xl">
+                  <Laptop size={20} color={muted} style={{ marginRight: 12 }} />
+                  <View className="flex-1">
+                    <Text className="text-[9px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase">Registered Device</Text>
+                    <Text className="text-[13px] font-black text-[#1A1325] dark:text-[#F6F3FC] mt-0.5">{blockedDetails.registeredDevice}</Text>
+                    <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] mt-0.5">{`Last sync: ${formatDateTime(blockedDetails.lastUsed)}`}</Text>
                   </View>
                 </View>
 
-                <View style={[styles.deviceRow, styles.unregisteredDeviceRow]}>
-                  <Smartphone size={20} color="#f43f5e" style={styles.deviceIcon} />
-                  <View style={styles.deviceTextCol}>
-                    <Text style={[styles.deviceLabel, styles.roseText]}>Current Mobile Device</Text>
-                    <Text style={[styles.deviceValue, styles.roseText]}>Unregistered Setup</Text>
-                    <Text style={styles.deviceSub}>Signature mismatch detected</Text>
+                <View className="flex-row items-center bg-red-500/[0.03] border border-red-500/20 p-3.5 rounded-2xl">
+                  <Smartphone size={20} color={danger} style={{ marginRight: 12 }} />
+                  <View className="flex-1">
+                    <Text className="text-[9px] font-bold uppercase" style={{ color: danger }}>Current Mobile Device</Text>
+                    <Text className="text-[13px] font-black mt-0.5" style={{ color: danger }}>Unregistered Setup</Text>
+                    <Text className="text-[10px] text-[#6B6478] dark:text-[#A79AC2] mt-0.5">Signature mismatch detected</Text>
                   </View>
                 </View>
               </View>
 
               {/* Information Alert Box */}
-              <View style={styles.infoAlert}>
-                <AlertTriangle size={16} color="#e11d48" style={styles.infoAlertIcon} />
-                <Text style={styles.infoAlertText}>
+              <View className="flex-row bg-red-500/5 border border-red-500/15 rounded-2xl p-3.5 mb-6">
+                <AlertTriangle size={16} color={danger} style={{ marginRight: 10, marginTop: 2 }} />
+                <Text className="flex-1 text-[11px] text-[#6B6478] dark:text-[#A79AC2] leading-4 font-medium">
                   Your account is restricted to a single hardware setup. Logging in from multiple screens or clearing browser storage triggers device security locks.
                 </Text>
               </View>
 
               {/* Action Buttons */}
               <TouchableOpacity
-                style={styles.primaryButton}
+                className="w-full bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5"
                 onPress={() => setViewState('request_reset')}
                 activeOpacity={0.85}
               >
-                <View style={styles.primaryButtonContent}>
-                  <RotateCcw size={16} color="#ffffff" style={styles.noticeIcon} />
-                  <Text style={styles.primaryButtonText}>Request Device Reset</Text>
+                <View className="flex-row items-center">
+                  <RotateCcw size={16} color="#ffffff" style={{ marginRight: 10 }} />
+                  <Text className="text-white text-sm font-bold">Request Device Reset</Text>
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.outlineButton}
+                className="w-full h-[50px] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mt-2.5"
                 onPress={() => setViewState('login')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.outlineButtonText}>Return to Login</Text>
+                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-[13px] font-bold">Return to Login</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* VIEW 3: DEVICE LOCKED */}
           {viewState === 'device_locked' && (
-            <View style={styles.securityContainer}>
-              <View style={[styles.iconCircle, styles.roseIconCircle]}>
-                <ShieldAlert size={36} color="#f43f5e" />
+            <View className="items-center w-full">
+              <View className="w-[72px] h-[72px] rounded-[36px] bg-red-500/10 border-[1.5px] border-red-500/25 items-center justify-center mb-3">
+                <ShieldAlert size={36} color={danger} />
               </View>
-              <Text style={styles.securityTitle}>Account Locked</Text>
-              <Text style={styles.securitySubtitle}>Device Access Locked</Text>
+              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Account Locked</Text>
+              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Device Access Locked</Text>
 
-              <Text style={styles.descriptionText}>
+              <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] text-center leading-[18px] px-3 mb-5 font-medium">
                 Your device authentication access has been locked by security protocols due to multiple unrecognized registration attempts or coordinator policies.
               </Text>
 
-              <View style={styles.supportBox}>
-                <Text style={styles.supportBoxText}>
+              <View className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] p-3.5 rounded-2xl w-full mb-6">
+                <Text className="text-[11px] text-[#1A1325] dark:text-[#F6F3FC] text-center leading-4 font-semibold">
                   Please contact the SLA operations coordinators or coordinate via your trainer to unlock your session credentials.
                 </Text>
               </View>
 
               <TouchableOpacity
-                style={styles.outlineButton}
+                className="w-full h-[50px] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mt-2.5"
                 onPress={() => setViewState('login')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.outlineButtonText}>Return to Login</Text>
+                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-[13px] font-bold">Return to Login</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* VIEW 4: REQUEST DEVICE RESET */}
           {viewState === 'request_reset' && (
-            <View style={styles.formContainer}>
-              <Text style={styles.securityTitle}>Request Device Reset</Text>
-              <Text style={styles.securitySubtitle}>Submit change requests to LCP Administrators</Text>
+            <View className="w-full">
+              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Request Device Reset</Text>
+              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Submit change requests to LCP Administrators</Text>
 
               {/* Reset Reason Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Reason for Device Change</Text>
-                <View style={styles.inputWrapper}>
+              <View className="mb-4">
+                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Reason for Device Change</Text>
+                <View className="flex-row items-center border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[50px]">
                   <TextInput
-                    style={styles.input}
+                    className="flex-1 text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
                     value={resetReason}
                     onChangeText={setResetReason}
                     placeholder="e.g. Changed my mobile phone"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={muted}
                   />
                 </View>
               </View>
 
               {/* Details Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Brief Explanation</Text>
-                <View style={[styles.inputWrapper, styles.textareaWrapper]}>
+              <View className="mb-4">
+                <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] mb-1.5 uppercase tracking-wider">Brief Explanation</Text>
+                <View className="border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl bg-white dark:bg-[#1C1530] px-3.5 h-[100px] items-start py-2.5">
                   <TextInput
-                    style={[styles.input, styles.textarea]}
+                    className="flex-1 w-full text-[13px] font-semibold text-[#1A1325] dark:text-[#F6F3FC]"
+                    style={{ textAlignVertical: 'top' }}
                     value={resetExplanation}
                     onChangeText={setResetExplanation}
                     placeholder="Provide additional context (e.g. phone stolen/upgraded)"
-                    placeholderTextColor="#475569"
+                    placeholderTextColor={muted}
                     multiline
                     numberOfLines={4}
                   />
@@ -386,7 +393,7 @@ export default function LoginScreen() {
 
               {/* Actions */}
               <TouchableOpacity
-                style={styles.primaryButton}
+                className="bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5"
                 onPress={handleResetSubmit}
                 disabled={resetLoading}
                 activeOpacity={0.85}
@@ -394,39 +401,39 @@ export default function LoginScreen() {
                 {resetLoading ? (
                   <ActivityIndicator color="#ffffff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Submit Request</Text>
+                  <Text className="text-white text-sm font-bold">Submit Request</Text>
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.outlineButton}
+                className="w-full h-[50px] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl items-center justify-center mt-2.5"
                 onPress={() => setViewState('unauthorized_device')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.outlineButtonText}>Cancel</Text>
+                <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-[13px] font-bold">Cancel</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* VIEW 5: SUCCESS SUBMIT */}
           {viewState === 'reset_success' && (
-            <View style={styles.securityContainer}>
-              <View style={[styles.iconCircle, styles.emeraldIconCircle]}>
-                <CheckCircle2 size={36} color="#10b981" />
+            <View className="items-center w-full">
+              <View className="w-[72px] h-[72px] rounded-[36px] bg-emerald-500/10 border-[1.5px] border-emerald-500/25 items-center justify-center mb-3">
+                <CheckCircle2 size={36} color={success} />
               </View>
-              <Text style={styles.securityTitle}>Request Logged</Text>
-              <Text style={styles.securitySubtitle}>Awaiting Admin Review</Text>
+              <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC] mb-1 text-center">Request Logged</Text>
+              <Text className="text-[11px] font-extrabold uppercase tracking-widest mb-5 text-center" style={{ color: danger }}>Awaiting Admin Review</Text>
 
-              <Text style={styles.descriptionText}>
+              <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2] text-center leading-[18px] px-3 mb-5 font-medium">
                 Your device reset request has been logged successfully. SLA Administrators will review your request and clear the locked device mapping within 1-2 hours.
               </Text>
 
               <TouchableOpacity
-                style={styles.primaryButton}
+                className="w-full bg-[#5B21B6] rounded-2xl h-[50px] items-center justify-center mt-2.5"
                 onPress={() => setViewState('login')}
                 activeOpacity={0.85}
               >
-                <Text style={styles.primaryButtonText}>Return to Login</Text>
+                <Text className="text-white text-sm font-bold">Return to Login</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -435,280 +442,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#020617', // Slate 950
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 36,
-    paddingBottom: 24,
-    justifyContent: 'center',
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(99, 102, 241, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  roseIconCircle: {
-    backgroundColor: 'rgba(244, 63, 94, 0.08)',
-    borderColor: 'rgba(244, 63, 94, 0.25)',
-  },
-  emeraldIconCircle: {
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#ffffff',
-    marginBottom: 6,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#94a3b8',
-    textAlign: 'center',
-    paddingHorizontal: 12,
-    lineHeight: 18,
-  },
-  shieldNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.06)',
-    borderColor: 'rgba(99, 102, 241, 0.15)',
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 20,
-  },
-  noticeIcon: {
-    marginRight: 10,
-  },
-  noticeText: {
-    flex: 1,
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#94a3b8',
-    lineHeight: 16,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#cbd5e1',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    borderRadius: 14,
-    backgroundColor: '#0f172a',
-    paddingHorizontal: 14,
-    height: 50,
-  },
-  textareaWrapper: {
-    height: 100,
-    alignItems: 'flex-start',
-    paddingVertical: 10,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 13,
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-  textarea: {
-    height: '100%',
-    textAlignVertical: 'top',
-  },
-  eyeIcon: {
-    padding: 6,
-  },
-  primaryButton: {
-    backgroundColor: '#6366f1',
-    borderRadius: 14,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  primaryButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-    marginRight: 6,
-  },
-  illustrationContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  illustrationImage: {
-    width: '100%',
-    height: 100,
-  },
-  
-  // Security Styles
-  securityContainer: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  securityTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#ffffff',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  securitySubtitle: {
-    fontSize: 11,
-    color: '#f43f5e',
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  deviceInfoContainer: {
-    width: '100%',
-    gap: 12,
-    marginBottom: 20,
-  },
-  deviceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0f172a',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    padding: 14,
-    borderRadius: 16,
-  },
-  unregisteredDeviceRow: {
-    borderColor: 'rgba(244, 63, 94, 0.2)',
-    backgroundColor: 'rgba(244, 63, 94, 0.02)',
-  },
-  deviceIcon: {
-    marginRight: 12,
-  },
-  deviceTextCol: {
-    flex: 1,
-  },
-  deviceLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-  },
-  deviceValue: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#ffffff',
-    marginTop: 2,
-  },
-  deviceSub: {
-    fontSize: 10,
-    color: '#64748b',
-    marginTop: 2,
-  },
-  roseText: {
-    color: '#f43f5e',
-  },
-  infoAlert: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(225, 29, 72, 0.05)',
-    borderColor: 'rgba(225, 29, 72, 0.15)',
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 24,
-  },
-  infoAlertIcon: {
-    marginRight: 10,
-    marginTop: 2,
-  },
-  infoAlertText: {
-    flex: 1,
-    fontSize: 11,
-    color: '#94a3b8',
-    lineHeight: 16,
-    fontWeight: '500',
-  },
-  outlineButton: {
-    width: '100%',
-    height: 50,
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  outlineButtonText: {
-    color: '#cbd5e1',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  descriptionText: {
-    fontSize: 12,
-    color: '#94a3b8',
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 12,
-    marginBottom: 20,
-    fontWeight: '500',
-  },
-  supportBox: {
-    backgroundColor: '#0f172a',
-    borderColor: '#1e293b',
-    borderWidth: 1,
-    padding: 14,
-    borderRadius: 16,
-    width: '100%',
-    marginBottom: 24,
-  },
-  supportBoxText: {
-    fontSize: 11,
-    color: '#cbd5e1',
-    textAlign: 'center',
-    lineHeight: 16,
-    fontWeight: '600',
-  },
-});

@@ -349,7 +349,7 @@ const TrainerManagement = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+            className="px-4 py-2.5 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-extrabold shadow-md shadow-violet-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
           >
             <Plus size={16} />
             <span>Add New Trainer</span>
@@ -378,8 +378,8 @@ const TrainerManagement = () => {
             onClick={() => setRoleFilter(r.key)}
             className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
               roleFilter === r.key
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                : 'bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-indigo-500'
+                ? 'bg-violet-800 text-white shadow-md shadow-violet-500/20'
+                : 'bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-violet-500'
             }`}
           >
             <GraduationCap size={14} />
@@ -399,12 +399,12 @@ const TrainerManagement = () => {
               placeholder="Search by Trainer ID, Name, Email, Mobile..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
+              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
             />
           </div>
 
           <div className="text-xs text-slate-500 font-semibold">
-            Showing <span className="font-bold text-indigo-600 dark:text-indigo-400">{filteredTrainers.length}</span> trainer(s)
+            Showing <span className="font-bold text-violet-800 dark:text-violet-400">{filteredTrainers.length}</span> trainer(s)
           </div>
         </div>
 
@@ -443,7 +443,7 @@ const TrainerManagement = () => {
 
                   return (
                     <tr key={trainer._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                      <td className="px-6 py-4 font-mono font-bold text-violet-800 dark:text-violet-400">
                         {displayId}
                       </td>
 
@@ -457,7 +457,7 @@ const TrainerManagement = () => {
                               ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
                               : trainer.role === 'Aptitude Trainer'
                               ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
-                              : 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300'
+                              : 'bg-violet-100 dark:bg-violet-950/50 text-violet-900 dark:text-violet-300'
                           }`}>
                             {trainer.role}
                           </span>
@@ -524,7 +524,7 @@ const TrainerManagement = () => {
                           <button
                             onClick={() => handleOpenEdit(trainer)}
                             title="Edit Trainer"
-                            className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer"
+                            className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 transition cursor-pointer"
                           >
                             <Edit3 size={14} />
                           </button>
@@ -558,7 +558,7 @@ const TrainerManagement = () => {
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                  <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400">
                     <GraduationCap size={18} />
                   </div>
                   <div>
@@ -585,7 +585,7 @@ const TrainerManagement = () => {
                       placeholder="e.g. TR-101, SLA-TR-01"
                       value={formData.trainerId}
                       onChange={(e) => setFormData({ ...formData, trainerId: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -596,7 +596,7 @@ const TrainerManagement = () => {
                     <select
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Technical Trainer">Technical Trainer</option>
                       <option value="Communication Trainer">Communication Trainer</option>
@@ -616,7 +616,7 @@ const TrainerManagement = () => {
                       placeholder="e.g. Suresh Kumar"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -630,7 +630,7 @@ const TrainerManagement = () => {
                       placeholder="trainer@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -644,7 +644,7 @@ const TrainerManagement = () => {
                       placeholder="e.g. +91 9876543210"
                       value={formData.mobile}
                       onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
                 </div>
@@ -678,7 +678,7 @@ const TrainerManagement = () => {
 
                 {/* Multiple Select Skills */}
                 <div>
-                  <label className="block text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="block text-xs font-extrabold text-violet-800 dark:text-violet-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
                     <Sparkles size={14} />
                     <span>Select Expertise Skills (Multiple Select)</span>
                   </label>
@@ -692,8 +692,8 @@ const TrainerManagement = () => {
                           onClick={() => setFormData({ ...formData, skills: toggleSelection(formData.skills, sk) })}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
                             isSelected
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                              ? 'bg-violet-800 text-white border-violet-800 shadow-sm'
+                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-violet-400'
                           }`}
                         >
                           {isSelected ? '✓ ' : '+ '} {sk}
@@ -714,7 +714,7 @@ const TrainerManagement = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? 'Creating...' : 'Create Trainer'}
                   </button>
@@ -737,7 +737,7 @@ const TrainerManagement = () => {
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                  <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400">
                     <Edit3 size={18} />
                   </div>
                   <div>
@@ -764,7 +764,7 @@ const TrainerManagement = () => {
                       placeholder="e.g. TR-101"
                       value={editFormData.trainerId}
                       onChange={(e) => setEditFormData({ ...editFormData, trainerId: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -775,7 +775,7 @@ const TrainerManagement = () => {
                     <select
                       value={editFormData.role}
                       onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Technical Trainer">Technical Trainer</option>
                       <option value="Communication Trainer">Communication Trainer</option>
@@ -795,7 +795,7 @@ const TrainerManagement = () => {
                       placeholder="e.g. Suresh Kumar"
                       value={editFormData.name}
                       onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -809,7 +809,7 @@ const TrainerManagement = () => {
                       placeholder="trainer@example.com"
                       value={editFormData.email}
                       onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
 
@@ -823,7 +823,7 @@ const TrainerManagement = () => {
                       placeholder="e.g. +91 9876543210"
                       value={editFormData.mobile}
                       onChange={(e) => setEditFormData({ ...editFormData, mobile: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
                 </div>
@@ -857,7 +857,7 @@ const TrainerManagement = () => {
 
                 {/* Multiple Select Skills */}
                 <div>
-                  <label className="block text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="block text-xs font-extrabold text-violet-800 dark:text-violet-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">
                     <Sparkles size={14} />
                     <span>Select Expertise Skills (Multiple Select)</span>
                   </label>
@@ -871,8 +871,8 @@ const TrainerManagement = () => {
                           onClick={() => setEditFormData({ ...editFormData, skills: toggleSelection(editFormData.skills, sk) })}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
                             isSelected
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                              ? 'bg-violet-800 text-white border-violet-800 shadow-sm'
+                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-violet-400'
                           }`}
                         >
                           {isSelected ? '✓ ' : '+ '} {sk}
@@ -893,7 +893,7 @@ const TrainerManagement = () => {
                   <button
                     type="submit"
                     disabled={updating}
-                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                   >
                     {updating ? 'Saving...' : 'Save Changes'}
                   </button>
@@ -933,7 +933,7 @@ const TrainerManagement = () => {
                 </button>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-indigo-50/10 transition-colors relative cursor-pointer">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-violet-50/10 transition-colors relative cursor-pointer">
                 <input
                   type="file"
                   accept=".xlsx, .xls"
@@ -941,7 +941,7 @@ const TrainerManagement = () => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
                 <div className="space-y-2">
-                  <div className="h-10 w-10 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto">
+                  <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl flex items-center justify-center mx-auto">
                     <FileSpreadsheet size={24} />
                   </div>
                   <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
@@ -954,7 +954,7 @@ const TrainerManagement = () => {
               <button
                 type="submit"
                 disabled={!excelFile || importingExcel}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/10 flex items-center justify-center gap-2"
               >
                 {importingExcel ? (
                   <>
@@ -1012,7 +1012,7 @@ const TrainerManagement = () => {
                     <select
                       value={newDay}
                       onChange={(e) => setNewDay(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                     >
                       <option value="Monday">Monday</option>
                       <option value="Tuesday">Tuesday</option>
@@ -1032,7 +1032,7 @@ const TrainerManagement = () => {
                       type="time"
                       value={newStart}
                       onChange={(e) => setNewStart(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1041,13 +1041,13 @@ const TrainerManagement = () => {
                       type="time"
                       value={newEnd}
                       onChange={(e) => setNewEnd(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                     />
                   </div>
                 </div>
                 <button
                   onClick={handleAddSlot}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-950 dark:bg-indigo-600 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-950 dark:bg-violet-800 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
                 >
                   Add Timeslot
                 </button>
@@ -1100,7 +1100,7 @@ const TrainerManagement = () => {
                 <button
                   onClick={handleSaveAvailability}
                   disabled={savingAvailability}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-650/20 transition-all select-none flex items-center justify-center"
+                  className="flex-1 py-3 bg-violet-800 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-650/20 transition-all select-none flex items-center justify-center"
                 >
                   {savingAvailability ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

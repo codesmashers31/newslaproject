@@ -131,7 +131,7 @@ const Register = () => {
       >
         {/* Left Side - Brand & Info */}
         <div className="hidden md:flex flex-col justify-between p-12 bg-white dark:bg-[#12131a] text-gray-900 dark:text-gray-100 relative overflow-hidden border-r border-gray-100 dark:border-gray-800/80">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-100/50 dark:bg-indigo-950/10 rounded-full blur-3xl opacity-40" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-100/50 dark:bg-violet-950/10 rounded-full blur-3xl opacity-40" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-100/50 dark:bg-pink-950/10 rounded-full blur-3xl opacity-40" />
           
           <div className="relative z-10">
@@ -167,9 +167,9 @@ const Register = () => {
               
               {/* Progress Indicator Bar */}
               <div className="flex items-center gap-2 mt-4">
-                <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
-                <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
-                <div className={`h-1.5 flex-1 rounded-full ${step >= 3 ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
+                <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-violet-800' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
+                <div className={`h-1.5 flex-1 rounded-full ${step >= 2 ? 'bg-violet-800' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
+                <div className={`h-1.5 flex-1 rounded-full ${step >= 3 ? 'bg-violet-800' : 'bg-gray-200 dark:bg-gray-800'}`}></div>
               </div>
             </div>
             
@@ -187,7 +187,7 @@ const Register = () => {
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                         placeholder="John Doe"
                       />
                     </div>
@@ -202,7 +202,7 @@ const Register = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                         placeholder="john@example.com"
                       />
                     </div>
@@ -218,7 +218,7 @@ const Register = () => {
                           required
                           value={mobile}
                           onChange={(e) => setMobile(e.target.value)}
-                          className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                          className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                           placeholder="9876543210"
                         />
                       </div>
@@ -229,7 +229,7 @@ const Register = () => {
                       <select
                         value={role}
                         onChange={(e) => setRole(e.target.value)}
-                        className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-3 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                       >
                         <option value="Student">Student</option>
                         <option value="Admin">Admin</option>
@@ -250,7 +250,7 @@ const Register = () => {
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                          className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                           placeholder="••••••••"
                         />
                         <span
@@ -274,7 +274,7 @@ const Register = () => {
                           required
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                          className="w-full input-with-icon-both rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                           placeholder="••••••••"
                         />
                         <span
@@ -304,7 +304,7 @@ const Register = () => {
                         required
                         value={collegeName}
                         onChange={(e) => setCollegeName(e.target.value)}
-                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full input-with-icon-left rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                         placeholder="Harvard University / IIT Madras"
                       />
                     </div>
@@ -318,7 +318,7 @@ const Register = () => {
                         required
                         value={degree}
                         onChange={(e) => setDegree(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                         placeholder="B.E. Computer Science"
                       />
                     </div>
@@ -330,7 +330,7 @@ const Register = () => {
                         required
                         value={yearOfPassing}
                         onChange={(e) => setYearOfPassing(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151722] text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
                         placeholder="2026"
                       />
                     </div>
@@ -352,7 +352,7 @@ const Register = () => {
                     
                     <div 
                       onClick={triggerFileInput}
-                      className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-indigo-600/20 mb-4 bg-white dark:bg-gray-800 cursor-pointer group transition-all duration-350 hover:border-indigo-600/50"
+                      className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-violet-800/20 mb-4 bg-white dark:bg-gray-800 cursor-pointer group transition-all duration-350 hover:border-violet-800/50"
                     >
                       {photo ? (
                         <img src={photo} alt="Avatar preview" className="w-full h-full object-cover" />
@@ -373,7 +373,7 @@ const Register = () => {
                           key={i}
                           type="button"
                           onClick={() => setPhoto(url)}
-                          className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${photo === url ? 'border-indigo-600 scale-110 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                          className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${photo === url ? 'border-violet-800 scale-110 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'}`}
                         >
                           <img src={url} alt="Preset avatar" className="w-full h-full object-cover" />
                         </button>
@@ -384,7 +384,7 @@ const Register = () => {
                       <button
                         type="button"
                         onClick={triggerFileInput}
-                        className="py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold text-xs rounded-xl border border-indigo-100/40 dark:border-indigo-900/30 transition-all cursor-pointer"
+                        className="py-2.5 px-4 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/20 dark:hover:bg-violet-950/40 text-violet-800 dark:text-violet-400 font-semibold text-xs rounded-xl border border-violet-100/40 dark:border-violet-950/30 transition-all cursor-pointer"
                       >
                         Choose from Local Files
                       </button>
@@ -392,8 +392,8 @@ const Register = () => {
                   </div>
                   
                   {/* Account overview card */}
-                  <div className="p-4 bg-indigo-50/15 dark:bg-indigo-950/10 border border-gray-200 dark:border-gray-800 rounded-2xl text-xs space-y-2">
-                    <p className="font-bold text-indigo-600 dark:text-indigo-400">Account Overview:</p>
+                  <div className="p-4 bg-violet-50/15 dark:bg-violet-950/10 border border-gray-200 dark:border-gray-800 rounded-2xl text-xs space-y-2">
+                    <p className="font-bold text-violet-800 dark:text-violet-400">Account Overview:</p>
                     <p className="text-gray-600 dark:text-gray-400"><span className="font-semibold text-gray-800 dark:text-gray-200">Name:</span> {name}</p>
                     <p className="text-gray-600 dark:text-gray-400"><span className="font-semibold text-gray-800 dark:text-gray-200">Email:</span> {email}</p>
                     <p className="text-gray-600 dark:text-gray-400"><span className="font-semibold text-gray-800 dark:text-gray-200">Role:</span> {role}</p>
@@ -421,7 +421,7 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
+                    className="flex-1 py-3 bg-violet-800 hover:bg-violet-500 text-white font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
                   >
                     <span>Continue</span>
                     <ChevronRight className="w-4 h-4" />
@@ -430,7 +430,7 @@ const Register = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                    className="flex-1 py-3 bg-violet-800 hover:bg-violet-500 text-white font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
                   >
                     {loading ? (
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -448,7 +448,7 @@ const Register = () => {
 
             <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
               Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">
+              <Link to="/login" className="text-violet-800 dark:text-violet-400 font-bold hover:underline">
                 Sign in
               </Link>
             </p>

@@ -53,7 +53,7 @@ const StudentScorecards = () => {
     return (
       <div className="flex justify-center space-x-2.5">
         <div 
-          className={`h-4.5 w-4.5 rounded-full border-2 border-gray-400 flex items-center justify-center ${inProgress ? 'bg-indigo-600 border-indigo-600' : 'bg-transparent'}`}
+          className={`h-4.5 w-4.5 rounded-full border-2 border-gray-400 flex items-center justify-center ${inProgress ? 'bg-violet-800 border-violet-800' : 'bg-transparent'}`}
           title="In Progress"
         >
           {inProgress && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -81,7 +81,7 @@ const StudentScorecards = () => {
         {Array(count).fill(0).map((_, i) => (
           <div 
             key={i} 
-            className={`h-4.5 w-4.5 rounded-full border-2 border-gray-400 flex items-center justify-center ${list[i] ? 'bg-indigo-600 border-[#4648d4]' : 'bg-transparent'}`}
+            className={`h-4.5 w-4.5 rounded-full border-2 border-gray-400 flex items-center justify-center ${list[i] ? 'bg-violet-800 border-[#4648d4]' : 'bg-transparent'}`}
           >
             {list[i] && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
           </div>
@@ -162,7 +162,7 @@ const StudentScorecards = () => {
             { title: 'Comm. Score', val: '9.0 / 10', percent: progress.communication, stroke: 'stroke-purple-500' },
             { title: 'Technical Score', val: '9.2 / 10', percent: progress.technical, stroke: 'stroke-emerald-500' },
             { title: 'Assignment Score', val: '8.8 / 10', percent: 88, stroke: 'stroke-amber-500' },
-            { title: 'Attendance Rate', val: `${attendance.percentage}%`, percent: attendance.percentage, stroke: 'stroke-indigo-600' },
+            { title: 'Attendance Rate', val: `${attendance.percentage}%`, percent: attendance.percentage, stroke: 'stroke-violet-800' },
             { title: 'Placement Score', val: `${placement.status || 'Active'}`, percent: progress.overall, stroke: 'stroke-pink-500' }
           ].map((score, i) => (
             <div key={i} className="bg-white border border-[#c7c4d7] p-4 rounded-3xl ambient-shadow flex flex-col items-center text-center">

@@ -80,7 +80,7 @@ const AttendanceManagement = () => {
   const calculateKPIs = () => {
     if (!logs || logs.length === 0) {
       return [
-        { label: 'Academy Students', value: totalStudents || '0', sub: 'Total Enrolled', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
+        { label: 'Academy Students', value: totalStudents || '0', sub: 'Total Enrolled', icon: Users, color: 'text-violet-800 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20' },
         { label: 'Overall Present', value: '0', sub: 'Today', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
         { label: 'Technical Present', value: '0', sub: 'Today', icon: ShieldCheck, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20' },
         { label: 'Communication Present', value: '0', sub: 'Today', icon: Users, color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20' },
@@ -101,7 +101,7 @@ const AttendanceManagement = () => {
     const aptiPresent = todayLogs.filter(log => log.status === 'Present' && log.batch?.course?.includes('Aptitude')).length;
 
     return [
-      { label: 'Academy Students', value: totalStudents || '0', sub: 'Total Enrolled', icon: Users, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20' },
+      { label: 'Academy Students', value: totalStudents || '0', sub: 'Total Enrolled', icon: Users, color: 'text-violet-800 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20' },
       { label: 'Overall Present', value: presentCount, sub: 'Today', icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20' },
       { label: 'Technical Present', value: techPresent, sub: 'Today', icon: ShieldCheck, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20' },
       { label: 'Communication Present', value: commPresent, sub: 'Today', icon: Users, color: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20' },
@@ -175,7 +175,7 @@ const AttendanceManagement = () => {
         </div>
         <button
           onClick={handleExportCSV}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
+          className="bg-violet-800 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
         >
           <Download size={14} />
           <span>Export Ledger CSV</span>
@@ -206,7 +206,7 @@ const AttendanceManagement = () => {
         {/* Heatmap */}
         <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800/80 p-6 rounded-[24px] shadow-sm">
           <h4 className="font-bold text-sm text-gray-800 dark:text-white mb-4 flex items-center gap-1.5">
-            <Calendar size={16} className="text-indigo-500" />
+            <Calendar size={16} className="text-violet-500" />
             Weekly Attendance Heatmap
           </h4>
           <div className="flex justify-between items-end h-40 pt-4 px-2">
@@ -215,7 +215,7 @@ const AttendanceManagement = () => {
                 <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500">{item.rate}%</span>
                 <div 
                   className={`w-8 rounded-t-lg transition-all duration-550 ${
-                    item.rate >= 90 ? 'bg-emerald-500' : item.rate >= 80 ? 'bg-indigo-500' : item.rate > 0 ? 'bg-amber-500' : 'bg-gray-100 dark:bg-gray-800'
+                    item.rate >= 90 ? 'bg-emerald-500' : item.rate >= 80 ? 'bg-violet-500' : item.rate > 0 ? 'bg-amber-500' : 'bg-gray-100 dark:bg-gray-800'
                   }`}
                   style={{ height: `${Math.max(item.rate, 8)}px` }}
                 />
@@ -233,7 +233,7 @@ const AttendanceManagement = () => {
               {liveFeed.length > 0 ? liveFeed.map((feed, i) => (
                 <div key={i} className="flex items-center justify-between text-xs p-2.5 bg-gray-50/50 dark:bg-[#181922] border border-gray-100 dark:border-gray-800/80 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 rounded-full ${feed.color.includes('emerald') ? 'bg-emerald-500' : feed.color.includes('indigo') ? 'bg-indigo-500' : 'bg-amber-500'}`} />
+                    <span className={`w-2.5 h-2.5 rounded-full ${feed.color.includes('emerald') ? 'bg-emerald-500' : feed.color.includes('indigo') ? 'bg-violet-500' : 'bg-amber-500'}`} />
                     <span className="font-bold text-gray-800 dark:text-gray-200">{feed.name}</span>
                     <span className="text-gray-500 dark:text-gray-400">{feed.action}</span>
                   </div>
@@ -262,7 +262,7 @@ const AttendanceManagement = () => {
               placeholder="Search by student name or batch..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 text-gray-900 dark:text-white"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white"
             />
           </div>
           
@@ -271,13 +271,13 @@ const AttendanceManagement = () => {
               type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
             />
             
             <select
               value={filterCourse}
               onChange={(e) => setFilterCourse(e.target.value)}
-              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
             >
               <option value="All">All Subjects</option>
               <option value="Technical">Technical</option>
@@ -288,7 +288,7 @@ const AttendanceManagement = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
             >
               <option value="All">All Statuses</option>
               <option value="Present">Present</option>
@@ -312,7 +312,7 @@ const AttendanceManagement = () => {
         </div>
         
         <div className="flex justify-between items-center border-t border-gray-100 dark:border-gray-800/60 pt-3">
-          <div className="text-xs text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/20 px-3.5 py-1.5 rounded-lg border border-indigo-100/30 dark:border-indigo-900/10 inline-block">
+          <div className="text-xs text-violet-800 dark:text-violet-400 font-bold bg-violet-50 dark:bg-violet-950/20 px-3.5 py-1.5 rounded-lg border border-violet-100/30 dark:border-violet-950/10 inline-block">
             Filtered Records: {filteredLogs.length}
           </div>
         </div>
@@ -335,7 +335,7 @@ const AttendanceManagement = () => {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="text-center py-10">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mx-auto font-black"></div>
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent mx-auto font-black"></div>
                     <span className="text-xs text-gray-400 mt-2 block font-semibold">Loading ledger logs...</span>
                   </td>
                 </tr>
@@ -359,7 +359,7 @@ const AttendanceManagement = () => {
                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400 font-semibold">
                       <div className="flex flex-col gap-0.5">
                         <span className="flex items-center gap-1">
-                          <Calendar size={13} className="text-indigo-500" />
+                          <Calendar size={13} className="text-violet-500" />
                           {new Date(log.date).toLocaleDateString()}
                         </span>
                         <span className="flex items-center gap-1 text-[10px] text-gray-400">
@@ -381,7 +381,7 @@ const AttendanceManagement = () => {
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-300 font-bold">
                       <div className="flex items-center gap-1">
-                        <ShieldCheck size={14} className="text-indigo-500" />
+                        <ShieldCheck size={14} className="text-violet-500" />
                         <span>{log.markedBy?.name} <span className="text-[10px] text-gray-400 font-medium">({log.markedBy?.role?.replace(' Trainer', '')})</span></span>
                       </div>
                     </td>

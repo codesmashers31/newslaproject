@@ -204,7 +204,7 @@ const ScheduleCalendar = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <CalendarIcon className="text-indigo-600 dark:text-indigo-400" />
+            <CalendarIcon className="text-violet-800 dark:text-violet-400" />
             Schedule Calendar
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -235,7 +235,7 @@ const ScheduleCalendar = () => {
                   setSelectedTrainerFilter('');
                   setSelectedBatchFilter('');
                 }}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 <option value="">Choose room...</option>
                 {rooms.map(r => (
@@ -259,7 +259,7 @@ const ScheduleCalendar = () => {
                   setSelectedRoomFilter('');
                   setSelectedBatchFilter('');
                 }}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 <option value="">Choose trainer...</option>
                 {trainers.map(t => (
@@ -283,7 +283,7 @@ const ScheduleCalendar = () => {
                   setSelectedRoomFilter('');
                   setSelectedTrainerFilter('');
                 }}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
               >
                 <option value="">Choose batch...</option>
                 {batches.map(b => (
@@ -296,7 +296,7 @@ const ScheduleCalendar = () => {
           </div>
           
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/50 text-[10px] font-bold text-slate-400 space-y-2 leading-relaxed">
-            <span className="flex items-center gap-1.5 text-indigo-500 uppercase tracking-wider">
+            <span className="flex items-center gap-1.5 text-violet-500 uppercase tracking-wider">
               <Move size={12} />
               Drag and Drop
             </span>
@@ -313,7 +313,7 @@ const ScheduleCalendar = () => {
               <button
                 onClick={() => setView('day')}
                 className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
-                  view === 'day' ? 'bg-white dark:bg-slate-900 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-500'
+                  view === 'day' ? 'bg-white dark:bg-slate-900 shadow-sm text-violet-800 dark:text-violet-400' : 'text-slate-500'
                 }`}
               >
                 Day
@@ -321,7 +321,7 @@ const ScheduleCalendar = () => {
               <button
                 onClick={() => setView('week')}
                 className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
-                  view === 'week' ? 'bg-white dark:bg-slate-900 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-500'
+                  view === 'week' ? 'bg-white dark:bg-slate-900 shadow-sm text-violet-800 dark:text-violet-400' : 'text-slate-500'
                 }`}
               >
                 Week
@@ -329,7 +329,7 @@ const ScheduleCalendar = () => {
               <button
                 onClick={() => setView('month')}
                 className={`px-4 py-2 rounded-lg text-xs font-extrabold transition-all ${
-                  view === 'month' ? 'bg-white dark:bg-slate-900 shadow-sm text-indigo-600 dark:text-indigo-400' : 'text-slate-500'
+                  view === 'month' ? 'bg-white dark:bg-slate-900 shadow-sm text-violet-800 dark:text-violet-400' : 'text-slate-500'
                 }`}
               >
                 Month
@@ -366,7 +366,7 @@ const ScheduleCalendar = () => {
           <div className="flex-1 overflow-y-auto overflow-x-auto relative min-w-[700px]">
             {loading ? (
               <div className="absolute inset-0 bg-white/70 dark:bg-slate-950/70 z-10 flex items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
               </div>
             ) : null}
 
@@ -417,11 +417,11 @@ const ScheduleCalendar = () => {
                                 key={alloc._id}
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, alloc)}
-                                className="bg-indigo-50 border border-indigo-200/50 dark:bg-indigo-950/20 dark:border-indigo-900/30 p-2 rounded-xl text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 cursor-grab active:cursor-grabbing hover:shadow-xs shadow-indigo-600/5 flex flex-col justify-between h-full transition-all relative overflow-hidden"
+                                className="bg-violet-50 border border-violet-200/50 dark:bg-violet-950/20 dark:border-violet-950/30 p-2 rounded-xl text-[10px] font-semibold text-violet-900 dark:text-violet-400 cursor-grab active:cursor-grabbing hover:shadow-xs shadow-violet-800/5 flex flex-col justify-between h-full transition-all relative overflow-hidden"
                               >
                                 <div>
                                   <span className="font-extrabold text-slate-900 dark:text-white truncate block">{alloc.batch?.name || 'Class'}</span>
-                                  <span className="text-[9px] text-indigo-500 block mt-0.5 truncate">{alloc.room?.name}</span>
+                                  <span className="text-[9px] text-violet-500 block mt-0.5 truncate">{alloc.room?.name}</span>
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-[9px] text-slate-400 border-t border-slate-100 dark:border-slate-800/40 pt-1">
                                   <span>{alloc.startTime}-{alloc.endTime}</span>
@@ -485,11 +485,11 @@ const ScheduleCalendar = () => {
                                 key={alloc._id}
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, alloc)}
-                                className="bg-indigo-50 border border-indigo-200/50 dark:bg-indigo-950/20 dark:border-indigo-900/30 p-2 rounded-xl text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 cursor-grab active:cursor-grabbing hover:shadow-xs shadow-indigo-600/5 flex flex-col justify-between h-full transition-all relative overflow-hidden"
+                                className="bg-violet-50 border border-violet-200/50 dark:bg-violet-950/20 dark:border-violet-950/30 p-2 rounded-xl text-[10px] font-semibold text-violet-900 dark:text-violet-400 cursor-grab active:cursor-grabbing hover:shadow-xs shadow-violet-800/5 flex flex-col justify-between h-full transition-all relative overflow-hidden"
                               >
                                 <div>
                                   <span className="font-extrabold text-slate-900 dark:text-white truncate block text-[11px]">{alloc.batch?.name || 'Class'}</span>
-                                  <span className="text-[9px] text-indigo-500 block mt-0.5 truncate">Trainer: {alloc.trainer?.name}</span>
+                                  <span className="text-[9px] text-violet-500 block mt-0.5 truncate">Trainer: {alloc.trainer?.name}</span>
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-[9px] text-slate-400 border-t border-slate-100 dark:border-slate-800/40 pt-1">
                                   <span>{alloc.startTime}-{alloc.endTime}</span>
@@ -546,7 +546,7 @@ const ScheduleCalendar = () => {
                         
                         <div className="space-y-1 overflow-y-auto max-h-16 w-full mt-1.5">
                           {dayAllocs.slice(0, 2).map((alloc, idx) => (
-                            <div key={idx} className="bg-indigo-50/80 border border-indigo-200/20 dark:bg-indigo-950/10 dark:border-indigo-900/10 text-[9px] font-bold text-indigo-700 dark:text-indigo-400 p-1 rounded truncate">
+                            <div key={idx} className="bg-violet-50/80 border border-violet-200/20 dark:bg-violet-950/10 dark:border-violet-950/10 text-[9px] font-bold text-violet-900 dark:text-violet-400 p-1 rounded truncate">
                               {alloc.startTime} {alloc.batch?.name}
                             </div>
                           ))}

@@ -202,7 +202,7 @@ const TrainerDashboard = () => {
               type="button"
               disabled={savingMock}
               onClick={handleSaveMockEvaluation}
-              className="px-5 py-2 rounded-xl bg-[#4F46E5] hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-[#4F46E5] hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
             >
               {savingMock ? 'Saving...' : 'Save Mock Details'}
             </button>
@@ -575,7 +575,7 @@ const TrainerDashboard = () => {
               trainerName || <span className="text-slate-400 dark:text-slate-500 italic font-normal">Unassigned</span>
             )}
           </div>
-          <div className="text-[10px] text-indigo-650 dark:text-indigo-400 font-bold mt-0.5">
+          <div className="text-[10px] text-indigo-650 dark:text-violet-400 font-bold mt-0.5">
             {batchName || 'No Batch'}
           </div>
         </div>
@@ -635,7 +635,7 @@ const TrainerDashboard = () => {
               {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
             </span>
             {record.scannedBatch && (
-              <span className="ml-1 text-[8px] font-black text-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 px-1 py-0.5 rounded border border-indigo-500/10 uppercase tracking-wide">
+              <span className="ml-1 text-[8px] font-black text-violet-800 bg-violet-50/50 dark:bg-violet-950/20 px-1 py-0.5 rounded border border-violet-500/10 uppercase tracking-wide">
                 Scanned: {record.scannedBatch.name || record.scannedBatch}
               </span>
             )}
@@ -826,7 +826,7 @@ const TrainerDashboard = () => {
     if (marks >= 9) return { letter: 'A+', color: 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-900' };
     if (marks === 8) return { letter: 'A', color: 'bg-teal-50 border-teal-200 text-teal-700 dark:bg-teal-950/20 dark:border-teal-900' };
     if (marks === 7) return { letter: 'B+', color: 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/20 dark:border-blue-900' };
-    if (marks === 6) return { letter: 'B', color: 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/20 dark:border-indigo-900' };
+    if (marks === 6) return { letter: 'B', color: 'bg-violet-50 border-violet-200 text-violet-900 dark:bg-violet-950/20 dark:border-violet-950' };
     if (marks === 5) return { letter: 'C', color: 'bg-orange-50 border-orange-200 text-orange-700 dark:bg-orange-950/20 dark:border-orange-900' };
     return { letter: 'Fail', color: 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:border-rose-900' };
   };
@@ -931,7 +931,7 @@ const TrainerDashboard = () => {
               <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1">{totalStudents}</h3>
               <p className="text-[10px] text-gray-500 mt-0.5">Students enrolled across selection</p>
             </div>
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 text-[#4F46E5] rounded-xl">
+            <div className="p-3 bg-violet-50 dark:bg-violet-950/40 text-[#4F46E5] rounded-xl">
               <Users size={22} />
             </div>
           </div>
@@ -1078,7 +1078,7 @@ const TrainerDashboard = () => {
                             title={isEligible ? "Update Spoken Mock Evaluation" : `Not eligible (${attPct}% attendance < 70%)`}
                             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
                               isEligible
-                                ? 'bg-[#4F46E5] hover:bg-indigo-500 text-white'
+                                ? 'bg-[#4F46E5] hover:bg-violet-500 text-white'
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-rose-50 hover:text-rose-600'
                             }`}
                           >
@@ -1330,7 +1330,7 @@ const TrainerDashboard = () => {
                   <h3 className="text-3xl font-black text-gray-900 dark:text-white">{totalStudentsInBatch}</h3>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400">Active enrollments in batch</p>
                 </div>
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-[#4F46E5] rounded-xl">
+                <div className="p-3 bg-violet-50 dark:bg-violet-950/30 text-[#4F46E5] rounded-xl">
                   <Users size={20} />
                 </div>
               </motion.div>
@@ -1396,7 +1396,7 @@ const TrainerDashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-56 text-slate-700 dark:text-slate-200"
+                      className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 w-full sm:w-56 text-slate-700 dark:text-slate-200"
                     />
                   </div>
 
@@ -1407,7 +1407,7 @@ const TrainerDashboard = () => {
                       setSelectedBatchId(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                   >
                     <option value="all">All Batches</option>
                     {batches.map(b => (
@@ -1416,7 +1416,7 @@ const TrainerDashboard = () => {
                   </select>
 
                   {/* Date Selector */}
-                  <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 bg-slate-50 dark:bg-slate-900/50 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                  <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 bg-slate-50 dark:bg-slate-900/50 text-xs font-bold text-violet-800 dark:text-violet-400">
                     <Calendar size={13} />
                     <input
                       type="date"
@@ -1437,7 +1437,7 @@ const TrainerDashboard = () => {
                         }}
                         className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
                           attendanceStatusFilter === st
-                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                            ? 'bg-white dark:bg-slate-700 text-violet-800 dark:text-violet-400 shadow-sm'
                             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                         }`}
                       >
@@ -1563,7 +1563,7 @@ const TrainerDashboard = () => {
                       <ChevronLeft size={14} />
                       <span>Previous</span>
                     </button>
-                    <span className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-extrabold">
+                    <span className="px-3 py-1.5 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-800 dark:text-violet-400 text-xs font-extrabold">
                       Page {currentPage} of {attTotalPages || 1}
                     </span>
                     <button
@@ -1732,7 +1732,7 @@ const TrainerDashboard = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-2.5 mt-2 bg-[#4F46E5] hover:bg-indigo-500 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
+                    className="w-full py-2.5 mt-2 bg-[#4F46E5] hover:bg-violet-500 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-sm"
                   >
                     Save Evaluation
                   </button>
@@ -1772,7 +1772,7 @@ const TrainerDashboard = () => {
             <>
               <button
                 onClick={() => setShowAddBatchModal(true)}
-                className="px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-3 py-2 rounded-xl border border-violet-200 dark:border-violet-900 bg-violet-50/70 dark:bg-violet-950/40 text-violet-900 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-950/50 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Plus size={14} />
                 <span>Add Batch</span>
@@ -1818,14 +1818,14 @@ const TrainerDashboard = () => {
                 visible: { opacity: 1, y: 0 }
               }}
               whileHover={{ scale: 1.02 }}
-              className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-500/20 dark:border-indigo-900/30 p-6 rounded-[20px] shadow-md flex items-center justify-between hover:shadow-lg transition-all duration-300 h-32"
+              className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-950/20 dark:to-purple-950/20 border border-violet-500/20 dark:border-violet-950/30 p-6 rounded-[20px] shadow-md flex items-center justify-between hover:shadow-lg transition-all duration-300 h-32"
             >
               <div className="space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#4648d4]">Total Students</span>
                 <h3 className="text-3xl font-extrabold text-gray-900 dark:text-white">{originalTotalCount}</h3>
                 <p className="text-[10px] text-gray-500 dark:text-gray-400">Active enrollments</p>
               </div>
-              <div className="p-3.5 bg-indigo-500/25 dark:bg-indigo-900/40 text-[#4648d4] rounded-2xl">
+              <div className="p-3.5 bg-violet-500/25 dark:bg-violet-950/40 text-[#4648d4] rounded-2xl">
                 <Users size={24} />
               </div>
             </motion.div>
@@ -1901,7 +1901,7 @@ const TrainerDashboard = () => {
         <div className="space-y-6">
           {loading ? (
             <div className="h-60 flex items-center justify-center bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
             </div>
           ) : batchStudents.length === 0 ? (
             <div className="text-center py-10 bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 text-gray-500">
@@ -2040,7 +2040,7 @@ const TrainerDashboard = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 mt-2 bg-[#4648d4] hover:bg-[#393bb3] text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10 cursor-pointer transition-colors"
+                  className="w-full py-2.5 mt-2 bg-[#4648d4] hover:bg-[#393bb3] text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/10 cursor-pointer transition-colors"
                 >
                   Save Evaluation
                 </button>
@@ -2062,7 +2062,7 @@ const TrainerDashboard = () => {
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                  <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400">
                     <Plus size={18} />
                   </div>
                   <div>
@@ -2087,7 +2087,7 @@ const TrainerDashboard = () => {
                     placeholder="e.g. Communication Batch 2, Aptitude Batch A"
                     value={newBatchForm.name}
                     onChange={(e) => setNewBatchForm({ ...newBatchForm, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
 
@@ -2099,7 +2099,7 @@ const TrainerDashboard = () => {
                     placeholder="e.g. Communication Skills, Aptitude & Reasoning"
                     value={newBatchForm.course}
                     onChange={(e) => setNewBatchForm({ ...newBatchForm, course: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
 
@@ -2110,7 +2110,7 @@ const TrainerDashboard = () => {
                     placeholder="e.g. Mon-Fri (09:00 AM - 12:00 PM)"
                     value={newBatchForm.schedule}
                     onChange={(e) => setNewBatchForm({ ...newBatchForm, schedule: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
 
@@ -2125,7 +2125,7 @@ const TrainerDashboard = () => {
                   <button
                     type="submit"
                     disabled={creatingBatch}
-                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                   >
                     {creatingBatch ? 'Creating...' : 'Create Batch'}
                   </button>

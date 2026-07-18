@@ -480,7 +480,7 @@ const TrainerBatchesPage = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSelectedBatchForStudents(null)}
-              className="p-2 rounded-xl bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 hover:border-indigo-500 transition cursor-pointer"
+              className="p-2 rounded-xl bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800 hover:border-violet-500 transition cursor-pointer"
             >
               <ArrowLeft size={16} />
             </button>
@@ -489,12 +489,12 @@ const TrainerBatchesPage = () => {
                 <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white font-sans">
                   {selectedBatchForStudents.name}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/20 text-[#4648d4] text-[10px] font-extrabold uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/20 text-[#4648d4] text-[10px] font-extrabold uppercase">
                   {getDomainText(selectedBatchForStudents.course)}
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5 font-semibold">
-                Batch ID: <span className="font-bold font-mono text-indigo-600">{selectedBatchForStudents.batchId}</span> • {selectedBatchForStudents.schedule}
+                Batch ID: <span className="font-bold font-mono text-violet-800">{selectedBatchForStudents.batchId}</span> • {selectedBatchForStudents.schedule}
               </p>
             </div>
           </div>
@@ -502,7 +502,7 @@ const TrainerBatchesPage = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowAssignModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Plus size={14} />
               <span>Add Student</span>
@@ -534,11 +534,11 @@ const TrainerBatchesPage = () => {
               placeholder="Search by Name, EID, or Mobile..."
               value={studentSearchText}
               onChange={(e) => setStudentSearchText(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
+              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
             />
           </div>
           <div className="text-xs text-slate-500 font-semibold">
-            Total active students in batch: <span className="font-bold text-indigo-600 dark:text-indigo-400">{batchStudents.length}</span>
+            Total active students in batch: <span className="font-bold text-violet-800 dark:text-violet-400">{batchStudents.length}</span>
           </div>
         </div>
 
@@ -632,7 +632,7 @@ const TrainerBatchesPage = () => {
               >
                 <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                    <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400">
                       <Users size={18} />
                     </div>
                     <div>
@@ -660,7 +660,7 @@ const TrainerBatchesPage = () => {
                       placeholder="Type name, EID (e.g. 5810), or mobile number..."
                       value={assignSearchQuery}
                       onChange={(e) => setAssignSearchQuery(e.target.value)}
-                      className="pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
+                      className="pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
                       autoFocus
                     />
                   </div>
@@ -680,7 +680,7 @@ const TrainerBatchesPage = () => {
                           <button
                             onClick={() => handleAssignStudent(student)}
                             disabled={assigningStudent}
-                            className="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/60 text-[#4648d4] text-[10px] font-extrabold transition cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/30 dark:hover:bg-violet-950/60 text-[#4648d4] text-[10px] font-extrabold transition cursor-pointer"
                           >
                             Assign
                           </button>
@@ -738,7 +738,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={destBatchId}
                       onChange={(e) => setDestBatchId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="">Select destination batch...</option>
                       {otherDomainBatches.map(b => (
@@ -765,7 +765,7 @@ const TrainerBatchesPage = () => {
                     <button
                       type="submit"
                       disabled={transferring || otherDomainBatches.length === 0}
-                      className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                      className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                     >
                       {transferring ? 'Transferring...' : 'Execute Transfer'}
                     </button>
@@ -809,7 +809,7 @@ const TrainerBatchesPage = () => {
                 </div>
 
                 <form onSubmit={handleBulkImport} className="mt-4 space-y-4">
-                  <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-2xl p-6 text-center cursor-pointer relative transition">
+                  <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-violet-500 dark:hover:border-violet-400 rounded-2xl p-6 text-center cursor-pointer relative transition">
                     <input
                       type="file"
                       accept=".xlsx, .xls"
@@ -858,7 +858,7 @@ const TrainerBatchesPage = () => {
                     <button
                       type="submit"
                       disabled={importing}
-                      className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                      className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                     >
                       {importing ? 'Processing...' : 'Upload & Process'}
                     </button>
@@ -900,7 +900,7 @@ const TrainerBatchesPage = () => {
             });
             setShowAddModal(true);
           }}
-          className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-md shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+          className="px-4 py-2.5 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-extrabold shadow-md shadow-violet-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
         >
           <Plus size={16} />
           <span>Create Batch</span>
@@ -927,8 +927,8 @@ const TrainerBatchesPage = () => {
             onClick={() => setDomainFilter(dom.key)}
             className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
               domainFilter === dom.key
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                : 'bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-indigo-500'
+                ? 'bg-violet-800 text-white shadow-md shadow-violet-500/20'
+                : 'bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-violet-500'
             }`}
           >
             <BookOpen size={13} />
@@ -948,12 +948,12 @@ const TrainerBatchesPage = () => {
               placeholder="Search by Batch ID, Name, Course..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full text-slate-800 dark:text-white"
+              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
             />
           </div>
 
           <div className="text-xs text-slate-500 font-semibold">
-            Showing <span className="font-bold text-indigo-600 dark:text-indigo-400">{filteredBatches.length}</span> active batch(es)
+            Showing <span className="font-bold text-violet-800 dark:text-violet-400">{filteredBatches.length}</span> active batch(es)
           </div>
         </div>
 
@@ -994,7 +994,7 @@ const TrainerBatchesPage = () => {
 
                   return (
                     <tr key={batch._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                      <td className="px-6 py-4 font-mono font-bold text-violet-800 dark:text-violet-400">
                         {displayId}
                       </td>
                       <td className="px-6 py-4">
@@ -1007,7 +1007,7 @@ const TrainerBatchesPage = () => {
                               ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
                               : domainBadge.includes('Aptitude')
                               ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
-                              : 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300'
+                              : 'bg-violet-100 dark:bg-violet-950/50 text-violet-900 dark:text-violet-300'
                           }`}>
                             {domainBadge}
                           </span>
@@ -1018,13 +1018,13 @@ const TrainerBatchesPage = () => {
                           {batch.trainers && batch.trainers.length > 0 ? (
                             batch.trainers.map((t, idx) => (
                               <div key={t._id || idx} className="flex items-center gap-1.5">
-                                <UserCheck size={14} className="text-indigo-500" />
+                                <UserCheck size={14} className="text-violet-500" />
                                 <span>{t.name} <span className="text-[10px] text-gray-400 font-normal">({t.role})</span></span>
                               </div>
                             ))
                           ) : batch.trainerName ? (
                             <div className="flex items-center gap-1.5">
-                              <UserCheck size={14} className="text-indigo-500" />
+                              <UserCheck size={14} className="text-violet-500" />
                               <span>{batch.trainerName}</span>
                             </div>
                           ) : (
@@ -1060,7 +1060,7 @@ const TrainerBatchesPage = () => {
                           <button
                             onClick={() => handleViewStudents(batch)}
                             title="Manage Students"
-                            className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer"
+                            className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 transition cursor-pointer"
                           >
                             <Users size={14} />
                           </button>
@@ -1101,7 +1101,7 @@ const TrainerBatchesPage = () => {
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                  <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400">
                     <FolderGit size={18} />
                   </div>
                   <div>
@@ -1128,7 +1128,7 @@ const TrainerBatchesPage = () => {
                       placeholder="e.g. SLATC-01"
                       value={formData.batchId}
                       onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-400"
                     />
                   </div>
 
@@ -1142,7 +1142,7 @@ const TrainerBatchesPage = () => {
                       placeholder="e.g. Technical Batch A"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-400"
                     />
                   </div>
                 </div>
@@ -1155,7 +1155,7 @@ const TrainerBatchesPage = () => {
                     <select
                       value={formData.course}
                       onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       {user?.role === 'Communication Trainer' && <option value="Communication Skills">Communication Skills</option>}
                       {user?.role === 'Aptitude Trainer' && <option value="Aptitude & Reasoning">Aptitude & Reasoning</option>}
@@ -1179,7 +1179,7 @@ const TrainerBatchesPage = () => {
                       placeholder="e.g. Trainer Name"
                       value={formData.trainerName}
                       onChange={(e) => setFormData({ ...formData, trainerName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-sans"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-400 font-sans"
                     />
                   </div>
                 </div>
@@ -1194,7 +1194,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={formData.startTime}
                       onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     />
                   </div>
 
@@ -1207,7 +1207,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={formData.endTime}
                       onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     />
                   </div>
                 </div>
@@ -1220,7 +1220,7 @@ const TrainerBatchesPage = () => {
                     <select
                       value={formData.days}
                       onChange={(e) => setFormData({ ...formData, days: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Mon - Fri">Mon - Fri</option>
                       <option value="Sat - Sun">Sat - Sun (Weekend)</option>
@@ -1236,7 +1236,7 @@ const TrainerBatchesPage = () => {
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Active">Active</option>
                       <option value="Upcoming">Upcoming</option>
@@ -1257,7 +1257,7 @@ const TrainerBatchesPage = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                   >
                     {submitting ? 'Creating...' : 'Create Batch'}
                   </button>
@@ -1280,7 +1280,7 @@ const TrainerBatchesPage = () => {
             >
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                  <div className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400">
                     <FolderGit size={18} />
                   </div>
                   <div>
@@ -1307,7 +1307,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={editFormData.batchId}
                       onChange={(e) => setEditFormData({ ...editFormData, batchId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-mono"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-400 font-mono"
                     />
                   </div>
 
@@ -1320,7 +1320,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={editFormData.name}
                       onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-400"
                     />
                   </div>
                 </div>
@@ -1333,7 +1333,7 @@ const TrainerBatchesPage = () => {
                     <select
                       value={editFormData.course}
                       onChange={(e) => setEditFormData({ ...editFormData, course: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Technical Training">Technical Training</option>
                       <option value="Communication Skills">Communication Skills</option>
@@ -1350,7 +1350,7 @@ const TrainerBatchesPage = () => {
                       placeholder="e.g. Trainer Name"
                       value={editFormData.trainerName}
                       onChange={(e) => setEditFormData({ ...editFormData, trainerName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 font-sans"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-slate-400 font-sans"
                     />
                   </div>
                 </div>
@@ -1365,7 +1365,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={editFormData.startTime}
                       onChange={(e) => setEditFormData({ ...editFormData, startTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     />
                   </div>
 
@@ -1378,7 +1378,7 @@ const TrainerBatchesPage = () => {
                       required
                       value={editFormData.endTime}
                       onChange={(e) => setEditFormData({ ...editFormData, endTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     />
                   </div>
                 </div>
@@ -1391,7 +1391,7 @@ const TrainerBatchesPage = () => {
                     <select
                       value={editFormData.days}
                       onChange={(e) => setEditFormData({ ...editFormData, days: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Mon - Fri">Mon - Fri</option>
                       <option value="Sat - Sun">Sat - Sun (Weekend)</option>
@@ -1407,7 +1407,7 @@ const TrainerBatchesPage = () => {
                     <select
                       value={editFormData.status}
                       onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
                     >
                       <option value="Active">Active</option>
                       <option value="Upcoming">Upcoming</option>
@@ -1428,7 +1428,7 @@ const TrainerBatchesPage = () => {
                   <button
                     type="submit"
                     disabled={updating}
-                    className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-500/25 cursor-pointer disabled:opacity-50"
                   >
                     {updating ? 'Saving...' : 'Save Allocation'}
                   </button>

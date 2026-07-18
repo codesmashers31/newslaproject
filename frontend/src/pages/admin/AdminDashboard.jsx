@@ -19,7 +19,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const COLORS = ['#10b981', '#f43f5e', '#eab308', '#6366f1'];
+const COLORS = ['#10b981', '#f43f5e', '#eab308', '#7c3aed'];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
       <div className="space-y-8 p-1">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <LayoutDashboard className="text-indigo-600 dark:text-indigo-400" />
+            <LayoutDashboard className="text-violet-800 dark:text-violet-400" />
             Admin Dashboard
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -115,12 +115,12 @@ const AdminDashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <motion.div whileHover={{ y: -5 }} onClick={() => navigate('/admin/students')} className="cursor-pointer bg-white dark:bg-[#12131a]/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:border-indigo-500 transition-all flex items-center justify-between group">
+          <motion.div whileHover={{ y: -5 }} onClick={() => navigate('/admin/students')} className="cursor-pointer bg-white dark:bg-[#12131a]/80 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm hover:border-violet-500 transition-all flex items-center justify-between group">
              <div className="space-y-2">
                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Students</span>
-               <h3 className="text-3xl font-black text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 transition-colors">{stats?.totalStudents || 0}</h3>
+               <h3 className="text-3xl font-black text-violet-800 dark:text-violet-400 group-hover:text-violet-900 transition-colors">{stats?.totalStudents || 0}</h3>
              </div>
-             <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+             <div className="p-4 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
                <Users size={26} />
              </div>
           </motion.div>
@@ -162,7 +162,7 @@ const AdminDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <LayoutDashboard className="text-indigo-600 dark:text-indigo-400" />
+            <LayoutDashboard className="text-violet-800 dark:text-violet-400" />
             Super Admin Control Center
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
         </div>
         <button
           onClick={() => navigate('/admin/allocations')}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs px-5 py-3.5 rounded-xl shadow-lg shadow-indigo-600/20 transition-all select-none"
+          className="flex items-center justify-center gap-2 bg-violet-800 hover:bg-indigo-750 text-white font-bold text-xs px-5 py-3.5 rounded-xl shadow-lg shadow-violet-800/20 transition-all select-none"
         >
           <Plus size={16} />
           Book Classroom
@@ -189,9 +189,9 @@ const AdminDashboard = () => {
           <div className="space-y-2">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Classrooms</span>
             <h3 className="text-3xl font-black text-slate-900 dark:text-white">{dashboardStats.totalRooms}</h3>
-            <span className="inline-block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-2 py-0.5 rounded-full">Spaces Configured</span>
+            <span className="inline-block text-[10px] font-bold text-violet-800 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20 px-2 py-0.5 rounded-full">Spaces Configured</span>
           </div>
-          <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner">
+          <div className="p-4 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl shadow-inner">
             <School size={26} />
           </div>
         </motion.div>
@@ -239,10 +239,10 @@ const AdminDashboard = () => {
         >
           <div className="space-y-2">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Today's bookings</span>
-            <h3 className="text-3xl font-black text-indigo-900 dark:text-white">{dashboardStats.todayAllocationsCount}</h3>
-            <span className="inline-block text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-2 py-0.5 rounded-full">Total slots today</span>
+            <h3 className="text-3xl font-black text-violet-950 dark:text-white">{dashboardStats.todayAllocationsCount}</h3>
+            <span className="inline-block text-[10px] font-bold text-violet-800 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20 px-2 py-0.5 rounded-full">Total slots today</span>
           </div>
-          <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner">
+          <div className="p-4 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl shadow-inner">
             <Calendar size={26} />
           </div>
         </motion.div>
@@ -253,7 +253,7 @@ const AdminDashboard = () => {
         {/* Left Column (Occupancy Chart) */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm lg:col-span-8 space-y-6">
           <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 flex items-center gap-2">
-            <Layers size={16} className="text-indigo-600" />
+            <Layers size={16} className="text-violet-800" />
             Classroom Utilization Chart (Past 7 Days)
           </h3>
           
@@ -266,7 +266,7 @@ const AdminDashboard = () => {
                   <XAxis dataKey="roomNumber" stroke="#94a3b8" fontSize={11} tickLine={false} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} domain={[0, 100]} />
                   <Tooltip cursor={{ fill: 'rgba(79, 70, 229, 0.03)' }} />
-                  <Bar dataKey="utilizationRate" name="Utilization Rate (%)" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={24} />
+                  <Bar dataKey="utilizationRate" name="Utilization Rate (%)" fill="#5b21b6" radius={[4, 4, 0, 0]} barSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -276,7 +276,7 @@ const AdminDashboard = () => {
         {/* Right Column (Availability Summary Breakdowns) */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm lg:col-span-4 flex flex-col justify-between max-h-[400px] overflow-y-auto">
           <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 flex items-center gap-2 mb-4">
-            <Clock size={16} className="text-indigo-600" />
+            <Clock size={16} className="text-violet-800" />
             Running & Upcoming Classes
           </h3>
           
@@ -317,7 +317,7 @@ const AdminDashboard = () => {
       {/* Bottom: Today's Allocations Listing */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm space-y-4">
         <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 flex items-center gap-2">
-          <Calendar size={16} className="text-indigo-600" />
+          <Calendar size={16} className="text-violet-800" />
           Today's Scheduled Classrooms ({recentAllocations.length})
         </h3>
         
@@ -341,7 +341,7 @@ const AdminDashboard = () => {
                   <tr key={alloc._id} className="border-b border-slate-100 dark:border-slate-850/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
                     <td className="py-3 px-4 text-slate-900 dark:text-white font-bold">{alloc.room?.name}</td>
                     <td className="py-3 px-4">{alloc.room?.roomNumber}</td>
-                    <td className="py-3 px-4 font-bold text-indigo-600 dark:text-indigo-400">{alloc.batch?.name}</td>
+                    <td className="py-3 px-4 font-bold text-violet-800 dark:text-violet-400">{alloc.batch?.name}</td>
                     <td className="py-3 px-4">{alloc.trainer?.name}</td>
                     <td className="py-3 px-4">{alloc.startTime} - {alloc.endTime}</td>
                     <td className="py-3 px-4">

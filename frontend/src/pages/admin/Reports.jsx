@@ -264,7 +264,7 @@ const Reports = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <BarChart3 className="text-indigo-600 dark:text-indigo-400" />
+            <BarChart3 className="text-violet-800 dark:text-violet-400" />
             Classroom Analytics & Reports
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -283,7 +283,7 @@ const Reports = () => {
           </button>
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-755 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition-all select-none cursor-pointer"
+            className="flex items-center gap-2 bg-violet-800 hover:bg-indigo-755 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition-all select-none cursor-pointer"
           >
             <FileText size={15} />
             Export PDF
@@ -303,7 +303,7 @@ const Reports = () => {
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
             >
               <option value="utilization">Room Space Utilization</option>
               <option value="daily">Daily Usage Summary</option>
@@ -324,7 +324,7 @@ const Reports = () => {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -336,7 +336,7 @@ const Reports = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
             </>
@@ -352,7 +352,7 @@ const Reports = () => {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full max-w-md px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full max-w-md px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
             </div>
           )}
@@ -367,7 +367,7 @@ const Reports = () => {
                 <select
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                 >
                   <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
                   <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
@@ -381,7 +381,7 @@ const Reports = () => {
                 <select
                   value={month}
                   onChange={(e) => setMonth(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                 >
                   {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((mName, idx) => (
                     <option key={idx} value={idx}>{mName}</option>
@@ -396,7 +396,7 @@ const Reports = () => {
       {/* Visual Analytics Charts Block */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
         </div>
       ) : reportData.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-16 text-center shadow-sm">
@@ -411,7 +411,7 @@ const Reports = () => {
           {/* Chart Panel */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm lg:col-span-8">
             <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 mb-6 flex items-center gap-2">
-              <TrendingUp size={16} className="text-indigo-600" />
+              <TrendingUp size={16} className="text-violet-800" />
               Usage Visualization
             </h3>
             
@@ -424,7 +424,7 @@ const Reports = () => {
                     <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} domain={[0, 100]} />
                     <Tooltip cursor={{ fill: 'rgba(79, 70, 229, 0.03)' }} />
                     <Legend />
-                    <Bar dataKey="utilizationRate" name="Utilization Rate (%)" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="utilizationRate" name="Utilization Rate (%)" fill="#5b21b6" radius={[4, 4, 0, 0]} barSize={28} />
                   </BarChart>
                 ) : reportType === 'monthly' ? (
                   <LineChart data={reportData}>
@@ -433,7 +433,7 @@ const Reports = () => {
                     <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="totalHours" name="Allocated Hours" stroke="#4f46e5" strokeWidth={3} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="totalHours" name="Allocated Hours" stroke="#5b21b6" strokeWidth={3} activeDot={{ r: 6 }} />
                   </LineChart>
                 ) : reportType === 'trainers' ? (
                   <BarChart data={reportData}>
@@ -442,7 +442,7 @@ const Reports = () => {
                     <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} label={{ value: 'Hours Allocated Today', angle: -90, position: 'insideLeft' }} />
                     <Tooltip cursor={{ fill: 'rgba(79, 70, 229, 0.03)' }} />
                     <Legend />
-                    <Bar dataKey="totalHoursUsed" name="Hours Allocated" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="totalHoursUsed" name="Hours Allocated" fill="#7c3aed" radius={[4, 4, 0, 0]} barSize={28} />
                   </BarChart>
                 ) : (
                   <BarChart data={reportData}>
@@ -451,7 +451,7 @@ const Reports = () => {
                     <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
                     <Tooltip cursor={{ fill: 'rgba(79, 70, 229, 0.03)' }} />
                     <Legend />
-                    <Bar dataKey="totalHoursUsed" name="Hours Allocated" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={28} />
+                    <Bar dataKey="totalHoursUsed" name="Hours Allocated" fill="#5b21b6" radius={[4, 4, 0, 0]} barSize={28} />
                   </BarChart>
                 )}
               </ResponsiveContainer>
@@ -461,7 +461,7 @@ const Reports = () => {
           {/* Table Summary Panel */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm lg:col-span-4 max-h-[400px] overflow-y-auto">
             <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-200 mb-4 flex items-center gap-2">
-              <Layers size={16} className="text-indigo-600" />
+              <Layers size={16} className="text-violet-800" />
               Summary Table
             </h3>
 
@@ -483,7 +483,7 @@ const Reports = () => {
                 <div key={idx} className="p-3 border border-slate-100 dark:border-slate-800/50 rounded-xl space-y-2 text-xs">
                   <div className="flex justify-between items-center">
                     <h4 className="font-bold text-slate-855 dark:text-slate-250">{r.roomName} ({r.roomNumber})</h4>
-                    <span className="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 rounded text-[10px]">
+                    <span className="bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 font-bold px-2 py-0.5 rounded text-[10px]">
                       {r.totalClassesToday} classes
                     </span>
                   </div>
@@ -523,10 +523,10 @@ const Reports = () => {
                   </div>
                   <div className="bg-slate-50/50 dark:bg-slate-950/20 p-2.5 rounded-xl space-y-1 text-[10px] font-bold text-slate-500">
                     <p>Shift: <strong className="text-slate-700 dark:text-slate-300">{r.availabilitySlots}</strong></p>
-                    <p>Booked: <strong className="text-indigo-650 dark:text-indigo-400">{r.totalHoursUsed} hrs</strong></p>
+                    <p>Booked: <strong className="text-indigo-650 dark:text-violet-400">{r.totalHoursUsed} hrs</strong></p>
                   </div>
                   {r.scheduleList.map((s, sIdx) => (
-                    <div key={sIdx} className="bg-indigo-50/20 dark:bg-indigo-950/5 p-2 rounded-lg text-[9px] font-bold text-slate-500 dark:text-slate-400 border-l-2 border-indigo-500 leading-normal">
+                    <div key={sIdx} className="bg-violet-50/20 dark:bg-violet-950/5 p-2 rounded-lg text-[9px] font-bold text-slate-500 dark:text-slate-400 border-l-2 border-violet-500 leading-normal">
                       <p>{s.timeSlot} • Room {s.roomNumber} ({s.roomName})</p>
                       <p className="text-slate-400 font-medium mt-0.5">Batch: {s.batchName}</p>
                     </div>

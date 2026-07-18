@@ -139,7 +139,7 @@ const RoomManagement = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <School className="text-indigo-600 dark:text-indigo-400" />
+            <School className="text-violet-800 dark:text-violet-400" />
             Room Management
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -148,7 +148,7 @@ const RoomManagement = () => {
         </div>
         <button
           onClick={() => { resetForm(); setShowAddModal(true); }}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/35 transition-all select-none"
+          className="flex items-center justify-center gap-2 bg-violet-800 hover:bg-violet-900 text-white font-bold text-xs px-5 py-3 rounded-xl shadow-lg shadow-violet-800/20 hover:shadow-violet-800/35 transition-all select-none"
         >
           <Plus size={16} />
           Add Classroom
@@ -167,7 +167,7 @@ const RoomManagement = () => {
             placeholder="Search room name or number..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium placeholder-slate-400"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-medium placeholder-slate-400"
           />
         </div>
 
@@ -181,7 +181,7 @@ const RoomManagement = () => {
           <select
             value={filterFloor}
             onChange={(e) => setFilterFloor(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-semibold"
           >
             <option value="">All Floors</option>
             <option value="0">Ground Floor</option>
@@ -195,7 +195,7 @@ const RoomManagement = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-semibold"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-semibold"
           >
             <option value="">All Status</option>
             <option value="Active">Active</option>
@@ -207,7 +207,7 @@ const RoomManagement = () => {
       {/* Rooms Grid */}
       {loading && rooms.length === 0 ? (
         <div className="flex items-center justify-center h-48">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
         </div>
       ) : rooms.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-16 text-center shadow-sm">
@@ -229,7 +229,7 @@ const RoomManagement = () => {
                 {/* Header info */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-violet-800">
                       {room.name}
                     </h3>
                     <span className="inline-block bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-md mt-1">
@@ -263,7 +263,7 @@ const RoomManagement = () => {
                     {room.facilities.map((fac, idx) => (
                       <span 
                         key={idx} 
-                        className="bg-indigo-50/50 dark:bg-indigo-950/10 text-indigo-600 dark:text-indigo-400 text-[9px] font-bold px-2 py-0.5 rounded"
+                        className="bg-violet-50/50 dark:bg-violet-950/10 text-violet-800 dark:text-violet-400 text-[9px] font-bold px-2 py-0.5 rounded"
                       >
                         {fac}
                       </span>
@@ -276,11 +276,11 @@ const RoomManagement = () => {
               <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/50 justify-between">
                 <button
                   onClick={() => toggleRoomStatus(room)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-violet-800 dark:hover:text-violet-400 transition-colors"
                 >
                   {room.status === 'Active' ? (
                     <>
-                      <ToggleRight size={18} className="text-indigo-600 dark:text-indigo-400" />
+                      <ToggleRight size={18} className="text-violet-800 dark:text-violet-400" />
                       <span>Deactivate</span>
                     </>
                   ) : (
@@ -336,7 +336,7 @@ const RoomManagement = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Einstein Lab"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -348,7 +348,7 @@ const RoomManagement = () => {
                       value={roomNumber}
                       onChange={(e) => setRoomNumber(e.target.value)}
                       placeholder="e.g. 102"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -360,7 +360,7 @@ const RoomManagement = () => {
                       value={floor}
                       onChange={(e) => setFloor(e.target.value)}
                       placeholder="e.g. 1"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
                 </div>
@@ -373,7 +373,7 @@ const RoomManagement = () => {
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
                     placeholder="e.g. 40"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -383,14 +383,14 @@ const RoomManagement = () => {
                     value={facilities}
                     onChange={(e) => setFacilities(e.target.value)}
                     placeholder="e.g. Projector, AC, Whiteboard, Computers"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
                 <div className="pt-4">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center"
+                    className="w-full py-3.5 bg-violet-800 hover:bg-violet-900 text-white font-bold text-xs rounded-xl shadow-lg shadow-violet-800/20 transition-all flex items-center justify-center"
                   >
                     {saving ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -437,7 +437,7 @@ const RoomManagement = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Einstein Lab"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -449,7 +449,7 @@ const RoomManagement = () => {
                       value={roomNumber}
                       onChange={(e) => setRoomNumber(e.target.value)}
                       placeholder="e.g. 102"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -461,7 +461,7 @@ const RoomManagement = () => {
                       value={floor}
                       onChange={(e) => setFloor(e.target.value)}
                       placeholder="e.g. 1"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                     />
                   </div>
                 </div>
@@ -474,7 +474,7 @@ const RoomManagement = () => {
                     value={capacity}
                     onChange={(e) => setCapacity(e.target.value)}
                     placeholder="e.g. 40"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -484,14 +484,14 @@ const RoomManagement = () => {
                     value={facilities}
                     onChange={(e) => setFacilities(e.target.value)}
                     placeholder="e.g. Projector, AC, Whiteboard, Computers"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                   />
                 </div>
                 <div className="pt-4">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center"
+                    className="w-full py-3.5 bg-violet-800 hover:bg-violet-900 text-white font-bold text-xs rounded-xl shadow-lg shadow-violet-800/20 transition-all flex items-center justify-center"
                   >
                     {saving ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

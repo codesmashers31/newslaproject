@@ -181,18 +181,18 @@ const StudentDashboard = () => {
   return (
     <div className="space-y-8">
       {/* 1. Welcoming Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-r from-violet-800 to-purple-600 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
         <div className="absolute inset-0 bg-grid-white/[0.06] bg-[size:15px_15px] pointer-events-none" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         
         <div className="relative z-10 space-y-4">
           <div className="flex items-center space-x-2">
             <Sparkles size={16} className="text-amber-300 animate-pulse" />
-            <span className="text-xs uppercase tracking-wider font-semibold text-indigo-100">Student Space</span>
+            <span className="text-xs uppercase tracking-wider font-semibold text-violet-100">Student Space</span>
           </div>
           <div>
             <h1 className="text-3xl font-extrabold text-white">Hello, {profile.user?.name}!</h1>
-            <p className="text-sm text-indigo-100 mt-1">
+            <p className="text-sm text-violet-100 mt-1">
               {data.batches && data.batches.length > 0 
                 ? `Enrolled in: ${data.batches.map(b => `${b.name} (${b.course})`).join(' • ')}`
                 : batch 
@@ -210,7 +210,7 @@ const StudentDashboard = () => {
         <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl">
+              <div className="p-2.5 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl">
                 <CalendarDays size={20} />
               </div>
               <div>
@@ -226,7 +226,7 @@ const StudentDashboard = () => {
               </div>
               <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
                 <span className="font-semibold text-gray-500 dark:text-gray-400">Course / Syllabus:</span>
-                <span className="font-bold text-indigo-600 dark:text-indigo-400">{batch?.course || 'Full Stack Placement Prep'}</span>
+                <span className="font-bold text-violet-800 dark:text-violet-400">{batch?.course || 'Full Stack Placement Prep'}</span>
               </div>
               <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
                 <span className="font-semibold text-gray-500 dark:text-gray-400">Schedule:</span>
@@ -245,7 +245,7 @@ const StudentDashboard = () => {
                 {batch?.trainers && batch.trainers.length > 0 ? (
                   batch.trainers.map((tr) => (
                     <div key={tr._id} className="p-2.5 border border-gray-100 dark:border-gray-850 bg-gray-50/50 dark:bg-[#181922] rounded-xl text-center space-y-1">
-                      <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wide block truncate">{tr.role}</span>
+                      <span className="text-[9px] font-bold text-violet-500 uppercase tracking-wide block truncate">{tr.role}</span>
                       <h5 className="font-bold text-xs text-gray-800 dark:text-white truncate" title={tr.name}>{tr.name}</h5>
                       <span className="text-[9px] text-gray-400 block truncate">{tr.email}</span>
                     </div>
@@ -315,7 +315,7 @@ const StudentDashboard = () => {
           {!data.attendance?.todayRecord && (
             <Link
               to="/student/scanner"
-              className="mt-4 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-500/20 duration-200 cursor-pointer"
+              className="mt-4 w-full py-3 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md shadow-violet-500/20 duration-200 cursor-pointer"
             >
               <Camera size={14} />
               <span>Scan Attendance QR Code</span>
@@ -336,7 +336,7 @@ const StudentDashboard = () => {
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-2xl font-black">#{leaderboardRank?.institute || '—'}</span>
               <span className="text-[10px] text-gray-400">Inst. Rank</span>
-              <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">#{leaderboardRank?.batch || '—'}</span>
+              <span className="text-lg font-bold text-violet-800 dark:text-violet-400">#{leaderboardRank?.batch || '—'}</span>
               <span className="text-[10px] text-gray-400">Batch Rank</span>
             </div>
           </div>
@@ -344,7 +344,7 @@ const StudentDashboard = () => {
 
         {/* Grade Card */}
         <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-5 rounded-3xl backdrop-blur-md shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl">
+          <div className="p-3 bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl">
             <Award size={24} />
           </div>
           <div>
@@ -352,7 +352,7 @@ const StudentDashboard = () => {
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-2xl font-black">{calculatedScores?.grade || '—'}</span>
               <span className="text-[10px] text-gray-400">Grade Letter</span>
-              <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">({calculatedScores?.finalScorePercent || 0}%)</span>
+              <span className="text-sm font-bold text-violet-800 dark:text-violet-400">({calculatedScores?.finalScorePercent || 0}%)</span>
               <span className="text-[10px] text-gray-400">Weighted Score</span>
             </div>
           </div>
@@ -368,7 +368,7 @@ const StudentDashboard = () => {
             <div className="flex items-baseline space-x-2 mt-1">
               <span className="text-2xl font-black">{placementReadiness?.percentage || 0}%</span>
               <span className="text-[10px] text-gray-400">Readiness</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-violet-50 dark:bg-violet-950 text-violet-800 dark:text-violet-400">
                 {placementReadiness?.status || 'Critical'}
               </span>
             </div>
@@ -379,7 +379,7 @@ const StudentDashboard = () => {
       {/* 2. Score & Progress Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Overall Progress', value: progress.overall, color: 'bg-indigo-600' },
+          { label: 'Overall Progress', value: progress.overall, color: 'bg-violet-800' },
           { label: 'Aptitude Track', value: progress.aptitude, color: 'bg-blue-500' },
           { label: 'Communication Track', value: progress.communication, color: 'bg-purple-500' },
           { label: 'Technical Track', value: progress.technical, color: 'bg-emerald-500' }
@@ -398,7 +398,7 @@ const StudentDashboard = () => {
 
       {/* 3. Certificate Claims Card */}
       {isEligibleForCertificate && (
-        <div className="bg-gradient-to-r from-amber-500/10 to-indigo-500/10 border border-amber-300/30 dark:border-amber-950/20 p-6 rounded-3xl backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-300/30 dark:border-amber-950/20 p-6 rounded-3xl backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start space-x-3.5">
             <div className="p-3 bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-2xl flex-shrink-0">
               <Award size={26} />
@@ -413,7 +413,7 @@ const StudentDashboard = () => {
           <button
             onClick={isCertificateClaimed ? generatePDFCertificate : handleClaimCertificate}
             disabled={certificateClaiming}
-            className="bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+            className="bg-violet-800 hover:bg-violet-500 dark:bg-violet-800 dark:hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-violet-500/20 disabled:opacity-50"
           >
             <FileDown size={14} />
             <span>{isCertificateClaimed ? 'Download Certificate' : 'Claim Certificate'}</span>
@@ -460,9 +460,9 @@ const StudentDashboard = () => {
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Avg. Score</span>
                   <span className="text-xl font-extrabold text-blue-700 mt-1 block">8.2 / 10</span>
                 </div>
-                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Practice Tests</span>
-                  <span className="text-xl font-extrabold text-indigo-700 mt-1 block">16 / 16 Done</span>
+                  <span className="text-xl font-extrabold text-violet-900 mt-1 block">16 / 16 Done</span>
                 </div>
                 <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Mock Assessments</span>
@@ -514,7 +514,7 @@ const StudentDashboard = () => {
                   <h4 className="font-bold text-sm text-[#111c2d]">Trainer Feedback</h4>
                   <div className="p-5 border border-[#c7c4d7] rounded-2xl bg-gray-50/50 space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-extrabold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-900 font-extrabold text-sm">
                         AT
                       </div>
                       <div>
@@ -541,7 +541,7 @@ const StudentDashboard = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
                 {[
                   { name: 'Reading', rating: '8.5/10', color: 'border-blue-200 bg-blue-50/50' },
-                  { name: 'Writing', rating: '8.0/10', color: 'border-indigo-200 bg-indigo-50/50' },
+                  { name: 'Writing', rating: '8.0/10', color: 'border-violet-200 bg-violet-50/50' },
                   { name: 'Speaking', rating: '9.0/10', color: 'border-purple-200 bg-purple-50/50' },
                   { name: 'Listening', rating: '9.5/10', color: 'border-pink-200 bg-pink-50/50' },
                   { name: 'Presentation', rating: '8.8/10', color: 'border-amber-200 bg-amber-50/50' },
@@ -625,7 +625,7 @@ const StudentDashboard = () => {
                   <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Technology Stack</h5>
                   <div className="flex flex-wrap gap-2 pt-1">
                     {['React', 'Node.js', 'Express', 'MongoDB', 'Python', 'TailwindCSS', 'Git', 'Frontend Development'].map((tech, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-indigo-50 text-[#4648d4] text-[10px] font-bold rounded-lg border border-indigo-100">
+                      <span key={i} className="px-2.5 py-1 bg-violet-50 text-[#4648d4] text-[10px] font-bold rounded-lg border border-violet-100">
                         {tech}
                       </span>
                     ))}
@@ -707,7 +707,7 @@ const StudentDashboard = () => {
                     </blockquote>
                     <div className="pt-2 border-t border-[#c7c4d7] flex justify-between items-center text-xs">
                       <span className="text-gray-500">Coding Speed</span>
-                      <span className="font-extrabold text-indigo-600">Top 10%</span>
+                      <span className="font-extrabold text-violet-800">Top 10%</span>
                     </div>
                   </div>
                 </div>
@@ -719,9 +719,9 @@ const StudentDashboard = () => {
             <div className="space-y-6">
               {/* Stats Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Attendance Rate</span>
-                  <span className="text-xl font-extrabold text-indigo-700 mt-1 block">{data.attendance?.percentage || 0}%</span>
+                  <span className="text-xl font-extrabold text-violet-900 mt-1 block">{data.attendance?.percentage || 0}%</span>
                 </div>
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Classes Present</span>

@@ -180,7 +180,7 @@ const RoomAvailability = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <Activity className="text-indigo-600 dark:text-indigo-400" />
+            <Activity className="text-violet-800 dark:text-violet-400" />
             Live Availability Dashboard
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -198,7 +198,7 @@ const RoomAvailability = () => {
           }}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all select-none cursor-pointer flex items-center gap-2 ${
             activeTab === 'rooms'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+              ? 'bg-violet-800 text-white shadow-md shadow-violet-500/10'
               : 'bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850'
           }`}
         >
@@ -212,7 +212,7 @@ const RoomAvailability = () => {
           }}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all select-none cursor-pointer flex items-center gap-2 ${
             activeTab === 'trainers'
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+              ? 'bg-violet-800 text-white shadow-md shadow-violet-500/10'
               : 'bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-850'
           }`}
         >
@@ -234,7 +234,7 @@ const RoomAvailability = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -248,7 +248,7 @@ const RoomAvailability = () => {
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -262,7 +262,7 @@ const RoomAvailability = () => {
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
 
@@ -277,7 +277,7 @@ const RoomAvailability = () => {
               placeholder={activeTab === 'rooms' ? "Search name or room #..." : "Search trainer name or role..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
             />
           </div>
         </div>
@@ -341,7 +341,7 @@ const RoomAvailability = () => {
       {/* Live status Grid display */}
       {loading ? (
         <div className="flex items-center justify-center h-48">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
         </div>
       ) : activeTab === 'rooms' ? (
         /* Classroom availability cards */

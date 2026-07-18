@@ -416,7 +416,7 @@ const StudentManagement = () => {
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-500/20"
+            className="flex items-center space-x-2 bg-violet-800 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-violet-500/20"
           >
             <Plus size={16} />
             <span>Add Student</span>
@@ -460,7 +460,7 @@ const StudentManagement = () => {
             placeholder="Search by name, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 dark:focus:ring-violet-400"
           />
         </div>
 
@@ -469,7 +469,7 @@ const StudentManagement = () => {
           <select
             value={selectedBatch}
             onChange={(e) => setSelectedBatch(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 dark:focus:ring-violet-400"
           >
             <option value="">All Batches</option>
             {getFilteredFilterBatches().map(b => (
@@ -483,7 +483,7 @@ const StudentManagement = () => {
           <select
             value={selectedPlacement}
             onChange={(e) => setSelectedPlacement(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-400"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 dark:focus:ring-violet-400"
           >
             <option value="">All Placement Statuses</option>
             <option value="Not Started">Not Started</option>
@@ -497,7 +497,7 @@ const StudentManagement = () => {
         {/* Search Action */}
         <button 
           type="submit"
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 shadow-lg shadow-indigo-500/10"
+          className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 shadow-lg shadow-violet-500/10"
         >
           <Filter size={16} />
           <span>Apply Filters</span>
@@ -523,7 +523,7 @@ const StudentManagement = () => {
               {loading ? (
                 <tr>
                   <td colSpan="7" className="text-center py-10">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mx-auto"></div>
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent mx-auto"></div>
                     <span className="text-xs text-gray-400 mt-2 block">Loading students directory...</span>
                   </td>
                 </tr>
@@ -537,14 +537,14 @@ const StudentManagement = () => {
                 paginatedStudents.map((student) => (
                   <tr key={student._id} className="hover:bg-gray-50/30 dark:hover:bg-gray-900/10 transition-colors">
                     <td className="px-6 py-4 flex items-center space-x-3">
-                      <div className="h-9 w-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center">
+                      <div className="h-9 w-9 rounded-lg bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 font-bold flex items-center justify-center">
                         {student.name.charAt(0)}
                       </div>
                       <div>
                         <p className="text-sm font-semibold">{student.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{student.email}</p>
                         {student.slaeId && (
-                          <span className="inline-flex mt-0.5 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-455">
+                          <span className="inline-flex mt-0.5 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-indigo-455">
                             EID: {student.slaeId}
                           </span>
                         )}
@@ -558,7 +558,7 @@ const StudentManagement = () => {
                         {student.technicalBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
                       </div>
                       {student.technicalBatch && student.technicalTrainer && (
-                        <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-0.5 leading-none">
+                        <div className="text-[10px] text-violet-800 dark:text-violet-400 font-bold mt-0.5 leading-none">
                           Trainer: {student.technicalTrainer}
                         </div>
                       )}
@@ -595,14 +595,14 @@ const StudentManagement = () => {
                     <td className="px-6 py-4 text-right space-x-2">
                       <button 
                         onClick={() => openDetailsModal(student)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-600 transition-colors"
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-violet-800 transition-colors"
                         title="View Scorecards"
                       >
                         <Eye size={16} />
                       </button>
                       <button 
                         onClick={() => openEditModal(student)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-indigo-600 transition-colors"
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-violet-800 transition-colors"
                         title="Edit Profile"
                       >
                         <Edit2 size={16} />
@@ -667,7 +667,7 @@ const StudentManagement = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
                           currentPage === pageNum
-                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                            ? 'bg-violet-800 text-white shadow-md shadow-violet-500/10'
                             : 'border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-gray-605 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
@@ -716,7 +716,7 @@ const StudentManagement = () => {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
                       placeholder="Name"
                     />
                   </div>
@@ -727,7 +727,7 @@ const StudentManagement = () => {
                       required
                       value={formData.mobile}
                       onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
                       placeholder="Mobile"
                     />
                   </div>
@@ -741,7 +741,7 @@ const StudentManagement = () => {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
                       placeholder="email@domain.com"
                     />
                   </div>
@@ -751,7 +751,7 @@ const StudentManagement = () => {
                       type="text"
                       value={formData.slaeId}
                       onChange={(e) => setFormData({ ...formData, slaeId: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
                       placeholder="e.g. SLA001"
                     />
                   </div>
@@ -765,7 +765,7 @@ const StudentManagement = () => {
                       required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
                       placeholder="password123"
                     />
                   </div>
@@ -795,7 +795,7 @@ const StudentManagement = () => {
                           placeholder="Search batch..."
                           value={batchSearchAdd}
                           onChange={(e) => setBatchSearchAdd(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
@@ -814,7 +814,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setFormData({ ...formData, technicalBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-300 text-indigo-650 focus:ring-violet-800 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -850,7 +850,7 @@ const StudentManagement = () => {
                           placeholder="Search batch..."
                           value={commSearchAdd}
                           onChange={(e) => setCommSearchAdd(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
@@ -869,7 +869,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setFormData({ ...formData, communicationBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-655 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-300 text-indigo-655 focus:ring-violet-800 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -905,7 +905,7 @@ const StudentManagement = () => {
                           placeholder="Search batch..."
                           value={aptiSearchAdd}
                           onChange={(e) => setAptiSearchAdd(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
@@ -924,7 +924,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setFormData({ ...formData, aptitudeBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-300 text-indigo-655 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-300 text-indigo-655 focus:ring-violet-800 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -938,7 +938,7 @@ const StudentManagement = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/20"
+                  className="w-full py-3 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/20"
                 >
                   Create Student Account
                 </button>
@@ -1043,7 +1043,7 @@ const StudentManagement = () => {
                           placeholder="Search batch..."
                           value={batchSearchEdit}
                           onChange={(e) => setBatchSearchEdit(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
@@ -1062,7 +1062,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setEditFormData({ ...editFormData, technicalBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-350 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-350 text-indigo-650 focus:ring-violet-800 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -1098,7 +1098,7 @@ const StudentManagement = () => {
                           placeholder="Search batch..."
                           value={commSearchEdit}
                           onChange={(e) => setCommSearchEdit(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
@@ -1117,7 +1117,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setEditFormData({ ...editFormData, communicationBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-350 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-350 text-indigo-650 focus:ring-violet-800 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -1153,7 +1153,7 @@ const StudentManagement = () => {
                           placeholder="Search batch..."
                           value={aptiSearchEdit}
                           onChange={(e) => setAptiSearchEdit(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full px-3 py-1.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="max-h-28 overflow-y-auto space-y-1.5">
                           {batches
@@ -1172,7 +1172,7 @@ const StudentManagement = () => {
                                         : currentList.filter(name => name !== b.name);
                                       setEditFormData({ ...editFormData, aptitudeBatch: newList.join(', ') });
                                     }}
-                                    className="rounded border-gray-350 text-indigo-650 focus:ring-indigo-600 h-3.5 w-3.5 cursor-pointer"
+                                    className="rounded border-gray-350 text-indigo-650 focus:ring-violet-800 h-3.5 w-3.5 cursor-pointer"
                                   />
                                   <span>{b.name}</span>
                                 </label>
@@ -1257,7 +1257,7 @@ const StudentManagement = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-3 mt-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/20"
+                  className="w-full py-3 mt-4 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/20"
                 >
                   Save Profile Changes
                 </button>
@@ -1295,7 +1295,7 @@ const StudentManagement = () => {
                   </button>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-indigo-50/10 transition-colors relative cursor-pointer">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-violet-50/10 transition-colors relative cursor-pointer">
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -1303,7 +1303,7 @@ const StudentManagement = () => {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="space-y-2">
-                    <div className="h-10 w-10 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto">
+                    <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl flex items-center justify-center mx-auto">
                       <FileSpreadsheet size={24} />
                     </div>
                     <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
@@ -1316,7 +1316,7 @@ const StudentManagement = () => {
                 <button
                   type="submit"
                   disabled={!excelFile || importingExcel}
-                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/10 flex items-center justify-center gap-2"
                 >
                   {importingExcel ? (
                     <>
@@ -1357,7 +1357,7 @@ const StudentManagement = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Profile detail card */}
                 <div className="bg-gray-50/50 dark:bg-gray-900/30 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-4">
-                  <div className="h-20 w-20 rounded-full bg-indigo-100 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 text-3xl font-bold flex items-center justify-center mx-auto shadow-md">
+                  <div className="h-20 w-20 rounded-full bg-violet-100 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 text-3xl font-bold flex items-center justify-center mx-auto shadow-md">
                     {selectedStudent.name.charAt(0)}
                   </div>
                   <div className="text-center">
@@ -1386,7 +1386,7 @@ const StudentManagement = () => {
                       <div className="flex flex-wrap gap-1 justify-end max-w-[150px]">
                         {selectedStudent.profile?.skills?.length > 0 ? (
                           selectedStudent.profile.skills.map(sk => (
-                            <span key={sk} className="bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 text-[9px] px-1.5 py-0.5 rounded-full font-medium">{sk}</span>
+                            <span key={sk} className="bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 text-[9px] px-1.5 py-0.5 rounded-full font-medium">{sk}</span>
                           ))
                         ) : 'None listed'}
                       </div>
@@ -1397,13 +1397,13 @@ const StudentManagement = () => {
                 {/* Scorecards timeline */}
                 <div className="md:col-span-2 space-y-4">
                   <h4 className="font-bold text-sm flex items-center gap-1.5">
-                    <Briefcase size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <Briefcase size={16} className="text-violet-800 dark:text-violet-400" />
                     Student Milestones & Portfolios
                   </h4>
 
                   {/* Placement preparation log */}
-                  <div className="bg-indigo-50/20 dark:bg-indigo-950/10 p-5 rounded-2xl border border-indigo-100/30 dark:border-indigo-900/10">
-                    <h5 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-4 uppercase tracking-wider">Placement milestones</h5>
+                  <div className="bg-violet-50/20 dark:bg-violet-950/10 p-5 rounded-2xl border border-violet-100/30 dark:border-violet-950/10">
+                    <h5 className="text-xs font-bold text-violet-800 dark:text-violet-400 mb-4 uppercase tracking-wider">Placement milestones</h5>
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div className="flex items-center space-x-2">
                         <span className={`h-2 w-2 rounded-full ${selectedStudent.placement?.resumeUploaded ? 'bg-emerald-500' : 'bg-gray-300'}`} />
@@ -1441,16 +1441,16 @@ const StudentManagement = () => {
                   </div>
 
                   {/* AI Study Planner Card */}
-                  <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/10 dark:to-purple-950/10 p-5 rounded-2xl border border-indigo-100/30 dark:border-indigo-900/10 space-y-4">
+                  <div className="bg-gradient-to-br from-violet-50/50 to-purple-50/30 dark:from-violet-950/10 dark:to-purple-950/10 p-5 rounded-2xl border border-violet-100/30 dark:border-violet-950/10 space-y-4">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <h5 className="text-xs font-bold text-violet-800 dark:text-violet-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles size={14} className="text-yellow-500 animate-pulse" />
                         <span>AI Study Planner (Admin Control)</span>
                       </h5>
                       {selectedStudent.profile?.aiRoadmap && !adminConfiguringRoadmap && (
                         <button 
                           onClick={() => setAdminConfiguringRoadmap(true)}
-                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center space-x-1"
+                          className="text-[10px] font-bold text-violet-800 hover:text-violet-900 dark:text-violet-400 dark:hover:text-violet-300 flex items-center space-x-1"
                         >
                           <Sliders size={12} />
                           <span>Configure</span>
@@ -1468,7 +1468,7 @@ const StudentManagement = () => {
                           <select 
                             value={adminTrack}
                             onChange={(e) => setAdminTrack(e.target.value)}
-                            className="w-full px-3 py-2 bg-white dark:bg-[#181922] border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs"
+                            className="w-full px-3 py-2 bg-white dark:bg-[#181922] border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-xs"
                           >
                             <option value="MERN Full Stack Developer">MERN Full Stack Developer</option>
                             <option value="Python Data Scientist">Python Data Scientist</option>
@@ -1486,14 +1486,14 @@ const StudentManagement = () => {
                             onChange={(e) => setAdminSkills(e.target.value)}
                             placeholder="e.g. HTML, CSS, React"
                             rows="2"
-                            className="w-full px-3 py-2 bg-white dark:bg-[#181922] border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs resize-none"
+                            className="w-full px-3 py-2 bg-white dark:bg-[#181922] border border-gray-200 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 text-xs resize-none"
                           />
                         </div>
 
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-[10px] font-semibold text-gray-500">
                             <span>Daily Study Hours:</span>
-                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{adminHours} hrs/day</span>
+                            <span className="text-violet-800 dark:text-violet-400 font-bold">{adminHours} hrs/day</span>
                           </div>
                           <input 
                             type="range" 
@@ -1501,7 +1501,7 @@ const StudentManagement = () => {
                             max="10" 
                             value={adminHours}
                             onChange={(e) => setAdminHours(Number(e.target.value))}
-                            className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                            className="w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-violet-800"
                           />
                         </div>
 
@@ -1518,7 +1518,7 @@ const StudentManagement = () => {
                           <button 
                             type="submit"
                             disabled={adminRoadmapLoading}
-                            className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-xl font-bold text-[11px] transition flex items-center justify-center space-x-1.5"
+                            className="flex-1 py-2 bg-violet-800 hover:bg-violet-900 disabled:bg-violet-400 text-white rounded-xl font-bold text-[11px] transition flex items-center justify-center space-x-1.5"
                           >
                             <Sparkles size={12} className="text-yellow-200 animate-pulse" />
                             <span>{adminRoadmapLoading ? 'Generating...' : 'Generate Plan'}</span>
@@ -1535,7 +1535,7 @@ const StudentManagement = () => {
                               Estimated Time: {selectedStudent.profile.aiRoadmap.topics?.filter(t => !t.completed).reduce((acc, t) => acc + t.estimatedDays, 0)} days remaining
                             </p>
                           </div>
-                          <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold rounded-lg border border-indigo-100 dark:border-indigo-900">
+                          <span className="px-2 py-0.5 bg-violet-50 dark:bg-violet-950 text-violet-800 dark:text-violet-400 text-[10px] font-bold rounded-lg border border-violet-100 dark:border-violet-950">
                             {selectedStudent.profile.aiRoadmap.dailyHours} hrs / day
                           </span>
                         </div>
@@ -1550,7 +1550,7 @@ const StudentManagement = () => {
                           </div>
                           <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
+                              className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-300"
                               style={{ 
                                 width: `${(selectedStudent.profile.aiRoadmap.topics?.filter(t => t.completed).length / selectedStudent.profile.aiRoadmap.topics?.length) * 100 || 0}%` 
                               }}
@@ -1568,7 +1568,7 @@ const StudentManagement = () => {
                               <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0 ${
                                 topic.completed 
                                   ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-500' 
-                                  : 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400'
+                                  : 'bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400'
                               }`}>
                                 {topic.completed ? 'Done' : `${topic.estimatedDays}d`}
                               </span>

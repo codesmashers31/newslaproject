@@ -12,7 +12,7 @@ export default function BannerCarousel() {
       title: 'Full-Stack Bootcamp',
       subtitle: 'Master MERN & Next.js. Enroll now and get 20% off!',
       icon: <GraduationCap size={24} color="#ffffff" />,
-      colors: 'bg-indigo-600',
+      colors: 'bg-violet-800',
       tag: 'New Course'
     },
     {
@@ -47,7 +47,7 @@ export default function BannerCarousel() {
             key={banner.id}
             activeOpacity={0.9}
             style={{ width: CARD_WIDTH }}
-            className={`rounded-3xl p-5 ${banner.colors} shadow-lg shadow-indigo-900/20 flex flex-row justify-between items-center overflow-hidden`}
+            className={`rounded-3xl p-5 ${banner.colors} shadow-lg shadow-violet-950/20 flex flex-row justify-between items-center overflow-hidden`}
           >
             {/* Decorative background circle */}
             <View className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full" />

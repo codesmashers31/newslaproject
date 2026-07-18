@@ -133,7 +133,7 @@ const TrainerStudentsPage = () => {
           </div>
           {batchName && (
             <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-              <Clock size={11} className="text-indigo-400" />
+              <Clock size={11} className="text-violet-400" />
               <span>{schedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
             </div>
           )}
@@ -163,7 +163,7 @@ const TrainerStudentsPage = () => {
               </span>
             )}
             {record?.scannedBatch && (
-              <span className="text-[8px] font-black text-indigo-750 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/20 px-1 py-0.5 rounded border border-indigo-500/10 uppercase">
+              <span className="text-[8px] font-black text-indigo-750 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20 px-1 py-0.5 rounded border border-violet-500/10 uppercase">
                 Scanned: {record.scannedBatch.name || record.scannedBatch}
               </span>
             )}
@@ -1245,7 +1245,7 @@ const TrainerStudentsPage = () => {
                 <p className="text-[11px] text-slate-500 mb-3">Download the excel format with correct headers (SLAEID, Name, BatchID) first.</p>
                 <button
                   onClick={downloadTemplate}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-950/40 text-violet-800 dark:text-violet-400 rounded-lg text-xs font-bold transition cursor-pointer"
                 >
                   <FileSpreadsheet size={14} />
                   <span>Download Excel Template</span>

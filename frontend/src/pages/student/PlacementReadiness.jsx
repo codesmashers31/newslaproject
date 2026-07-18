@@ -25,7 +25,7 @@ const PlacementReadiness = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
       </div>
     );
   }
@@ -70,7 +70,7 @@ const PlacementReadiness = () => {
   return (
     <div className="max-w-5xl mx-auto py-6 space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400">
           Placement Readiness Engine
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2">
@@ -99,7 +99,7 @@ const PlacementReadiness = () => {
                 cy="80"
                 r="70"
                 strokeWidth="10"
-                className="stroke-indigo-600 dark:stroke-indigo-500"
+                className="stroke-violet-800 dark:stroke-violet-500"
                 fill="transparent"
                 strokeDasharray={440}
                 strokeDashoffset={440 - (440 * percentage) / 100}
@@ -126,7 +126,7 @@ const PlacementReadiness = () => {
             {/* Criteria Items */}
             <div className="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-gray-900/10 border border-gray-200/40 dark:border-gray-800/40 rounded-xl">
               <div className="flex items-center gap-2.5">
-                <FileText className="w-4 h-4 text-indigo-500" />
+                <FileText className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium">Resume Uploaded</span>
               </div>
               <span className="text-xs font-bold text-gray-500">{breakdown.resume}% / 15%</span>
@@ -134,7 +134,7 @@ const PlacementReadiness = () => {
 
             <div className="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-gray-900/10 border border-gray-200/40 dark:border-gray-800/40 rounded-xl">
               <div className="flex items-center gap-2.5">
-                <Linkedin className="w-4 h-4 text-indigo-500" />
+                <Linkedin className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium">LinkedIn Updated</span>
               </div>
               <span className="text-xs font-bold text-gray-500">{breakdown.linkedin}% / 10%</span>
@@ -142,7 +142,7 @@ const PlacementReadiness = () => {
 
             <div className="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-gray-900/10 border border-gray-200/40 dark:border-gray-800/40 rounded-xl">
               <div className="flex items-center gap-2.5">
-                <Github className="w-4 h-4 text-indigo-500" />
+                <Github className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium">GitHub Updated</span>
               </div>
               <span className="text-xs font-bold text-gray-500">{breakdown.github}% / 10%</span>
@@ -150,7 +150,7 @@ const PlacementReadiness = () => {
 
             <div className="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-gray-900/10 border border-gray-200/40 dark:border-gray-800/40 rounded-xl">
               <div className="flex items-center gap-2.5">
-                <Briefcase className="w-4 h-4 text-indigo-500" />
+                <Briefcase className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium">Mock Interview</span>
               </div>
               <span className="text-xs font-bold text-gray-500">{breakdown.mockInterview}% / 15%</span>
@@ -158,7 +158,7 @@ const PlacementReadiness = () => {
 
             <div className="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-gray-900/10 border border-gray-200/40 dark:border-gray-800/40 rounded-xl">
               <div className="flex items-center gap-2.5">
-                <Check className="w-4 h-4 text-indigo-500" />
+                <Check className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium">Technical Mock Panel</span>
               </div>
               <span className="text-xs font-bold text-gray-500">{breakdown.technicalInterview}% / 15%</span>
@@ -166,7 +166,7 @@ const PlacementReadiness = () => {
 
             <div className="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-gray-900/10 border border-gray-200/40 dark:border-gray-800/40 rounded-xl">
               <div className="flex items-center gap-2.5">
-                <User className="w-4 h-4 text-indigo-500" />
+                <User className="w-4 h-4 text-violet-500" />
                 <span className="text-xs font-medium">HR Interview Panel</span>
               </div>
               <span className="text-xs font-bold text-gray-500">{breakdown.hrInterview}% / 10%</span>
@@ -205,9 +205,9 @@ const PlacementReadiness = () => {
           {recommendations.map((rec, index) => (
             <div
               key={index}
-              className="flex gap-3.5 p-4 rounded-2xl bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/50 dark:border-indigo-900/20 text-sm font-medium"
+              className="flex gap-3.5 p-4 rounded-2xl bg-violet-50/30 dark:bg-violet-950/10 border border-violet-100/50 dark:border-violet-950/20 text-sm font-medium"
             >
-              <div className="h-5 w-5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+              <div className="h-5 w-5 bg-violet-100 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
                 {index + 1}
               </div>
               <span className="text-gray-700 dark:text-gray-300">{rec}</span>

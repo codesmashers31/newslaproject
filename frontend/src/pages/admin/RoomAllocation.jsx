@@ -237,7 +237,7 @@ const RoomAllocation = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 font-sans">
-          <Calendar className="text-indigo-600 dark:text-indigo-400" />
+          <Calendar className="text-violet-800 dark:text-violet-400" />
           Book Classroom
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium font-sans">
@@ -249,7 +249,7 @@ const RoomAllocation = () => {
         {/* Left Form Panel */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 p-6 md:p-8 rounded-3xl shadow-sm space-y-6 lg:col-span-5">
           <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <School size={20} className="text-indigo-600" />
+            <School size={20} className="text-violet-800" />
             Allocation Details
           </h2>
           
@@ -265,7 +265,7 @@ const RoomAllocation = () => {
                 <button
                   type="button"
                   onClick={() => setBatchDropdownOpen(!batchDropdownOpen)}
-                  className="w-full min-h-[46px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 flex flex-wrap items-center gap-1.5 justify-between cursor-pointer"
+                  className="w-full min-h-[46px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 flex flex-wrap items-center gap-1.5 justify-between cursor-pointer"
                 >
                   <div className="flex flex-wrap gap-1">
                     {selectedBatches.length === 0 ? (
@@ -274,11 +274,11 @@ const RoomAllocation = () => {
                       selectedBatches.map(id => {
                         const b = batches.find(x => x._id === id);
                         return (
-                          <span key={id} className="bg-indigo-55 dark:bg-indigo-955/40 text-indigo-750 dark:text-indigo-400 px-2.5 py-0.5 rounded-md font-bold text-[10px] flex items-center gap-1">
+                          <span key={id} className="bg-indigo-55 dark:bg-indigo-955/40 text-indigo-750 dark:text-violet-400 px-2.5 py-0.5 rounded-md font-bold text-[10px] flex items-center gap-1">
                             {b ? (b.batchId || b.name) : id}
                             <X 
                               size={10} 
-                              className="cursor-pointer hover:text-indigo-900" 
+                              className="cursor-pointer hover:text-violet-950" 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedBatches(selectedBatches.filter(x => x !== id));
@@ -305,7 +305,7 @@ const RoomAllocation = () => {
                             placeholder="Search batches..."
                             value={batchSearchQuery}
                             onChange={(e) => setBatchSearchQuery(e.target.value)}
-                            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-violet-500"
                           />
                         </div>
                       </div>
@@ -327,12 +327,12 @@ const RoomAllocation = () => {
                               }}
                               className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                                 isChecked 
-                                  ? 'bg-indigo-55/60 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400' 
+                                  ? 'bg-indigo-55/60 dark:bg-violet-950/40 text-indigo-650 dark:text-violet-400' 
                                   : 'text-slate-700 dark:text-slate-355 hover:bg-slate-50 dark:hover:bg-slate-900'
                               }`}
                             >
                               <span>{b.batchId || b.name} ({b.course || 'General'})</span>
-                              {isChecked && <Check size={14} className="text-indigo-600" />}
+                              {isChecked && <Check size={14} className="text-violet-800" />}
                             </div>
                           );
                         })
@@ -353,7 +353,7 @@ const RoomAllocation = () => {
                 {selectedTrainer && (
                   <button
                     onClick={openAvailabilityModal}
-                    className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+                    className="text-[10px] text-violet-800 dark:text-violet-400 hover:underline flex items-center gap-1 font-bold"
                   >
                     <Settings size={12} />
                     Trainer Shift
@@ -365,7 +365,7 @@ const RoomAllocation = () => {
                 <button
                   type="button"
                   onClick={() => setTrainerDropdownOpen(!trainerDropdownOpen)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-between cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 flex items-center justify-between cursor-pointer"
                 >
                   <span className={selectedTrainer ? 'text-slate-955 dark:text-white font-bold' : 'text-slate-400 font-medium'}>
                     {selectedTrainer 
@@ -388,7 +388,7 @@ const RoomAllocation = () => {
                             placeholder="Search trainers..."
                             value={trainerSearchQuery}
                             onChange={(e) => setTrainerSearchQuery(e.target.value)}
-                            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-violet-500"
                           />
                         </div>
                       </div>
@@ -405,7 +405,7 @@ const RoomAllocation = () => {
                             }}
                             className={`px-3.5 py-2.5 rounded-lg text-xs font-bold cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-900 ${
                               selectedTrainer === t._id 
-                                ? 'bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400' 
+                                ? 'bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400' 
                                 : 'text-slate-700 dark:text-slate-350'
                             }`}
                           >
@@ -421,9 +421,9 @@ const RoomAllocation = () => {
 
             {/* Shift Times indicator under selection */}
             {shiftInfo && (
-              <div className="bg-indigo-50/50 dark:bg-indigo-950/10 text-indigo-650 dark:text-indigo-400 p-3 rounded-xl text-[10px] font-bold flex items-center gap-2 border border-indigo-500/5">
+              <div className="bg-violet-50/50 dark:bg-violet-950/10 text-indigo-650 dark:text-violet-400 p-3 rounded-xl text-[10px] font-bold flex items-center gap-2 border border-violet-500/5">
                 <Clock size={12} className="shrink-0" />
-                <span>Trainer shift hours on selected date: <strong className="text-indigo-700 dark:text-indigo-300">{shiftInfo}</strong></span>
+                <span>Trainer shift hours on selected date: <strong className="text-violet-900 dark:text-violet-300">{shiftInfo}</strong></span>
               </div>
             )}
 
@@ -438,7 +438,7 @@ const RoomAllocation = () => {
                 value={date}
                 min={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
             </div>
 
@@ -453,7 +453,7 @@ const RoomAllocation = () => {
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -465,7 +465,7 @@ const RoomAllocation = () => {
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
             </div>
@@ -478,7 +478,7 @@ const RoomAllocation = () => {
               disabled={loading || !selectedRoom || selectedBatches.length === 0 || !selectedTrainer}
               className={`w-full py-4 rounded-2xl font-bold text-xs select-none transition-all flex items-center justify-center gap-2 ${
                 selectedRoom && selectedBatches.length > 0 && selectedTrainer
-                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20'
+                  ? 'bg-violet-800 hover:bg-violet-900 text-white shadow-lg shadow-violet-800/20'
                   : 'bg-slate-100 dark:bg-slate-850 text-slate-400 dark:text-slate-600 cursor-not-allowed'
               }`}
             >
@@ -504,7 +504,7 @@ const RoomAllocation = () => {
                 exit={{ opacity: 0 }}
                 className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-12 text-center shadow-sm h-[400px] flex flex-col justify-center items-center"
               >
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent mb-4"></div>
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-violet-800 border-t-transparent mb-4"></div>
                 <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">Analyzing schedules...</h3>
                 <p className="text-xs text-slate-400 mt-1">Resolving room usage and checking trainer availability slots</p>
               </motion.div>
@@ -543,9 +543,9 @@ const RoomAllocation = () => {
 
                 {/* Main Recommendation Widget */}
                 {availabilityResult.suggestedRoom ? (
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-indigo-200/50 dark:border-indigo-850/50 rounded-3xl p-6 md:p-8 space-y-6">
+                  <div className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 border border-violet-200/50 dark:border-indigo-850/50 rounded-3xl p-6 md:p-8 space-y-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase select-none">
+                      <div className="flex items-center gap-2 bg-violet-100 dark:bg-violet-950/80 text-violet-900 dark:text-violet-300 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase select-none">
                         <Sparkles size={12} />
                         Recommended Classroom
                       </div>
@@ -566,11 +566,11 @@ const RoomAllocation = () => {
                       
                       <div className="text-right">
                         <span className="text-xs font-bold text-slate-500 uppercase block tracking-wider">Capacity</span>
-                        <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{availabilityResult.suggestedRoom.capacity} Students</span>
+                        <span className="text-2xl font-black text-violet-800 dark:text-violet-400">{availabilityResult.suggestedRoom.capacity} Students</span>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-indigo-200/20">
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-violet-200/20">
                       {availabilityResult.suggestedRoom.facilities.map((fac, idx) => (
                         <span key={idx} className="bg-white/80 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-lg">
                           {fac}
@@ -586,7 +586,7 @@ const RoomAllocation = () => {
                     ) : (
                       <button
                         onClick={() => setSelectedRoom(availabilityResult.suggestedRoom)}
-                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                        className="w-full py-3.5 bg-violet-800 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
                       >
                         Select Recommended Room
                       </button>
@@ -620,7 +620,7 @@ const RoomAllocation = () => {
                             onClick={() => setSelectedRoom(room)}
                             className={`p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
                               selectedRoom?._id === room._id
-                                ? 'bg-indigo-55/65 border-indigo-500/30 text-indigo-900'
+                                ? 'bg-indigo-55/65 border-violet-500/30 text-violet-950'
                                 : 'bg-slate-50/50 border-slate-100 dark:border-slate-800/50 dark:bg-slate-950/20 text-slate-700 dark:text-slate-330'
                             }`}
                           >
@@ -719,7 +719,7 @@ const RoomAllocation = () => {
                     <select
                       value={newDay}
                       onChange={(e) => setNewDay(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-950 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                     >
                       <option value="Monday">Monday</option>
                       <option value="Tuesday">Tuesday</option>
@@ -739,7 +739,7 @@ const RoomAllocation = () => {
                       type="time"
                       value={newStart}
                       onChange={(e) => setNewStart(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-955 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-955 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                     />
                   </div>
                   <div className="space-y-1">
@@ -748,13 +748,13 @@ const RoomAllocation = () => {
                       type="time"
                       value={newEnd}
                       onChange={(e) => setNewEnd(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-955 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 text-slate-955 dark:text-white text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-violet-500"
                     />
                   </div>
                 </div>
                 <button
                   onClick={handleAddSlot}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-950 dark:bg-indigo-600 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-950 dark:bg-violet-800 dark:hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-md transition-all select-none"
                 >
                   Add Timeslot
                 </button>
@@ -808,7 +808,7 @@ const RoomAllocation = () => {
                 <button
                   onClick={handleSaveAvailability}
                   disabled={savingAvailability}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-650/20 transition-all select-none flex items-center justify-center"
+                  className="flex-1 py-3 bg-violet-800 hover:bg-indigo-750 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-650/20 transition-all select-none flex items-center justify-center"
                 >
                   {savingAvailability ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

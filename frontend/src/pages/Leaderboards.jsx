@@ -35,7 +35,7 @@ const Leaderboards = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent"></div>
       </div>
     );
   }
@@ -86,7 +86,7 @@ const Leaderboards = () => {
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-8">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400 flex items-center gap-3">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400 flex items-center gap-3">
           <Trophy className="w-8 h-8 text-amber-500 fill-amber-500/10" />
           Leaderboards & Rankings
         </h1>
@@ -117,7 +117,7 @@ const Leaderboards = () => {
                   <p className="text-xs font-black truncate max-w-full mb-0.5">{champ.name}</p>
                   <p className="text-[9px] text-gray-500 dark:text-gray-400 truncate max-w-full font-medium mb-2">{champ.batchName}</p>
                   <span className="text-base font-black tracking-tight">{champ.finalScore}%</span>
-                  <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-widest mt-1">Grade {champ.grade}</span>
+                  <span className="text-[8px] font-bold text-violet-500 uppercase tracking-widest mt-1">Grade {champ.grade}</span>
                 </div>
               </div>
             );
@@ -135,7 +135,7 @@ const Leaderboards = () => {
             placeholder="Search student by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-205 dark:border-gray-805 bg-transparent text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-205 dark:border-gray-805 bg-transparent text-sm focus:ring-2 focus:ring-violet-500 transition-all"
           />
           <Search className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
         </div>
@@ -148,7 +148,7 @@ const Leaderboards = () => {
             <select
               value={selectedBatchFilter}
               onChange={(e) => setSelectedBatchFilter(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl border border-gray-205 dark:border-gray-805 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500 dark:bg-[#12131a]"
+              className="px-3.5 py-2.5 rounded-xl border border-gray-205 dark:border-gray-805 bg-transparent text-xs focus:ring-2 focus:ring-violet-500 dark:bg-[#12131a]"
             >
               <option value="">All Batches</option>
               {batches.map(b => (
@@ -162,7 +162,7 @@ const Leaderboards = () => {
             <select
               value={selectedGradeFilter}
               onChange={(e) => setSelectedGradeFilter(e.target.value)}
-              className="px-3.5 py-2.5 rounded-xl border border-gray-205 dark:border-gray-805 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500 dark:bg-[#12131a]"
+              className="px-3.5 py-2.5 rounded-xl border border-gray-205 dark:border-gray-805 bg-transparent text-xs focus:ring-2 focus:ring-violet-500 dark:bg-[#12131a]"
             >
               <option value="">All Grades</option>
               <option value="A+">Grade A+</option>
@@ -195,7 +195,7 @@ const Leaderboards = () => {
               {filteredLeaderboard.map((student, idx) => (
                 <tr
                   key={student.studentId}
-                  className="hover:bg-indigo-50/15 dark:hover:bg-gray-800/20 transition-all"
+                  className="hover:bg-violet-50/15 dark:hover:bg-gray-800/20 transition-all"
                 >
                   <td className="px-6 py-4 text-center font-black text-gray-700 dark:text-gray-300">
                     {student.instituteRank === 1 ? (

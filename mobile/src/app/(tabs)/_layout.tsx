@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'nativewind';
-import { Home, Camera, FileText, CalendarRange, User, BookOpen } from 'lucide-react-native';
+import { Home, Camera, FileText, Briefcase, User, BookOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
@@ -13,15 +13,15 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDark ? '#020617' : '#ffffff', // Slate 950 : White
-          borderTopColor: isDark ? '#1e293b' : '#e2e8f0', // Slate 800 : Slate 200
+          backgroundColor: isDark ? '#1C1530' : '#ffffff', // LCP surface dark : light
+          borderTopColor: isDark ? 'rgba(196,163,255,0.16)' : 'rgba(81,0,137,0.12)', // LCP border dark : light
           borderTopWidth: 1,
           paddingBottom: Math.max(insets.bottom, 20),
           paddingTop: 8,
           height: 70 + Math.max(insets.bottom, 20),
         },
-        tabBarActiveTintColor: '#6366f1', // Indigo 500
-        tabBarInactiveTintColor: '#64748b', // Slate 500
+        tabBarActiveTintColor: '#5B21B6', // LCP primary
+        tabBarInactiveTintColor: isDark ? '#A79AC2' : '#6B6478', // LCP muted dark : light
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: 'bold',
@@ -31,8 +31,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'Home',
           tabBarIcon: ({ color }) => <Home size={20} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="training"
+        options={{
+          title: 'Training',
+          tabBarIcon: ({ color }) => <BookOpen size={20} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -50,10 +57,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="career"
         options={{
-          title: 'Logs',
-          tabBarIcon: ({ color }) => <CalendarRange size={20} color={color} />,
+          title: 'Career',
+          tabBarIcon: ({ color }) => <Briefcase size={20} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -64,10 +71,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="training"
+        name="history"
         options={{
-          title: 'Training',
-          tabBarIcon: ({ color }) => <BookOpen size={20} color={color} />,
+          href: null,
         }}
       />
     </Tabs>

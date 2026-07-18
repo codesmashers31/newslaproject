@@ -86,7 +86,7 @@ const DashboardLayout = ({ children }) => {
   // Role based navigation links
   const getNavLinks = () => {
     const baseClass = "group flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all duration-200 select-none ";
-    const activeClass = "bg-[#4F46E5]/10 text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#818cf8] font-bold border border-[#4F46E5]/20 shadow-xs";
+    const activeClass = "bg-[#4F46E5]/10 text-[#4F46E5] dark:bg-[#4F46E5]/20 dark:text-[#a78bfa] font-bold border border-[#4F46E5]/20 shadow-xs";
     const inactiveClass = "text-slate-600 hover:text-[#4F46E5] hover:bg-slate-100/90 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/50";
 
     const makeLink = (path, icon, label) => {
@@ -107,13 +107,13 @@ const DashboardLayout = ({ children }) => {
           className={`${baseClass} ${isActive ? activeClass : inactiveClass}`}
         >
           <div className="flex items-center gap-3">
-            <span className={`${isActive ? 'text-[#4F46E5] dark:text-[#818cf8]' : 'text-slate-500 group-hover:text-[#4F46E5]'} transition-colors`}>
+            <span className={`${isActive ? 'text-[#4F46E5] dark:text-[#a78bfa]' : 'text-slate-500 group-hover:text-[#4F46E5]'} transition-colors`}>
               {icon}
             </span>
             <span className={`${!sidebarOpen && "lg:hidden"} origin-left duration-200 truncate`}>{label}</span>
           </div>
           {isActive && sidebarOpen && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5] dark:bg-[#818cf8]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5] dark:bg-[#a78bfa]" />
           )}
         </Link>
       );
@@ -201,7 +201,7 @@ const DashboardLayout = ({ children }) => {
               <motion.span 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="font-bold text-lg tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400"
+                className="font-bold text-lg tracking-tight bg-gradient-to-r from-violet-800 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400"
               >
                 LCP System
               </motion.span>
@@ -209,7 +209,7 @@ const DashboardLayout = ({ children }) => {
           </Link>
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+            className="text-gray-500 hover:text-violet-800 dark:text-gray-400 dark:hover:text-violet-400"
           >
             <ChevronRight className={`h-5 w-5 transform transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -224,7 +224,7 @@ const DashboardLayout = ({ children }) => {
         <div className="p-3.5 border-t border-gray-200 dark:border-gray-800/85">
           {sidebarOpen ? (
             <div className="bg-gray-100/60 dark:bg-gray-900/40 rounded-xl p-2.5 mb-2.5 flex items-center gap-2.5">
-              <div className="h-8 w-8 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold text-xs">
+              <div className="h-8 w-8 bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-lg flex items-center justify-center font-bold text-xs">
                 {user?.name?.charAt(0)}
               </div>
               <div className="overflow-hidden flex-1">
@@ -269,7 +269,7 @@ const DashboardLayout = ({ children }) => {
                     <div className="h-9 flex items-center">
                       <img src={logoSla} alt="LCP Logo" className="h-8 w-auto object-contain" />
                     </div>
-                    <span className="font-bold text-lg text-indigo-600 dark:text-indigo-400">LCP System</span>
+                    <span className="font-bold text-lg text-violet-800 dark:text-violet-400">LCP System</span>
                   </div>
                   <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500 dark:text-gray-400">
                     <X size={20} />
@@ -282,7 +282,7 @@ const DashboardLayout = ({ children }) => {
 
                <div>
                  <div className="bg-gray-100/50 dark:bg-gray-900/40 rounded-2xl p-3 mb-4 flex items-center space-x-3">
-                   <div className="h-9 w-9 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center font-bold overflow-hidden relative">
+                   <div className="h-9 w-9 bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-lg flex items-center justify-center font-bold overflow-hidden relative">
                      {user?.photo ? (
                        <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
                      ) : (
@@ -303,7 +303,7 @@ const DashboardLayout = ({ children }) => {
                        : '/trainer/profile'
                    }
                    onClick={() => setMobileMenuOpen(false)}
-                   className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 font-medium transition-all duration-300 mb-2"
+                   className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-violet-950/20 font-medium transition-all duration-300 mb-2"
                  >
                    <User size={20} />
                    <span>My Profile</span>
@@ -334,7 +334,7 @@ const DashboardLayout = ({ children }) => {
               <Menu size={20} />
             </button>
             {user?.role !== 'Communication Trainer' && (
-              <div className="hidden sm:flex items-center space-x-2 text-xs font-medium bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-full border border-indigo-100/40 dark:border-indigo-900/30">
+              <div className="hidden sm:flex items-center space-x-2 text-xs font-medium bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 px-3 py-1.5 rounded-full border border-violet-100/40 dark:border-violet-950/30">
                 <Sparkles size={13} />
                 <span>{user?.role} Workspace</span>
               </div>
@@ -354,7 +354,7 @@ const DashboardLayout = ({ children }) => {
                       markNotificationsRead();
                     }
                   }}
-                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors relative"
+                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 hover:text-violet-800 dark:text-gray-400 dark:hover:text-violet-400 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors relative"
                 >
                   <Bell size={18} />
                   {unreadCount > 0 && (
@@ -377,7 +377,7 @@ const DashboardLayout = ({ children }) => {
                       >
                         <div className="flex items-center justify-between mb-3 border-b border-gray-200 dark:border-gray-800 pb-2">
                           <h4 className="font-semibold text-sm">Notifications</h4>
-                          <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                          <span className="text-xs text-violet-800 dark:text-violet-400 font-medium">
                             {unreadCount} new
                           </span>
                         </div>
@@ -386,7 +386,7 @@ const DashboardLayout = ({ children }) => {
                             <p className="text-xs text-gray-500 text-center py-4">No notifications yet.</p>
                           ) : (
                             notifications.map(notif => (
-                              <div key={notif._id} className={`p-2.5 rounded-xl border transition-all ${notif.isRead ? 'bg-transparent border-gray-100 dark:border-gray-800' : 'bg-indigo-50/30 border-indigo-100/50 dark:bg-indigo-950/10 dark:border-indigo-900/30'}`}>
+                              <div key={notif._id} className={`p-2.5 rounded-xl border transition-all ${notif.isRead ? 'bg-transparent border-gray-100 dark:border-gray-800' : 'bg-violet-50/30 border-violet-100/50 dark:bg-violet-950/10 dark:border-violet-950/30'}`}>
                                 <h5 className="text-xs font-semibold">{notif.title}</h5>
                                 <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{notif.message}</p>
                                 <span className="text-[8px] text-gray-400 mt-1 block">
@@ -447,7 +447,7 @@ const DashboardLayout = ({ children }) => {
                       <div className="px-3 py-2.5 border-b border-gray-200 dark:border-gray-800 mb-1">
                         <p className="text-xs font-extrabold text-gray-900 dark:text-white truncate">{user?.name}</p>
                         <p className="text-[10px] text-gray-500 truncate mt-0.5">{user?.email}</p>
-                        <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-[#4F46E5] dark:text-indigo-400">
+                        <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-[#4F46E5] dark:text-violet-400">
                           {user?.role}
                         </span>
                       </div>
@@ -460,7 +460,7 @@ const DashboardLayout = ({ children }) => {
                             : '/trainer/profile'
                         }
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 hover:text-[#4F46E5] transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-violet-50 dark:hover:bg-gray-800 hover:text-[#4F46E5] transition-colors"
                       >
                         <User size={16} />
                         <span>My Profile</span>

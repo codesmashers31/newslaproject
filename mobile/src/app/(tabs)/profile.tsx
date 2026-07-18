@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
@@ -34,6 +35,9 @@ import {
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const muted = isDark ? '#A79AC2' : '#6B6478';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -275,8 +279,8 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-950 items-center justify-center">
-        <ActivityIndicator size="large" color="#6366f1" />
+      <View className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center">
+        <ActivityIndicator size="large" color="#7c3aed" />
       </View>
     );
   }
@@ -313,26 +317,26 @@ export default function ProfileScreen() {
     });
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-950">
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       
       {/* Header */}
-      <View className="px-6 py-4 border-b border-slate-900 bg-slate-950 flex-row justify-between items-center">
+      <View className="px-6 py-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] bg-white dark:bg-[#0E0A18] flex-row justify-between items-center">
         <View>
-          <Text className="text-xl font-black text-white">Edit Profile</Text>
-          <Text className="text-xs text-slate-500">Update academic info & details</Text>
+          <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC]">Edit Profile</Text>
+          <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2]">Update academic info & details</Text>
         </View>
         <TouchableOpacity
           onPress={handleSave}
           disabled={saving}
-          className="bg-indigo-600 px-4 py-2.5 rounded-xl flex-row items-center space-x-1.5 shadow-sm"
+          className="bg-violet-800 px-4 py-2.5 rounded-xl flex-row items-center space-x-1.5 shadow-sm"
         >
           {saving ? (
             <ActivityIndicator size="small" color="#ffffff" />
           ) : (
             <>
               <Save size={14} color="#ffffff" style={{ marginRight: 4 }} />
-              <Text className="text-white text-xs font-bold">Save</Text>
+              <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">Save</Text>
             </>
           )}
         </TouchableOpacity>
@@ -344,29 +348,29 @@ export default function ProfileScreen() {
       >
         <ScrollView
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7c3aed" />
           }
           className="flex-1 px-6 py-4"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Avatar Picture Card */}
-          <View className="bg-slate-900 border border-slate-800 rounded-3xl p-6 items-center mb-6">
+          <View className="bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-3xl p-6 items-center mb-6">
             <TouchableOpacity onPress={handlePickImage} activeOpacity={0.8} className="relative">
-              <View className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-slate-800 items-center justify-center shadow-lg relative">
+              <View className="h-28 w-28 rounded-full border-2 border-violet-500 overflow-hidden bg-[#F1EBFB] dark:bg-[#251C3D] items-center justify-center shadow-lg relative">
                 {avatarSource ? (
                   <Image source={avatarSource} className="h-full w-full" contentFit="cover" />
                 ) : (
-                  <User size={48} color="#64748b" />
+                  <User size={48} color={muted} />
                 )}
               </View>
-              <View className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full border-2 border-slate-950">
+              <View className="absolute bottom-0 right-0 bg-violet-800 p-2 rounded-full border-2 border-white dark:border-[#1C1530]">
                 <Camera size={14} color="#ffffff" />
               </View>
             </TouchableOpacity>
             
-            <Text className="text-white font-extrabold text-base mt-4">{profileData.name || 'Student'}</Text>
-            <Text className="text-slate-400 text-xs mt-0.5">{profileData.email}</Text>
+            <Text className="text-[#1A1325] dark:text-[#F6F3FC] font-extrabold text-base mt-4">{profileData.name || 'Student'}</Text>
+            <Text className="text-[#6B6478] dark:text-[#A79AC2] text-xs mt-0.5">{profileData.email}</Text>
           </View>
 
           {/* Form Content */}
@@ -374,208 +378,208 @@ export default function ProfileScreen() {
             
             {/* Bio */}
             <View className="mb-6">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Short Bio</Text>
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Short Bio</Text>
               <TextInput
                 multiline
                 numberOfLines={3}
                 value={profileData.bio}
                 onChangeText={(text) => setProfileData({ ...profileData, bio: text })}
                 placeholder="Tell us about yourself, career goals or specializations..."
-                placeholderTextColor="#475569"
-                className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-white text-xs font-semibold text-left"
+                placeholderTextColor={muted}
+                className="w-full bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl p-4 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold text-left"
                 style={{ minHeight: 80, textAlignVertical: 'top' }}
               />
             </View>
 
             {/* Basic Info Header */}
-            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Personal Info</Text>
+            <Text className="text-[10px] font-black text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-4 mt-2">Personal Info</Text>
 
             {/* Name */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <User size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Full Name</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <User size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.name}
                   onChangeText={(text) => setProfileData({ ...profileData, name: text })}
                   placeholder="Enter full name"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Mobile */}
             <View className="mb-6">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Mobile Number</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Phone size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Mobile Number</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <Phone size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.mobile}
                   onChangeText={(text) => setProfileData({ ...profileData, mobile: text })}
                   placeholder="Enter mobile number"
-                  placeholderTextColor="#475569"
+                  placeholderTextColor={muted}
                   keyboardType="phone-pad"
-                  className="flex-1 text-white text-xs font-semibold"
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Academic Info Header */}
-            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Academic Details</Text>
+            <Text className="text-[10px] font-black text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-4 mt-2">Academic Details</Text>
 
             {/* College Name */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">College Name</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <GraduationCap size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">College Name</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <GraduationCap size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.collegeName}
                   onChangeText={(text) => setProfileData({ ...profileData, collegeName: text })}
                   placeholder="Enter college name"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Degree */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Degree</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <BookOpen size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Degree</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <BookOpen size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.degree}
                   onChangeText={(text) => setProfileData({ ...profileData, degree: text })}
                   placeholder="e.g. B.E, B.Tech, MCA, BSc"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Department */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Department</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <BookOpen size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Department</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <BookOpen size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.department}
                   onChangeText={(text) => setProfileData({ ...profileData, department: text })}
                   placeholder="e.g. Computer Science, Information Technology"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Year of Passing */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Year of Passing</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Calendar size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Year of Passing</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <Calendar size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.yearOfPassing}
                   onChangeText={(text) => setProfileData({ ...profileData, yearOfPassing: text })}
                   placeholder="e.g. 2024, 2025"
-                  placeholderTextColor="#475569"
+                  placeholderTextColor={muted}
                   keyboardType="numeric"
-                  className="flex-1 text-white text-xs font-semibold"
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Gender */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Gender</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <User size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Gender</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <User size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.gender}
                   onChangeText={(text) => setProfileData({ ...profileData, gender: text })}
                   placeholder="e.g. Male, Female, Other"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Date of Birth */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Date of Birth</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Calendar size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Date of Birth</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <Calendar size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.dob}
                   onChangeText={(text) => setProfileData({ ...profileData, dob: text })}
                   placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Skills */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Skills (comma-separated)</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Sparkles size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Skills (comma-separated)</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <Sparkles size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.skills}
                   onChangeText={(text) => setProfileData({ ...profileData, skills: text })}
                   placeholder="e.g. React, Node.js, Python, SQL"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Address */}
             <View className="mb-6">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Home Address</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <MapPin size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">Home Address</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <MapPin size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.address}
                   onChangeText={(text) => setProfileData({ ...profileData, address: text })}
                   placeholder="Enter full address"
-                  placeholderTextColor="#475569"
-                  className="flex-1 text-white text-xs font-semibold"
+                  placeholderTextColor={muted}
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* Professional Links Header */}
-            <Text className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 mt-2">Professional Handles</Text>
+            <Text className="text-[10px] font-black text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-4 mt-2">Professional Handles</Text>
 
             {/* LinkedIn */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">LinkedIn Profile Link</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Briefcase size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">LinkedIn Profile Link</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <Briefcase size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.linkedin}
                   onChangeText={(text) => setProfileData({ ...profileData, linkedin: text })}
                   placeholder="https://linkedin.com/in/username"
-                  placeholderTextColor="#475569"
+                  placeholderTextColor={muted}
                   autoCapitalize="none"
-                  className="flex-1 text-white text-xs font-semibold"
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>
 
             {/* GitHub */}
             <View className="mb-5">
-              <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">GitHub Profile Link</Text>
-              <View className="flex-row items-center bg-slate-900 border border-slate-800 rounded-2xl px-4 h-12">
-                <Code2 size={16} color="#64748b" style={{ marginRight: 8 }} />
+              <Text className="text-[10px] font-bold text-[#6B6478] dark:text-[#A79AC2] uppercase tracking-wider mb-2">GitHub Profile Link</Text>
+              <View className="flex-row items-center bg-white dark:bg-[#1C1530] border border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] rounded-2xl px-4 h-12">
+                <Code2 size={16} color={muted} style={{ marginRight: 8 }} />
                 <TextInput
                   value={profileData.github}
                   onChangeText={(text) => setProfileData({ ...profileData, github: text })}
                   placeholder="https://github.com/username"
-                  placeholderTextColor="#475569"
+                  placeholderTextColor={muted}
                   autoCapitalize="none"
-                  className="flex-1 text-white text-xs font-semibold"
+                  className="flex-1 text-[#1A1325] dark:text-[#F6F3FC] text-xs font-semibold"
                 />
               </View>
             </View>

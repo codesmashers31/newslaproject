@@ -25,8 +25,8 @@ export default function EntryPoint() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-950 items-center justify-center">
-        <ActivityIndicator size="large" color="#6366f1" />
+      <View className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18] items-center justify-center">
+        <ActivityIndicator size="large" color="#5B21B6" />
       </View>
     );
   }

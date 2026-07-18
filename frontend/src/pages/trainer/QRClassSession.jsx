@@ -132,8 +132,8 @@ const QRClassSession = () => {
       {/* Header section with sparkles */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-400 flex items-center gap-2">
-            <Sparkles className="text-indigo-500 animate-pulse shrink-0" size={28} />
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 via-violet-500 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400 flex items-center gap-2">
+            <Sparkles className="text-violet-500 animate-pulse shrink-0" size={28} />
             Smart Dynamic QR Session
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium">
@@ -150,7 +150,7 @@ const QRClassSession = () => {
           className="bg-white/70 dark:bg-[#12131a]/85 border border-gray-200 dark:border-gray-800 rounded-[28px] p-8 backdrop-blur-md shadow-xl w-full"
         >
           <div className="flex items-center gap-3 border-b border-gray-150 dark:border-gray-800 pb-5 mb-6">
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shrink-0">
+            <div className="p-3 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl shrink-0">
               <Camera size={24} />
             </div>
             <div>
@@ -165,12 +165,12 @@ const QRClassSession = () => {
               {/* Searchable Batch Select Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
-                  <Users size={14} className="text-indigo-500" />
+                  <Users size={14} className="text-violet-500" />
                   Select Class Batch *
                 </label>
                 <div
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer flex items-center justify-between font-semibold text-gray-900 dark:text-white"
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer flex items-center justify-between font-semibold text-gray-900 dark:text-white"
                 >
                   <span className={selectedBatchObj ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
                     {selectedBatchObj ? `${selectedBatchObj.name} (${selectedBatchObj.batchId || 'Active'})` : '-- Choose Batch --'}
@@ -193,7 +193,7 @@ const QRClassSession = () => {
                           value={batchSearchQuery}
                           onChange={(e) => setBatchSearchQuery(e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-[#0c0d12]/50 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+                          className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-[#0c0d12]/50 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
                         />
                       </div>
                       <div className="max-h-60 overflow-y-auto scrollbar-thin">
@@ -208,9 +208,9 @@ const QRClassSession = () => {
                                 setIsDropdownOpen(false);
                                 setBatchSearchQuery('');
                               }}
-                              className={`p-3.5 text-xs font-semibold cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors flex flex-col gap-0.5 ${
+                              className={`p-3.5 text-xs font-semibold cursor-pointer hover:bg-violet-50/50 dark:hover:bg-violet-950/20 transition-colors flex flex-col gap-0.5 ${
                                 selectedBatch === b._id 
-                                  ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400' 
+                                  ? 'bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400' 
                                   : 'text-gray-700 dark:text-gray-300'
                               }`}
                             >
@@ -230,7 +230,7 @@ const QRClassSession = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-4 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 transition-all cursor-pointer text-sm"
+              className="w-full mt-4 py-4 rounded-2xl font-bold bg-violet-800 hover:bg-violet-500 text-white flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20 disabled:opacity-50 transition-all cursor-pointer text-sm"
             >
               {loading ? (
                 <>
@@ -265,7 +265,7 @@ const QRClassSession = () => {
             <div className="relative p-8 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-[36px] shadow-inner w-full max-w-md mx-auto flex items-center justify-center">
               {qrLoading && (
                 <div className="absolute inset-0 bg-white/80 dark:bg-[#0c0d12]/90 flex items-center justify-center rounded-[36px] z-10">
-                  <RefreshCw className="h-8 w-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                  <RefreshCw className="h-8 w-8 text-violet-800 dark:text-violet-400 animate-spin" />
                 </div>
               )}
               {qrImageUrl ? (
@@ -284,7 +284,7 @@ const QRClassSession = () => {
               </div>
               <div className="w-full bg-gray-205 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-indigo-655 dark:bg-indigo-500 h-full transition-all duration-1000 ease-linear"
+                  className="bg-indigo-655 dark:bg-violet-500 h-full transition-all duration-1000 ease-linear"
                   style={{ width: `${(countdown / 15) * 100}%` }}
                 ></div>
               </div>
@@ -303,7 +303,7 @@ const QRClassSession = () => {
               <div className="space-y-4">
                 
                 <div className="flex gap-3">
-                  <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
+                  <div className="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
                     <BookOpen size={20} />
                   </div>
                   <div>
@@ -313,7 +313,7 @@ const QRClassSession = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
+                  <div className="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
                     <Users size={20} />
                   </div>
                   <div>
@@ -325,7 +325,7 @@ const QRClassSession = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
+                  <div className="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
                     <MapPin size={20} />
                   </div>
                   <div>
@@ -337,7 +337,7 @@ const QRClassSession = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
+                  <div className="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-500 rounded-xl h-10 w-10 flex items-center justify-center shrink-0">
                     <Clock size={20} />
                   </div>
                   <div>

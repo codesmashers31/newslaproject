@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #6366f1;       /* Indigo 500 */
-  --color-primary-hover: #4f46e5; /* Indigo 600 */
+  --color-primary: #7c3aed;       /* Indigo 500 */
+  --color-primary-hover: #5b21b6; /* Indigo 600 */
   --color-secondary: #8b5cf6;     /* Violet 500 */
   --color-success: #10b981;       /* Emerald 500 */
   --color-warning: #f59e0b;       /* Amber 500 */
@@ -48,7 +48,7 @@
   
   /* Form Inputs styling defaults - note that these do not use !important so they can be overridden easily */
   input, select, textarea {
-    @apply px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] text-slate-900 dark:text-slate-100 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500;
+    @apply px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] text-slate-900 dark:text-slate-100 transition-all focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500;
   }
   
   label {
@@ -75,7 +75,7 @@
 
 .scanning-line {
   height: 2px;
-  background: linear-gradient(90deg, transparent, #6366f1, transparent);
+  background: linear-gradient(90deg, transparent, #7c3aed, transparent);
   animation: scan 3s ease-in-out infinite;
   position: absolute;
   width: 100%;
