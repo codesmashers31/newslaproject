@@ -92,11 +92,11 @@ export default function DashboardScreen() {
       <StatusBar barStyle="dark-content" />
       
       {/* Top Header Row */}
-      <View className="flex-row justify-between items-center px-6 py-5 border-b border-[#E2E8F0] bg-white shadow-sm z-10">
+      <View className="flex-row justify-between items-center px-8 py-4 border-b border-[#E2E8F0] bg-white shadow-sm z-10">
         <View className="flex-row items-center">
           <Image
             source={require('../../../assets/images/branding/logo-buildx.png')}
-            style={{ height: 42, width: 100 }}
+            style={{ height: 52, width: 52 }}
             contentFit="contain"
           />
         </View>
