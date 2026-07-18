@@ -1,10 +1,11 @@
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { Home, Camera, FileText, CalendarRange, User, BookOpen } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-  const scheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
 
   return (
@@ -12,8 +13,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#020617', // Slate 950
-          borderTopColor: '#1e293b', // Slate 800
+          backgroundColor: isDark ? '#020617' : '#ffffff', // Slate 950 : White
+          borderTopColor: isDark ? '#1e293b' : '#e2e8f0', // Slate 800 : Slate 200
           borderTopWidth: 1,
           paddingBottom: Math.max(insets.bottom, 20),
           paddingTop: 8,

@@ -6,11 +6,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
+import { useColorScheme } from 'nativewind';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
+  const { colorScheme, setColorScheme } = useColorScheme();
 
   useEffect(() => {
     async function prepare() {
@@ -23,7 +25,21 @@ export default function RootLayout() {
       }
     }
 
+    async function loadTheme() {
+      try {
+        const savedTheme = await AsyncStorage.getItem('app_theme');
+        if (savedTheme === 'dark') {
+          setColorScheme('dark');
+        } else {
+          setColorScheme('light');
+        }
+      } catch (e) {
+        setColorScheme('light');
+      }
+    }
+
     prepare();
+    loadTheme();
   }, []);
 
   if (!appReady) {
