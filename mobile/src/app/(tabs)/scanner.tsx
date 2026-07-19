@@ -23,13 +23,14 @@ import {
 export default function QRScannerScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const primary = '#6366F1';
+  const primary = '#7C3AED';
 
   const [permission, requestPermission] = useCameraPermissions();
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [zoom, setZoom] = useState(0);
 
   const loadDashboardData = async () => {
     try {
@@ -131,27 +132,28 @@ export default function QRScannerScreen() {
           {/* 1. Camera Viewport Panel */}
           <View className="items-center justify-center my-6">
             {cameraActive && !scanResult && !loading ? (
-              <View className="w-64 h-64 bg-[#0F0C20] rounded-[32px] overflow-hidden relative shadow-lg shadow-purple-500/5 border border-slate-200">
+              <View className="w-80 h-80 bg-[#0F0C20] rounded-[32px] overflow-hidden relative shadow-lg shadow-purple-500/5 border border-slate-200">
                 <CameraView
                   onBarcodeScanned={handleBarCodeScanned}
                   barcodeScannerSettings={{
                     barcodeTypes: ['qr'],
                   }}
+                  zoom={zoom}
                   style={{ flex: 1 }}
                 />
-                <View pointerEvents="none" className="absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#8B5CF6] rounded-tl-lg" />
-                <View pointerEvents="none" className="absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#8B5CF6] rounded-tr-lg" />
-                <View pointerEvents="none" className="absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#8B5CF6] rounded-bl-lg" />
-                <View pointerEvents="none" className="absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#8B5CF6] rounded-br-lg" />
+                <View pointerEvents="none" className="absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg" />
+                <View pointerEvents="none" className="absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg" />
+                <View pointerEvents="none" className="absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg" />
+                <View pointerEvents="none" className="absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#7C3AED] rounded-br-lg" />
 
-                <View className="absolute top-1/2 left-4 right-4 h-1 bg-[#8B5CF6] opacity-80 shadow-md shadow-purple-500" />
+                <View className="absolute top-1/2 left-4 right-4 h-1 bg-[#7C3AED] opacity-80 shadow-md shadow-purple-500" />
               </View>
             ) : (
-              <View className="w-64 h-64 bg-white border border-slate-200 rounded-[32px] items-center justify-center p-6 shadow-sm">
+              <View className="w-80 h-80 bg-white border border-slate-200 rounded-[32px] items-center justify-center p-6 shadow-sm">
                 {loading ? (
                   <View className="items-center">
                     <ActivityIndicator size="large" color={primary} />
-                    <Text className="text-xs font-semibold mt-3 text-[#6366F1]">Verifying code with server...</Text>
+                    <Text className="text-xs font-semibold mt-3 text-[#7C3AED]">Verifying code with server...</Text>
                   </View>
                 ) : scanResult ? (
                   <View className="items-center w-full">
@@ -174,7 +176,7 @@ export default function QRScannerScreen() {
                         setScanResult(null);
                         setCameraActive(true);
                       }}
-                      className="px-5 py-2.5 bg-[#6366F1] rounded-xl mt-4"
+                      className="px-5 py-2.5 bg-[#7C3AED] rounded-xl mt-4"
                     >
                       <Text className="text-white font-bold text-xs">Scan Again</Text>
                     </TouchableOpacity>
@@ -190,7 +192,7 @@ export default function QRScannerScreen() {
                     <Text className="text-sm font-bold text-[#0F172A]">Camera Idle</Text>
                     <TouchableOpacity
                       onPress={() => setCameraActive(true)}
-                      className="px-5 py-2.5 bg-[#6366F1] rounded-xl mt-3"
+                      className="px-5 py-2.5 bg-[#7C3AED] rounded-xl mt-3"
                     >
                       <Text className="text-white font-bold text-xs">Start Camera</Text>
                     </TouchableOpacity>
@@ -199,8 +201,29 @@ export default function QRScannerScreen() {
               </View>
             )}
 
+            {/* Zoom Controls */}
+            {cameraActive && !scanResult && !loading && (
+              <View className="flex-row items-center justify-center gap-2.5 mt-5">
+                <Text className="text-[9px] font-black text-[#64748B] uppercase tracking-wider mr-1">Zoom:</Text>
+                {[
+                  { label: '1x', val: 0 },
+                  { label: '2x', val: 0.15 },
+                  { label: '3x', val: 0.3 },
+                  { label: '4x', val: 0.45 }
+                ].map(z => (
+                  <TouchableOpacity
+                    key={z.label}
+                    onPress={() => setZoom(z.val)}
+                    className={`px-3 py-1.5 rounded-full border ${zoom === z.val ? 'bg-[#7C3AED] border-[#7C3AED]' : 'bg-white border-[#E2E8F0]'} shadow-sm`}
+                  >
+                    <Text className={`text-[10px] font-black ${zoom === z.val ? 'text-white' : 'text-[#64748B]'}`}>{z.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
             {/* Scanning Status Pill */}
-            <View className="bg-[#F3E8FF] px-6 py-2.5 rounded-full mt-6 shadow-sm border border-[#E9D5FF]/30">
+            <View className="bg-[#F3E8FF] px-6 py-2.5 rounded-full mt-4 shadow-sm border border-[#E9D5FF]/30">
               <Text className="text-[#6B21A8] text-[11px] font-black tracking-wide">
                 {loading ? 'Verifying QR code...' : scanResult ? 'Ready for next scan' : 'Scanning for QR code...'}
               </Text>
