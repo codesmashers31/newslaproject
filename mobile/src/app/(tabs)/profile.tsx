@@ -74,7 +74,8 @@ export default function ProfileScreen() {
   const getServerRoot = () => {
     const base = API.defaults.baseURL;
     if (base) {
-      return base.replace('/api', '');
+      const root = base.replace('/api', '');
+      return root.endsWith('/') ? root.slice(0, -1) : root;
     }
     return 'http://172.17.1.232:5000';
   };
@@ -154,7 +155,7 @@ export default function ProfileScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ImagePicker.MediaTypeOptions ? ImagePicker.MediaTypeOptions.Images : ['images'] as any,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -200,33 +201,27 @@ export default function ProfileScreen() {
       formData.append('aptitudeBatch', profileData.aptitudeBatch);
       formData.append('aptitudeTrainer', profileData.aptitudeTrainer);
       
-      // Handle skills array formatting
-      const skillsArr = profileData.skills
-        ? profileData.skills.split(',').map(s => s.trim()).filter(Boolean)
-        : [];
-      skillsArr.forEach(skill => {
-        formData.append('skills[]', skill);
-      });
+      // Send skills as a comma-separated string directly (which matches the backend's split parser)
+      formData.append('skills', profileData.skills || '');
 
       // Append photo if selected
       if (selectedPhoto) {
         const uri = selectedPhoto.uri || selectedPhoto;
-        const filename = selectedPhoto.fileName || uri.split('/').pop() || 'photo.jpg';
+        // On Android/iOS, make sure the URI includes the file:// scheme so the native engine fetches the binary
+        const cleanUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+        const filename = selectedPhoto.fileName || cleanUri.split('/').pop() || 'photo.jpg';
         const type = selectedPhoto.mimeType || 'image/jpeg';
         
         formData.append('photo', {
-          uri: uri,
+          uri: cleanUri,
           name: filename,
           type: type,
         } as any);
       }
 
       // 2. Save via API (Profile details and trainers)
-      await API.put('/student/profile', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      // Omit manual Content-Type header in React Native to allow Axios to automatically generate boundary
+      await API.put('/student/profile', formData);
 
       // 3. Sync user basic details (name, mobile) to the auth model
       await API.put('/auth/me', {
@@ -261,11 +256,13 @@ export default function ProfileScreen() {
     );
   }
 
-  const avatarSource = selectedPhoto 
-    ? { uri: selectedPhoto.uri || selectedPhoto } 
+  const uriString = selectedPhoto 
+    ? (selectedPhoto.uri || selectedPhoto)
     : currentPhotoPath 
-    ? { uri: `${getServerRoot()}${currentPhotoPath}` } 
+    ? `${getServerRoot()}${currentPhotoPath.startsWith('/') ? '' : '/'}${currentPhotoPath}`
     : null;
+
+  const avatarSource = uriString ? { uri: uriString } : null;
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
@@ -315,7 +312,7 @@ export default function ProfileScreen() {
             <TouchableOpacity onPress={handlePickImage} activeOpacity={0.8} className="relative">
               <View className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-indigo-50 items-center justify-center shadow-md relative">
                 {avatarSource ? (
-                  <Image source={avatarSource} className="h-full w-full" contentFit="cover" />
+                  <Image key={uriString || 'photo'} source={avatarSource} className="h-full w-full" contentFit="cover" />
                 ) : (
                   <User size={48} color={mutedColor} />
                 )}
