@@ -26,16 +26,7 @@ export default function RootLayout() {
     }
 
     async function loadTheme() {
-      try {
-        const savedTheme = await AsyncStorage.getItem('app_theme');
-        if (savedTheme === 'dark') {
-          setColorScheme('dark');
-        } else {
-          setColorScheme('light');
-        }
-      } catch (e) {
-        setColorScheme('light');
-      }
+      setColorScheme('light');
     }
 
     prepare();
