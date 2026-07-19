@@ -217,7 +217,7 @@ export default function ProfileScreen() {
         const type = selectedPhoto.mimeType || 'image/jpeg';
         
         formData.append('photo', {
-          uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+          uri: uri,
           name: filename,
           type: type,
         } as any);
@@ -317,26 +317,26 @@ export default function ProfileScreen() {
     });
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F6FC] dark:bg-[#0E0A18]">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+    <SafeAreaView className="flex-1 bg-[#F8FAFC]">
+      <StatusBar barStyle="dark-content" />
       
       {/* Header */}
-      <View className="px-6 py-4 border-b border-[#510089]/[0.12] dark:border-[#C4A3FF]/[0.16] bg-white dark:bg-[#0E0A18] flex-row justify-between items-center">
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row justify-between items-center">
         <View>
-          <Text className="text-xl font-black text-[#1A1325] dark:text-[#F6F3FC]">Edit Profile</Text>
-          <Text className="text-xs text-[#6B6478] dark:text-[#A79AC2]">Update academic info & details</Text>
+          <Text className="text-2xl font-black text-[#0F172A]">Edit Profile</Text>
+          <Text className="text-xs text-[#64748B] mt-0.5">Update academic info & details</Text>
         </View>
         <TouchableOpacity
           onPress={handleSave}
           disabled={saving}
-          className="bg-violet-800 px-4 py-2.5 rounded-xl flex-row items-center space-x-1.5 shadow-sm"
+          className="bg-[#4F46E5] px-5 py-2.5 rounded-xl flex-row items-center space-x-1.5 shadow-sm"
         >
           {saving ? (
             <ActivityIndicator size="small" color="#ffffff" />
           ) : (
             <>
               <Save size={14} color="#ffffff" style={{ marginRight: 4 }} />
-              <Text className="text-[#1A1325] dark:text-[#F6F3FC] text-xs font-bold">Save</Text>
+              <Text className="text-white text-xs font-extrabold">Save</Text>
             </>
           )}
         </TouchableOpacity>
