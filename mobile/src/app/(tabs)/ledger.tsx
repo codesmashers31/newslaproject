@@ -10,14 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { useColorScheme } from 'nativewind';
 import Svg, { Circle } from 'react-native-svg';
-import { Video } from 'lucide-react-native';
+import { Video, Code2, MessageSquare, Brain } from 'lucide-react-native';
 import API from '../../services/api';
 
 export default function LedgerScreen() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
   const primary = '#4F46E5';
 
   const [data, setData] = useState<any>(null);
@@ -85,7 +82,6 @@ export default function LedgerScreen() {
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - overallVal / 100);
 
-  // Mock dates or details
   const placement = data?.placement || {};
 
   return (
@@ -104,8 +100,8 @@ export default function LedgerScreen() {
         showsVerticalScrollIndicator={false}
       >
         
-        {/* 1. Centered Circular Progress Ring */}
-        <View className="items-center py-6 mb-2">
+        {/* 1. Elevated circular progress card */}
+        <View className="bg-white border border-[#E2E8F0] rounded-3xl p-6 items-center mb-6 shadow-sm">
           <View style={{ width: 132, height: 132, position: 'relative' }}>
             <Svg width={132} height={132}>
               <Circle
@@ -131,54 +127,69 @@ export default function LedgerScreen() {
             </Svg>
             <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
               <Text className="text-3xl font-black text-[#0F172A]">{overallVal}%</Text>
-              <Text className="text-[11px] font-semibold text-[#64748B] mt-0.5">Overall</Text>
+              <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mt-0.5">Overall</Text>
             </View>
           </View>
-          <Text className="text-xs text-[#64748B] mt-4 font-semibold">Updated by trainer after each module</Text>
+          <Text className="text-[10px] text-[#64748B] mt-4 font-extrabold uppercase tracking-wider">Updated by trainers after each session</Text>
         </View>
 
-        {/* 2. Horizonal progress bars matching the screenshot design */}
+        {/* 2. Horizontal progress bars with theme colors and icons */}
         <View className="gap-4 mb-8">
           
           {/* Technical Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm font-black text-[#0F172A]">Technical</Text>
-              <Text className="text-xs font-black text-[#4F46E5]">{techVal}%</Text>
+            <View className="flex-row justify-between items-center mb-3">
+              <View className="flex-row items-center gap-2.5">
+                <View className="p-2 bg-violet-50 rounded-xl border border-violet-100/50">
+                  <Code2 size={16} color="#8B5CF6" />
+                </View>
+                <Text className="text-sm font-black text-[#0F172A]">Technical</Text>
+              </View>
+              <Text className="text-xs font-black text-[#8B5CF6]">{techVal}%</Text>
             </View>
-            <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
-              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${techVal}%` }} />
+            <View className="h-2 rounded-full bg-slate-100 mb-2.5 overflow-hidden">
+              <View className="h-full rounded-full bg-[#8B5CF6]" style={{ width: `${techVal}%` }} />
             </View>
             <Text className="text-[10px] font-extrabold text-[#64748B]">
-              {techCount.completed}/{techCount.total} modules • Mock: {Number(techMock).toFixed(1)}/10
+              {techCount.completed}/{techCount.total} modules • Mock Average: {Number(techMock).toFixed(1)}/10
             </Text>
           </View>
 
           {/* Communication Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm font-black text-[#0F172A]">Communication</Text>
-              <Text className="text-xs font-black text-[#4F46E5]">{commVal}%</Text>
+            <View className="flex-row justify-between items-center mb-3">
+              <View className="flex-row items-center gap-2.5">
+                <View className="p-2 bg-amber-50 rounded-xl border border-amber-100/50">
+                  <MessageSquare size={16} color="#D97706" />
+                </View>
+                <Text className="text-sm font-black text-[#0F172A]">Communication</Text>
+              </View>
+              <Text className="text-xs font-black text-[#D97706]">{commVal}%</Text>
             </View>
-            <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
-              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${commVal}%` }} />
+            <View className="h-2 rounded-full bg-slate-100 mb-2.5 overflow-hidden">
+              <View className="h-full rounded-full bg-[#D97706]" style={{ width: `${commVal}%` }} />
             </View>
             <Text className="text-[10px] font-extrabold text-[#64748B]">
-              {commCount.completed}/{commCount.total} modules • Mock: {Number(commMock).toFixed(1)}/10
+              {commCount.completed}/{commCount.total} modules • Mock Average: {Number(commMock).toFixed(1)}/10
             </Text>
           </View>
 
           {/* Aptitude Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm font-black text-[#0F172A]">Aptitude</Text>
-              <Text className="text-xs font-black text-[#4F46E5]">{aptiVal}%</Text>
+            <View className="flex-row justify-between items-center mb-3">
+              <View className="flex-row items-center gap-2.5">
+                <View className="p-2 bg-indigo-50 rounded-xl border border-indigo-100/50">
+                  <Brain size={16} color={primary} />
+                </View>
+                <Text className="text-sm font-black text-[#0F172A]">Aptitude</Text>
+              </View>
+              <Text className="text-xs font-black" style={{ color: primary }}>{aptiVal}%</Text>
             </View>
-            <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
+            <View className="h-2 rounded-full bg-slate-100 mb-2.5 overflow-hidden">
               <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${aptiVal}%` }} />
             </View>
             <Text className="text-[10px] font-extrabold text-[#64748B]">
-              {aptCount.completed}/{aptCount.total} modules • Mock: {Number(aptMock).toFixed(1)}/10
+              {aptCount.completed}/{aptCount.total} modules • Mock Average: {Number(aptMock).toFixed(1)}/10
             </Text>
           </View>
 
@@ -192,7 +203,7 @@ export default function LedgerScreen() {
             
             {/* Technical Mock row */}
             <View className="flex-row items-center p-4 border-b border-[#F1F5F9] gap-4">
-              <View className="p-3 bg-[#F3E8FF] rounded-2xl">
+              <View className="p-3 bg-violet-50 rounded-2xl border border-violet-100/50">
                 <Video size={16} color="#8B5CF6" />
               </View>
               <View className="flex-1">
@@ -207,8 +218,8 @@ export default function LedgerScreen() {
 
             {/* Comm Mock row */}
             <View className="flex-row items-center p-4 border-b border-[#F1F5F9] gap-4">
-              <View className="p-3 bg-[#F3E8FF] rounded-2xl">
-                <Video size={16} color="#8B5CF6" />
+              <View className="p-3 bg-amber-50 rounded-2xl border border-amber-100/50">
+                <Video size={16} color="#D97706" />
               </View>
               <View className="flex-1">
                 <Text className="text-[#0F172A] font-extrabold text-xs">Communication Mock</Text>
@@ -222,8 +233,8 @@ export default function LedgerScreen() {
 
             {/* Aptitude Mock row */}
             <View className="flex-row items-center p-4 gap-4">
-              <View className="p-3 bg-[#F3E8FF] rounded-2xl">
-                <Video size={16} color="#8B5CF6" />
+              <View className="p-3 bg-indigo-50 rounded-2xl border border-indigo-100/50">
+                <Video size={16} color={primary} />
               </View>
               <View className="flex-1">
                 <Text className="text-[#0F172A] font-extrabold text-xs">Aptitude Mock Test</Text>
