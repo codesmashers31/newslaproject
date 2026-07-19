@@ -256,22 +256,35 @@ export default function QRScannerScreen() {
               </View>
             </View>
 
-            {/* 3. Last check-in pill success banner */}
-            {hasCheckedInToday && lastRecord ? (
-              <View className="bg-[#DCFCE7] border border-[#BBF7D0]/40 py-3 px-4 rounded-2xl flex-row items-center gap-3">
-                <View className="w-5 h-5 bg-[#22C55E] rounded-full items-center justify-center">
-                  <Text className="text-white text-[10px] font-black">✓</Text>
+            {/* 3. Today's Check-in Pills */}
+            {hasCheckedInToday ? (
+              <View className="gap-2.5">
+                <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-0.5">Today's Check-ins</Text>
+                <View className="flex-row flex-wrap gap-2.5">
+                  {todayRecords.map((rec: any, idx: number) => {
+                    const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return (
+                      <View 
+                        key={idx} 
+                        className="bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full flex-row items-center gap-2 self-start shadow-sm"
+                      >
+                        <View className="w-3.5 h-3.5 bg-[#22C55E] rounded-full items-center justify-center">
+                          <Text className="text-white text-[8px] font-black">✓</Text>
+                        </View>
+                        <Text className="text-[10px] font-black text-emerald-800">
+                          {rec.subject || 'Session'}: {timeStr}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
-                <Text className="text-xs font-black text-[#15803D]">
-                  Last check-in: Today {new Date(lastRecord.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {lastRecord.status}
-                </Text>
               </View>
             ) : (
-              <View className="bg-amber-50 border border-amber-100 py-3 px-4 rounded-2xl flex-row items-center gap-3">
-                <View className="w-5 h-5 bg-amber-500 rounded-full items-center justify-center">
-                  <Text className="text-white text-[10px] font-black">!</Text>
+              <View className="bg-amber-50 border border-amber-100 px-4.5 py-1.5 rounded-full flex-row items-center gap-2 self-start shadow-sm">
+                <View className="w-3.5 h-3.5 bg-amber-500 rounded-full items-center justify-center">
+                  <Text className="text-white text-[8px] font-black">!</Text>
                 </View>
-                <Text className="text-xs font-black text-amber-700">
+                <Text className="text-[10px] font-black text-amber-700">
                   No check-ins logged today
                 </Text>
               </View>

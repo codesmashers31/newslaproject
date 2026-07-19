@@ -211,7 +211,8 @@ export const getStudentDashboard = async (req, res) => {
           _id: rec._id,
           date: rec.date,
           status: rec.status,
-          remarks: rec.remarks || ''
+          remarks: rec.remarks || '',
+          subject: rec.subject
         })).sort((a, b) => new Date(b.date) - new Date(a.date))
       },
       scorecards: {
