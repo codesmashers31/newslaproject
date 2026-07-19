@@ -138,18 +138,19 @@ export default function LedgerScreen() {
         </View>
 
         {/* 2. Horizonal progress bars matching the screenshot design */}
-        <View className="space-y-4 mb-8">
-          {/* Aptitude Card */}
+        <View className="gap-4 mb-8">
+          
+          {/* Technical Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm font-black text-[#0F172A]">Aptitude</Text>
-              <Text className="text-xs font-black text-[#4F46E5]">{aptiVal}%</Text>
+              <Text className="text-sm font-black text-[#0F172A]">Technical</Text>
+              <Text className="text-xs font-black text-[#4F46E5]">{techVal}%</Text>
             </View>
             <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
-              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${aptiVal}%` }} />
+              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${techVal}%` }} />
             </View>
             <Text className="text-[10px] font-extrabold text-[#64748B]">
-              {aptCount.completed}/{aptCount.total} modules • Mock: {Number(aptMock).toFixed(1)}/10
+              {techCount.completed}/{techCount.total} modules • Mock: {Number(techMock).toFixed(1)}/10
             </Text>
           </View>
 
@@ -167,19 +168,20 @@ export default function LedgerScreen() {
             </Text>
           </View>
 
-          {/* Technical Card */}
+          {/* Aptitude Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-sm font-black text-[#0F172A]">Technical</Text>
-              <Text className="text-xs font-black text-[#4F46E5]">{techVal}%</Text>
+              <Text className="text-sm font-black text-[#0F172A]">Aptitude</Text>
+              <Text className="text-xs font-black text-[#4F46E5]">{aptiVal}%</Text>
             </View>
             <View className="h-2 rounded-full bg-[#EEF2F6] mb-2.5 overflow-hidden">
-              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${techVal}%` }} />
+              <View className="h-full rounded-full bg-[#4F46E5]" style={{ width: `${aptiVal}%` }} />
             </View>
             <Text className="text-[10px] font-extrabold text-[#64748B]">
-              {techCount.completed}/{techCount.total} modules • Mock: {Number(techMock).toFixed(1)}/10
+              {aptCount.completed}/{aptCount.total} modules • Mock: {Number(aptMock).toFixed(1)}/10
             </Text>
           </View>
+
         </View>
 
         {/* 3. Mock Interview Updates Section */}
@@ -187,9 +189,10 @@ export default function LedgerScreen() {
           <Text className="text-sm font-black text-[#0F172A] mb-4">Mock Interview Updates</Text>
 
           <View className="bg-white border border-[#E2E8F0] rounded-3xl overflow-hidden shadow-sm">
+            
             {/* Technical Mock row */}
-            <View className="flex-row items-center p-4 border-b border-[#F1F5F9]">
-              <View className="p-3 bg-[#F3E8FF] rounded-2xl mr-4">
+            <View className="flex-row items-center p-4 border-b border-[#F1F5F9] gap-4">
+              <View className="p-3 bg-[#F3E8FF] rounded-2xl">
                 <Video size={16} color="#8B5CF6" />
               </View>
               <View className="flex-1">
@@ -203,8 +206,8 @@ export default function LedgerScreen() {
             </View>
 
             {/* Comm Mock row */}
-            <View className="flex-row items-center p-4">
-              <View className="p-3 bg-[#F3E8FF] rounded-2xl mr-4">
+            <View className="flex-row items-center p-4 border-b border-[#F1F5F9] gap-4">
+              <View className="p-3 bg-[#F3E8FF] rounded-2xl">
                 <Video size={16} color="#8B5CF6" />
               </View>
               <View className="flex-1">
@@ -216,6 +219,20 @@ export default function LedgerScreen() {
                 </Text>
               </View>
             </View>
+
+            {/* Aptitude Mock row */}
+            <View className="flex-row items-center p-4 gap-4">
+              <View className="p-3 bg-[#F3E8FF] rounded-2xl">
+                <Video size={16} color="#8B5CF6" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#0F172A] font-extrabold text-xs">Aptitude Mock Test</Text>
+                <Text className="text-[10px] text-[#64748B] mt-0.5">
+                  Score {Number(aptMock).toFixed(1)}/10 • Sync Completed
+                </Text>
+              </View>
+            </View>
+
           </View>
         </View>
 
