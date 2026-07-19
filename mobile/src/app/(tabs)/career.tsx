@@ -119,10 +119,10 @@ export default function CareerScreen() {
 
   // Recent placed students
   const placedStudents = [
-    { id: 1, name: 'Sakthi S', company: 'Zoho Corp', pkg: '₹8.5 LPA', role: 'Associate Developer', init: 'S', color: '#F5F3FF', textColor: '#7C3AED' },
-    { id: 2, name: 'Janani K', company: 'Accenture', pkg: '₹6.5 LPA', role: 'System Engineer', init: 'J', color: '#EEF2F6', textColor: '#4F46E5' },
-    { id: 3, name: 'Arun Kumar', company: 'TCS', pkg: '₹5.5 LPA', role: 'System Engineer', init: 'A', color: '#FEF3C7', textColor: '#D97706' },
-    { id: 4, name: 'Naveen R', company: 'Cognizant', pkg: '₹4.8 LPA', role: 'Analyst', init: 'N', color: '#F0FDFA', textColor: '#0D9488' }
+    { id: 1, name: 'Sakthi S', company: 'Zoho Corp', pkg: '₹8.5 LPA', role: 'Associate Developer', batch: 'Batch 14', init: 'S', color: '#F5F3FF', textColor: '#7C3AED' },
+    { id: 2, name: 'Janani K', company: 'Accenture', pkg: '₹6.5 LPA', role: 'System Engineer', batch: 'Batch 12', init: 'J', color: '#EEF2F6', textColor: '#4F46E5' },
+    { id: 3, name: 'Arun Kumar', company: 'TCS', pkg: '₹5.5 LPA', role: 'System Engineer', batch: 'Batch 11', init: 'A', color: '#FEF3C7', textColor: '#D97706' },
+    { id: 4, name: 'Naveen R', company: 'Cognizant', pkg: '₹4.8 LPA', role: 'Analyst', batch: 'Batch 10', init: 'N', color: '#F0FDFA', textColor: '#0D9488' }
   ];
 
   return (
@@ -190,9 +190,8 @@ export default function CareerScreen() {
                       {tool.desc}
                     </Text>
                   </View>
-                  <View className="flex-row items-center mt-2.5">
-                    <Text style={{ color: tool.color }} className="text-[10px] font-black uppercase tracking-wider">Start</Text>
-                    <ChevronRight size={10} color={tool.color} style={{ marginLeft: 2 }} />
+                  <View className="bg-slate-100 border border-slate-200/50 px-2 py-0.5 rounded-full mt-2.5">
+                    <Text className="text-[#64748B] text-[8px] font-black uppercase tracking-wider">Coming Soon</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -223,7 +222,7 @@ export default function CareerScreen() {
                   </View>
                   <View>
                     <Text className="text-xs font-black text-[#0F172A]">{stud.name}</Text>
-                    <Text className="text-[9px] text-[#64748B] font-semibold">{stud.role}</Text>
+                    <Text className="text-[9px] text-[#64748B] font-semibold">{stud.role} • {stud.batch}</Text>
                   </View>
                 </View>
                 <View className="border-t border-[#F1F5F9] pt-2.5 flex-row justify-between items-center">
