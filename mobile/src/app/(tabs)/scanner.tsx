@@ -120,14 +120,20 @@ export default function QRScannerScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
+      
+      {/* Header */}
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center gap-3.5">
+        <View className="p-2.5 bg-violet-50 rounded-2xl border border-violet-100/50">
+          <CameraIcon size={20} color="#7C3AED" />
+        </View>
+        <View>
+          <Text className="text-2xl font-black text-[#0F172A]">Scan Attendance</Text>
+          <Text className="text-xs text-[#64748B] mt-0.5">Point camera at the trainer's session QR code</Text>
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="flex-1 px-6 py-6 justify-between">
-          
-          {/* Header */}
-          <View className="mb-4">
-            <Text className="text-2xl font-black text-[#0F172A]">Scan Attendance</Text>
-            <Text className="text-xs text-[#64748B] mt-1">Point your camera at the trainer's session QR code</Text>
-          </View>
 
           {/* 1. Camera Viewport Panel */}
           <View className="items-center justify-center my-6">

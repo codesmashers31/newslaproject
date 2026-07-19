@@ -130,9 +130,14 @@ export default function CareerScreen() {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white">
-        <Text className="text-2xl font-black text-[#0F172A]">Career Portal</Text>
-        <Text className="text-xs text-[#64748B] mt-0.5">Explore placements, mock tests, and AI tools</Text>
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center gap-3.5">
+        <View className="p-2.5 bg-emerald-50 rounded-2xl border border-emerald-100/50">
+          <Briefcase size={20} color="#0D9488" />
+        </View>
+        <View>
+          <Text className="text-2xl font-black text-[#0F172A]">Career Portal</Text>
+          <Text className="text-xs text-[#64748B] mt-0.5">Explore placements, mock tests, and AI tools</Text>
+        </View>
       </View>
 
       <ScrollView

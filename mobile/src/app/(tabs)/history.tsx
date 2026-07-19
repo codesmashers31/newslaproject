@@ -11,7 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import API from '../../services/api';
 import { 
-  CalendarRange 
+  CalendarRange,
+  Clock
 } from 'lucide-react-native';
 
 export default function HistoryScreen() {
@@ -59,9 +60,14 @@ export default function HistoryScreen() {
       <StatusBar barStyle="dark-content" />
       
       {/* Header */}
-      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white">
-        <Text className="text-2xl font-black text-[#0F172A]">Attendance Logs</Text>
-        <Text className="text-xs text-[#64748B] mt-0.5">View check-in times and rolling stats</Text>
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center gap-3.5">
+        <View className="p-2.5 bg-blue-50 rounded-2xl border border-blue-100/50">
+          <Clock size={20} color="#2563EB" />
+        </View>
+        <View>
+          <Text className="text-2xl font-black text-[#0F172A]">Attendance Logs</Text>
+          <Text className="text-xs text-[#64748B] mt-0.5">View check-in times and rolling stats</Text>
+        </View>
       </View>
 
       <ScrollView 

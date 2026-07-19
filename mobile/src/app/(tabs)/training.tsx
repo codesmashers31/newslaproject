@@ -163,7 +163,7 @@ export default function TrainingScreen() {
       <StatusBar barStyle="dark-content" />
       
       {/* Header */}
-      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center space-x-3">
+      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center gap-3.5">
         <View className="p-2.5 bg-[#F3E8FF] rounded-2xl border border-[#D8B4FE]/30">
           <BookOpen size={20} color="#8B5CF6" />
         </View>

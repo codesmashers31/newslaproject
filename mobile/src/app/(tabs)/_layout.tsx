@@ -13,15 +13,15 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDark ? '#1C1530' : '#ffffff', // LCP surface dark : light
-          borderTopColor: isDark ? 'rgba(196,163,255,0.16)' : 'rgba(81,0,137,0.12)', // LCP border dark : light
+          backgroundColor: '#ffffff',
+          borderTopColor: '#E2E8F0',
           borderTopWidth: 1,
           paddingBottom: Math.max(insets.bottom, 20),
           paddingTop: 8,
           height: 70 + Math.max(insets.bottom, 20),
         },
-        tabBarActiveTintColor: '#5B21B6', // LCP primary
-        tabBarInactiveTintColor: isDark ? '#A79AC2' : '#6B6478', // LCP muted dark : light
+        tabBarActiveTintColor: '#4F46E5',
+        tabBarInactiveTintColor: '#64748B',
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: 'bold',

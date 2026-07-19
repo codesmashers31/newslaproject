@@ -273,9 +273,14 @@ export default function ProfileScreen() {
       
       {/* Header */}
       <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row justify-between items-center z-10">
-        <View>
-          <Text className="text-2xl font-black text-[#0F172A]">Edit Profile</Text>
-          <Text className="text-xs text-[#64748B] mt-0.5">Update academic info & details</Text>
+        <View className="flex-row items-center gap-3.5">
+          <View className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200/50">
+            <User size={20} color="#64748B" />
+          </View>
+          <View>
+            <Text className="text-2xl font-black text-[#0F172A]">Edit Profile</Text>
+            <Text className="text-xs text-[#64748B] mt-0.5">Update academic info & details</Text>
+          </View>
         </View>
         <TouchableOpacity
           onPress={handleSave}
