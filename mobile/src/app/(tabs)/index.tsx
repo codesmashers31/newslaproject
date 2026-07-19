@@ -149,7 +149,7 @@ export default function DashboardScreen() {
             </View>
 
             {todayRecords.length > 0 ? (
-              <View className="space-y-3">
+              <View className="gap-3">
                 {todayRecords.map((record: any, index: number) => (
                   <View key={index} className="flex-row items-center justify-between py-3.5 px-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
                     <View className="flex-row items-center">
