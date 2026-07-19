@@ -57,7 +57,7 @@ export default function CareerScreen() {
   }
 
   // Bind dynamic readiness percentage from backend
-  const readinessPercent = data?.placementReadiness?.percentage || 82;
+  const readinessPercent = data?.placementReadiness?.percentage ?? 0;
 
   // Predefined job list matching the screenshot
   const jobs = [

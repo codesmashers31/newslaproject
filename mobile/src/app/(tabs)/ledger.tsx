@@ -71,14 +71,14 @@ export default function LedgerScreen() {
   const techCount = getModuleCounts(scorecards.technical);
 
   // Dynamic values from backend API
-  const overallVal = data?.progress?.overall || 82;
-  const aptiVal = data?.progress?.aptitude || 90;
-  const commVal = data?.progress?.communication || 68;
-  const techVal = data?.progress?.technical || 74;
+  const overallVal = data?.progress?.overall ?? 0;
+  const aptiVal = data?.progress?.aptitude ?? 0;
+  const commVal = data?.progress?.communication ?? 0;
+  const techVal = data?.progress?.technical ?? 0;
 
-  const aptMock = data?.calculatedScores?.aptitudeScore || 8.5;
-  const commMock = data?.calculatedScores?.communicationScore || 6.0;
-  const techMock = data?.calculatedScores?.technicalScore || 7.5;
+  const aptMock = data?.calculatedScores?.aptitudeScore ?? 0;
+  const commMock = data?.calculatedScores?.communicationScore ?? 0;
+  const techMock = data?.calculatedScores?.technicalScore ?? 0;
 
   const radius = 56;
   const strokeWidth = 12;

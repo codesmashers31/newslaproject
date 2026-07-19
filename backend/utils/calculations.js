@@ -57,7 +57,7 @@ export const calculateStudentScores = async (studentId) => {
   // Fetch averages of module scores (marks out of 10)
   const getAverageModuleMarks = async (category) => {
     const scores = await Score.find({ student: studentId, category }).lean();
-    if (scores.length === 0) return 8.0; // default baseline if not started
+    if (scores.length === 0) return 0; // true dynamic value if not started
     const sum = scores.reduce((acc, curr) => acc + curr.marks, 0);
     return sum / scores.length;
   };
