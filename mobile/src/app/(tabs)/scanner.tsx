@@ -203,22 +203,25 @@ export default function QRScannerScreen() {
 
             {/* Zoom Controls */}
             {cameraActive && !scanResult && !loading && (
-              <View className="flex-row items-center justify-center gap-2.5 mt-5">
-                <Text className="text-[9px] font-black text-[#64748B] uppercase tracking-wider mr-1">Zoom:</Text>
-                {[
-                  { label: '1x', val: 0 },
-                  { label: '2x', val: 0.15 },
-                  { label: '3x', val: 0.3 },
-                  { label: '4x', val: 0.45 }
-                ].map(z => (
-                  <TouchableOpacity
-                    key={z.label}
-                    onPress={() => setZoom(z.val)}
-                    className={`px-3 py-1.5 rounded-full border ${zoom === z.val ? 'bg-[#7C3AED] border-[#7C3AED]' : 'bg-white border-[#E2E8F0]'} shadow-sm`}
-                  >
-                    <Text className={`text-[10px] font-black ${zoom === z.val ? 'text-white' : 'text-[#64748B]'}`}>{z.label}</Text>
-                  </TouchableOpacity>
-                ))}
+              <View className="flex-row items-center justify-center gap-4 mt-5 bg-white border border-[#E2E8F0] px-4 py-2 rounded-2xl shadow-sm">
+                <TouchableOpacity
+                  onPress={() => setZoom(Math.max(0, zoom - 0.05))}
+                  className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full items-center justify-center"
+                >
+                  <Text className="text-xl font-black text-[#7C3AED]">-</Text>
+                </TouchableOpacity>
+
+                <View className="items-center min-w-[70px]">
+                  <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Zoom</Text>
+                  <Text className="text-sm font-black text-[#0F172A] mt-0.5">{(zoom * 10 + 1).toFixed(1)}x</Text>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => setZoom(Math.min(1.0, zoom + 0.05))}
+                  className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full items-center justify-center"
+                >
+                  <Text className="text-xl font-black text-[#7C3AED]">+</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -231,9 +234,9 @@ export default function QRScannerScreen() {
           </View>
 
           {/* Bottom Session Card and Scan Result Banner */}
-          <View className="mt-2 space-y-4">
+          <View className="mt-4 gap-4">
             {/* 2. Web Development Session Info Card */}
-            <View className="bg-white border border-[#E2E8F0] p-4 rounded-3xl flex-row items-center space-x-3.5 shadow-sm">
+            <View className="bg-white border border-[#E2E8F0] p-4 rounded-3xl flex-row items-center gap-3.5 shadow-sm">
               <View className="p-3 bg-[#F3E8FF] rounded-2xl">
                 <BookOpen size={20} color="#8B5CF6" />
               </View>
@@ -249,7 +252,7 @@ export default function QRScannerScreen() {
 
             {/* 3. Last check-in pill success banner */}
             {hasCheckedInToday && lastRecord ? (
-              <View className="bg-[#DCFCE7] border border-[#BBF7D0]/40 py-3 px-4 rounded-2xl flex-row items-center space-x-2.5">
+              <View className="bg-[#DCFCE7] border border-[#BBF7D0]/40 py-3 px-4 rounded-2xl flex-row items-center gap-3">
                 <View className="w-5 h-5 bg-[#22C55E] rounded-full items-center justify-center">
                   <Text className="text-white text-[10px] font-black">✓</Text>
                 </View>
@@ -258,7 +261,7 @@ export default function QRScannerScreen() {
                 </Text>
               </View>
             ) : (
-              <View className="bg-amber-50 border border-amber-100 py-3 px-4 rounded-2xl flex-row items-center space-x-2.5">
+              <View className="bg-amber-50 border border-amber-100 py-3 px-4 rounded-2xl flex-row items-center gap-3">
                 <View className="w-5 h-5 bg-amber-500 rounded-full items-center justify-center">
                   <Text className="text-white text-[10px] font-black">!</Text>
                 </View>
