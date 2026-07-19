@@ -5,7 +5,8 @@ import {
   ScrollView, 
   ActivityIndicator, 
   RefreshControl,
-  StatusBar
+  StatusBar,
+  TouchableOpacity
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
