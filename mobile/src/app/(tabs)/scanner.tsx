@@ -17,7 +17,9 @@ import {
   AlertCircle,
   CheckCircle2,
   BookOpen,
-  HelpCircle
+  HelpCircle,
+  Zap,
+  ZapOff
 } from 'lucide-react-native';
 
 export default function QRScannerScreen() {
@@ -30,7 +32,11 @@ export default function QRScannerScreen() {
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
-  const [zoom, setZoom] = useState(0);
+  const [displayZoom, setDisplayZoom] = useState(1.0); // 1.0x to 30.0x+
+  const [torch, setTorch] = useState(false);
+
+  // Map 1.0x - 30.0x display range to Expo Camera 0.0 - 1.0 hardware zoom float
+  const expoZoom = Math.min(1.0, Math.max(0.0, (displayZoom - 1) / 29));
 
   const loadDashboardData = async () => {
     try {
@@ -136,7 +142,7 @@ export default function QRScannerScreen() {
         <View className="flex-1 px-6 py-6 justify-between">
 
           {/* 1. Camera Viewport Panel */}
-          <View className="items-center justify-center my-6">
+          <View className="items-center justify-center my-4">
             {cameraActive && !scanResult && !loading ? (
               <View className="w-80 h-80 bg-[#0F0C20] rounded-[32px] overflow-hidden relative shadow-lg shadow-purple-500/5 border border-slate-200">
                 <CameraView
@@ -144,9 +150,22 @@ export default function QRScannerScreen() {
                   barcodeScannerSettings={{
                     barcodeTypes: ['qr'],
                   }}
-                  zoom={zoom}
+                  zoom={expoZoom}
+                  enableTorch={torch}
                   style={{ flex: 1 }}
                 />
+                
+                {/* Torch Toggle Overlay */}
+                <TouchableOpacity
+                  onPress={() => setTorch(!torch)}
+                  className={`absolute top-4 right-4 p-2.5 rounded-full z-20 ${
+                    torch ? 'bg-amber-400' : 'bg-black/60 border border-white/20'
+                  }`}
+                >
+                  {torch ? <Zap size={16} color="#000" /> : <ZapOff size={16} color="#FFF" />}
+                </TouchableOpacity>
+
+                {/* Viewport Corners */}
                 <View pointerEvents="none" className="absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg" />
                 <View pointerEvents="none" className="absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg" />
                 <View pointerEvents="none" className="absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg" />
@@ -207,27 +226,52 @@ export default function QRScannerScreen() {
               </View>
             )}
 
-            {/* Zoom Controls */}
+            {/* 30X Ultra Zoom Controls */}
             {cameraActive && !scanResult && !loading && (
-              <View className="flex-row items-center justify-center gap-4 mt-5 bg-white border border-[#E2E8F0] px-4 py-2 rounded-2xl shadow-sm">
-                <TouchableOpacity
-                  onPress={() => setZoom(Math.max(0, zoom - 0.05))}
-                  className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full items-center justify-center"
-                >
-                  <Text className="text-xl font-black text-[#7C3AED]">-</Text>
-                </TouchableOpacity>
+              <View className="w-full max-w-[320px] mt-4 gap-2.5">
+                <View className="flex-row items-center justify-between bg-white border border-[#E2E8F0] px-4 py-2 rounded-2xl shadow-sm">
+                  <TouchableOpacity
+                    onPress={() => setDisplayZoom(prev => Math.max(1.0, parseFloat((prev - (prev > 10 ? 2 : 1)).toFixed(1))))}
+                    className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-xl items-center justify-center active:scale-95"
+                  >
+                    <Text className="text-xl font-black text-[#7C3AED]">-</Text>
+                  </TouchableOpacity>
 
-                <View className="items-center min-w-[70px]">
-                  <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Zoom</Text>
-                  <Text className="text-sm font-black text-[#0F172A] mt-0.5">{(zoom * 10 + 1).toFixed(1)}x</Text>
+                  <View className="items-center">
+                    <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Ultra Zoom</Text>
+                    <Text className="text-base font-black text-[#7C3AED] mt-0.5">{displayZoom.toFixed(1)}x</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => setDisplayZoom(prev => Math.min(30.0, parseFloat((prev + (prev >= 10 ? 2 : 1)).toFixed(1))))}
+                    className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-xl items-center justify-center active:scale-95"
+                  >
+                    <Text className="text-xl font-black text-[#7C3AED]">+</Text>
+                  </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => setZoom(Math.min(1.0, zoom + 0.05))}
-                  className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-full items-center justify-center"
-                >
-                  <Text className="text-xl font-black text-[#7C3AED]">+</Text>
-                </TouchableOpacity>
+                {/* Quick Presets: 1x, 2x, 5x, 10x, 15x, 30x */}
+                <View className="flex-row justify-between gap-1.5">
+                  {[1, 2, 5, 10, 15, 30].map(zVal => (
+                    <TouchableOpacity
+                      key={zVal}
+                      onPress={() => setDisplayZoom(zVal)}
+                      className={`flex-1 py-2 rounded-xl border items-center justify-center ${
+                        Math.abs(displayZoom - zVal) < 0.5
+                          ? 'bg-[#7C3AED] border-[#7C3AED]'
+                          : 'bg-white border-[#E2E8F0]'
+                      }`}
+                    >
+                      <Text
+                        className={`text-[11px] font-black ${
+                          Math.abs(displayZoom - zVal) < 0.5 ? 'text-white' : 'text-[#64748B]'
+                        }`}
+                      >
+                        {zVal}x
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             )}
 
