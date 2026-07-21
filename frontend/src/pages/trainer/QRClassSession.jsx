@@ -243,49 +243,49 @@ const QRClassSession = () => {
           </motion.div>
         </div>
       ) : (
-        // Active Session Display (Wide layout with LARGE high-visibility QR Code)
-        <div className="max-w-6xl mx-auto w-full">
+        // Active Session Display (Balanced compact layout with clear QR Code)
+        <div className="max-w-4xl mx-auto w-full">
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
           >
-            {/* BIG QR Code Container (7 cols) */}
-            <div className="lg:col-span-8 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-[32px] p-6 sm:p-8 shadow-xl flex flex-col items-center justify-center text-center">
-              <div className="mb-5">
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-500/20 shadow-sm">
-                  <Clock className="w-4 h-4 animate-pulse" />
+            {/* QR Code Container (7 cols) */}
+            <div className="lg:col-span-7 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center text-center">
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-500/20 shadow-sm">
+                  <Clock className="w-3.5 h-3.5 animate-pulse" />
                   ACTIVE CLASS ATTENDANCE QR
                 </span>
               </div>
 
-              {/* Large, Bold QR Container */}
-              <div className="relative p-4 sm:p-6 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-[36px] shadow-inner w-full max-w-[660px] mx-auto flex items-center justify-center">
+              {/* Compact, Neat QR Container */}
+              <div className="relative p-5 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-inner w-full max-w-[340px] mx-auto flex items-center justify-center">
                 {qrLoading && (
-                  <div className="absolute inset-0 bg-white/85 dark:bg-[#0c0d12]/92 flex items-center justify-center rounded-[36px] z-10">
-                    <RefreshCw className="h-10 w-10 text-violet-800 dark:text-violet-400 animate-spin" />
+                  <div className="absolute inset-0 bg-white/85 dark:bg-[#0c0d12]/92 flex items-center justify-center rounded-3xl z-10">
+                    <RefreshCw className="h-8 w-8 text-violet-800 dark:text-violet-400 animate-spin" />
                   </div>
                 )}
                 {qrImageUrl ? (
                   <img 
                     src={qrImageUrl} 
                     alt="Rotating Class QR Code" 
-                    className="w-full aspect-square max-w-[600px] select-none rounded-2xl object-contain"
+                    className="w-64 h-64 sm:w-72 sm:h-72 select-none rounded-xl object-contain"
                   />
                 ) : (
-                  <div className="w-full aspect-square max-w-[600px] bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center text-gray-400 font-bold">
+                  <div className="w-64 h-64 sm:w-72 sm:h-72 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold">
                     Initializing token...
                   </div>
                 )}
               </div>
 
               {/* Rotating Timer Bar */}
-              <div className="mt-6 w-full max-w-[660px] mx-auto">
-                <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-300 mb-2">
+              <div className="mt-5 w-full max-w-[340px] mx-auto">
+                <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5">
                   <span>Rotating Security Token</span>
                   <span className="font-extrabold text-violet-600 dark:text-violet-400">{countdown}s remaining</span>
                 </div>
-                <div className="w-full bg-gray-100 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
                   <div
                     className="bg-[#4648d4] h-full transition-all duration-1000 ease-linear rounded-full"
                     style={{ width: `${(countdown / 15) * 100}%` }}
@@ -293,9 +293,9 @@ const QRClassSession = () => {
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-2.5 text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-4 py-3 rounded-2xl border border-rose-200/60 dark:border-rose-900/30 w-full max-w-[660px] mx-auto justify-center">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-                <span>Anti-spoofing active: Shared screenshots expire in 15s.</span>
+              <div className="mt-5 flex items-center gap-2 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-3.5 py-2.5 rounded-xl border border-rose-200/60 dark:border-rose-900/30 w-full max-w-[340px] mx-auto justify-center">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                <span>Shared screenshots expire in 15s.</span>
               </div>
             </div>
 
