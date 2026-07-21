@@ -32,8 +32,11 @@ export const getAssignedStudents = async (req, res) => {
       return res.status(403).json({ message: 'User is not a valid trainer' });
     }
 
-    // Find batches where this trainer is assigned
-    const batches = await Batch.find({ trainers: req.user._id })
+    const isAdmin = req.user.role === 'Admin' || req.user.role === 'Super Admin';
+    const batchQuery = isAdmin ? {} : { trainers: req.user._id };
+
+    // Find batches where this trainer is assigned (or all batches for admin)
+    const batches = await Batch.find(batchQuery)
       .populate('students', 'name email mobile status slaeId technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
       .lean();
 
@@ -58,18 +61,25 @@ export const getAssignedStudents = async (req, res) => {
       }
     }
 
-    // Get unique students that this trainer actually teaches
-    const batchStudentIds = batches.flatMap(b => b.students?.map(s => s._id?.toString() || s.toString()) || []);
-    
-    // Also find students who are enrolled directly with this trainer
-    const directEnrollments = await Enrollment.find({ trainerId: req.user._id, status: 'Active' }).lean();
-    const enrolledStudentIds = directEnrollments.map(e => e.studentId.toString());
-    
-    const uniqueStudentIds = [...new Set([...batchStudentIds, ...enrolledStudentIds])];
+    let allStudentUsers = [];
+    if (isAdmin) {
+      allStudentUsers = await User.find({ role: 'Student' })
+        .select('name email mobile status slaeId')
+        .lean();
+    } else {
+      // Get unique students that this trainer actually teaches
+      const batchStudentIds = batches.flatMap(b => b.students?.map(s => s._id?.toString() || s.toString()) || []);
+      
+      // Also find students who are enrolled directly with this trainer
+      const directEnrollments = await Enrollment.find({ trainerId: req.user._id, status: 'Active' }).lean();
+      const enrolledStudentIds = directEnrollments.map(e => e.studentId.toString());
+      
+      const uniqueStudentIds = [...new Set([...batchStudentIds, ...enrolledStudentIds])];
 
-    const allStudentUsers = await User.find({ _id: { $in: uniqueStudentIds }, role: 'Student' })
-      .select('name email mobile status slaeId')
-      .lean();
+      allStudentUsers = await User.find({ _id: { $in: uniqueStudentIds }, role: 'Student' })
+        .select('name email mobile status slaeId')
+        .lean();
+    }
 
     const allStudentIds = allStudentUsers.map(s => s._id);
 
@@ -596,7 +606,9 @@ export const getTrainerDashboardStats = async (req, res) => {
 
 export const getTrainerBatches = async (req, res) => {
   try {
-    const batches = await Batch.find({ trainers: req.user._id }).sort({ createdAt: -1 }).lean();
+    const isAdmin = req.user.role === 'Admin' || req.user.role === 'Super Admin';
+    const query = isAdmin ? {} : { trainers: req.user._id };
+    const batches = await Batch.find(query).sort({ createdAt: -1 }).lean();
     res.json(batches);
   } catch (error) {
     res.status(500).json({ message: error.message });

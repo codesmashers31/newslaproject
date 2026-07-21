@@ -11,6 +11,7 @@ const AttendanceManagement = () => {
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterBatch, setFilterBatch] = useState('All');
   const [filterDate, setFilterDate] = useState('');
 
   const [totalStudents, setTotalStudents] = useState(0);
@@ -32,6 +33,8 @@ const AttendanceManagement = () => {
     loadLogs();
   }, []);
 
+  const availableBatches = [...new Set(logs.map(l => l.batch?.name).filter(Boolean))];
+
   const filteredLogs = logs.filter(log => {
     const matchesSearch = log.student?.name?.toLowerCase().includes(search.toLowerCase()) || log.batch?.name?.toLowerCase().includes(search.toLowerCase());
     
@@ -45,13 +48,14 @@ const AttendanceManagement = () => {
     }
 
     const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
+    const matchesBatch = filterBatch === 'All' || log.batch?.name === filterBatch;
     
     let matchesDate = true;
     if (filterDate) {
       matchesDate = new Date(log.date).toISOString().split('T')[0] === filterDate;
     }
 
-    return matchesSearch && matchesCourse && matchesStatus && matchesDate;
+    return matchesSearch && matchesCourse && matchesStatus && matchesBatch && matchesDate;
   });
 
   // Helper to trigger CSV Export simulation
@@ -60,16 +64,18 @@ const AttendanceManagement = () => {
       toast.error('No logs to export');
       return;
     }
-    const headers = 'Student Name,Email,Batch,Course,Date,Time,Status,Marked By\n';
+    const headers = 'SLAEID,Student Name,Email,Batch,Course,Date,Time,Status,Marked By\n';
     const rows = filteredLogs.map(log => {
       const d = new Date(log.date);
-      return `"${log.student?.name}","${log.student?.email}","${log.batch?.name}","${log.batch?.course}","${d.toLocaleDateString()}","${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}","${log.status}","${log.markedBy?.name}"`;
+      const slaeId = log.student?.slaeId || `SLA-${log.student?._id?.slice(-5).toUpperCase() || 'STU'}`;
+      return `"${slaeId}","${log.student?.name}","${log.student?.email}","${log.batch?.name}","${log.batch?.course}","${d.toLocaleDateString()}","${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}","${log.status}","${log.markedBy?.name || 'System'}"`;
     }).join('\n');
     
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `LCP_Attendance_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    const batchLabel = filterBatch === 'All' ? 'All_Batches' : filterBatch.replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.setAttribute('download', `LCP_Attendance_Report_${batchLabel}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -275,6 +281,17 @@ const AttendanceManagement = () => {
             />
             
             <select
+              value={filterBatch}
+              onChange={(e) => setFilterBatch(e.target.value)}
+              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
+            >
+              <option value="All">All Batches</option>
+              {availableBatches.map((bName, i) => (
+                <option key={i} value={bName}>{bName}</option>
+              ))}
+            </select>
+
+            <select
               value={filterCourse}
               onChange={(e) => setFilterCourse(e.target.value)}
               className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
@@ -299,6 +316,7 @@ const AttendanceManagement = () => {
             
             <button
               onClick={() => {
+                setFilterBatch('All');
                 setFilterCourse('All');
                 setFilterStatus('All');
                 setFilterDate('');
