@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkUserSession = () => {
+    const checkUserSession = async () => {
       const storedUser = localStorage.getItem('userInfo');
       if (storedUser) {
         try {
@@ -17,7 +17,22 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('userInfo');
         }
       }
-      setLoading(false);
+
+      try {
+        const { data } = await API.get('/auth/me');
+        if (data) {
+          const storedToken = storedUser ? JSON.parse(storedUser)?.token : '';
+          const fullUser = { ...data, token: storedToken };
+          setUser(fullUser);
+          localStorage.setItem('userInfo', JSON.stringify(fullUser));
+        }
+      } catch (error) {
+        // Unverified session - enforce logout and clear local state
+        setUser(null);
+        localStorage.removeItem('userInfo');
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkUserSession();
@@ -107,7 +122,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await API.post('/auth/logout');
+    } catch (e) {
+      // Ignore network errors during logout
+    }
     setUser(null);
     localStorage.removeItem('userInfo');
   };

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,11 +22,26 @@ connectDB();
 
 const app = express();
 
-// Middlewares
+// CORS configuration supporting HTTP-only cookies
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://slabuildx.vercel.app'
+];
+
 app.use(cors({
-  origin: '*', // Allow any origin for ease of use in local development
-  credentials: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, etc) or matching origins
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Permissive callback for client apps while allowing credentials
+    }
+  },
+  credentials: true
 }));
+
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

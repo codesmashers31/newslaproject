@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, authUser, getUserProfile, updateUserProfile, requestDeviceReset } from '../controllers/authController.js';
+import { registerUser, authUser, logoutUser, getUserProfile, updateUserProfile, requestDeviceReset } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 
 import upload from '../middleware/upload.js';
@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', authUser);
+router.post('/logout', logoutUser);
 router.post('/request-device-reset', requestDeviceReset);
 router.get('/me', protect, getUserProfile);
 router.put('/me', protect, upload.single('photo'), updateUserProfile);

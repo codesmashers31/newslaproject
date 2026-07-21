@@ -14,6 +14,32 @@ const generateToken = (id) => {
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
+const sendTokenResponse = (user, statusCode, res) => {
+  const token = generateToken(user._id);
+
+  const cookieOptions = {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  };
+
+  res.cookie('jwtToken', token, cookieOptions);
+
+  res.status(statusCode).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    mobile: user.mobile || '',
+    role: user.role,
+    slaeId: user.slaeId || '',
+    token,
+  });
+};
+
+// @desc    Register a new user
+// @route   POST /api/auth/register
+// @access  Public
 export const registerUser = async (req, res) => {
   const { name, email, mobile, password, role, collegeName, degree, yearOfPassing, photo } = req.body;
 
@@ -34,7 +60,6 @@ export const registerUser = async (req, res) => {
     });
 
     if (user) {
-      // If role is Student, create Student profile and Placement record
       if (role === 'Student') {
         await Student.create({ 
           user: user._id,
@@ -46,14 +71,7 @@ export const registerUser = async (req, res) => {
         await Placement.create({ student: user._id });
       }
 
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        mobile: user.mobile,
-        role: user.role,
-        token: generateToken(user._id),
-      });
+      sendTokenResponse(user, 201, res);
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
@@ -92,7 +110,7 @@ export const authUser = async (req, res) => {
       });
     }
 
-    // 3. If still not found, search in the 'students' collection (which has the actual student mobile field)
+    // 3. If still not found, search in the 'students' collection
     if (!user) {
       const studentProfile = await mongoose.connection.db.collection('students').findOne({
         $or: [
@@ -114,15 +132,12 @@ export const authUser = async (req, res) => {
     }
     let passwordMatches = false;
     if (user) {
-      // Check original case
       passwordMatches = await user.matchPassword(password);
       
-      // If that fails, check lowercase (helps when default password is lowercased SLAE ID)
       if (!passwordMatches) {
         passwordMatches = await user.matchPassword(password.toLowerCase());
       }
       
-      // If that fails, check uppercase just in case
       if (!passwordMatches) {
         passwordMatches = await user.matchPassword(password.toUpperCase());
       }
@@ -144,13 +159,11 @@ export const authUser = async (req, res) => {
       // Single Device Access logic
       if (user.role === 'Student' && deviceId) {
         if (!user.deviceId) {
-          // Link first device
           user.deviceId = deviceId;
           user.deviceInfo = deviceInfo || 'Unknown Web Browser';
           user.deviceLastUsed = new Date();
           await user.save();
         } else if (user.deviceId !== deviceId) {
-          // Block access if device mismatch
           return res.status(403).json({
             code: 'UNAUTHORIZED_DEVICE',
             message: 'Access Denied: This account is already registered and logged in on another device.',
@@ -158,20 +171,12 @@ export const authUser = async (req, res) => {
             lastUsed: user.deviceLastUsed
           });
         } else {
-          // Same device, update last active timestamp
           user.deviceLastUsed = new Date();
           await user.save();
         }
       }
 
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        mobile: user.mobile || '',
-        role: user.role,
-        token: generateToken(user._id),
-      });
+      sendTokenResponse(user, 200, res);
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -181,20 +186,35 @@ export const authUser = async (req, res) => {
   }
 };
 
+// @desc    Logout user & clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+export const logoutUser = (req, res) => {
+  res.cookie('jwtToken', '', {
+    expires: new Date(0),
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  });
+  res.json({ message: 'Logged out successfully' });
+};
+
 // @desc    Get user profile
 // @route   GET /api/auth/me
 // @access  Private
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('-password');
 
     if (user) {
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: user.mobile || '',
         role: user.role,
+        slaeId: user.slaeId || '',
+        status: user.status || 'Active'
       });
     } else {
       res.status(404).json({ message: 'User not found' });
