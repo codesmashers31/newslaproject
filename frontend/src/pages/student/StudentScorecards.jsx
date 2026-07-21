@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { Video, Code2, MessageSquare, Brain, Award } from 'lucide-react';
-import { Card, CardHeader, ProgressBar, PRIMARY } from '../../components/ui/primitives';
+import { Card, CardHeader, ProgressBar, PRIMARY,
+  PageSkeleton
+} from '../../components/ui/primitives';
 
 /**
  * Web counterpart of mobile/src/app/(tabs)/ledger.tsx.
@@ -30,12 +32,7 @@ const StudentScorecards = () => {
 
   if (loading) {
     return (
-      <div className="h-60 flex items-center justify-center m-card animate-pulse">
-        <div
-          className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
-          style={{ borderColor: PRIMARY, borderTopColor: 'transparent' }}
-        />
-      </div>
+      <PageSkeleton variant="list" />
     );
   }
 

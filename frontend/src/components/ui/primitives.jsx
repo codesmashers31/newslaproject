@@ -214,6 +214,108 @@ export const EmptyState = ({ icon: Icon, tone = 'warning', badge, title, childre
   );
 };
 
+/**
+ * Shimmering placeholder block. Compose these into page-shaped skeletons
+ * rather than showing a spinner while data loads.
+ */
+export const Skeleton = ({ className = '', style }) => (
+  <div className={`skeleton ${className}`} style={style} aria-hidden="true" />
+);
+
+/** A few skeleton lines standing in for a paragraph. */
+export const SkeletonText = ({ lines = 3, className = '' }) => (
+  <div className={`space-y-2 ${className}`} aria-hidden="true">
+    {Array.from({ length: lines }).map((_, i) => (
+      <Skeleton
+        key={i}
+        className="h-3"
+        // Last line runs short, the way real wrapped text does.
+        style={{ width: i === lines - 1 ? '60%' : '100%' }}
+      />
+    ))}
+  </div>
+);
+
+/** Card-shaped skeleton: optional icon tile, title and body lines. */
+export const SkeletonCard = ({ lines = 2, withIcon = true, className = '' }) => (
+  <div className={`m-card p-5 ${className}`} aria-hidden="true">
+    <div className="flex items-center gap-3 mb-4">
+      {withIcon && <Skeleton className="w-11 h-11 rounded-xl shrink-0" />}
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-3.5 w-1/3" />
+        <Skeleton className="h-2.5 w-1/2" />
+      </div>
+    </div>
+    <SkeletonText lines={lines} />
+  </div>
+);
+
+/**
+ * Full-page loading state. `variant` picks a shape roughly matching the page
+ * being loaded so the skeleton does not jump when real content arrives.
+ */
+export const PageSkeleton = ({ variant = 'default' }) => {
+  if (variant === 'form') {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6" role="status" aria-label="Loading">
+        <SkeletonCard lines={0} />
+        <div className="m-card p-6 flex flex-col items-center gap-3">
+          <Skeleton className="w-28 h-28 rounded-full" />
+          <Skeleton className="h-3.5 w-32" />
+          <Skeleton className="h-2.5 w-40" />
+        </div>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="m-card p-5 space-y-4">
+            <Skeleton className="h-2.5 w-28" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Skeleton className="h-11" />
+              <Skeleton className="h-11" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === 'list') {
+    return (
+      <div className="space-y-4" role="status" aria-label="Loading">
+        <SkeletonCard lines={0} />
+        {[0, 1, 2, 3].map((i) => (
+          <SkeletonCard key={i} lines={1} />
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === 'table') {
+    return (
+      <div className="space-y-4" role="status" aria-label="Loading">
+        <SkeletonCard lines={0} />
+        <div className="m-card p-5 space-y-3">
+          <Skeleton className="h-9" />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-11" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // default: header, hero, then a grid of cards
+  return (
+    <div className="space-y-6" role="status" aria-label="Loading">
+      <Skeleton className="h-36 rounded-3xl" />
+      <SkeletonCard lines={2} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[0, 1, 2].map((i) => (
+          <SkeletonCard key={i} lines={1} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 /** Underlined tab strip used by the module switchers. */
 export const Tabs = ({ tabs, active, onChange }) => (
   <div className="flex overflow-x-auto border-b border-[#E2E8F0] dark:border-[#1e2330]">

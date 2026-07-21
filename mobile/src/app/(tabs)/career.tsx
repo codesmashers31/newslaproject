@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   StatusBar,
   TouchableOpacity
@@ -25,6 +24,7 @@ import {
   Bell
 } from 'lucide-react-native';
 import API from '../../services/api';
+import { ScreenSkeleton } from '../../components/Skeleton';
 
 export default function CareerScreen() {
   const primary = '#4F46E5';
@@ -62,9 +62,7 @@ export default function CareerScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
-        <ActivityIndicator size="large" color={primary} />
-      </View>
+      <ScreenSkeleton variant="list" />
     );
   }
 

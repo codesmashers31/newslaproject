@@ -18,6 +18,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import API from '../../services/api';
+import { ScreenSkeleton } from '../../components/Skeleton';
 import { 
   User, 
   Mail, 
@@ -250,9 +251,7 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
-        <ActivityIndicator size="large" color={primaryColor} />
-      </View>
+      <ScreenSkeleton variant="form" />
     );
   }
 

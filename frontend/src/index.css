@@ -177,6 +177,41 @@
   @apply w-full py-3.5 bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-xl flex items-center justify-center gap-2 font-black text-xs uppercase tracking-wider shadow-md shadow-indigo-600/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer;
 }
 
+/* ---------------------------------------------------------------
+   Skeleton placeholders with a shimmer sweep.
+   Used instead of spinners while a page's data loads.
+   --------------------------------------------------------------- */
+.skeleton {
+  @apply relative overflow-hidden bg-slate-200/80 rounded-xl;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: skeleton-shimmer 1.6s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Respect users who ask for less motion: keep the placeholder, drop the sweep. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
 /* Custom Premium Utilities */
 .glassmorphism {
   @apply bg-white/80 dark:bg-[#11131c]/80 backdrop-blur-xl border border-slate-200/55 dark:border-slate-800/60 shadow-xl shadow-slate-100/45 dark:shadow-none;

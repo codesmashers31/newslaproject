@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   StatusBar,
   TouchableOpacity
@@ -13,6 +12,7 @@ import { router, useFocusEffect } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 import { Video, Code2, MessageSquare, Brain, Award } from 'lucide-react-native';
 import API from '../../services/api';
+import { ScreenSkeleton } from '../../components/Skeleton';
 
 export default function LedgerScreen() {
   const primary = '#4F46E5';
@@ -49,9 +49,7 @@ export default function LedgerScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
-        <ActivityIndicator size="large" color={primary} />
-      </View>
+      <ScreenSkeleton variant="list" />
     );
   }
 

@@ -16,6 +16,7 @@ import Toast from 'react-native-toast-message';
 import { useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import API from '../../services/api';
+import { ScreenSkeleton } from '../../components/Skeleton';
 import { 
   BookOpen,
   CheckCircle2,
@@ -193,9 +194,7 @@ export default function TrainingScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
-        <ActivityIndicator size="large" color={primary} />
-      </View>
+      <ScreenSkeleton variant="list" />
     );
   }
 

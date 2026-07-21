@@ -19,7 +19,8 @@ import {
   Pill,
   ProgressRing,
   EmptyState,
-  PRIMARY
+  PRIMARY,
+  PageSkeleton
 } from '../../components/ui/primitives';
 import BannerCarousel from '../../components/ui/BannerCarousel';
 
@@ -50,11 +51,7 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-36 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
-        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
-        <div className="h-56 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
-      </div>
+      <PageSkeleton />
     );
   }
 

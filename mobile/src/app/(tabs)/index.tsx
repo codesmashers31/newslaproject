@@ -4,7 +4,6 @@ import {
   Text, 
   ScrollView, 
   TouchableOpacity, 
-  ActivityIndicator, 
   RefreshControl,
   StatusBar
 } from 'react-native';
@@ -12,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
+import { ScreenSkeleton } from '../../components/Skeleton';
 import { 
   CalendarDays, 
   Clock, 
@@ -65,9 +65,7 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8FAFC] items-center justify-center">
-        <ActivityIndicator size="large" color={primaryColor} />
-      </View>
+      <ScreenSkeleton variant="default" />
     );
   }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { BookOpen, Lock, Search, CheckCircle2, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PageSkeleton } from '../../components/ui/primitives';
 
 const StudentTrainingPage = () => {
   const [loading, setLoading] = useState(true);
@@ -122,9 +123,7 @@ const StudentTrainingPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <RefreshCw className="w-8 h-8 text-violet-600 animate-spin" />
-      </div>
+      <PageSkeleton variant="list" />
     );
   }
 

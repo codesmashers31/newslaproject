@@ -12,7 +12,9 @@ import {
   Gamepad2,
   MapPin
 } from 'lucide-react';
-import { Card, CardHeader, PRIMARY } from '../../components/ui/primitives';
+import { Card, CardHeader, PRIMARY,
+  PageSkeleton
+} from '../../components/ui/primitives';
 
 /**
  * Web counterpart of mobile/src/app/(tabs)/career.tsx.
@@ -65,12 +67,7 @@ const PlacementReadiness = () => {
 
   if (loading) {
     return (
-      <div className="h-60 flex items-center justify-center m-card animate-pulse">
-        <div
-          className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
-          style={{ borderColor: PRIMARY, borderTopColor: 'transparent' }}
-        />
-      </div>
+      <PageSkeleton variant="list" />
     );
   }
 
