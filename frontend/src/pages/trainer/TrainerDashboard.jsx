@@ -706,6 +706,116 @@ const TrainerDashboard = () => {
     }
   };
 
+  const getExportDataForStudent = (student) => {
+    const isGuest = student.isGuest;
+
+    const baseData = {
+      'SLAEID': student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`,
+      'Student Name': student.name,
+      'Student Email': student.email,
+      'Mobile': student.mobile || 'N/A'
+    };
+
+    // Communication Details
+    const commBatchId = isGuest ? student.guestRecord?.batch?._id : getBatchIdByName(student.communicationBatch);
+    const commRecord = isGuest 
+      ? student.guestRecord 
+      : todayRecords?.find(r => 
+          String(r?.student?._id || r?.student) === String(student?._id) &&
+          (String(r?.batch?._id || r?.batch) === String(commBatchId) || r.subject === 'Communication Skills')
+        );
+    const commStatus = commRecord ? commRecord.status : (commBatchId ? (attendanceState[`${student._id}_${commBatchId}`] || 'Absent') : (student.communicationBatch ? 'Not Checked In' : 'No Batch'));
+    const commTime = commRecord ? new Date(commRecord.createdAt || commRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+    const commDate = commRecord ? new Date(commRecord.createdAt || commRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+
+    // Technical Details
+    const techBatchId = getBatchIdByName(student.technicalBatch);
+    const techRecord = todayRecords?.find(r => 
+      String(r?.student?._id || r?.student) === String(student?._id) &&
+      (String(r?.batch?._id || r?.batch) === String(techBatchId) || r.subject === 'Technical Training')
+    );
+    const techStatus = techRecord ? techRecord.status : (techBatchId ? (attendanceState[`${student._id}_${techBatchId}`] || 'Absent') : (student.technicalBatch ? 'Not Checked In' : 'No Batch'));
+    const techTime = techRecord ? new Date(techRecord.createdAt || techRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+    const techDate = techRecord ? new Date(techRecord.createdAt || techRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+
+    // Aptitude Details
+    const aptiBatchId = getBatchIdByName(student.aptitudeBatch);
+    const aptiRecord = todayRecords?.find(r => 
+      String(r?.student?._id || r?.student) === String(student?._id) &&
+      (String(r?.batch?._id || r?.batch) === String(aptiBatchId) || r.subject === 'Aptitude & Reasoning')
+    );
+    const aptiStatus = aptiRecord ? aptiRecord.status : (aptiBatchId ? (attendanceState[`${student._id}_${aptiBatchId}`] || 'Absent') : (student.aptitudeBatch ? 'Not Checked In' : 'No Batch'));
+    const aptiTime = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+    const aptiDate = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+
+    if (user?.role === 'Communication Trainer') {
+      return {
+        ...baseData,
+        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
+        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+        'Communication Status': commStatus,
+        'Communication Scan Time': commTime,
+        'Communication Scan Date': commDate,
+        'Session Date': attendanceDate,
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    }
+
+    if (user?.role === 'Technical Trainer') {
+      return {
+        ...baseData,
+        'Technical Batch': student.technicalBatch || 'Unassigned',
+        'Technical Trainer': student.technicalTrainer || 'Unassigned',
+        'Technical Status': techStatus,
+        'Technical Scan Time': techTime,
+        'Technical Scan Date': techDate,
+        'Session Date': attendanceDate,
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    }
+
+    if (user?.role === 'Aptitude Trainer') {
+      return {
+        ...baseData,
+        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
+        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
+        'Aptitude Status': aptiStatus,
+        'Aptitude Scan Time': aptiTime,
+        'Aptitude Scan Date': aptiDate,
+        'Session Date': attendanceDate,
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    }
+
+    // Admin / Super Admin (gets all columns)
+    const anyRecord = isGuest ? student.guestRecord : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
+    const overallStatus = anyRecord ? anyRecord.status : (commStatus !== 'Absent' ? commStatus : (techStatus !== 'Absent' ? techStatus : aptiStatus));
+    const overallTime = anyRecord ? new Date(anyRecord.createdAt || anyRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (commTime !== 'N/A' ? commTime : (techTime !== 'N/A' ? techTime : aptiTime));
+
+    return {
+      ...baseData,
+      'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
+      'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+      'Communication Status': commStatus,
+      'Communication Scan Time': commTime,
+      'Communication Scan Date': commDate,
+      'Technical Batch': student.technicalBatch || 'Unassigned',
+      'Technical Trainer': student.technicalTrainer || 'Unassigned',
+      'Technical Status': techStatus,
+      'Technical Scan Time': techTime,
+      'Technical Scan Date': techDate,
+      'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
+      'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
+      'Aptitude Status': aptiStatus,
+      'Aptitude Scan Time': aptiTime,
+      'Aptitude Scan Date': aptiDate,
+      'Overall Status': overallStatus,
+      'Overall Scan Time': overallTime,
+      'Session Date': attendanceDate,
+      'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+    };
+  };
+
   // Excel Exporter for daily attendance logs
   const exportAttendanceToExcel = () => {
     if (filteredAttendanceStudents.length === 0) {
@@ -716,86 +826,7 @@ const TrainerDashboard = () => {
     const selBatchObj = batches.find(b => String(b._id) === String(selectedBatchId) || String(b.name) === String(selectedBatchId));
     const batchLabel = (!selectedBatchId || selectedBatchId === 'all') ? 'All_Batches' : (selBatchObj?.name || 'Selected_Batch');
 
-    const dataToExport = filteredAttendanceStudents.map(student => {
-      const isGuest = student.isGuest;
-
-      // Communication Details
-      const commBatchId = isGuest ? student.guestRecord?.batch?._id : getBatchIdByName(student.communicationBatch);
-      const commRecord = isGuest 
-        ? student.guestRecord 
-        : todayRecords?.find(r => 
-            String(r?.student?._id || r?.student) === String(student?._id) &&
-            (String(r?.batch?._id || r?.batch) === String(commBatchId) || r.subject === 'Communication Skills')
-          );
-      const commStatus = commRecord ? commRecord.status : (commBatchId ? (attendanceState[`${student._id}_${commBatchId}`] || 'Absent') : (student.communicationBatch ? 'Not Checked In' : 'No Batch'));
-      const commTime = commRecord ? new Date(commRecord.createdAt || commRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const commDate = commRecord ? new Date(commRecord.createdAt || commRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-
-      // Technical Details
-      const techBatchId = getBatchIdByName(student.technicalBatch);
-      const techRecord = todayRecords?.find(r => 
-        String(r?.student?._id || r?.student) === String(student?._id) &&
-        (String(r?.batch?._id || r?.batch) === String(techBatchId) || r.subject === 'Technical Training')
-      );
-      const techStatus = techRecord ? techRecord.status : (techBatchId ? (attendanceState[`${student._id}_${techBatchId}`] || 'Absent') : (student.technicalBatch ? 'Not Checked In' : 'No Batch'));
-      const techTime = techRecord ? new Date(techRecord.createdAt || techRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const techDate = techRecord ? new Date(techRecord.createdAt || techRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-
-      // Aptitude Details
-      const aptiBatchId = getBatchIdByName(student.aptitudeBatch);
-      const aptiRecord = todayRecords?.find(r => 
-        String(r?.student?._id || r?.student) === String(student?._id) &&
-        (String(r?.batch?._id || r?.batch) === String(aptiBatchId) || r.subject === 'Aptitude & Reasoning')
-      );
-      const aptiStatus = aptiRecord ? aptiRecord.status : (aptiBatchId ? (attendanceState[`${student._id}_${aptiBatchId}`] || 'Absent') : (student.aptitudeBatch ? 'Not Checked In' : 'No Batch'));
-      const aptiTime = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const aptiDate = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-
-      // Primary Status for trainer role / selected batch
-      let primaryStatus = 'Absent';
-      let primaryTime = 'N/A';
-
-      if (user?.role === 'Communication Trainer') {
-        primaryStatus = commStatus;
-        primaryTime = commTime;
-      } else if (user?.role === 'Technical Trainer') {
-        primaryStatus = techStatus;
-        primaryTime = techTime;
-      } else if (user?.role === 'Aptitude Trainer') {
-        primaryStatus = aptiStatus;
-        primaryTime = aptiTime;
-      } else {
-        const anyRecord = isGuest ? student.guestRecord : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
-        primaryStatus = anyRecord ? anyRecord.status : (commStatus !== 'Absent' ? commStatus : (techStatus !== 'Absent' ? techStatus : aptiStatus));
-        primaryTime = anyRecord ? new Date(anyRecord.createdAt || anyRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (commTime !== 'N/A' ? commTime : (techTime !== 'N/A' ? techTime : aptiTime));
-      }
-
-      return {
-        'SLAEID': student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`,
-        'Student Name': student.name,
-        'Student Email': student.email,
-        'Mobile': student.mobile || 'N/A',
-        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
-        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
-        'Communication Status': commStatus,
-        'Communication Scan Time': commTime,
-        'Communication Scan Date': commDate,
-        'Technical Batch': student.technicalBatch || 'Unassigned',
-        'Technical Trainer': student.technicalTrainer || 'Unassigned',
-        'Technical Status': techStatus,
-        'Technical Scan Time': techTime,
-        'Technical Scan Date': techDate,
-        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
-        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
-        'Aptitude Status': aptiStatus,
-        'Aptitude Scan Time': aptiTime,
-        'Aptitude Scan Date': aptiDate,
-        'Primary Status': primaryStatus,
-        'Primary Scan Time': primaryTime,
-        'Session Date': attendanceDate,
-        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
-      };
-    });
+    const dataToExport = filteredAttendanceStudents.map(student => getExportDataForStudent(student));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
@@ -818,90 +849,11 @@ const TrainerDashboard = () => {
     const selBatchObj = batches.find(b => String(b._id) === String(selectedBatchId) || String(b.name) === String(selectedBatchId));
     const batchLabel = (!selectedBatchId || selectedBatchId === 'all') ? 'All_Batches' : (selBatchObj?.name || 'Selected_Batch');
 
-    const dataToExport = filteredAttendanceStudents.map(student => {
-      const isGuest = student.isGuest;
-
-      // Communication Details
-      const commBatchId = isGuest ? student.guestRecord?.batch?._id : getBatchIdByName(student.communicationBatch);
-      const commRecord = isGuest 
-        ? student.guestRecord 
-        : todayRecords?.find(r => 
-            String(r?.student?._id || r?.student) === String(student?._id) &&
-            (String(r?.batch?._id || r?.batch) === String(commBatchId) || r.subject === 'Communication Skills')
-          );
-      const commStatus = commRecord ? commRecord.status : (commBatchId ? (attendanceState[`${student._id}_${commBatchId}`] || 'Absent') : (student.communicationBatch ? 'Not Checked In' : 'No Batch'));
-      const commTime = commRecord ? new Date(commRecord.createdAt || commRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const commDate = commRecord ? new Date(commRecord.createdAt || commRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-
-      // Technical Details
-      const techBatchId = getBatchIdByName(student.technicalBatch);
-      const techRecord = todayRecords?.find(r => 
-        String(r?.student?._id || r?.student) === String(student?._id) &&
-        (String(r?.batch?._id || r?.batch) === String(techBatchId) || r.subject === 'Technical Training')
-      );
-      const techStatus = techRecord ? techRecord.status : (techBatchId ? (attendanceState[`${student._id}_${techBatchId}`] || 'Absent') : (student.technicalBatch ? 'Not Checked In' : 'No Batch'));
-      const techTime = techRecord ? new Date(techRecord.createdAt || techRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const techDate = techRecord ? new Date(techRecord.createdAt || techRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-
-      // Aptitude Details
-      const aptiBatchId = getBatchIdByName(student.aptitudeBatch);
-      const aptiRecord = todayRecords?.find(r => 
-        String(r?.student?._id || r?.student) === String(student?._id) &&
-        (String(r?.batch?._id || r?.batch) === String(aptiBatchId) || r.subject === 'Aptitude & Reasoning')
-      );
-      const aptiStatus = aptiRecord ? aptiRecord.status : (aptiBatchId ? (attendanceState[`${student._id}_${aptiBatchId}`] || 'Absent') : (student.aptitudeBatch ? 'Not Checked In' : 'No Batch'));
-      const aptiTime = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
-      const aptiDate = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-
-      // Primary Status
-      let primaryStatus = 'Absent';
-      let primaryTime = 'N/A';
-
-      if (user?.role === 'Communication Trainer') {
-        primaryStatus = commStatus;
-        primaryTime = commTime;
-      } else if (user?.role === 'Technical Trainer') {
-        primaryStatus = techStatus;
-        primaryTime = techTime;
-      } else if (user?.role === 'Aptitude Trainer') {
-        primaryStatus = aptiStatus;
-        primaryTime = aptiTime;
-      } else {
-        const anyRecord = isGuest ? student.guestRecord : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
-        primaryStatus = anyRecord ? anyRecord.status : (commStatus !== 'Absent' ? commStatus : (techStatus !== 'Absent' ? techStatus : aptiStatus));
-        primaryTime = anyRecord ? new Date(anyRecord.createdAt || anyRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (commTime !== 'N/A' ? commTime : (techTime !== 'N/A' ? techTime : aptiTime));
-      }
-
-      return {
-        'SLAEID': student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`,
-        'Student Name': student.name,
-        'Student Email': student.email,
-        'Mobile': student.mobile || 'N/A',
-        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
-        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
-        'Communication Status': commStatus,
-        'Communication Scan Time': commTime,
-        'Communication Scan Date': commDate,
-        'Technical Batch': student.technicalBatch || 'Unassigned',
-        'Technical Trainer': student.technicalTrainer || 'Unassigned',
-        'Technical Status': techStatus,
-        'Technical Scan Time': techTime,
-        'Technical Scan Date': techDate,
-        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
-        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
-        'Aptitude Status': aptiStatus,
-        'Aptitude Scan Time': aptiTime,
-        'Aptitude Scan Date': aptiDate,
-        'Primary Status': primaryStatus,
-        'Primary Scan Time': primaryTime,
-        'Session Date': attendanceDate,
-        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
-      };
-    });
+    const dataToExport = filteredAttendanceStudents.map(student => getExportDataForStudent(student));
 
     const headers = Object.keys(dataToExport[0]);
-    const filenameBatch = batchLabel.replace(/[^a-zA-Z0-9_-]/g, '_');
-    downloadCSV(dataToExport, `Attendance_Report_${filenameBatch}_${attendanceDate}.csv`, headers);
+    const cleanBatchLabel = batchLabel.replace(/[^a-zA-Z0-9_-]/g, '_');
+    downloadCSV(dataToExport, `Attendance_Report_${cleanBatchLabel}_${attendanceDate}.csv`, headers);
   };
 
   // CSV Exporter helper
