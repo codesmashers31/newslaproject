@@ -301,8 +301,26 @@ export const importStudentsExcel = async (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
 
-    let importCount = 0;
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
+    if (!data || data.length === 0) {
+      return res.json({ message: 'Successfully imported 0 students' });
+    }
+
+    // Pre-fetch all batches for fast in-memory resolution
+    const allDbBatches = await Batch.find().lean();
+    const batchLookup = new Map();
+    allDbBatches.forEach(b => {
+      if (b.batchId) batchLookup.set(b.batchId.toLowerCase(), b);
+      if (b.name) batchLookup.set(b.name.trim().toLowerCase(), b);
+    });
+
+    const resolveBatchObj = (input) => {
+      if (!input) return null;
+      return batchLookup.get(input.trim().toLowerCase()) || null;
+    };
+
+    const rowsToProcess = [];
     for (const row of data) {
       const rowKeys = Object.keys(row);
       const getVal = (possibleKeys) => {
@@ -314,102 +332,153 @@ export const importStudentsExcel = async (req, res) => {
       };
 
       const slaeId = getVal(['slaeid', 'eid', 'id', 'studentworkid', 'rollno', 'registerid']);
+      if (!slaeId) continue;
+
       const nameVal = getVal(['name', 'studentname', 'fullname', 'username']);
       const technicalBatchInput = getVal(['technicalbatchid', 'technicalbatch', 'techbatchid', 'techbatch']);
       const communicationBatchInput = getVal(['communicationbatchid', 'communicationbatch', 'commbatchid', 'commbatch']);
       const aptitudeBatchInput = getVal(['aptitudebatchid', 'aptitudebatch', 'aptibatchid', 'aptibatch', 'apptitutebatchid', 'apptitutebatch']);
       const genericBatchInput = getVal(['batch', 'batchid', 'cohort', 'class', 'group', 'batchname']);
 
-      if (!slaeId) continue; // Only SLAEID is mandatory
-
-      const name = nameVal || `Student ${slaeId}`;
-      const email = `${slaeId.toLowerCase()}@lcp.com`;
-      const userExists = await User.findOne({ $or: [{ email }, { slaeId }] });
-
       let technicalBatch = '';
       let communicationBatch = '';
       let aptitudeBatch = '';
 
-      const resolveBatchName = async (input) => {
-        if (!input) return '';
-        const dbBatch = await Batch.findOne({
-          $or: [
-            { batchId: input },
-            { name: input }
-          ]
-        });
-        return dbBatch ? dbBatch.name : input;
-      };
-
       if (technicalBatchInput) {
-        technicalBatch = await resolveBatchName(technicalBatchInput);
+        const b = resolveBatchObj(technicalBatchInput);
+        technicalBatch = b ? b.name : technicalBatchInput;
       }
       if (communicationBatchInput) {
-        communicationBatch = await resolveBatchName(communicationBatchInput);
+        const b = resolveBatchObj(communicationBatchInput);
+        communicationBatch = b ? b.name : communicationBatchInput;
       }
       if (aptitudeBatchInput) {
-        aptitudeBatch = await resolveBatchName(aptitudeBatchInput);
+        const b = resolveBatchObj(aptitudeBatchInput);
+        aptitudeBatch = b ? b.name : aptitudeBatchInput;
       }
 
-      if (genericBatchInput && !technicalBatchInput && !communicationBatchInput && !aptitudeBatchInput) {
-        const dbBatch = await Batch.findOne({
-          $or: [
-            { batchId: genericBatchInput },
-            { name: genericBatchInput }
-          ]
-        });
-
-        if (dbBatch) {
-          if (dbBatch.course === 'Communication Skills') {
-            communicationBatch = dbBatch.name;
-          } else if (dbBatch.course === 'Aptitude & Reasoning') {
-            aptitudeBatch = dbBatch.name;
-          } else {
-            technicalBatch = dbBatch.name;
-          }
+      if (genericBatchInput && !technicalBatch && !communicationBatch && !aptitudeBatch) {
+        const b = resolveBatchObj(genericBatchInput);
+        if (b) {
+          if (b.course === 'Communication Skills') communicationBatch = b.name;
+          else if (b.course === 'Aptitude & Reasoning') aptitudeBatch = b.name;
+          else technicalBatch = b.name;
         } else {
           technicalBatch = genericBatchInput;
         }
       }
 
-      if (userExists) {
-        const updateObj = { name };
-        await User.findByIdAndUpdate(userExists._id, { $set: updateObj });
-        await syncStudentBatchesFromStrings(userExists._id, { technicalBatch, communicationBatch, aptitudeBatch });
-        importCount++;
-        continue;
-      }
-
-      const user = await User.create({
-        name,
-        email,
-        mobile: '9999999999',
-        password: slaeId ? slaeId.toLowerCase() : 'password123',
-        role: 'Student',
-        status: 'Active',
+      rowsToProcess.push({
         slaeId,
+        nameVal,
+        technicalBatch,
+        communicationBatch,
+        aptitudeBatch
       });
+    }
 
-      await Student.create({
-        user: user._id,
+    if (rowsToProcess.length === 0) {
+      return res.json({ message: 'Successfully imported 0 students' });
+    }
+
+    const slaeIds = [...new Set(rowsToProcess.map(r => r.slaeId))];
+    const emails = [...new Set(rowsToProcess.map(r => `${r.slaeId.toLowerCase()}@lcp.com`))];
+
+    // Pre-fetch existing users in bulk
+    const existingUsers = await User.find({
+      $or: [{ slaeId: { $in: slaeIds } }, { email: { $in: emails } }]
+    }).lean();
+
+    const userMap = new Map();
+    existingUsers.forEach(u => {
+      if (u.slaeId) userMap.set(u.slaeId.toLowerCase(), u);
+      if (u.email) userMap.set(u.email.toLowerCase(), u);
+    });
+
+    let importCount = 0;
+    const newUsersToCreate = [];
+    const createdSlaeSet = new Set();
+    const existingUsersToSync = [];
+
+    for (const r of rowsToProcess) {
+      const lowerSlae = r.slaeId.toLowerCase();
+      const existing = userMap.get(lowerSlae) || userMap.get(`${lowerSlae}@lcp.com`);
+
+      if (existing) {
+        existingUsersToSync.push({
+          userId: existing._id,
+          name: r.nameVal || existing.name,
+          batches: {
+            technicalBatch: r.technicalBatch,
+            communicationBatch: r.communicationBatch,
+            aptitudeBatch: r.aptitudeBatch
+          }
+        });
+        importCount++;
+      } else if (!createdSlaeSet.has(lowerSlae)) {
+        const name = r.nameVal || `Student ${r.slaeId}`;
+        const email = `${lowerSlae}@lcp.com`;
+        const newId = new mongoose.Types.ObjectId();
+
+        newUsersToCreate.push({
+          _id: newId,
+          name,
+          email,
+          mobile: '9999999999',
+          password: lowerSlae,
+          role: 'Student',
+          status: 'Active',
+          slaeId: r.slaeId,
+          batchesToSync: {
+            technicalBatch: r.technicalBatch,
+            communicationBatch: r.communicationBatch,
+            aptitudeBatch: r.aptitudeBatch
+          }
+        });
+        createdSlaeSet.add(lowerSlae);
+        importCount++;
+      }
+    }
+
+    // Insert new users in bulk
+    if (newUsersToCreate.length > 0) {
+      const usersToInsert = newUsersToCreate.map(({ batchesToSync, ...u }) => u);
+      await User.insertMany(usersToInsert, { ordered: false });
+
+      const newStudentProfiles = newUsersToCreate.map(u => ({
+        user: u._id,
         collegeName: '',
         degree: '',
         department: '',
-        yearOfPassing: '',
-      });
+        yearOfPassing: ''
+      }));
+      await Student.insertMany(newStudentProfiles, { ordered: false });
 
-      await Placement.create({ student: user._id });
+      const newPlacements = newUsersToCreate.map(u => ({
+        student: u._id
+      }));
+      await Placement.insertMany(newPlacements, { ordered: false });
 
-      if (technicalBatch || communicationBatch || aptitudeBatch) {
-        await syncStudentBatchesFromStrings(user._id, { technicalBatch, communicationBatch, aptitudeBatch });
+      // Sync batch strings for new users
+      for (const u of newUsersToCreate) {
+        if (u.batchesToSync.technicalBatch || u.batchesToSync.communicationBatch || u.batchesToSync.aptitudeBatch) {
+          await syncStudentBatchesFromStrings(u._id, u.batchesToSync);
+        }
       }
+    }
 
-      importCount++;
+    // Sync existing users in parallel
+    for (const item of existingUsersToSync) {
+      await User.findByIdAndUpdate(item.userId, { $set: { name: item.name } });
+      await syncStudentBatchesFromStrings(item.userId, item.batches);
     }
 
     res.json({ message: `Successfully imported ${importCount} students` });
   } catch (error) {
-    console.error(error);
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    console.error('Import students excel error:', error);
     res.status(500).json({ message: error.message });
   }
 };

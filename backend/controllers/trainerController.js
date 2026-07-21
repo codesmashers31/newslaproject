@@ -976,6 +976,7 @@ export const bulkImportStudents = async (req, res) => {
 
     const batch = await Batch.findById(id);
     if (!batch) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(404).json({ message: 'Batch not found.' });
     }
 
@@ -985,15 +986,21 @@ export const bulkImportStudents = async (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     const data = xlsx.utils.sheet_to_json(sheet);
 
-    let successCount = 0;
-    let skippedCount = 0;
-    let failedCount = 0;
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+
+    if (!data || data.length === 0) {
+      return res.json({ successCount: 0, skippedCount: 0, failedCount: 0 });
+    }
 
     let dept = 'Technical';
-    if (batch.course.includes('Communication')) dept = 'Communication';
-    if (batch.course.includes('Aptitude')) dept = 'Aptitude';
+    if (batch.course?.includes('Communication')) dept = 'Communication';
+    if (batch.course?.includes('Aptitude')) dept = 'Aptitude';
 
     const trainerId = batch.trainers?.[0] || req.user._id;
+
+    // 1. Extract valid SLAEIDs and row values
+    const rowsToProcess = [];
+    let failedCount = 0;
 
     for (const row of data) {
       const rowKeys = Object.keys(row);
@@ -1005,57 +1012,132 @@ export const bulkImportStudents = async (req, res) => {
         return matchingKey ? String(row[matchingKey]).trim() : '';
       };
 
-      const slaeId = getVal(['eid', 'slaeid', 'id', 'studentworkid']);
+      const slaeId = getVal(['eid', 'slaeid', 'id', 'studentworkid', 'rollno', 'registerid']);
       if (!slaeId) {
         failedCount++;
         continue;
       }
 
       const nameVal = getVal(['name', 'studentname', 'fullname', 'username']);
+      rowsToProcess.push({ slaeId, nameVal });
+    }
 
-      let student = await User.findOne({ slaeId, role: 'Student' });
-      if (!student) {
-        const name = nameVal || `Student ${slaeId}`;
-        const email = `${slaeId.toLowerCase()}@lcp.com`;
-        
-        student = await User.create({
+    if (rowsToProcess.length === 0) {
+      return res.json({ successCount: 0, skippedCount: 0, failedCount });
+    }
+
+    const slaeIds = [...new Set(rowsToProcess.map(r => r.slaeId))];
+
+    // 2. Pre-fetch existing Users in bulk
+    const existingUsers = await User.find({ slaeId: { $in: slaeIds }, role: 'Student' }).lean();
+    const userMap = new Map();
+    existingUsers.forEach(u => userMap.set(u.slaeId.toLowerCase(), u));
+
+    // 3. Create non-existent users in bulk
+    const newUsersToCreate = [];
+    const createdSlaeSet = new Set();
+
+    for (const r of rowsToProcess) {
+      const lowerSlae = r.slaeId.toLowerCase();
+      if (!userMap.has(lowerSlae) && !createdSlaeSet.has(lowerSlae)) {
+        const name = r.nameVal || `Student ${r.slaeId}`;
+        const email = `${lowerSlae}@lcp.com`;
+        const newId = new mongoose.Types.ObjectId();
+
+        newUsersToCreate.push({
+          _id: newId,
           name,
           email,
           mobile: '9999999999',
-          password: slaeId.toLowerCase(),
+          password: lowerSlae,
           role: 'Student',
           status: 'Active',
-          slaeId,
+          slaeId: r.slaeId,
+        });
+        createdSlaeSet.add(lowerSlae);
+      }
+    }
+
+    if (newUsersToCreate.length > 0) {
+      await User.insertMany(newUsersToCreate, { ordered: false });
+
+      const newStudentProfiles = newUsersToCreate.map(u => ({
+        user: u._id,
+        collegeName: '',
+        degree: '',
+        department: '',
+        yearOfPassing: '',
+      }));
+      await Student.insertMany(newStudentProfiles, { ordered: false });
+
+      const newPlacements = newUsersToCreate.map(u => ({
+        student: u._id,
+      }));
+      await Placement.insertMany(newPlacements, { ordered: false });
+
+      newUsersToCreate.forEach(u => userMap.set(u.slaeId.toLowerCase(), u));
+    }
+
+    // 4. Pre-fetch existing active enrollments in bulk
+    const allUserIds = Array.from(userMap.values()).map(u => u._id);
+    const existingEnrollments = await Enrollment.find({
+      studentId: { $in: allUserIds },
+      status: 'Active'
+    }).lean();
+
+    const enrollmentSet = new Set(
+      existingEnrollments.map(e => `${e.studentId.toString()}_${e.batchId.toString()}`)
+    );
+
+    // If Communication or Aptitude, update old active domain enrollments in bulk
+    if (dept === 'Communication' || dept === 'Aptitude') {
+      const activeDomainEnrollmentsToComplete = existingEnrollments.filter(
+        e => e.department === dept && e.batchId.toString() !== id.toString()
+      );
+
+      if (activeDomainEnrollmentsToComplete.length > 0) {
+        const idsToComplete = activeDomainEnrollmentsToComplete.map(e => e._id);
+        await Enrollment.updateMany(
+          { _id: { $in: idsToComplete } },
+          { $set: { status: 'Completed', completedAt: new Date() } }
+        );
+
+        // Batch pull student IDs from previous domain batches in bulk
+        const prevBatchGroup = {};
+        activeDomainEnrollmentsToComplete.forEach(e => {
+          const bId = e.batchId.toString();
+          if (!prevBatchGroup[bId]) prevBatchGroup[bId] = [];
+          prevBatchGroup[bId].push(e.studentId);
         });
 
-        await Student.create({
-          user: student._id,
-          collegeName: '',
-          degree: '',
-          department: '',
-          yearOfPassing: '',
-        });
+        for (const [prevBatchId, stuIds] of Object.entries(prevBatchGroup)) {
+          await Batch.findByIdAndUpdate(prevBatchId, { $pull: { students: { $in: stuIds } } });
+        }
+      }
+    }
 
-        await Placement.create({ student: student._id });
+    // 5. Prepare new enrollments & batch addition in bulk
+    let successCount = 0;
+    let skippedCount = 0;
+    const newEnrollmentsToInsert = [];
+    const studentIdsToAddToCurrentBatch = new Set();
+    const processedPairs = new Set();
+
+    for (const r of rowsToProcess) {
+      const student = userMap.get(r.slaeId.toLowerCase());
+      if (!student) {
+        failedCount++;
+        continue;
       }
 
-      const existing = await Enrollment.findOne({ studentId: student._id, batchId: id, status: 'Active' });
-      if (existing) {
+      const pairKey = `${student._id.toString()}_${id}`;
+      if (enrollmentSet.has(pairKey) || processedPairs.has(pairKey)) {
         skippedCount++;
         continue;
       }
 
-      if (dept === 'Communication' || dept === 'Aptitude') {
-        const activeEnroll = await Enrollment.findOne({ studentId: student._id, department: dept, status: 'Active' });
-        if (activeEnroll) {
-          activeEnroll.status = 'Completed';
-          activeEnroll.completedAt = new Date();
-          await activeEnroll.save();
-          await Batch.findByIdAndUpdate(activeEnroll.batchId, { $pull: { students: student._id } });
-        }
-      }
-
-      await Enrollment.create({
+      processedPairs.add(pairKey);
+      newEnrollmentsToInsert.push({
         studentId: student._id,
         batchId: id,
         trainerId,
@@ -1065,12 +1147,23 @@ export const bulkImportStudents = async (req, res) => {
         enrolledAt: new Date()
       });
 
-      await Batch.findByIdAndUpdate(id, { $addToSet: { students: student._id } });
+      studentIdsToAddToCurrentBatch.add(student._id);
       successCount++;
+    }
+
+    if (newEnrollmentsToInsert.length > 0) {
+      await Enrollment.insertMany(newEnrollmentsToInsert, { ordered: false });
+      await Batch.findByIdAndUpdate(id, {
+        $addToSet: { students: { $each: Array.from(studentIdsToAddToCurrentBatch) } }
+      });
     }
 
     res.json({ successCount, skippedCount, failedCount });
   } catch (error) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    console.error('Bulk import error:', error);
     res.status(500).json({ message: error.message });
   }
 };
