@@ -10,7 +10,7 @@ const QRClassSession = () => {
   
   const [activeSession, setActiveSession] = useState(null);
   const [qrToken, setQrToken] = useState('');
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(6);
   const [loading, setLoading] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
 
@@ -51,7 +51,7 @@ const QRClassSession = () => {
     try {
       const { data } = await API.get(`/trainer/session/${sessionId}/qr`);
       setQrToken(data.token);
-      setCountdown(15); // Reset 15 seconds countdown
+      setCountdown(6); // Reset 6 seconds countdown
     } catch (error) {
       console.error('Error loading QR code', error);
       toast.error('Failed to rotate QR token');
@@ -68,7 +68,7 @@ const QRClassSession = () => {
           if (prev <= 1) {
             // Trigger token refresh
             fetchQRToken(activeSession._id);
-            return 15;
+            return 6;
           }
           return prev - 1;
         });
@@ -260,7 +260,7 @@ const QRClassSession = () => {
               </div>
 
               {/* Compact, Neat QR Container */}
-              <div className="relative p-5 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-inner w-full max-w-[340px] mx-auto flex items-center justify-center">
+              <div className="relative p-5 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-inner w-full max-w-[420px] mx-auto flex items-center justify-center">
                 {qrLoading && (
                   <div className="absolute inset-0 bg-white/85 dark:bg-[#0c0d12]/92 flex items-center justify-center rounded-3xl z-10">
                     <RefreshCw className="h-8 w-8 text-violet-800 dark:text-violet-400 animate-spin" />
@@ -270,17 +270,17 @@ const QRClassSession = () => {
                   <img 
                     src={qrImageUrl} 
                     alt="Rotating Class QR Code" 
-                    className="w-64 h-64 sm:w-72 sm:h-72 select-none rounded-xl object-contain"
+                    className="w-72 h-72 sm:w-[360px] sm:h-[360px] select-none rounded-xl object-contain"
                   />
                 ) : (
-                  <div className="w-64 h-64 sm:w-72 sm:h-72 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold">
+                  <div className="w-72 h-72 sm:w-[360px] sm:h-[360px] bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold">
                     Initializing token...
                   </div>
                 )}
               </div>
 
               {/* Rotating Timer Bar */}
-              <div className="mt-5 w-full max-w-[340px] mx-auto">
+              <div className="mt-5 w-full max-w-[420px] mx-auto">
                 <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5">
                   <span>Rotating Security Token</span>
                   <span className="font-extrabold text-violet-600 dark:text-violet-400">{countdown}s remaining</span>
@@ -288,12 +288,12 @@ const QRClassSession = () => {
                 <div className="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
                   <div
                     className="bg-[#4648d4] h-full transition-all duration-1000 ease-linear rounded-full"
-                    style={{ width: `${(countdown / 15) * 100}%` }}
+                    style={{ width: `${(countdown / 6) * 100}%` }}
                   ></div>
                 </div>
               </div>
 
-              <div className="mt-5 flex items-center gap-2 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-3.5 py-2.5 rounded-xl border border-rose-200/60 dark:border-rose-900/30 w-full max-w-[340px] mx-auto justify-center">
+              <div className="mt-5 flex items-center gap-2 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-3.5 py-2.5 rounded-xl border border-rose-200/60 dark:border-rose-900/30 w-full max-w-[420px] mx-auto justify-center">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
                 <span>Shared screenshots expire in 15s.</span>
               </div>
