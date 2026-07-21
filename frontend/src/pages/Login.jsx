@@ -161,7 +161,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="student@lcp.edu"
-                    className="flex-1 h-full border-0 bg-transparent px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-0"
+                    className="field-bare flex-1 h-full px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8]"
                   />
                 </div>
               </div>
@@ -176,7 +176,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••"
-                    className="flex-1 h-full border-0 bg-transparent px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-0"
+                    className="field-bare flex-1 h-full px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8]"
                   />
                   <button
                     type="button"
