@@ -89,14 +89,18 @@ export const authUser = async (req, res) => {
 
   try {
     const trimmedInput = email ? email.trim() : '';
+    const cleanDigits = trimmedInput.replace(/^SLA-?/i, '');
 
-    // 1. Try to find user by email or slaeId (EID)
+    // 1. Try to find user by email or slaeId (EID) with prefix flexibility
     let user = await User.findOne({
       $or: [
         { email: trimmedInput.toLowerCase() },
         { slaeId: trimmedInput },
         { slaeId: trimmedInput.toUpperCase() },
-        { slaeId: trimmedInput.toLowerCase() }
+        { slaeId: trimmedInput.toLowerCase() },
+        { slaeId: cleanDigits },
+        { slaeId: `SLA${cleanDigits}` },
+        { slaeId: `SLA-${cleanDigits}` }
       ]
     });
 
@@ -140,6 +144,13 @@ export const authUser = async (req, res) => {
       
       if (!passwordMatches) {
         passwordMatches = await user.matchPassword(password.toUpperCase());
+      }
+
+      if (!passwordMatches && user.slaeId) {
+        const cleanSla = user.slaeId.replace(/^SLA-?/i, '');
+        passwordMatches = (await user.matchPassword(cleanSla)) ||
+                          (await user.matchPassword(`sla${cleanSla}`)) ||
+                          (await user.matchPassword(`SLA${cleanSla}`));
       }
     }
 
