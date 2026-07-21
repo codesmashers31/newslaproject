@@ -66,10 +66,59 @@ const QRScanner = () => {
     }
   };
 
+  const [displayZoom, setDisplayZoom] = useState(1.0);
+  const [torch, setTorch] = useState(false);
+
+  // Apply zoom to WebRTC track and CSS video transform
+  useEffect(() => {
+    if (!cameraActive) return;
+    const videoEl = document.querySelector('#reader video');
+    if (videoEl) {
+      videoEl.style.transform = `scale(${displayZoom})`;
+      videoEl.style.transformOrigin = 'center center';
+      videoEl.style.transition = 'transform 0.15s ease-out';
+
+      if (videoEl.srcObject) {
+        try {
+          const track = videoEl.srcObject.getVideoTracks()[0];
+          if (track && track.getCapabilities) {
+            const capabilities = track.getCapabilities();
+            if (capabilities.zoom) {
+              const minZ = capabilities.zoom.min || 1;
+              const maxZ = capabilities.zoom.max || 10;
+              const hwZoom = minZ + ((displayZoom - 1) / 29) * (maxZ - minZ);
+              track.applyConstraints({ advanced: [{ zoom: hwZoom }] }).catch(() => {});
+            }
+          }
+        } catch (e) {
+          // Fallback handled by CSS scale
+        }
+      }
+    }
+  }, [displayZoom, cameraActive]);
+
+  // Toggle Torch on WebRTC video track if supported
+  const toggleTorch = async () => {
+    const nextTorch = !torch;
+    setTorch(nextTorch);
+    const videoEl = document.querySelector('#reader video');
+    if (videoEl && videoEl.srcObject) {
+      try {
+        const track = videoEl.srcObject.getVideoTracks()[0];
+        if (track) {
+          await track.applyConstraints({ advanced: [{ torch: nextTorch }] });
+        }
+      } catch (err) {
+        console.log('Torch not supported on this device/browser:', err);
+      }
+    }
+  };
+
   const startScanning = async () => {
     setCameraPermissionError(null);
     setScanResult(null);
     setCameraActive(true);
+    setDisplayZoom(1.0);
 
     // Wait a brief tick for the container to render
     setTimeout(async () => {
@@ -80,8 +129,8 @@ const QRScanner = () => {
         await html5Qrcode.start(
           { facingMode: 'environment' }, // Target back camera
           {
-            fps: 10,
-            qrbox: { width: 220, height: 220 }
+            fps: 15,
+            qrbox: { width: 240, height: 240 }
           },
           (decodedText) => {
             toast.success('QR Code detected!');
@@ -143,7 +192,7 @@ const QRScanner = () => {
         : 'Camera idle';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 select-none">
       {/* Header — mirrors the mobile scanner header */}
       <Card className="p-5">
         <CardHeader
@@ -160,13 +209,13 @@ const QRScanner = () => {
             <div id="reader" className="w-full h-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full" />
 
             {/* Corner brackets */}
-            <span className="pointer-events-none absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg" />
-            <span className="pointer-events-none absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg" />
-            <span className="pointer-events-none absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg" />
-            <span className="pointer-events-none absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#7C3AED] rounded-br-lg" />
+            <span className="pointer-events-none absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg z-10" />
+            <span className="pointer-events-none absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg z-10" />
+            <span className="pointer-events-none absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg z-10" />
+            <span className="pointer-events-none absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#7C3AED] rounded-br-lg z-10" />
 
             {/* Sweep line */}
-            <span className="pointer-events-none scanning-line left-0" />
+            <span className="pointer-events-none scanning-line left-0 z-10" />
           </div>
         ) : (
           <div className="w-80 h-80 m-card rounded-[32px] flex items-center justify-center p-6 text-center">
@@ -226,6 +275,52 @@ const QRScanner = () => {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* 30X Ultra-Zoom Controls */}
+        {cameraActive && !scanResult && !loading && (
+          <div className="w-full max-w-[320px] mt-4 space-y-2.5">
+            <div className="flex items-center justify-between bg-white dark:bg-[#12131a] border border-[#E2E8F0] dark:border-slate-800 px-4 py-2 rounded-2xl shadow-sm">
+              <button
+                type="button"
+                onClick={() => setDisplayZoom(prev => Math.max(1.0, parseFloat((prev - (prev > 10 ? 2 : 1)).toFixed(1))))}
+                className="w-10 h-10 bg-indigo-50 dark:bg-violet-950/40 border border-indigo-100 dark:border-violet-800 rounded-xl flex items-center justify-center text-[#7C3AED] dark:text-violet-300 font-black text-xl hover:bg-indigo-100 cursor-pointer active:scale-95 transition-all"
+              >
+                -
+              </button>
+
+              <div className="text-center">
+                <span className="block text-[10px] font-black text-[#64748B] dark:text-slate-400 uppercase tracking-wider">Ultra Zoom</span>
+                <span className="block text-base font-black text-[#7C3AED] dark:text-violet-400 mt-0.5">{displayZoom.toFixed(1)}x</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDisplayZoom(prev => Math.min(30.0, parseFloat((prev + (prev >= 10 ? 2 : 1)).toFixed(1))))}
+                className="w-10 h-10 bg-indigo-50 dark:bg-violet-950/40 border border-indigo-100 dark:border-violet-800 rounded-xl flex items-center justify-center text-[#7C3AED] dark:text-violet-300 font-black text-xl hover:bg-indigo-100 cursor-pointer active:scale-95 transition-all"
+              >
+                +
+              </button>
+            </div>
+
+            {/* Quick Presets: 1x, 2x, 5x, 10x, 15x, 30x */}
+            <div className="flex justify-between gap-1.5">
+              {[1, 2, 5, 10, 15, 30].map(zVal => (
+                <button
+                  key={zVal}
+                  type="button"
+                  onClick={() => setDisplayZoom(zVal)}
+                  className={`flex-1 py-2 rounded-xl border text-[11px] font-black transition-all cursor-pointer ${
+                    Math.abs(displayZoom - zVal) < 0.5
+                      ? 'bg-[#7C3AED] border-[#7C3AED] text-white shadow-sm'
+                      : 'bg-white dark:bg-[#12131a] border-[#E2E8F0] dark:border-slate-800 text-[#64748B] dark:text-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {zVal}x
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
