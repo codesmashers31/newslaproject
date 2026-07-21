@@ -757,6 +757,61 @@ const TrainerDashboard = () => {
     const aptiTime = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
     const aptiDate = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
 
+    // 1. Aptitude Trainer Export Columns
+    if (user?.role === 'Aptitude Trainer') {
+      return {
+        ...baseData,
+        'Technical Batch': student.technicalBatch || 'Unassigned',
+        'Technical Trainer': student.technicalTrainer || 'Unassigned',
+        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
+        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
+        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
+        'Aptitude Status': aptiStatus,
+        'Aptitude Scan Time': aptiTime,
+        'Aptitude Scan Date': aptiDate,
+        'Session Date': attendanceDate,
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    }
+
+    // 2. Communication Trainer Export Columns
+    if (user?.role === 'Communication Trainer') {
+      return {
+        ...baseData,
+        'Technical Batch': student.technicalBatch || 'Unassigned',
+        'Technical Trainer': student.technicalTrainer || 'Unassigned',
+        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
+        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+        'Communication Status': commStatus,
+        'Communication Scan Time': commTime,
+        'Communication Scan Date': commDate,
+        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
+        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
+        'Session Date': attendanceDate,
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    }
+
+    // 3. Technical Trainer Export Columns
+    if (user?.role === 'Technical Trainer') {
+      return {
+        ...baseData,
+        'Technical Batch': student.technicalBatch || 'Unassigned',
+        'Technical Trainer': student.technicalTrainer || 'Unassigned',
+        'Technical Status': techStatus,
+        'Technical Scan Time': techTime,
+        'Technical Scan Date': techDate,
+        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
+        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
+        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
+        'Session Date': attendanceDate,
+        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
+      };
+    }
+
+    // 4. Admin / Super Admin (Gets all columns)
     const anyRecord = isGuest ? student.guestRecord : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
     const overallStatus = anyRecord ? anyRecord.status : (commStatus !== 'Absent' ? commStatus : (techStatus !== 'Absent' ? techStatus : aptiStatus));
     const overallTime = anyRecord ? new Date(anyRecord.createdAt || anyRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (commTime !== 'N/A' ? commTime : (techTime !== 'N/A' ? techTime : aptiTime));
