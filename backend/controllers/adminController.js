@@ -399,6 +399,7 @@ export const importStudentsExcel = async (req, res) => {
     const newUsersToCreate = [];
     const createdSlaeSet = new Set();
     const existingUsersToSync = [];
+    const salt = await bcrypt.genSalt(10);
 
     for (const r of rowsToProcess) {
       const lowerSlae = r.slaeId.toLowerCase();
@@ -419,13 +420,14 @@ export const importStudentsExcel = async (req, res) => {
         const name = r.nameVal || `Student ${r.slaeId}`;
         const email = `${lowerSlae}@lcp.com`;
         const newId = new mongoose.Types.ObjectId();
+        const hashedPassword = await bcrypt.hash(lowerSlae, salt);
 
         newUsersToCreate.push({
           _id: newId,
           name,
           email,
           mobile: '9999999999',
-          password: lowerSlae,
+          password: hashedPassword,
           role: 'Student',
           status: 'Active',
           slaeId: r.slaeId,

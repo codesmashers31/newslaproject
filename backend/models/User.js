@@ -100,9 +100,33 @@ userSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Compare password
+// Compare password with plaintext fallback for bulk-imported accounts
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (!this.password || typeof this.password !== 'string') return false;
+
+  // Handle plain text passwords (e.g. from bulk import)
+  if (!this.password.startsWith('$2')) {
+    const isExact = enteredPassword === this.password;
+    const isCaseInsensitive = enteredPassword.toLowerCase() === this.password.toLowerCase();
+    if (isExact || isCaseInsensitive) {
+      // Auto-upgrade plain text password to bcrypt hash
+      try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(enteredPassword, salt);
+        await this.save();
+      } catch (err) {
+        console.error('Password hash upgrade error:', err);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  try {
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (error) {
+    return false;
+  }
 };
 
 const User = mongoose.model('User', userSchema);
