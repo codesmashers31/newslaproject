@@ -5,7 +5,6 @@ import {
   AlertCircle,
   CheckCircle2,
   RefreshCw,
-  Key,
   BookOpen,
   Video,
   VideoOff
@@ -18,10 +17,9 @@ import { Card, CardHeader, SectionLabel, Pill, PRIMARY } from '../../components/
  * Web counterpart of mobile/src/app/(tabs)/scanner.tsx.
  * Same layout: framed camera viewport, status pill, active-session card and
  * today's check-in pills. The camera itself is html5-qrcode rather than
- * expo-camera, and the pasted-token fallback is web-only.
+ * expo-camera.
  */
 const QRScanner = () => {
-  const [tokenInput, setTokenInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -68,11 +66,6 @@ const QRScanner = () => {
     }
   };
 
-  const handleMockSubmit = (e) => {
-    e.preventDefault();
-    handleMarkAttendance(tokenInput);
-  };
-
   const startScanning = async () => {
     setCameraPermissionError(null);
     setScanResult(null);
@@ -102,7 +95,7 @@ const QRScanner = () => {
       } catch (err) {
         console.error('Camera startup error:', err);
         setCameraPermissionError(
-          'Could not access camera. Ensure you have granted camera permissions or paste the token below.'
+          'Could not access camera. Please grant camera permission and try again.'
         );
         setCameraActive(false);
       }
@@ -293,34 +286,6 @@ const QRScanner = () => {
         <Pill tone="warning" icon={AlertCircle}>No check-ins logged today</Pill>
       )}
 
-      {/* Web-only fallback: paste the rotating token directly */}
-      <Card className="p-5 space-y-4">
-        <SectionLabel>Paste token manually</SectionLabel>
-        <form onSubmit={handleMockSubmit} className="space-y-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Paste the session token from the trainer's screen..."
-              value={tokenInput}
-              onChange={(e) => setTokenInput(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E2E8F0] dark:border-[#1e2330] bg-transparent text-sm font-mono"
-              required
-            />
-            <Key className="absolute left-3.5 top-3.5 text-slate-400 w-4 h-4" />
-          </div>
-
-          <button type="submit" disabled={loading} className="m-btn-primary">
-            {loading ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Marking Attendance...
-              </>
-            ) : (
-              'Submit Scan Code'
-            )}
-          </button>
-        </form>
-      </Card>
     </div>
   );
 };
