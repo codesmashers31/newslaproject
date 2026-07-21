@@ -956,18 +956,15 @@ export const updateStudentEnrollments = async (req, res) => {
     const studentUser = await User.findById(studentId);
     if (!studentUser) return res.status(404).json({ message: 'User not found' });
     
-    // Check per-domain lock
-    const isTechAlreadyLocked = studentUser.isTechnicalLocked || studentUser.isBatchesLocked;
-    const isAptiAlreadyLocked = studentUser.isAptitudeLocked || studentUser.isBatchesLocked;
+    // Check per-domain lock strictly independently
+    const isTechAlreadyLocked = !!studentUser.isTechnicalLocked;
+    const isAptiAlreadyLocked = !!studentUser.isAptitudeLocked;
 
     if (targetDomain === 'Technical' && isTechAlreadyLocked) {
       return res.status(403).json({ message: 'Your Technical batch selection is permanently locked.' });
     }
     if (targetDomain === 'Aptitude' && isAptiAlreadyLocked) {
       return res.status(403).json({ message: 'Your Aptitude batch selection is permanently locked.' });
-    }
-    if (!targetDomain && studentUser.isBatchesLocked) {
-      return res.status(403).json({ message: 'Your batch selections are permanently locked.' });
     }
 
     // 1. Technical Batches (Multi-Select)

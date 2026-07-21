@@ -49,13 +49,15 @@ export default function TrainingScreen() {
   const [techSearchQuery, setTechSearchQuery] = useState('');
   const [aptiSearchQuery, setAptiSearchQuery] = useState('');
   
-  // Lock States
+  // Lock States (Strictly Independent)
   const [isTechLocked, setIsTechLocked] = useState(false);
   const [isAptiLocked, setIsAptiLocked] = useState(false);
 
-  // Saving States
-  const [savingTech, setSavingTech] = useState(false);
-  const [savingApti, setSavingApti] = useState(false);
+  // Separate Loading States
+  const [savingTechTemp, setSavingTechTemp] = useState(false);
+  const [lockingTech, setLockingTech] = useState(false);
+  const [savingAptiTemp, setSavingAptiTemp] = useState(false);
+  const [lockingApti, setLockingApti] = useState(false);
 
   const loadData = async () => {
     try {
@@ -69,9 +71,8 @@ export default function TrainingScreen() {
       setAvailableBatches(batchRes.data || []);
 
       const uObj = dashRes.data?.user || dashRes.data?.profile?.user || {};
-      const globalLocked = uObj.isBatchesLocked || false;
-      setIsTechLocked(globalLocked || !!uObj.isTechnicalLocked);
-      setIsAptiLocked(globalLocked || !!uObj.isAptitudeLocked);
+      setIsTechLocked(!!uObj.isTechnicalLocked);
+      setIsAptiLocked(!!uObj.isAptitudeLocked);
       
       // Initialize selected tech ids
       const tech = myBatches.filter((b: any) => b.course?.includes('Technical'));
@@ -100,9 +101,13 @@ export default function TrainingScreen() {
     loadData();
   };
 
-  // Technical Save / Lock Handler
+  // Technical Save Temp / Lock Handlers
   const handleSaveTech = async (isPermanent = false) => {
-    setSavingTech(true);
+    if (isPermanent) {
+      setLockingTech(true);
+    } else {
+      setSavingTechTemp(true);
+    }
     try {
       await API.post('/student/enrollments', {
         technicalBatchIds: selectedTechIds,
@@ -121,7 +126,8 @@ export default function TrainingScreen() {
       const msg = error?.response?.data?.message || 'Failed to update technical batches';
       Toast.show({ type: 'error', text1: 'Error', text2: msg });
     } finally {
-      setSavingTech(false);
+      setSavingTechTemp(false);
+      setLockingTech(false);
     }
   };
 
@@ -136,9 +142,13 @@ export default function TrainingScreen() {
     );
   };
 
-  // Aptitude Save / Lock Handler
+  // Aptitude Save Temp / Lock Handlers
   const handleSaveApti = async (isPermanent = false) => {
-    setSavingApti(true);
+    if (isPermanent) {
+      setLockingApti(true);
+    } else {
+      setSavingAptiTemp(true);
+    }
     try {
       await API.post('/student/enrollments', {
         aptitudeBatchId: selectedAptiId,
@@ -157,7 +167,8 @@ export default function TrainingScreen() {
       const msg = error?.response?.data?.message || 'Failed to update aptitude batch';
       Toast.show({ type: 'error', text1: 'Error', text2: msg });
     } finally {
-      setSavingApti(false);
+      setSavingAptiTemp(false);
+      setLockingApti(false);
     }
   };
 
@@ -383,11 +394,11 @@ export default function TrainingScreen() {
               })}
             </ScrollView>
             <View className="flex-row gap-4 mt-4">
-              <TouchableOpacity onPress={() => handleSaveTech(false)} disabled={savingTech || isTechLocked} className="flex-1 bg-[#EEF2F6] py-3 rounded-xl items-center disabled:opacity-50">
-                {savingTech ? <ActivityIndicator size="small" color="#0F172A" /> : <Text className="text-[#0F172A] text-xs font-bold">Save Temp</Text>}
+              <TouchableOpacity onPress={() => handleSaveTech(false)} disabled={savingTechTemp || lockingTech || isTechLocked} className="flex-1 bg-[#EEF2F6] py-3 rounded-xl items-center disabled:opacity-50">
+                {savingTechTemp ? <ActivityIndicator size="small" color="#0F172A" /> : <Text className="text-[#0F172A] text-xs font-bold">Save Temp</Text>}
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleLockTech} disabled={savingTech || isTechLocked} className="flex-1 bg-[#4F46E5] py-3 rounded-xl items-center flex-row justify-center disabled:opacity-50">
-                {savingTech ? <ActivityIndicator size="small" color="#fff" /> : (
+              <TouchableOpacity onPress={handleLockTech} disabled={savingTechTemp || lockingTech || isTechLocked} className="flex-1 bg-[#4F46E5] py-3 rounded-xl items-center flex-row justify-center disabled:opacity-50">
+                {lockingTech ? <ActivityIndicator size="small" color="#fff" /> : (
                   <>
                     <Lock size={14} color="#fff" />
                     <Text className="text-white text-xs font-black ml-1.5">{isTechLocked ? 'Locked' : 'Lock Selection'}</Text>
@@ -446,11 +457,11 @@ export default function TrainingScreen() {
               })}
             </ScrollView>
             <View className="flex-row gap-4 mt-4">
-              <TouchableOpacity onPress={() => handleSaveApti(false)} disabled={savingApti || isAptiLocked} className="flex-1 bg-[#EEF2F6] py-3 rounded-xl items-center disabled:opacity-50">
-                {savingApti ? <ActivityIndicator size="small" color="#0F172A" /> : <Text className="text-[#0F172A] text-xs font-bold">Save Temp</Text>}
+              <TouchableOpacity onPress={() => handleSaveApti(false)} disabled={savingAptiTemp || lockingApti || isAptiLocked} className="flex-1 bg-[#EEF2F6] py-3 rounded-xl items-center disabled:opacity-50">
+                {savingAptiTemp ? <ActivityIndicator size="small" color="#0F172A" /> : <Text className="text-[#0F172A] text-xs font-bold">Save Temp</Text>}
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleLockApti} disabled={savingApti || isAptiLocked} className="flex-1 bg-[#4F46E5] py-3 rounded-xl items-center flex-row justify-center disabled:opacity-50">
-                {savingApti ? <ActivityIndicator size="small" color="#fff" /> : (
+              <TouchableOpacity onPress={handleLockApti} disabled={savingAptiTemp || lockingApti || isAptiLocked} className="flex-1 bg-[#4F46E5] py-3 rounded-xl items-center flex-row justify-center disabled:opacity-50">
+                {lockingApti ? <ActivityIndicator size="small" color="#fff" /> : (
                   <>
                     <Lock size={14} color="#fff" />
                     <Text className="text-white text-xs font-black ml-1.5">{isAptiLocked ? 'Locked' : 'Lock Selection'}</Text>
