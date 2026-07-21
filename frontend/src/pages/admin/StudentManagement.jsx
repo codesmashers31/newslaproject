@@ -9,6 +9,7 @@ import {
   Trash2, 
   Edit2, 
   Eye, 
+  EyeOff,
   Upload, 
   FileDown, 
   FileSpreadsheet, 
@@ -78,6 +79,7 @@ const StudentManagement = () => {
     communicationBatch: '',
     aptitudeBatch: '',
   });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [editFormData, setEditFormData] = useState({
     id: '',
@@ -760,14 +762,23 @@ const StudentManagement = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider block mb-1.5">Initial Password</label>
-                    <input
-                      type="password"
-                      required
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
-                      placeholder="password123"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPasswordModal ? 'text' : 'password'}
+                        required
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800"
+                        placeholder="password123"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswordModal(!showPasswordModal)}
+                        className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none cursor-pointer"
+                      >
+                        {showPasswordModal ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Technical Training Batch */}

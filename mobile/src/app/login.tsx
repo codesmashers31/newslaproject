@@ -20,6 +20,8 @@ import {
   Mail,
   Lock,
   ArrowRight,
+  Eye,
+  EyeOff,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -41,6 +43,7 @@ export default function LoginScreen() {
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Blocked device details
@@ -192,7 +195,7 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              {/* Password Input Field with Icon */}
+              {/* Password Input Field with Icon & Eye Toggle */}
               <View className="mb-2">
                 <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14">
                   <Lock size={20} color="#94A3B8" style={{ marginRight: 12 }} />
@@ -202,9 +205,20 @@ export default function LoginScreen() {
                     placeholderTextColor="#94A3B8"
                     value={password}
                     onChangeText={setPassword}
-                    secureTextEntry={true}
+                    secureTextEntry={!showPassword}
                     autoCapitalize="none"
                   />
+                  <TouchableOpacity 
+                    onPress={() => setShowPassword(!showPassword)}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    className="p-1"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} color="#94A3B8" />
+                    ) : (
+                      <Eye size={20} color="#94A3B8" />
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
 
