@@ -170,9 +170,8 @@ const DashboardLayout = ({ children }) => {
         makeLink('/trainer/session', <Camera size={17} />, 'Smart Attendance QR'),
       ]);
     } else if (user?.role === 'Student') {
-      // Mirrors the mobile tab bar (mobile/src/app/(tabs)/_layout.tsx): same
-      // order, labels and icons, so the two apps navigate identically.
-      // AI Planner and Leaderboard are web-only and trail the shared items.
+      // Mirrors the mobile tab bar (mobile/src/app/(tabs)/_layout.tsx) exactly:
+      // same order, labels and icons, so the two apps navigate identically.
       return renderSection('Student Hub', [
         makeLink('/student', <Home size={17} />, 'Home'),
         makeLink('/student/training', <BookOpen size={17} />, 'Training'),
@@ -180,8 +179,6 @@ const DashboardLayout = ({ children }) => {
         makeLink('/student/scorecards', <FileText size={17} />, 'Scorecard'),
         makeLink('/student/placement', <Briefcase size={17} />, 'Career'),
         makeLink('/student/profile', <User size={17} />, 'Profile'),
-        makeLink('/student/ai-roadmap', <Sparkles size={17} />, 'AI Study Planner'),
-        makeLink('/student/leaderboard', <Trophy size={17} />, 'Leaderboard'),
       ]);
     }
     return null;

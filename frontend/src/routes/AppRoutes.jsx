@@ -33,10 +33,8 @@ import StudentProfile from '../pages/student/StudentProfile';
 import QRClassSession from '../pages/trainer/QRClassSession';
 import QRScanner from '../pages/student/QRScanner';
 import PlacementReadiness from '../pages/student/PlacementReadiness';
-import Leaderboards from '../pages/Leaderboards';
 import StudentScorecards from '../pages/student/StudentScorecards';
 import StudentTrainingPage from '../pages/student/StudentTrainingPage';
-import AIRoadmap from '../pages/student/AIRoadmap';
 import UserProfile from '../pages/common/UserProfile';
 
 const AppRoutes = () => {
@@ -271,29 +269,13 @@ const AppRoutes = () => {
             </DashboardLayout>
           } 
         />
-        <Route 
-          path="/student/leaderboard" 
-          element={
-            <DashboardLayout>
-              <Leaderboards />
-            </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/student/scorecards" 
+        <Route
+          path="/student/scorecards"
           element={
             <DashboardLayout>
               <StudentScorecards />
             </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/student/ai-roadmap" 
-          element={
-            <DashboardLayout>
-              <AIRoadmap />
-            </DashboardLayout>
-          } 
+          }
         />
       </Route>
 

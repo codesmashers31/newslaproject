@@ -1,19 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import API from '../../services/api';
-import { Camera, AlertCircle, CheckCircle, RefreshCw, Key, Info, Video, VideoOff } from 'lucide-react';
+import {
+  Camera,
+  AlertCircle,
+  CheckCircle2,
+  RefreshCw,
+  Key,
+  BookOpen,
+  Video,
+  VideoOff
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Html5Qrcode } from 'html5-qrcode';
+import { Card, CardHeader, SectionLabel, Pill, PRIMARY } from '../../components/ui/primitives';
 
+/**
+ * Web counterpart of mobile/src/app/(tabs)/scanner.tsx.
+ * Same layout: framed camera viewport, status pill, active-session card and
+ * today's check-in pills. The camera itself is html5-qrcode rather than
+ * expo-camera, and the pasted-token fallback is web-only.
+ */
 const QRScanner = () => {
   const [tokenInput, setTokenInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState(null);
-  
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraPermissionError, setCameraPermissionError] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const html5QrcodeRef = useRef(null);
 
-  // Custom mock token handler
+  const loadDashboardData = async () => {
+    try {
+      const { data } = await API.get('/student/dashboard');
+      setDashboardData(data);
+    } catch (e) {
+      console.log('Failed to fetch dashboard data in scanner', e);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
   const handleMarkAttendance = async (tokenString) => {
     if (!tokenString) {
       toast.error('Scan token is missing');
@@ -25,17 +53,15 @@ const QRScanner = () => {
       const { data } = await API.post('/student/attendance/scan', { token: tokenString });
       setScanResult({
         success: true,
-        message: data.message,
+        message: data.message || 'Attendance marked successfully!',
         details: data.attendance
       });
       toast.success('Attendance marked successfully!');
+      loadDashboardData(); // Refresh today's check-ins
     } catch (error) {
       console.error(error);
-      const message = error.response?.data?.message || 'Failed to mark attendance';
-      setScanResult({
-        success: false,
-        message
-      });
+      const message = error.response?.data?.message || 'Failed to mark attendance. Expired or invalid code.';
+      setScanResult({ success: false, message });
       toast.error(message);
     } finally {
       setLoading(false);
@@ -55,29 +81,28 @@ const QRScanner = () => {
     // Wait a brief tick for the container to render
     setTimeout(async () => {
       try {
-        const html5Qrcode = new Html5Qrcode("reader");
+        const html5Qrcode = new Html5Qrcode('reader');
         html5QrcodeRef.current = html5Qrcode;
 
         await html5Qrcode.start(
-          { facingMode: "environment" }, // Target back camera
+          { facingMode: 'environment' }, // Target back camera
           {
             fps: 10,
             qrbox: { width: 220, height: 220 }
           },
           (decodedText) => {
-            // Success handler
-            toast.success("QR Code detected!");
+            toast.success('QR Code detected!');
             stopScanning();
             handleMarkAttendance(decodedText);
           },
-          (errorMessage) => {
-            // Failure handler (silent to prevent console noise)
+          () => {
+            // Per-frame decode failures are expected; stay silent.
           }
         );
       } catch (err) {
-        console.error("Camera startup error:", err);
+        console.error('Camera startup error:', err);
         setCameraPermissionError(
-          "Could not access camera. Ensure you have granted camera permissions or try pasting the token below."
+          'Could not access camera. Ensure you have granted camera permissions or paste the token below.'
         );
         setCameraActive(false);
       }
@@ -91,7 +116,7 @@ const QRScanner = () => {
           await html5QrcodeRef.current.stop();
         }
       } catch (err) {
-        console.error("Failed to stop scanning:", err);
+        console.error('Failed to stop scanning:', err);
       }
       html5QrcodeRef.current = null;
     }
@@ -102,154 +127,200 @@ const QRScanner = () => {
   useEffect(() => {
     return () => {
       if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
-        html5QrcodeRef.current.stop().catch(err => console.error("Cleanup error:", err));
+        html5QrcodeRef.current.stop().catch(err => console.error('Cleanup error:', err));
       }
     };
   }, []);
 
+  // Active cohort mapping, same as the mobile screen
+  const activeBatch = dashboardData?.batch;
+  const trainerName = activeBatch?.trainers && activeBatch.trainers.length > 0
+    ? activeBatch.trainers[0].name
+    : 'Auto-Assigned';
+
+  const todayRecords = dashboardData?.attendance?.todayRecords || [];
+  const hasCheckedInToday = todayRecords.length > 0;
+
+  const statusText = loading
+    ? 'Verifying QR code...'
+    : scanResult
+      ? 'Ready for next scan'
+      : cameraActive
+        ? 'Scanning for QR code...'
+        : 'Camera idle';
+
   return (
-    <div className="max-w-2xl mx-auto py-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400">
-          Attendance QR Scanner
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2">
-          Scan the active classroom QR code projected by your trainer to instantly record your attendance.
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header — mirrors the mobile scanner header */}
+      <Card className="p-5">
+        <CardHeader
+          icon={Camera}
+          title="Scan Attendance"
+          subtitle="Point camera at the trainer's session QR code"
+        />
+      </Card>
 
-      <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 backdrop-blur-md shadow-xl space-y-8">
-        
-        {/* Camera Scanner Section */}
-        <div className="flex flex-col items-center justify-center p-6 border border-gray-200 dark:border-gray-800 rounded-2xl bg-gray-50/50 dark:bg-[#181922]">
-          <div className="w-16 h-16 bg-violet-50 dark:bg-violet-950/20 text-[#4648d4] dark:text-violet-400 rounded-2xl flex items-center justify-center shadow-sm mb-4">
-            <Camera className="w-8 h-8 animate-pulse" />
+      {/* 1. Camera viewport panel */}
+      <div className="flex flex-col items-center">
+        {cameraActive && !scanResult && !loading ? (
+          <div className="relative w-80 h-80 bg-[#0F0C20] rounded-[32px] overflow-hidden border border-slate-200 dark:border-[#1e2330] shadow-lg">
+            <div id="reader" className="w-full h-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full" />
+
+            {/* Corner brackets */}
+            <span className="pointer-events-none absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg" />
+            <span className="pointer-events-none absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg" />
+            <span className="pointer-events-none absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg" />
+            <span className="pointer-events-none absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#7C3AED] rounded-br-lg" />
+
+            {/* Sweep line */}
+            <span className="pointer-events-none scanning-line left-0" />
           </div>
-          <h3 className="font-bold text-base mb-1">Camera Scanner Panel</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
-            Point your device camera at the rotating QR code on the trainer's screen to verify attendance.
-          </p>
-
-          {/* Scanner Viewport */}
-          {cameraActive ? (
-            <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border-2 border-violet-500 bg-black shadow-inner flex flex-col items-center justify-center py-4">
-              <div id="reader" className="w-full bg-black"></div>
-              <button
-                onClick={stopScanning}
-                className="mt-4 flex items-center gap-1.5 px-4 py-2 border border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-500 hover:text-white text-rose-500 rounded-xl text-xs font-bold transition-all cursor-pointer"
-              >
-                <VideoOff size={14} />
-                <span>Turn Camera Off</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              {/* Mock View */}
-              <div className="relative p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 my-4 w-64 h-64 flex items-center justify-center">
-                <div className="w-full h-full bg-gray-50 dark:bg-[#181922] flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-800 p-4 text-center">
-                  <Camera className="w-12 h-12 text-[#4648d4] dark:text-violet-400 mb-2 opacity-50" />
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold tracking-wider uppercase">Camera Inactive</span>
-                  <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1">[Click Start Camera to Scan]</span>
+        ) : (
+          <div className="w-80 h-80 m-card rounded-[32px] flex items-center justify-center p-6 text-center">
+            {loading ? (
+              <div className="flex flex-col items-center">
+                <RefreshCw className="w-9 h-9 animate-spin" style={{ color: PRIMARY }} />
+                <p className="text-xs font-semibold mt-3 text-[#7C3AED] dark:text-violet-400">
+                  Verifying code with server...
+                </p>
+              </div>
+            ) : scanResult ? (
+              <div className="flex flex-col items-center w-full">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4 bg-slate-50 dark:bg-[#181922] border border-slate-100 dark:border-[#1e2330]">
+                  {scanResult.success
+                    ? <CheckCircle2 size={32} className="text-emerald-600" />
+                    : <AlertCircle size={32} className="text-rose-600" />}
                 </div>
-              </div>
-
-              <button
-                onClick={startScanning}
-                className="flex items-center gap-1.5 px-6 py-3 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md shadow-violet-500/20"
-              >
-                <Video size={14} />
-                <span>Open & Start Camera Scanner</span>
-              </button>
-            </div>
-          )}
-
-          {cameraPermissionError && (
-            <div className="mt-4 flex items-center gap-2 text-xs text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/10 px-4 py-2.5 rounded-xl border border-rose-200/50 dark:border-rose-900/20 max-w-sm">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{cameraPermissionError}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Developer Fallback Mode */}
-        <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-800 dark:text-violet-400 bg-violet-50/50 dark:bg-violet-950/20 px-3.5 py-2.5 rounded-xl border border-violet-100/40 dark:border-violet-950/30 mb-6">
-            <Info className="w-4 h-4 flex-shrink-0" />
-            <span>Sandbox Mode: Paste the rotating token generated by the Trainer's screen below.</span>
-          </div>
-
-          <form onSubmit={handleMockSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
-                Encrypted QR Token String
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Paste the session token from the trainer's session..."
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:ring-2 focus:ring-violet-500 transition-all font-mono text-gray-900 dark:text-white"
-                  required
-                />
-                <Key className="absolute left-3.5 top-3.5 text-gray-400 w-4 h-4" />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 rounded-xl font-bold bg-violet-800 hover:bg-violet-500 text-white flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25 disabled:opacity-50 transition-all cursor-pointer"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Decrypting & Marking Attendance...
-                </>
-              ) : (
-                'Submit Scan Code'
-              )}
-            </button>
-          </form>
-        </div>
-
-        {/* Scan Status Results */}
-        {scanResult && (
-          <div className={`p-6 rounded-2xl border transition-all ${scanResult.success ? 'bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/20' : 'bg-rose-50 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/20'}`}>
-            <div className="flex gap-4.5">
-              {scanResult.success ? (
-                <CheckCircle className="text-emerald-500 w-8 h-8 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="text-rose-500 w-8 h-8 flex-shrink-0" />
-              )}
-              <div>
-                <h4 className="font-bold text-base mb-1 text-gray-900 dark:text-white">
-                  {scanResult.success ? 'Attendance Verified' : 'Attendance Failed'}
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-base font-extrabold text-[#0F172A] dark:text-white">
+                  {scanResult.success ? 'Success' : 'Scan Failed'}
+                </p>
+                <p className="text-[10px] text-[#64748B] dark:text-slate-400 mt-1 px-4 leading-4">
                   {scanResult.message}
                 </p>
                 {scanResult.success && scanResult.details && (
-                  <div className="mt-4 grid grid-cols-2 gap-4 text-xs bg-white/40 dark:bg-black/10 p-3 rounded-xl text-gray-700 dark:text-gray-300">
-                    <div>
-                      <span className="text-gray-400 font-semibold block">Designation</span>
-                      <span className="font-bold mt-0.5 inline-block px-2 py-0.5 rounded bg-violet-200 dark:bg-violet-950 text-violet-900 dark:text-violet-300">
-                        {scanResult.details.status}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 font-semibold block">Marked Date</span>
-                      <span className="font-medium mt-0.5 inline-block">
-                        {new Date(scanResult.details.date).toLocaleString()}
-                      </span>
-                    </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Pill tone="success">{scanResult.details.status}</Pill>
+                    <span className="text-[10px] text-[#64748B]">
+                      {new Date(scanResult.details.date).toLocaleString()}
+                    </span>
                   </div>
                 )}
+                <button
+                  onClick={() => {
+                    setScanResult(null);
+                    startScanning();
+                  }}
+                  className="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6d28d9] text-white rounded-xl mt-4 font-bold text-xs cursor-pointer transition-colors"
+                >
+                  Scan Again
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center w-full">
+                <button
+                  onClick={startScanning}
+                  className="w-16 h-16 bg-[#F8FAFC] dark:bg-[#181922] border border-slate-100 dark:border-[#1e2330] rounded-2xl flex items-center justify-center mb-4 cursor-pointer"
+                >
+                  <Camera size={24} style={{ color: PRIMARY }} />
+                </button>
+                <p className="text-sm font-bold text-[#0F172A] dark:text-white">Camera Idle</p>
+                <button
+                  onClick={startScanning}
+                  className="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6d28d9] text-white rounded-xl mt-3 font-bold text-xs cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  <Video size={14} />
+                  Start Camera
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Stop control while live */}
+        {cameraActive && !scanResult && !loading && (
+          <button
+            onClick={stopScanning}
+            className="mt-4 flex items-center gap-1.5 px-4 py-2 border border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 hover:bg-rose-500 hover:text-white text-rose-500 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            <VideoOff size={14} />
+            <span>Turn Camera Off</span>
+          </button>
+        )}
+
+        {/* Scanning status pill */}
+        <div className="bg-[#F3E8FF] dark:bg-violet-950/30 border border-[#E9D5FF]/40 dark:border-violet-900/40 px-6 py-2.5 rounded-full mt-4 shadow-sm">
+          <span className="text-[#6B21A8] dark:text-violet-300 text-[11px] font-black tracking-wide">
+            {statusText}
+          </span>
+        </div>
+
+        {cameraPermissionError && (
+          <div className="mt-4 flex items-center gap-2 text-xs text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/10 px-4 py-2.5 rounded-xl border border-rose-200/50 dark:border-rose-900/20 max-w-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{cameraPermissionError}</span>
           </div>
         )}
       </div>
+
+      {/* 2. Active session card */}
+      <Card className="p-4 flex items-center gap-3.5">
+        <div className="p-3 bg-[#F3E8FF] dark:bg-violet-950/30 rounded-2xl shrink-0">
+          <BookOpen size={20} className="text-violet-500" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[#0F172A] dark:text-white font-extrabold text-sm truncate">
+            {activeBatch ? activeBatch.name : 'No Active Batch'}
+          </p>
+          <p className="text-[11px] text-[#64748B] dark:text-slate-400 mt-0.5 truncate">
+            {activeBatch ? `${activeBatch.course} • Trainer: ${trainerName}` : 'Please contact administrator'}
+          </p>
+        </div>
+      </Card>
+
+      {/* 3. Today's check-in pills */}
+      {hasCheckedInToday ? (
+        <div className="space-y-2.5">
+          <SectionLabel>Today's Check-ins</SectionLabel>
+          <div className="flex flex-wrap gap-2.5">
+            {todayRecords.map((rec, idx) => (
+              <Pill key={idx} tone="success" icon={CheckCircle2}>
+                {rec.subject || 'Session'}: {new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Pill>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Pill tone="warning" icon={AlertCircle}>No check-ins logged today</Pill>
+      )}
+
+      {/* Web-only fallback: paste the rotating token directly */}
+      <Card className="p-5 space-y-4">
+        <SectionLabel>Paste token manually</SectionLabel>
+        <form onSubmit={handleMockSubmit} className="space-y-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Paste the session token from the trainer's screen..."
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E2E8F0] dark:border-[#1e2330] bg-transparent text-sm font-mono"
+              required
+            />
+            <Key className="absolute left-3.5 top-3.5 text-slate-400 w-4 h-4" />
+          </div>
+
+          <button type="submit" disabled={loading} className="m-btn-primary">
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Marking Attendance...
+              </>
+            ) : (
+              'Submit Scan Code'
+            )}
+          </button>
+        </form>
+      </Card>
     </div>
   );
 };
