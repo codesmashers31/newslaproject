@@ -22,23 +22,17 @@ connectDB();
 
 const app = express();
 
-// CORS configuration supporting HTTP-only cookies
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://slabuildx.vercel.app'
-];
-
+// CORS configuration supporting HTTP-only cookies and credentials
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, etc) or matching origins
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Permissive callback for client apps while allowing credentials
-    }
+    // If no origin (e.g. mobile app, server-to-server), allow it
+    if (!origin) return callback(null, true);
+    // Echo requesting origin back as exact string so Access-Control-Allow-Origin is never '*' when credentials: true
+    return callback(null, origin);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 app.use(cookieParser());
