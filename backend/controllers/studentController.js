@@ -24,10 +24,10 @@ export const getStudentDashboard = async (req, res) => {
 
     // 1. Fetch Profile
     let profile = await Student.findOne({ user: studentId })
-      .populate('user', 'name email mobile role isBatchesLocked')
+      .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked')
       .lean();
     if (!profile) {
-      const userObj = await User.findById(studentId).select('name email mobile role isBatchesLocked').lean();
+      const userObj = await User.findById(studentId).select('name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked').lean();
       profile = { user: userObj };
     }
 
@@ -951,23 +951,32 @@ export const getAvailableTrainers = async (req, res) => {
 export const updateStudentEnrollments = async (req, res) => {
   try {
     const studentId = req.user._id;
-    const { technicalBatchIds, aptitudeBatchId, isPermanent } = req.body;
+    const { technicalBatchIds, aptitudeBatchId, isPermanent, targetDomain } = req.body;
 
     const studentUser = await User.findById(studentId);
     if (!studentUser) return res.status(404).json({ message: 'User not found' });
     
-    if (studentUser.isBatchesLocked) {
-      return res.status(403).json({ message: 'Your batch selections are permanently locked and cannot be changed.' });
+    // Check per-domain lock
+    const isTechAlreadyLocked = studentUser.isTechnicalLocked || studentUser.isBatchesLocked;
+    const isAptiAlreadyLocked = studentUser.isAptitudeLocked || studentUser.isBatchesLocked;
+
+    if (targetDomain === 'Technical' && isTechAlreadyLocked) {
+      return res.status(403).json({ message: 'Your Technical batch selection is permanently locked.' });
+    }
+    if (targetDomain === 'Aptitude' && isAptiAlreadyLocked) {
+      return res.status(403).json({ message: 'Your Aptitude batch selection is permanently locked.' });
+    }
+    if (!targetDomain && studentUser.isBatchesLocked) {
+      return res.status(403).json({ message: 'Your batch selections are permanently locked.' });
     }
 
     // 1. Technical Batches (Multi-Select)
-    if (technicalBatchIds && Array.isArray(technicalBatchIds)) {
+    if (technicalBatchIds && Array.isArray(technicalBatchIds) && !isTechAlreadyLocked) {
       const activeTechEnrollments = await Enrollment.find({ studentId, department: 'Technical', status: 'Active' });
       
       for (const batchId of technicalBatchIds) {
         const batch = await Batch.findById(batchId);
         if (batch && batch.course.includes('Technical')) {
-          // Auto assign trainer from batch
           const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
           
           await Enrollment.findOneAndUpdate(
@@ -994,19 +1003,18 @@ export const updateStudentEnrollments = async (req, res) => {
     }
 
     // 2. Aptitude Batch (Single-Select)
-    if (aptitudeBatchId) {
+    if (aptitudeBatchId && !isAptiAlreadyLocked) {
       const batch = await Batch.findById(aptitudeBatchId);
       if (batch && batch.course.includes('Aptitude')) {
         const activeAptiEnrollments = await Enrollment.find({ studentId, department: 'Aptitude', status: 'Active' });
         const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
 
-        // Is it different?
         let isDifferent = true;
         for (const old of activeAptiEnrollments) {
           if (old.batchId.toString() === aptitudeBatchId) {
             isDifferent = false; // Already active
           } else {
-            await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' }); // Close other
+            await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' });
             await Batch.findByIdAndUpdate(old.batchId, { $pull: { students: studentId } });
           }
         }
@@ -1027,12 +1035,26 @@ export const updateStudentEnrollments = async (req, res) => {
       }
     }
 
+    // Lock domain specific or all
     if (isPermanent) {
-      studentUser.isBatchesLocked = true;
+      if (targetDomain === 'Technical') {
+        studentUser.isTechnicalLocked = true;
+      } else if (targetDomain === 'Aptitude') {
+        studentUser.isAptitudeLocked = true;
+      } else {
+        studentUser.isBatchesLocked = true;
+        studentUser.isTechnicalLocked = true;
+        studentUser.isAptitudeLocked = true;
+      }
       await studentUser.save();
     }
 
-    res.json({ message: 'Enrollments updated successfully' });
+    res.json({
+      message: 'Enrollments updated successfully',
+      isTechnicalLocked: !!studentUser.isTechnicalLocked,
+      isAptitudeLocked: !!studentUser.isAptitudeLocked,
+      isBatchesLocked: !!studentUser.isBatchesLocked
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

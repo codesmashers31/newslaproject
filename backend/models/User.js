@@ -55,6 +55,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isTechnicalLocked: {
+    type: Boolean,
+    default: false
+  },
+  isAptitudeLocked: {
+    type: Boolean,
+    default: false
+  },
   deviceId: {
     type: String,
     default: null,

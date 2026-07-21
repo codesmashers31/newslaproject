@@ -128,109 +128,103 @@ const QRClassSession = () => {
   );
 
   return (
-    <div className="w-full py-8 px-4 space-y-8">
+    <div className="max-w-2xl mx-auto py-8 px-4 space-y-8 min-h-[calc(100vh-140px)] flex flex-col justify-center">
       {/* Header section with sparkles */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 via-violet-500 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400 flex items-center gap-2">
-            <Sparkles className="text-violet-500 animate-pulse shrink-0" size={28} />
-            Smart Dynamic QR Session
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium">
-            Start a live class session with rotating, anti-spoofing dynamic QR codes to register attendance
-          </p>
-        </div>
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 via-violet-500 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400 flex items-center justify-center gap-2.5">
+          <Sparkles className="text-violet-500 animate-pulse shrink-0" size={28} />
+          Smart Dynamic QR Session
+        </h1>
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium max-w-lg mx-auto">
+          Start a live class session with rotating, anti-spoofing dynamic QR codes to register attendance
+        </p>
       </div>
 
       {!activeSession ? (
-        // Advanced Config Form Card
+        // Advanced Centered Config Form Card
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/70 dark:bg-[#12131a]/85 border border-gray-200 dark:border-gray-800 rounded-[28px] p-8 backdrop-blur-md shadow-xl w-full"
+          className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl p-8 shadow-xl w-full space-y-6"
         >
-          <div className="flex items-center gap-3 border-b border-gray-150 dark:border-gray-800 pb-5 mb-6">
-            <div className="p-3 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl shrink-0">
+          <div className="flex items-center justify-center gap-3 border-b border-gray-150 dark:border-gray-800 pb-5 text-center">
+            <div className="p-3 bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400 rounded-2xl shrink-0">
               <Camera size={24} />
             </div>
-            <div>
+            <div className="text-left">
               <h2 className="text-lg font-black text-gray-900 dark:text-white">Class Session Setup</h2>
-              <p className="text-xs text-gray-450 dark:text-gray-400 mt-0.5">Define subject parameters, select active batches, and generate secure tokens</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Define subject parameters, select active batch, and generate secure tokens</p>
             </div>
           </div>
 
           <form onSubmit={handleStartSession} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Searchable Batch Select Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
-                  <Users size={14} className="text-violet-500" />
-                  Select Class Batch *
-                </label>
-                <div
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer flex items-center justify-between font-semibold text-gray-900 dark:text-white"
-                >
-                  <span className={selectedBatchObj ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
-                    {selectedBatchObj ? `${selectedBatchObj.name} (${selectedBatchObj.batchId || 'Active'})` : '-- Choose Batch --'}
-                  </span>
-                  <ChevronDown size={16} className={`text-gray-400 duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                </div>
-
-                <AnimatePresence>
-                  {isDropdownOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      className="absolute z-50 w-full mt-2 bg-white dark:bg-[#12131a] border border-gray-205 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden"
-                    >
-                      <div className="p-3 border-b border-gray-100 dark:border-gray-800">
-                        <input
-                          type="text"
-                          placeholder="Search batch name or ID..."
-                          value={batchSearchQuery}
-                          onChange={(e) => setBatchSearchQuery(e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-[#0c0d12]/50 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
-                        />
-                      </div>
-                      <div className="max-h-60 overflow-y-auto scrollbar-thin">
-                        {filteredBatches.length === 0 ? (
-                          <div className="p-4 text-xs text-center text-gray-400 italic">No batches found</div>
-                        ) : (
-                          filteredBatches.map(b => (
-                            <div
-                              key={b._id}
-                              onClick={() => {
-                                setSelectedBatch(b._id);
-                                setIsDropdownOpen(false);
-                                setBatchSearchQuery('');
-                              }}
-                              className={`p-3.5 text-xs font-semibold cursor-pointer hover:bg-violet-50/50 dark:hover:bg-violet-950/20 transition-colors flex flex-col gap-0.5 ${
-                                selectedBatch === b._id 
-                                  ? 'bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400' 
-                                  : 'text-gray-700 dark:text-gray-300'
-                              }`}
-                            >
-                              <span className="font-bold">{b.name}</span>
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">{b.course} {b.batchId && `• ID: ${b.batchId}`}</span>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+            {/* Searchable Batch Select Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 select-none">
+                <Users size={15} className="text-violet-500" />
+                Select Class Batch *
+              </label>
+              <div
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full px-4 py-3.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0c0d12]/50 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all cursor-pointer flex items-center justify-between font-semibold text-gray-900 dark:text-white hover:border-violet-300"
+              >
+                <span className={selectedBatchObj ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-400'}>
+                  {selectedBatchObj ? `${selectedBatchObj.name} (${selectedBatchObj.batchId || 'Active'})` : '-- Choose Batch --'}
+                </span>
+                <ChevronDown size={18} className={`text-gray-400 duration-200 ${isDropdownOpen ? 'rotate-180 text-violet-600' : ''}`} />
               </div>
 
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute z-50 w-full mt-2 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+                  >
+                    <div className="p-3 border-b border-gray-100 dark:border-gray-800">
+                      <input
+                        type="text"
+                        placeholder="Search batch name or ID..."
+                        value={batchSearchQuery}
+                        onChange={(e) => setBatchSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full px-3.5 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-[#0c0d12]/50 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
+                      />
+                    </div>
+                    <div className="max-h-60 overflow-y-auto scrollbar-thin">
+                      {filteredBatches.length === 0 ? (
+                        <div className="p-4 text-xs text-center text-gray-400 italic">No batches found</div>
+                      ) : (
+                        filteredBatches.map(b => (
+                          <div
+                            key={b._id}
+                            onClick={() => {
+                              setSelectedBatch(b._id);
+                              setIsDropdownOpen(false);
+                              setBatchSearchQuery('');
+                            }}
+                            className={`p-3.5 text-xs font-semibold cursor-pointer hover:bg-violet-50/50 dark:hover:bg-violet-950/20 transition-colors flex flex-col gap-0.5 ${
+                              selectedBatch === b._id 
+                                ? 'bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400' 
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <span className="font-bold">{b.name}</span>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold">{b.course} {b.batchId && `• ID: ${b.batchId}`}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-4 rounded-2xl font-bold bg-violet-800 hover:bg-violet-500 text-white flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20 disabled:opacity-50 transition-all cursor-pointer text-sm"
+              className="w-full py-4 rounded-2xl font-bold bg-[#4648d4] hover:bg-[#393bb3] text-white flex items-center justify-center gap-2.5 shadow-lg shadow-violet-500/20 disabled:opacity-50 transition-all cursor-pointer text-sm"
             >
               {loading ? (
                 <>
