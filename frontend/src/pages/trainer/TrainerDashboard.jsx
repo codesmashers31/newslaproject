@@ -524,7 +524,12 @@ const TrainerDashboard = () => {
 
   const getBatchIdByName = (batchName) => {
     if (!batchName) return null;
-    const b = allBatches.find(x => x.name.toLowerCase() === batchName.toLowerCase());
+    const cleanStr = String(batchName).trim().toLowerCase();
+    const b = allBatches.find(x => 
+      String(x.name || '').trim().toLowerCase() === cleanStr ||
+      String(x.batchId || '').trim().toLowerCase() === cleanStr ||
+      String(x._id || '').trim().toLowerCase() === cleanStr
+    );
     return b ? b._id : null;
   };
 
@@ -554,15 +559,23 @@ const TrainerDashboard = () => {
     }
   };
 
-  const renderSubjectCell = (student, batchName, batchId, trainerName, isInteractive, isGuestValue = false) => {
+  const renderSubjectCell = (student, batchName, batchId, trainerName, isInteractive, isGuestValue = false, subjectName = '') => {
+    const resolvedBatchId = batchId || getBatchIdByName(batchName);
+
     const record = isGuestValue
       ? student.guestRecord
       : todayRecords?.find(r => 
           String(r?.student?._id || r?.student) === String(student?._id) &&
-          String(r?.batch?._id || r?.batch) === String(batchId)
+          (
+            (resolvedBatchId && String(r?.batch?._id || r?.batch) === String(resolvedBatchId)) ||
+            (subjectName && (r?.subject === subjectName || r?.course === subjectName))
+          )
         );
 
-    const currentStatus = record ? record.status : (attendanceState[`${student._id}_${batchId}`] || 'Absent');
+    const effectiveBatchId = resolvedBatchId || (record?.batch?._id || record?.batch);
+    const currentStatus = record 
+      ? record.status 
+      : (effectiveBatchId ? (attendanceState[`${student._id}_${effectiveBatchId}`] || 'Absent') : (batchName ? 'Absent' : 'Not Configured'));
 
     return (
       <div className="space-y-2">
@@ -576,13 +589,13 @@ const TrainerDashboard = () => {
             )}
           </div>
           <div className="text-[10px] text-indigo-650 dark:text-violet-400 font-bold mt-0.5">
-            {batchName || 'No Batch'}
+            {batchName || 'No Batch Configured'}
           </div>
         </div>
 
         {/* Attendance Status (Interactive or Static) */}
-        {batchId ? (
-          isInteractive ? (
+        {effectiveBatchId || batchName || record ? (
+          isInteractive && effectiveBatchId ? (
             <div className="flex items-center gap-1">
               {['Present', 'Absent', 'Late'].map(st => {
                 const isSelected = currentStatus === st;
@@ -595,7 +608,7 @@ const TrainerDashboard = () => {
                 return (
                   <button
                     key={st}
-                    onClick={() => handleAttendanceChange(student._id, batchId, st)}
+                    onClick={() => handleAttendanceChange(student._id, effectiveBatchId, st)}
                     className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${baseStyle}`}
                   >
                     {st}
@@ -605,19 +618,15 @@ const TrainerDashboard = () => {
             </div>
           ) : (
             <div className="w-fit">
-              {record ? (
-                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
-                  currentStatus === 'Present'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15'
-                    : currentStatus === 'Late'
-                    ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/15'
-                    : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-500/15'
-                }`}>
-                  {currentStatus}
-                </span>
-              ) : (
-                <span className="text-[10px] text-slate-400 italic">Not Checked In</span>
-              )}
+              <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                currentStatus === 'Present'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15'
+                  : currentStatus === 'Late'
+                  ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/15'
+                  : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-500/15'
+              }`}>
+                {currentStatus}
+              </span>
             </div>
           )
         ) : (
@@ -628,11 +637,11 @@ const TrainerDashboard = () => {
         {record && (
           <div className="text-[9px] text-slate-450 dark:text-slate-400 flex flex-wrap items-center gap-1 font-mono">
             <span className="font-bold text-slate-700 dark:text-slate-300">
-              {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(record.createdAt || record.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             <span>•</span>
             <span>
-              {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+              {new Date(record.createdAt || record.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
             </span>
             {record.scannedBatch && (
               <span className="ml-1 text-[8px] font-black text-violet-800 bg-violet-50/50 dark:bg-violet-950/20 px-1 py-0.5 rounded border border-violet-500/10 uppercase tracking-wide">
@@ -748,62 +757,22 @@ const TrainerDashboard = () => {
     const aptiTime = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
     const aptiDate = aptiRecord ? new Date(aptiRecord.createdAt || aptiRecord.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
 
-    if (user?.role === 'Communication Trainer') {
-      return {
-        ...baseData,
-        'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
-        'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
-        'Communication Status': commStatus,
-        'Communication Scan Time': commTime,
-        'Communication Scan Date': commDate,
-        'Session Date': attendanceDate,
-        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
-      };
-    }
-
-    if (user?.role === 'Technical Trainer') {
-      return {
-        ...baseData,
-        'Technical Batch': student.technicalBatch || 'Unassigned',
-        'Technical Trainer': student.technicalTrainer || 'Unassigned',
-        'Technical Status': techStatus,
-        'Technical Scan Time': techTime,
-        'Technical Scan Date': techDate,
-        'Session Date': attendanceDate,
-        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
-      };
-    }
-
-    if (user?.role === 'Aptitude Trainer') {
-      return {
-        ...baseData,
-        'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
-        'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
-        'Aptitude Status': aptiStatus,
-        'Aptitude Scan Time': aptiTime,
-        'Aptitude Scan Date': aptiDate,
-        'Session Date': attendanceDate,
-        'Type': isGuest ? 'Guest (Cross-Attend)' : 'Regular'
-      };
-    }
-
-    // Admin / Super Admin (gets all columns)
     const anyRecord = isGuest ? student.guestRecord : todayRecords?.find(r => String(r?.student?._id || r?.student) === String(student?._id));
     const overallStatus = anyRecord ? anyRecord.status : (commStatus !== 'Absent' ? commStatus : (techStatus !== 'Absent' ? techStatus : aptiStatus));
     const overallTime = anyRecord ? new Date(anyRecord.createdAt || anyRecord.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (commTime !== 'N/A' ? commTime : (techTime !== 'N/A' ? techTime : aptiTime));
 
     return {
       ...baseData,
-      'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
-      'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
-      'Communication Status': commStatus,
-      'Communication Scan Time': commTime,
-      'Communication Scan Date': commDate,
       'Technical Batch': student.technicalBatch || 'Unassigned',
       'Technical Trainer': student.technicalTrainer || 'Unassigned',
       'Technical Status': techStatus,
       'Technical Scan Time': techTime,
       'Technical Scan Date': techDate,
+      'Communication Batch': isGuest ? (student.guestRecord?.batch?.name || 'Unassigned') : (student.communicationBatch || 'Unassigned'),
+      'Communication Trainer': isGuest ? 'Guest Scan' : (student.communicationTrainer || 'Unassigned'),
+      'Communication Status': commStatus,
+      'Communication Scan Time': commTime,
+      'Communication Scan Date': commDate,
       'Aptitude Batch': student.aptitudeBatch || 'Unassigned',
       'Aptitude Trainer': student.aptitudeTrainer || 'Unassigned',
       'Aptitude Status': aptiStatus,
@@ -1639,7 +1608,9 @@ const TrainerDashboard = () => {
                                       student.technicalBatch, 
                                       getBatchIdByName(student.technicalBatch), 
                                       student.technicalTrainer, 
-                                      c.isInteractive
+                                      c.isInteractive,
+                                      false,
+                                      'Technical Training'
                                     )}
                                   </td>
                                 );
@@ -1652,7 +1623,8 @@ const TrainerDashboard = () => {
                                       isGuest ? student.guestRecord.batch?._id : getBatchIdByName(student.communicationBatch), 
                                       student.communicationTrainer, 
                                       c.isInteractive,
-                                      isGuest
+                                      isGuest,
+                                      'Communication Skills'
                                     )}
                                   </td>
                                 );
@@ -1664,7 +1636,9 @@ const TrainerDashboard = () => {
                                       student.aptitudeBatch, 
                                       getBatchIdByName(student.aptitudeBatch), 
                                       student.aptitudeTrainer, 
-                                      c.isInteractive
+                                      c.isInteractive,
+                                      false,
+                                      'Aptitude & Reasoning'
                                     )}
                                   </td>
                                 );
