@@ -128,7 +128,7 @@ const QRClassSession = () => {
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-8 px-4 space-y-8 min-h-[calc(100vh-140px)] flex flex-col justify-center">
+    <div className="w-full max-w-7xl mx-auto py-6 px-4 space-y-6">
       {/* Header section with sparkles */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-800 via-violet-500 to-purple-600 bg-clip-text text-transparent dark:from-violet-400 dark:to-purple-400 flex items-center justify-center gap-2.5">
