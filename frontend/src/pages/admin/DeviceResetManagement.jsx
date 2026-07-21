@@ -161,15 +161,15 @@ const DeviceResetManagement = () => {
         
         {/* Left Side: Reset Requests (2 Columns) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white/70 dark:bg-[#12131a]/85 border border-gray-250 dark:border-gray-800 rounded-[24px] p-6 backdrop-blur-md shadow-xl">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <div className="bg-white/90 dark:bg-[#12131a]/85 border border-slate-200 dark:border-slate-800 rounded-[24px] p-6 backdrop-blur-md shadow-xl">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
               <Clock className="text-violet-500" size={20} />
               Pending Device Reset Requests
             </h2>
 
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-800 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-600 border-t-transparent" />
                 <span className="text-xs text-gray-400 font-semibold">Loading safety logs...</span>
               </div>
             ) : requests.length === 0 ? (
@@ -185,7 +185,7 @@ const DeviceResetManagement = () => {
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span className="font-extrabold text-sm text-slate-800 dark:text-white">{req.user?.name}</span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 border border-violet-500/10">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-100 dark:bg-violet-950/40 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
                           {req.user?.role}
                         </span>
                         <span className="font-mono text-[10px] text-purple-600 dark:text-purple-400 font-bold">
@@ -214,7 +214,7 @@ const DeviceResetManagement = () => {
                             setActiveRequest(req);
                             setModalAction('Approve');
                           }}
-                          className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm shadow-emerald-650/10 cursor-pointer"
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
                         >
                           <Check size={14} /> Approve Reset
                         </button>
@@ -223,7 +223,7 @@ const DeviceResetManagement = () => {
                             setActiveRequest(req);
                             setModalAction('Reject');
                           }}
-                          className="px-3 py-2 bg-rose-650 hover:bg-rose-500 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm shadow-rose-650/10 cursor-pointer"
+                          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-md shadow-rose-600/20 transition-all cursor-pointer"
                         >
                           <X size={14} /> Reject
                         </button>
@@ -238,8 +238,8 @@ const DeviceResetManagement = () => {
 
         {/* Right Side: Manual Search & Reset Controls (1 Column) */}
         <div className="space-y-6">
-          <div className="bg-white/70 dark:bg-[#12131a]/85 border border-gray-250 dark:border-gray-800 rounded-[24px] p-6 backdrop-blur-md shadow-xl">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <div className="bg-white/90 dark:bg-[#12131a]/85 border border-slate-200 dark:border-slate-800 rounded-[24px] p-6 backdrop-blur-md shadow-xl">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
               <Smartphone className="text-violet-500" size={20} />
               Quick Device Actions
             </h2>
@@ -252,7 +252,7 @@ const DeviceResetManagement = () => {
                 placeholder="Search user name or Email..."
                 value={userQuery}
                 onChange={(e) => handleUserSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50/50 dark:bg-[#0c0d12]/50 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0c0d12]/50 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
               />
             </div>
 
@@ -263,23 +263,23 @@ const DeviceResetManagement = () => {
               ) : userQuery && searchResults.length === 0 ? (
                 <div className="text-center py-6 text-xs text-gray-400 italic">No matching users found</div>
               ) : !userQuery ? (
-                <div className="text-xs text-center py-6 text-gray-450 dark:text-gray-500 font-semibold bg-slate-50 dark:bg-slate-900/30 rounded-xl p-4 border border-dashed border-slate-200 dark:border-slate-800 leading-relaxed">
+                <div className="text-xs text-center py-6 text-slate-500 dark:text-gray-400 font-semibold bg-slate-50 dark:bg-slate-900/30 rounded-xl p-4 border border-dashed border-slate-200 dark:border-slate-800 leading-relaxed">
                   Type a user's name or email to view their registered device details, toggle locks, or reset mapping.
                 </div>
               ) : (
                 searchResults.map(u => (
-                  <div key={u._id} className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-150 dark:border-slate-800 space-y-3">
+                  <div key={u._id} className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-extrabold text-xs text-slate-850 dark:text-white">{u.name}</h4>
+                        <h4 className="font-extrabold text-xs text-slate-800 dark:text-white">{u.name}</h4>
                         <p className="text-[10px] text-gray-400 mt-0.5">{u.email}</p>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[8px] font-bold bg-violet-50 dark:bg-violet-950/20 text-indigo-650 dark:text-violet-400 border border-violet-500/10">
+                      <span className="px-2 py-0.5 rounded text-[8px] font-bold bg-violet-100 dark:bg-violet-950/30 text-indigo-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800">
                         {u.role}
                       </span>
                     </div>
 
-                    <div className="text-[10px] space-y-0.5 font-semibold text-slate-500 dark:text-gray-400 bg-white dark:bg-[#0c0d12]/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-850/80">
+                    <div className="text-[10px] space-y-0.5 font-semibold text-slate-500 dark:text-gray-400 bg-white dark:bg-[#0c0d12]/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div><span className="text-gray-400 font-medium">Device:</span> {u.deviceInfo || 'Not Linked'}</div>
                       <div><span className="text-gray-400 font-medium">DeviceID:</span> <span className="font-mono text-[9px]">{u.deviceId || 'None'}</span></div>
                     </div>
@@ -289,27 +289,27 @@ const DeviceResetManagement = () => {
                       <button
                         onClick={() => handleDirectReset(u)}
                         disabled={!u.deviceId}
-                        className="flex-1 py-2 bg-violet-800 hover:bg-violet-500 disabled:bg-gray-200 disabled:dark:bg-gray-800 disabled:text-gray-400 text-white font-bold text-[10px] rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                        className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 active:scale-95 disabled:bg-slate-200 disabled:dark:bg-slate-800 disabled:text-slate-400 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-violet-600/20 transition-all cursor-pointer"
                       >
-                        <RotateCcw size={12} /> Reset Device
+                        <RotateCcw size={13} /> Reset Device
                       </button>
 
                       {/* Lock Device Button */}
                       <button
                         onClick={() => handleToggleLock(u)}
-                        className={`flex-1 py-2 font-bold text-[10px] rounded-xl flex items-center justify-center gap-1 cursor-pointer transition-colors ${
+                        className={`flex-1 py-2.5 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95 ${
                           u.isDeviceLocked 
-                            ? 'bg-rose-50 text-rose-650 border border-rose-200 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/50 hover:bg-rose-100'
-                            : 'bg-slate-200 hover:bg-slate-250 dark:bg-slate-800 dark:text-gray-300 dark:hover:bg-slate-700'
+                            ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+                            : 'bg-slate-700 hover:bg-slate-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 shadow-slate-700/20'
                         }`}
                       >
                         {u.isDeviceLocked ? (
                           <>
-                            <Lock size={12} /> Locked
+                            <Lock size={13} /> Locked
                           </>
                         ) : (
                           <>
-                            <Unlock size={12} /> Lock Device
+                            <Unlock size={13} /> Lock Device
                           </>
                         )}
                       </button>
@@ -348,8 +348,8 @@ const DeviceResetManagement = () => {
                 </button>
               </div>
 
-              <div className="space-y-1.5 text-xs font-semibold text-slate-500 dark:text-gray-450">
-                <p>User: <span className="text-slate-850 dark:text-white">{activeRequest.user?.name}</span></p>
+              <div className="space-y-1.5 text-xs font-semibold text-slate-500 dark:text-gray-400">
+                <p>User: <span className="text-slate-800 dark:text-white">{activeRequest.user?.name}</span></p>
                 <p>Reason: <span className="text-slate-700 dark:text-gray-300">{activeRequest.reason}</span></p>
               </div>
 
@@ -362,7 +362,7 @@ const DeviceResetManagement = () => {
                   value={adminComment}
                   onChange={(e) => setAdminComment(e.target.value)}
                   placeholder="e.g. Approved user device change request..."
-                  className="w-full px-3 py-2 border border-slate-205 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
+                  className="w-full px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-[#0c0d12]/50 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 font-semibold"
                 />
               </div>
 
@@ -372,15 +372,15 @@ const DeviceResetManagement = () => {
                     setActiveRequest(null);
                     setAdminComment('');
                   }}
-                  className="px-4 py-2 border border-slate-200 dark:border-slate-850 text-xs font-bold rounded-xl text-slate-650 dark:text-gray-300 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-700 text-xs font-bold rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleResolveRequest}
                   disabled={actionLoading}
-                  className={`px-4 py-2 text-white font-bold text-xs rounded-xl cursor-pointer ${
-                    modalAction === 'Approve' ? 'bg-emerald-650 hover:bg-emerald-500' : 'bg-rose-650 hover:bg-rose-500'
+                  className={`px-4 py-2 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95 ${
+                    modalAction === 'Approve' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
                   }`}
                 >
                   {actionLoading ? 'Processing...' : 'Confirm'}
