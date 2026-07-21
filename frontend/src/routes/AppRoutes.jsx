@@ -35,6 +35,7 @@ import QRScanner from '../pages/student/QRScanner';
 import PlacementReadiness from '../pages/student/PlacementReadiness';
 import Leaderboards from '../pages/Leaderboards';
 import StudentScorecards from '../pages/student/StudentScorecards';
+import StudentTrainingPage from '../pages/student/StudentTrainingPage';
 import AIRoadmap from '../pages/student/AIRoadmap';
 import UserProfile from '../pages/common/UserProfile';
 
@@ -238,13 +239,21 @@ const AppRoutes = () => {
             </DashboardLayout>
           } 
         />
-        <Route 
-          path="/student/profile" 
+        <Route
+          path="/student/training"
+          element={
+            <DashboardLayout>
+              <StudentTrainingPage />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/student/profile"
           element={
             <DashboardLayout>
               <StudentProfile />
             </DashboardLayout>
-          } 
+          }
         />
         <Route 
           path="/student/scanner" 

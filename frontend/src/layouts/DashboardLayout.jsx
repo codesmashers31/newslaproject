@@ -27,7 +27,9 @@ import {
   Layers,
   CalendarRange,
   BarChart3,
-  ShieldAlert
+  ShieldAlert,
+  Home,
+  BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logoSla from '../assets/logosla.png';
@@ -168,13 +170,18 @@ const DashboardLayout = ({ children }) => {
         makeLink('/trainer/session', <Camera size={17} />, 'Smart Attendance QR'),
       ]);
     } else if (user?.role === 'Student') {
+      // Mirrors the mobile tab bar (mobile/src/app/(tabs)/_layout.tsx): same
+      // order, labels and icons, so the two apps navigate identically.
+      // AI Planner and Leaderboard are web-only and trail the shared items.
       return renderSection('Student Hub', [
-        makeLink('/student', <LayoutDashboard size={17} />, 'Overview'),
+        makeLink('/student', <Home size={17} />, 'Home'),
+        makeLink('/student/training', <BookOpen size={17} />, 'Training'),
+        makeLink('/student/scanner', <Camera size={17} />, 'QR Scan'),
+        makeLink('/student/scorecards', <FileText size={17} />, 'Scorecard'),
+        makeLink('/student/placement', <Briefcase size={17} />, 'Career'),
+        makeLink('/student/profile', <User size={17} />, 'Profile'),
         makeLink('/student/ai-roadmap', <Sparkles size={17} />, 'AI Study Planner'),
-        makeLink('/student/scanner', <Camera size={17} />, 'Scan QR Attendance'),
-        makeLink('/student/placement', <Briefcase size={17} />, 'Placement Readiness'),
         makeLink('/student/leaderboard', <Trophy size={17} />, 'Leaderboard'),
-        makeLink('/student/scorecards', <FileText size={17} />, 'My Scorecards'),
       ]);
     }
     return null;
