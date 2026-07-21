@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { 
-  Award, 
+import {
+  Award,
   TrendingUp,
   BookOpen,
   Sparkles,
@@ -18,6 +18,20 @@ import {
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { Link } from 'react-router-dom';
+import {
+  Card,
+  CardHeader,
+  HeroHeader,
+  StatCard,
+  SectionLabel,
+  InfoRow,
+  Pill,
+  ProgressRing,
+  ProgressBar,
+  EmptyState,
+  Tabs,
+  PRIMARY
+} from '../../components/ui/primitives';
 
 const StudentDashboard = () => {
   const [data, setData] = useState(null);
@@ -72,7 +86,7 @@ const StudentDashboard = () => {
     doc.setDrawColor(99, 102, 241); // Indigo border
     doc.setLineWidth(1.5);
     doc.rect(8, 8, 281, 194); // outer frame
-    
+
     doc.setDrawColor(219, 180, 74); // Gold inner border
     doc.setLineWidth(0.8);
     doc.rect(12, 12, 273, 186); // inner frame
@@ -158,10 +172,12 @@ const StudentDashboard = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-40 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-80 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
-          <div className="h-80 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
+        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+        <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="h-40 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+          <div className="h-40 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+          <div className="h-40 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
         </div>
       </div>
     );
@@ -169,8 +185,9 @@ const StudentDashboard = () => {
 
   if (!data) return null;
   const { profile, batch, scorecards, progress, leaderboardRank, placementReadiness, calculatedScores } = data;
+  const user = profile?.user || {};
 
-  const currentScorecard = 
+  const currentScorecard =
     activeScorecard === 'aptitude' ? scorecards.aptitude :
     activeScorecard === 'communication' ? scorecards.communication :
     scorecards.technical;
@@ -178,234 +195,241 @@ const StudentDashboard = () => {
   const isEligibleForCertificate = progress.overall >= 80;
   const isCertificateClaimed = data.certificates?.length > 0;
 
+  // The API returns `todayRecords` as an array (see backend studentController).
+  // Tolerate the legacy singular field so an older payload still renders.
+  const todayRecords = data.attendance?.todayRecords
+    || (data.attendance?.todayRecord ? [data.attendance.todayRecord] : []);
+  const hasCheckedIn = todayRecords.length > 0;
+
+  // Assigned cohorts, mirroring the three domain cards on the mobile home screen.
+  const domains = [
+    {
+      key: 'technical',
+      title: 'Technical Training',
+      caption: 'Core technology track',
+      batch: user.technicalBatch,
+      trainer: user.technicalTrainer,
+    },
+    {
+      key: 'communication',
+      title: 'Communication Skills',
+      caption: 'Soft skills & interview prep',
+      batch: user.communicationBatch,
+      trainer: user.communicationTrainer,
+    },
+    {
+      key: 'aptitude',
+      title: 'Aptitude & Reasoning',
+      caption: 'Quantitative & analytical prep',
+      batch: user.aptitudeBatch,
+      trainer: user.aptitudeTrainer,
+    },
+  ];
+
+  const enrolledLine = data.batches && data.batches.length > 0
+    ? `Cohort: ${data.batches.map(b => `${b.name} (${b.course})`).join(' • ')}`
+    : batch
+      ? `Cohort: ${batch.name} • ${batch.course}`
+      : 'Unassigned Batch. Contact administrator.';
+
   return (
-    <div className="space-y-8">
-      {/* 1. Welcoming Header */}
-      <div className="bg-gradient-to-r from-violet-800 to-purple-600 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
-        <div className="absolute inset-0 bg-grid-white/[0.06] bg-[size:15px_15px] pointer-events-none" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center space-x-2">
-            <Sparkles size={16} className="text-amber-300 animate-pulse" />
-            <span className="text-xs uppercase tracking-wider font-semibold text-violet-100">Student Space</span>
-          </div>
-          <div>
-            <h1 className="text-3xl font-extrabold text-white">Hello, {profile.user?.name}!</h1>
-            <p className="text-sm text-violet-100 mt-1">
-              {data.batches && data.batches.length > 0 
-                ? `Enrolled in: ${data.batches.map(b => `${b.name} (${b.course})`).join(' • ')}`
-                : batch 
-                ? `Enrolled in: ${batch.name} • ${batch.course}` 
-                : 'Unassigned Batch. Contact administrator.'}
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* 1. Welcome banner — mobile home header */}
+      <HeroHeader
+        eyebrow="Student Portal"
+        eyebrowIcon={Sparkles}
+        title={`Hello, ${user.name || 'Student'}!`}
+        subtitle={enrolledLine}
+        avatarText={user.name?.charAt(0).toUpperCase() || 'S'}
+      />
+
+      {user.slaeId && (
+        <div className="-mt-3">
+          <Pill tone="info">SLA ID · {user.slaeId}</Pill>
         </div>
-      </div>
+      )}
 
-      {/* Batch Details and Daily Attendance Scanner Roll Call */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Left Card: Batch Profile Details */}
-        <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2.5 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl">
-                <CalendarDays size={20} />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-base text-gray-900 dark:text-white">Active Training Batch</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Course duration & curriculum details</p>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2 text-xs text-gray-700 dark:text-gray-300">
-              <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
-                <span className="font-semibold text-gray-500 dark:text-gray-400">Batch Name:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{batch?.name || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
-                <span className="font-semibold text-gray-500 dark:text-gray-400">Course / Syllabus:</span>
-                <span className="font-bold text-violet-800 dark:text-violet-400">{batch?.course || 'Full Stack Placement Prep'}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2 border-gray-100 dark:border-gray-850">
-                <span className="font-semibold text-gray-500 dark:text-gray-400">Schedule:</span>
-                <span className="font-bold">
-                  {batch?.startDate ? new Date(batch.startDate).toLocaleDateString() : 'N/A'}
-                  {' — '}
-                  {batch?.endDate ? new Date(batch.endDate).toLocaleDateString() : 'N/A'}
-                </span>
-              </div>
-            </div>
-
-            {/* List of Trainers */}
-            <div className="pt-2">
-              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Assigned Staff Trainers</span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {batch?.trainers && batch.trainers.length > 0 ? (
-                  batch.trainers.map((tr) => (
-                    <div key={tr._id} className="p-2.5 border border-gray-100 dark:border-gray-850 bg-gray-50/50 dark:bg-[#181922] rounded-xl text-center space-y-1">
-                      <span className="text-[9px] font-bold text-violet-500 uppercase tracking-wide block truncate">{tr.role}</span>
-                      <h5 className="font-bold text-xs text-gray-800 dark:text-white truncate" title={tr.name}>{tr.name}</h5>
-                      <span className="text-[9px] text-gray-400 block truncate">{tr.email}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[10px] text-gray-400 italic col-span-3 text-center py-2 bg-gray-50 dark:bg-[#181922] rounded-xl">No trainers assigned yet.</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Card: Daily Roll Call Check-in */}
-        <div className="bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2.5 bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 rounded-xl">
-                  <Clock size={20} />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-gray-900 dark:text-white">Daily Attendance Roll Call</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Today is: {new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Attendance Status View */}
-            {data.attendance?.todayRecord ? (
-              // Case: Marked
-              <div className="flex flex-col items-center justify-center py-5 space-y-3 bg-emerald-50/20 dark:bg-emerald-950/5 border border-emerald-200/50 dark:border-emerald-900/20 rounded-2xl p-4">
-                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center">
-                  <CheckCircle2 size={24} />
-                </div>
-                <div className="text-center">
-                  <span className="inline-flex px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider">
-                    {data.attendance.todayRecord.status}
-                  </span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">
-                    Verified today at {new Date(data.attendance.todayRecord.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1">Daily attendance session logged successfully.</p>
-                </div>
-              </div>
-            ) : (
-              // Case: Pending Check-in
-              <div className="flex flex-col items-center justify-center py-5 space-y-3 bg-amber-50/20 dark:bg-amber-950/5 border border-amber-200/50 dark:border-amber-900/20 rounded-2xl p-4">
-                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center animate-bounce">
-                  <AlertTriangle size={24} />
-                </div>
-                <div className="text-center">
-                  <span className="inline-flex px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-xs font-bold uppercase tracking-wider">
-                    Pending
-                  </span>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">
-                    You have not checked in for today's sessions yet.
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1">Please scan the live QR code projected by your trainer to record attendance.</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Action Link: Scanner Direct link */}
-          {!data.attendance?.todayRecord && (
-            <Link
-              to="/student/scanner"
-              className="mt-4 w-full py-3 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md shadow-violet-500/20 duration-200 cursor-pointer"
-            >
-              <Camera size={14} />
-              <span>Scan Attendance QR Code</span>
+      {/* 2. Daily roll call check-in */}
+      <Card>
+        <CardHeader
+          icon={Clock}
+          title="Daily Attendance Roll Call"
+          subtitle={`Today: ${new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}`}
+          action={
+            <Link to="/student/scanner" className="text-[10px] font-black text-[#4F46E5] dark:text-indigo-400 hover:underline shrink-0">
+              View Logs
             </Link>
-          )}
-        </div>
-      </div>
+          }
+          className="mb-4"
+        />
 
-      {/* Dynamic Grades, Ranks and Placement readiness Cards */}
+        {hasCheckedIn ? (
+          <div className="space-y-3">
+            {todayRecords.map((record, index) => (
+              <div
+                key={record._id || index}
+                className="flex items-center justify-between py-3.5 px-4 bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl gap-3"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 bg-emerald-100/60 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center shrink-0">
+                    <CheckCircle2 size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#0F172A] dark:text-white uppercase tracking-wider truncate">
+                      {record.subject || 'Class'}
+                    </p>
+                    <p className="text-[10px] text-[#64748B] dark:text-slate-400 mt-0.5">
+                      {new Date(record.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+                <Pill tone="success">{record.status}</Pill>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={AlertTriangle}
+            tone="warning"
+            badge="Pending"
+            title="You have not checked in for today's sessions yet."
+            action={
+              <Link to="/student/scanner" className="m-btn-primary">
+                <Camera size={16} />
+                <span>Scan Attendance QR</span>
+              </Link>
+            }
+          />
+        )}
+      </Card>
+
+      {/* 3. Module progress rings */}
+      <Card>
+        <h3 className="m-title mb-4">Module Progress</h3>
+        <div className="flex flex-wrap justify-around gap-6">
+          <ProgressRing percent={progress.aptitude} label="Aptitude" color={PRIMARY} trackColor="#F1EBFB" />
+          <ProgressRing percent={progress.communication} label="Comms" color="#F59E0B" trackColor="#FEF3C7" />
+          <ProgressRing percent={progress.technical} label="Technical" color="#8B5CF6" trackColor="#EDE9FE" />
+          <ProgressRing percent={progress.overall} label="Overall" color="#10B981" trackColor="#D1FAE5" />
+        </div>
+      </Card>
+
+      {/* 4. Headline metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Ranks Card */}
-        <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-5 rounded-3xl backdrop-blur-md shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-2xl">
-            <Trophy size={24} />
-          </div>
-          <div>
-            <h4 className="text-xs text-gray-500 font-semibold uppercase">Leaderboard Ranks</h4>
-            <div className="flex items-baseline space-x-2 mt-1">
-              <span className="text-2xl font-black">#{leaderboardRank?.institute || '—'}</span>
-              <span className="text-[10px] text-gray-400">Inst. Rank</span>
-              <span className="text-lg font-bold text-violet-800 dark:text-violet-400">#{leaderboardRank?.batch || '—'}</span>
-              <span className="text-[10px] text-gray-400">Batch Rank</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Grade Card */}
-        <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-5 rounded-3xl backdrop-blur-md shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-2xl">
-            <Award size={24} />
-          </div>
-          <div>
-            <h4 className="text-xs text-gray-500 font-semibold uppercase">Overall Grade</h4>
-            <div className="flex items-baseline space-x-2 mt-1">
-              <span className="text-2xl font-black">{calculatedScores?.grade || '—'}</span>
-              <span className="text-[10px] text-gray-400">Grade Letter</span>
-              <span className="text-sm font-bold text-violet-800 dark:text-violet-400">({calculatedScores?.finalScorePercent || 0}%)</span>
-              <span className="text-[10px] text-gray-400">Weighted Score</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Placement Readiness Card */}
-        <div className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-5 rounded-3xl backdrop-blur-md shadow-sm flex items-center space-x-4">
-          <div className="p-3 bg-purple-100 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 rounded-2xl">
-            <TrendingUp size={24} />
-          </div>
-          <div>
-            <h4 className="text-xs text-gray-500 font-semibold uppercase">Placement Readiness</h4>
-            <div className="flex items-baseline space-x-2 mt-1">
-              <span className="text-2xl font-black">{placementReadiness?.percentage || 0}%</span>
-              <span className="text-[10px] text-gray-400">Readiness</span>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-violet-50 dark:bg-violet-950 text-violet-800 dark:text-violet-400">
-                {placementReadiness?.status || 'Critical'}
-              </span>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon={Trophy}
+          label="Leaderboard Rank"
+          value={`#${leaderboardRank?.institute || '—'}`}
+          hint={`Batch #${leaderboardRank?.batch || '—'}`}
+        />
+        <StatCard
+          icon={Award}
+          label="Overall Grade"
+          value={calculatedScores?.grade || '—'}
+          hint={`${calculatedScores?.finalScorePercent || 0}% weighted`}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Placement Readiness"
+          value={`${placementReadiness?.percentage || 0}%`}
+          hint={placementReadiness?.status || 'Critical'}
+          tone={
+            (placementReadiness?.percentage || 0) >= 75 ? 'success'
+              : (placementReadiness?.percentage || 0) >= 50 ? 'warning'
+              : 'danger'
+          }
+        />
       </div>
 
-      {/* 2. Score & Progress Summary */}
+      {/* 5. Track progress bars */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Overall Progress', value: progress.overall, color: 'bg-violet-800' },
-          { label: 'Aptitude Track', value: progress.aptitude, color: 'bg-blue-500' },
-          { label: 'Communication Track', value: progress.communication, color: 'bg-purple-500' },
-          { label: 'Technical Track', value: progress.technical, color: 'bg-emerald-500' }
+          { label: 'Overall Progress', value: progress.overall, color: PRIMARY },
+          { label: 'Aptitude Track', value: progress.aptitude, color: '#3B82F6' },
+          { label: 'Communication Track', value: progress.communication, color: '#F59E0B' },
+          { label: 'Technical Track', value: progress.technical, color: '#8B5CF6' }
         ].map((item, i) => (
-          <div key={i} className="bg-white/60 dark:bg-[#12131a]/60 border border-gray-200 dark:border-gray-800 p-5 rounded-3xl backdrop-blur-md shadow-sm space-y-3">
-            <div className="flex justify-between items-center text-xs font-semibold text-gray-500 dark:text-gray-400">
-              <span>{item.label}</span>
-              <span className="font-bold text-gray-800 dark:text-gray-200">{item.value}%</span>
+          <Card key={i} className="p-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="m-label">{item.label}</span>
+              <span className="text-xs font-black text-[#0F172A] dark:text-white">{item.value}%</span>
             </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden">
-              <div className={`${item.color} h-full rounded-full transition-all duration-500`} style={{ width: `${item.value}%` }} />
-            </div>
-          </div>
+            <ProgressBar value={item.value} color={item.color} />
+          </Card>
         ))}
       </div>
 
-      {/* 3. Certificate Claims Card */}
+      {/* 6. Assigned cohorts & trainers — mobile domain cards */}
+      <div className="space-y-4">
+        <SectionLabel>Assigned Cohorts &amp; Trainers</SectionLabel>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {domains.map((domain) => (
+            <Card key={domain.key}>
+              <CardHeader
+                icon={CalendarDays}
+                title={domain.title}
+                subtitle={domain.caption}
+                className="mb-4"
+              />
+              <div className="space-y-2.5">
+                <InfoRow label="Assigned Batch:" value={domain.batch || 'Unassigned'} />
+                <InfoRow label="Trainer:" value={domain.trainer || 'Unassigned'} accent />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* 7. Batch schedule & staff roster */}
+      <Card>
+        <CardHeader
+          icon={CalendarDays}
+          title="Active Training Batch"
+          subtitle="Course duration & curriculum details"
+          className="mb-4"
+        />
+        <div className="space-y-2.5">
+          <InfoRow label="Batch Name:" value={batch?.name || 'N/A'} />
+          <InfoRow label="Course / Syllabus:" value={batch?.course || 'Full Stack Placement Prep'} accent />
+          <InfoRow
+            label="Schedule:"
+            value={`${batch?.startDate ? new Date(batch.startDate).toLocaleDateString() : 'N/A'} — ${batch?.endDate ? new Date(batch.endDate).toLocaleDateString() : 'N/A'}`}
+          />
+        </div>
+
+        <div className="pt-5">
+          <SectionLabel className="block mb-2">Assigned Staff Trainers</SectionLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {batch?.trainers && batch.trainers.length > 0 ? (
+              batch.trainers.map((tr) => (
+                <div
+                  key={tr._id}
+                  className="p-3 border border-[#E2E8F0] dark:border-[#1e2330] bg-slate-50/60 dark:bg-[#181922] rounded-2xl text-center space-y-1"
+                >
+                  <span className="text-[9px] font-black text-indigo-500 uppercase tracking-wide block truncate">{tr.role}</span>
+                  <h5 className="font-bold text-xs text-[#0F172A] dark:text-white truncate" title={tr.name}>{tr.name}</h5>
+                  <span className="text-[9px] text-[#64748B] dark:text-slate-500 block truncate">{tr.email}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-[10px] text-[#64748B] italic col-span-3 text-center py-3 bg-slate-50 dark:bg-[#181922] rounded-2xl">
+                No trainers assigned yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* 8. Certificate claim */}
       {isEligibleForCertificate && (
-        <div className="bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-300/30 dark:border-amber-950/20 p-6 rounded-3xl backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-start space-x-3.5">
-            <div className="p-3 bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 rounded-2xl flex-shrink-0">
+        <Card className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-amber-200/70 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-950/10">
+          <div className="flex items-start gap-3.5">
+            <div className="p-3 bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-2xl shrink-0">
               <Award size={26} />
             </div>
             <div>
-              <h4 className="font-bold text-sm">Course Certificate Available</h4>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h4 className="m-title">Course Certificate Available</h4>
+              <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">
                 Congratulations! You completed over 80% of the training modules. Claim your official scorecard credential.
               </p>
             </div>
@@ -413,359 +437,125 @@ const StudentDashboard = () => {
           <button
             onClick={isCertificateClaimed ? generatePDFCertificate : handleClaimCertificate}
             disabled={certificateClaiming}
-            className="bg-violet-800 hover:bg-violet-500 dark:bg-violet-800 dark:hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-lg shadow-violet-500/20 disabled:opacity-50"
+            className="m-btn-primary sm:w-auto sm:px-6 shrink-0"
           >
             <FileDown size={14} />
             <span>{isCertificateClaimed ? 'Download Certificate' : 'Claim Certificate'}</span>
           </button>
-        </div>
+        </Card>
       )}
 
+      {/* 9. Module detail tabs */}
+      <Card padded={false} className="overflow-hidden">
+        <Tabs
+          active={activeScorecard}
+          onChange={setActiveScorecard}
+          tabs={[
+            { id: 'aptitude', name: 'Aptitude', icon: BookOpen },
+            { id: 'communication', name: 'Communication', icon: Bookmark },
+            { id: 'technical', name: 'Technical', icon: Award },
+            { id: 'attendance', name: 'Attendance', icon: Calendar }
+          ]}
+        />
 
-      {/* 5. Advanced Interactive Modules Dashboard */}
-      <div className="bg-white border border-[#c7c4d7] rounded-3xl ambient-shadow overflow-hidden">
-        {/* Module Switcher Tabs */}
-        <div className="flex border-b border-[#c7c4d7] bg-[#f0f3ff]">
-          {[
-            { id: 'aptitude', name: 'Aptitude Module', icon: BookOpen },
-            { id: 'communication', name: 'Communication Module', icon: Bookmark },
-            { id: 'technical', name: 'Technical Module', icon: Award },
-            { id: 'attendance', name: 'Attendance History', icon: Calendar }
-          ].map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveScorecard(tab.id)}
-                className={`flex-1 py-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center justify-center gap-2 ${
-                  activeScorecard === tab.id
-                    ? 'border-[#4648d4] text-[#4648d4] bg-white'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'
-                }`}
-              >
-                <Icon size={16} />
-                <span>{tab.name}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab Contents */}
         <div className="p-6">
-          {activeScorecard === 'aptitude' && (
-            <div className="space-y-6">
-              {/* Aptitude Dashboard Header Metrics */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Avg. Score</span>
-                  <span className="text-xl font-extrabold text-blue-700 mt-1 block">8.2 / 10</span>
-                </div>
-                <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Practice Tests</span>
-                  <span className="text-xl font-extrabold text-violet-900 mt-1 block">16 / 16 Done</span>
-                </div>
-                <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Mock Assessments</span>
-                  <span className="text-xl font-extrabold text-purple-700 mt-1 block">11 Cleared</span>
-                </div>
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Trainer Status</span>
-                  <span className="text-xl font-extrabold text-emerald-700 mt-1 block">Readiness OK</span>
-                </div>
-              </div>
-
-              {/* Grid: Modules Table and Leaderboard rank */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Modules & Scores */}
-                <div className="lg:col-span-2 space-y-4">
-                  <h4 className="font-bold text-sm text-[#111c2d]">Modules & Topic Grades</h4>
-                  <div className="border border-[#c7c4d7] rounded-2xl overflow-hidden bg-white">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-[#c7c4d7] text-gray-500 font-semibold uppercase tracking-wider">
-                          <th className="px-4 py-3">Topic</th>
-                          <th className="px-4 py-3">Status</th>
-                          <th className="px-4 py-3 text-center">Score</th>
-                          <th className="px-4 py-3">Remarks</th>
+          {activeScorecard !== 'attendance' && (
+            <div className="space-y-4">
+              <h4 className="m-title">Modules &amp; Topic Grades</h4>
+              <div className="border border-[#E2E8F0] dark:border-[#1e2330] rounded-2xl overflow-hidden overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-[#181922] border-b border-[#E2E8F0] dark:border-[#1e2330] text-[#64748B] dark:text-slate-400 font-black uppercase tracking-wider">
+                      <th className="px-4 py-3">Topic</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-center">Score</th>
+                      <th className="px-4 py-3">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#1e2330]">
+                    {!currentScorecard || currentScorecard.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-8 text-center text-[#64748B] italic">
+                          No graded modules yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      currentScorecard.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/20 transition-colors">
+                          <td className="px-4 py-3.5 font-bold text-[#0F172A] dark:text-white">{item.moduleName}</td>
+                          <td className="px-4 py-3.5">
+                            <Pill tone={item.status === 'Completed' ? 'success' : 'warning'}>{item.status}</Pill>
+                          </td>
+                          <td className="px-4 py-3.5 text-center font-extrabold text-[#0F172A] dark:text-white">{item.marks}/10</td>
+                          <td className="px-4 py-3.5 text-[#64748B] dark:text-slate-400 max-w-[200px] truncate">{item.remarks}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#c7c4d7]">
-                        {currentScorecard.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50/20 transition-colors">
-                            <td className="px-4 py-3.5 font-bold text-gray-800">{item.moduleName}</td>
-                            <td className="px-4 py-3.5">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                              }`}>
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3.5 text-center font-extrabold">{item.marks}/10</td>
-                            <td className="px-4 py-3.5 text-gray-500 max-w-[150px] truncate">{item.remarks}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Trainer Feedback & Class Rank */}
-                <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-[#111c2d]">Trainer Feedback</h4>
-                  <div className="p-5 border border-[#c7c4d7] rounded-2xl bg-gray-50/50 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-900 font-extrabold text-sm">
-                        AT
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs">Prof. Sarah Jenkins</p>
-                        <p className="text-[10px] text-gray-400">Lead Aptitude Trainer</p>
-                      </div>
-                    </div>
-                    <blockquote className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-[#c7c4d7]">
-                      "Strong logical reasoning skills. Needs minor practice on speed calculations for permutation and probability models. Overall readiness is very promising."
-                    </blockquote>
-                    <div className="pt-2 border-t border-[#c7c4d7] flex justify-between items-center text-xs">
-                      <span className="text-gray-500">Track Progress</span>
-                      <span className="font-extrabold text-[#4648d4]">84% Complete</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeScorecard === 'communication' && (
-            <div className="space-y-6">
-              {/* Communication Skill Matrix */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
-                {[
-                  { name: 'Reading', rating: '8.5/10', color: 'border-blue-200 bg-blue-50/50' },
-                  { name: 'Writing', rating: '8.0/10', color: 'border-violet-200 bg-violet-50/50' },
-                  { name: 'Speaking', rating: '9.0/10', color: 'border-purple-200 bg-purple-50/50' },
-                  { name: 'Listening', rating: '9.5/10', color: 'border-pink-200 bg-pink-50/50' },
-                  { name: 'Presentation', rating: '8.8/10', color: 'border-amber-200 bg-amber-50/50' },
-                  { name: 'Group Discussion', rating: '8.5/10', color: 'border-emerald-200 bg-emerald-50/50' },
-                  { name: 'Interview Comm.', rating: '9.2/10', color: 'border-teal-200 bg-teal-50/50' }
-                ].map((skill, i) => (
-                  <div key={i} className={`p-3 border rounded-xl text-center ${skill.color}`}>
-                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider block">{skill.name}</span>
-                    <span className="text-sm font-extrabold mt-1 block">{skill.rating}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Grid: Topics and Trainer Remarks */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Scorecard Table */}
-                <div className="lg:col-span-2 space-y-4">
-                  <h4 className="font-bold text-sm text-[#111c2d]">Modules & Topic Grades</h4>
-                  <div className="border border-[#c7c4d7] rounded-2xl overflow-hidden bg-white">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-[#c7c4d7] text-gray-500 font-semibold uppercase tracking-wider">
-                          <th className="px-4 py-3">Communication Topic</th>
-                          <th className="px-4 py-3">Status</th>
-                          <th className="px-4 py-3 text-center">Score</th>
-                          <th className="px-4 py-3">Remarks</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#c7c4d7]">
-                        {currentScorecard.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50/20 transition-colors">
-                            <td className="px-4 py-3.5 font-bold text-gray-800">{item.moduleName}</td>
-                            <td className="px-4 py-3.5">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                              }`}>
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3.5 text-center font-extrabold">{item.marks}/10</td>
-                            <td className="px-4 py-3.5 text-gray-500 max-w-[150px] truncate">{item.remarks}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Speech Modulation Remarks */}
-                <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-[#111c2d]">Speech & Body Language Feed</h4>
-                  <div className="p-5 border border-[#c7c4d7] rounded-2xl bg-gray-50/50 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-extrabold text-sm">
-                        CT
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs">Prof. Julian Reed</p>
-                        <p className="text-[10px] text-gray-400">Communication Lead</p>
-                      </div>
-                    </div>
-                    <blockquote className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-[#c7c4d7]">
-                      "Elena spoke clearly during the mock interview. Her posture and confidence were stellar. She should reduce filler words like 'like' or 'umm' under pressure."
-                    </blockquote>
-                    <div className="pt-2 border-t border-[#c7c4d7] flex justify-between items-center text-xs">
-                      <span className="text-gray-500">GD Engagement</span>
-                      <span className="font-extrabold text-emerald-600">Excellent</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeScorecard === 'technical' && (
-            <div className="space-y-6">
-              {/* Technology Stack & GitHub Tracking Widgets */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Tech Stack */}
-                <div className="p-4 border border-[#c7c4d7] rounded-2xl bg-white space-y-2">
-                  <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Technology Stack</h5>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    {['React', 'Node.js', 'Express', 'MongoDB', 'Python', 'TailwindCSS', 'Git', 'Frontend Development'].map((tech, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-violet-50 text-[#4648d4] text-[10px] font-bold rounded-lg border border-violet-100">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* GitHub Sync Status */}
-                <div className="p-4 border border-[#c7c4d7] rounded-2xl bg-white flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider">GitHub Integration</h5>
-                    <p className="text-xs font-bold text-emerald-600">Connected & Synced</p>
-                    <p className="text-[10px] text-gray-400">Last commit: 2 hrs ago</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-2xl text-gray-700 font-bold">
-                    [GIT]
-                  </div>
-                </div>
-
-                {/* Project Reviews Summary */}
-                <div className="p-4 border border-[#c7c4d7] rounded-2xl bg-white space-y-1">
-                  <h5 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Project Reviews</h5>
-                  <div className="flex items-baseline space-x-2 mt-2">
-                    <span className="text-2xl font-black">9.2 / 10</span>
-                    <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">Approved</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Grid: Coding Tests & Trainer Remarks */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Table list */}
-                <div className="lg:col-span-2 space-y-4">
-                  <h4 className="font-bold text-sm text-[#111c2d]">Modules & Topic Grades</h4>
-                  <div className="border border-[#c7c4d7] rounded-2xl overflow-hidden bg-white">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-[#c7c4d7] text-gray-500 font-semibold uppercase tracking-wider">
-                          <th className="px-4 py-3">Technical Topic</th>
-                          <th className="px-4 py-3">Status</th>
-                          <th className="px-4 py-3 text-center">Score</th>
-                          <th className="px-4 py-3">Remarks</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#c7c4d7]">
-                        {currentScorecard.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-gray-55/20 transition-colors">
-                            <td className="px-4 py-3.5 font-bold text-gray-800">{item.moduleName}</td>
-                            <td className="px-4 py-3.5">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                              }`}>
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3.5 text-center font-extrabold">{item.marks}/10</td>
-                            <td className="px-4 py-3.5 text-gray-500 max-w-[150px] truncate">{item.remarks}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Code Reviews Feedback */}
-                <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-[#111c2d]">Coding Review logs</h4>
-                  <div className="p-5 border border-[#c7c4d7] rounded-2xl bg-gray-50/50 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-extrabold text-sm">
-                        TT
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs">Prof. Marcus Vance</p>
-                        <p className="text-[10px] text-gray-400">Technical Evaluator</p>
-                      </div>
-                    </div>
-                    <blockquote className="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-[#c7c4d7]">
-                      "Understands asynchronous control flow and MongoDB indexing principles. Excellent work building clean REST controllers."
-                    </blockquote>
-                    <div className="pt-2 border-t border-[#c7c4d7] flex justify-between items-center text-xs">
-                      <span className="text-gray-500">Coding Speed</span>
-                      <span className="font-extrabold text-violet-800">Top 10%</span>
-                    </div>
-                  </div>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
 
           {activeScorecard === 'attendance' && (
             <div className="space-y-6">
-              {/* Stats Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Attendance Rate</span>
-                  <span className="text-xl font-extrabold text-violet-900 mt-1 block">{data.attendance?.percentage || 0}%</span>
-                </div>
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Classes Present</span>
-                  <span className="text-xl font-extrabold text-emerald-700 mt-1 block">{data.attendance?.presentCount || 0} Days</span>
-                </div>
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Total Sessions</span>
-                  <span className="text-xl font-extrabold text-gray-700 mt-1 block">{data.attendance?.totalClasses || 0} Sessions</span>
-                </div>
+                <Card className="p-4">
+                  <span className="m-label block">Attendance Rate</span>
+                  <span className="text-xl font-black text-[#4F46E5] dark:text-indigo-400 mt-1 block">
+                    {data.attendance?.percentage || 0}%
+                  </span>
+                </Card>
+                <Card className="p-4">
+                  <span className="m-label block">Classes Present</span>
+                  <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1 block">
+                    {data.attendance?.presentCount || 0} Days
+                  </span>
+                </Card>
+                <Card className="p-4">
+                  <span className="m-label block">Total Sessions</span>
+                  <span className="text-xl font-black text-[#0F172A] dark:text-white mt-1 block">
+                    {data.attendance?.totalClasses || 0} Sessions
+                  </span>
+                </Card>
               </div>
 
-              {/* Attendance Table */}
               <div className="space-y-4">
-                <h4 className="font-bold text-sm text-[#111c2d]">Day-Wise Attendance Logs</h4>
-                <div className="border border-[#c7c4d7] rounded-2xl overflow-hidden bg-white">
+                <h4 className="m-title">Day-Wise Attendance Logs</h4>
+                <div className="border border-[#E2E8F0] dark:border-[#1e2330] rounded-2xl overflow-hidden overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-[#c7c4d7] text-gray-500 font-semibold uppercase tracking-wider">
+                      <tr className="bg-slate-50 dark:bg-[#181922] border-b border-[#E2E8F0] dark:border-[#1e2330] text-[#64748B] dark:text-slate-400 font-black uppercase tracking-wider">
                         <th className="px-4 py-3">Date</th>
+                        <th className="px-4 py-3">Subject</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3">Remarks</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#c7c4d7]">
+                    <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#1e2330]">
                       {!data.attendance?.records || data.attendance.records.length === 0 ? (
                         <tr>
-                          <td colSpan="3" className="px-4 py-8 text-center text-gray-500 italic">No attendance records found.</td>
+                          <td colSpan="4" className="px-4 py-8 text-center text-[#64748B] italic">No attendance records found.</td>
                         </tr>
                       ) : (
                         data.attendance.records.map((item, idx) => (
-                          <tr key={item._id || idx} className="hover:bg-gray-50/20 transition-colors">
-                            <td className="px-4 py-3.5 font-bold text-gray-800">
+                          <tr key={item._id || idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/20 transition-colors">
+                            <td className="px-4 py-3.5 font-bold text-[#0F172A] dark:text-white">
                               {new Date(item.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                             </td>
+                            <td className="px-4 py-3.5 text-[#64748B] dark:text-slate-400">{item.subject || '—'}</td>
                             <td className="px-4 py-3.5">
-                              <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                                item.status === 'Present' ? 'bg-emerald-50 text-emerald-600' :
-                                item.status === 'Late' ? 'bg-amber-50 text-amber-600' :
-                                'bg-rose-50 text-rose-600'
-                              }`}>
+                              <Pill
+                                tone={
+                                  item.status === 'Present' ? 'success'
+                                    : item.status === 'Late' ? 'warning'
+                                    : 'danger'
+                                }
+                              >
                                 {item.status}
-                              </span>
+                              </Pill>
                             </td>
-                            <td className="px-4 py-3.5 text-gray-500 max-w-[200px] truncate">{item.remarks || '—'}</td>
+                            <td className="px-4 py-3.5 text-[#64748B] dark:text-slate-400 max-w-[200px] truncate">{item.remarks || '—'}</td>
                           </tr>
                         ))
                       )}
@@ -776,7 +566,7 @@ const StudentDashboard = () => {
             </div>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
