@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Phone, UserPlus, BookOpen, GraduationCap, ChevronRight, ChevronLeft, Camera, Eye, EyeOff } from 'lucide-react';
-import logoSla from '../assets/logosla.png';
+import logoSla from '../assets/logo.png';
 
 const PRESET_AVATARS = [
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',

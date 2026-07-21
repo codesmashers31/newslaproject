@@ -20,7 +20,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import API from '../services/api';
-import logoSla from '../assets/logosla.png';
+import logoSla from '../assets/logo.png';
 
 const Login = () => {
   const { login } = useAuth();
@@ -123,7 +123,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0c0d12] text-slate-800 dark:text-gray-100 selection:bg-violet-500 selection:text-white p-4 relative overflow-y-auto">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-800 selection:bg-violet-500 selection:text-white p-4 relative overflow-y-auto">
       
       <AnimatePresence mode="wait">
         {/* VIEW 1: NORMAL LOGIN SCREEN */}
@@ -134,94 +134,92 @@ const Login = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.98 }}
             transition={{ duration: 0.4 }}
-            className="m-auto w-full max-w-md p-8 py-10 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-xl space-y-6"
+            className="m-auto w-full max-w-md px-6 py-10"
           >
-            {/* Top SLA Logo & Brand Header */}
-            <div className="flex flex-col items-center text-center space-y-4">
-              <img src={logoSla} alt="Softlogic Logo" className="h-16 w-auto object-contain mb-1" />
-              <div>
-                <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                  Softlogic LCP Portal
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mt-1.5 font-semibold">
-                  Student & Career Portal • Login to Continue
-                </p>
-              </div>
-            </div>
-
-            {/* Shield Notice indicating Single Device enforcement */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-3 flex items-center space-x-3 text-xs">
-              <ShieldCheck className="text-violet-800 dark:text-violet-400 h-5 w-5 shrink-0" />
-              <p className="text-slate-600 dark:text-gray-400 font-semibold leading-relaxed">
-                Protected by BuildX Single Device Authentication. Each student profile is restricted to one hardware setup.
+            {/* Logo & titles — mirrors mobile/src/app/login.tsx */}
+            <div className="flex flex-col items-center text-center mb-6">
+              <img
+                src={logoSla}
+                alt="Softlogic Logo"
+                className="w-[120px] h-[120px] object-contain rounded-3xl mb-6"
+              />
+              <h2 className="text-3xl font-extrabold tracking-tight text-[#0F172A]">Welcome back</h2>
+              <p className="text-xs text-[#64748B] mt-1.5 font-semibold">
+                Log in to continue your progress
               </p>
             </div>
 
             {/* Login Form */}
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <form onSubmit={handleLoginSubmit}>
               {/* Email Address */}
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-bold text-slate-700 dark:text-gray-400 uppercase tracking-wide">
-                  Email Address / SLAEID
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-450 dark:text-gray-500">
-                    <Mail size={18} />
-                  </div>
+              <div className="mb-4">
+                <div className="flex items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14 focus-within:border-[#5B21B6] transition-colors">
+                  <Mail size={18} className="text-[#94A3B8] shrink-0" />
                   <input
                     type="text"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter email or SLAE-0001"
-                    className="w-full pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-semibold placeholder-slate-400"
+                    placeholder="student@lcp.edu"
+                    className="flex-1 h-full border-0 bg-transparent px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-0"
                   />
                 </div>
               </div>
 
               {/* Password */}
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-bold text-slate-700 dark:text-gray-400 uppercase tracking-wide">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-450 dark:text-gray-500">
-                    <Lock size={18} />
-                  </div>
+              <div className="mb-2">
+                <div className="flex items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14 focus-within:border-[#5B21B6] transition-colors">
+                  <Lock size={18} className="text-[#94A3B8] shrink-0" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="w-full pl-12 pr-12 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0c0d12]/50 text-slate-950 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all font-semibold placeholder-slate-400"
+                    placeholder="••••••••••"
+                    className="flex-1 h-full border-0 bg-transparent px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-0"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:text-gray-500"
+                    className="p-1 text-[#94A3B8] hover:text-[#64748B] cursor-pointer"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
+              {/* Forgot password */}
+              <div className="flex justify-end mb-6">
+                <button type="button" className="text-[#5B21B6] text-xs font-black cursor-pointer">
+                  Forgot password?
+                </button>
+              </div>
+
               {/* Login Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-violet-800 to-violet-600 hover:from-violet-500 hover:to-violet-500 text-white font-extrabold text-sm shadow-md shadow-violet-800/10 flex items-center justify-center space-x-2 transition disabled:opacity-50 cursor-pointer"
+                className="w-full bg-[#5B21B6] hover:bg-[#4c1d95] rounded-2xl h-14 flex items-center justify-center mb-6 shadow-sm disabled:opacity-50 transition-colors cursor-pointer"
               >
                 {loading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
-                  <>
-                    <span>Sign In to Portal</span>
+                  <span className="flex items-center justify-center text-white text-base font-black">
+                    <span className="mr-2.5">Login to Portal</span>
                     <ArrowRight size={18} />
-                  </>
+                  </span>
                 )}
               </button>
             </form>
+
+            {/* Single-device notice */}
+            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-4">
+              <p className="text-xs font-black text-[#0F172A]">Before you continue</p>
+              <p className="text-[10.5px] text-[#64748B] mt-1.5 leading-4 font-semibold">
+                Protected by BuildX Single Device Authentication. Each student profile is restricted to
+                one hardware setup.
+              </p>
+            </div>
           </motion.div>
         )}
 

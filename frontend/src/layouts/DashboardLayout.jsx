@@ -11,8 +11,6 @@ import {
   Briefcase, 
   FilePieChart, 
   Bell, 
-  Sun, 
-  Moon, 
   LogOut, 
   User, 
   Menu, 
@@ -32,7 +30,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import logoSla from '../assets/logosla.png';
+import logoSla from '../assets/logo.png';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -41,20 +39,16 @@ const DashboardLayout = ({ children }) => {
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [notifications, setNotifications] = useState([]);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Sync theme with document class
+  // The mobile app is light-only, so the web is pinned to light as well.
+  // The `dark` class is never applied; any remaining dark: variants are inert.
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('theme');
+  }, []);
 
   // Fetch student notifications if role is student
   useEffect(() => {
@@ -406,15 +400,6 @@ const DashboardLayout = ({ children }) => {
                 </AnimatePresence>
               </div>
             )}
-
-            {/* Theme Toggle Button */}
-            <button 
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-              className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors cursor-pointer"
-            >
-              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-            </button>
 
             {/* Quick Profile Dropdown */}
             <div className="relative">
