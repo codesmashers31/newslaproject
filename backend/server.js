@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 import connectDB from './config/db.js';
 
 // Route imports
@@ -66,6 +67,21 @@ app.use((req, res, next) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+
+  // Multer signals upload problems with a code rather than a status, which
+  // would otherwise surface to the client as an opaque 500.
+  if (err instanceof multer.MulterError) {
+    const messages = {
+      LIMIT_FILE_SIZE: 'File is too large. Maximum upload size is 15MB.',
+      LIMIT_FILE_COUNT: 'Too many files uploaded.',
+      LIMIT_UNEXPECTED_FILE: `Unexpected file field "${err.field}".`,
+    };
+    return res.status(400).json({
+      message: messages[err.code] || `Upload failed (${err.code}).`,
+      code: err.code,
+    });
+  }
+
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',
     error: process.env.NODE_ENV === 'production' ? {} : err.stack

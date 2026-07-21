@@ -7,7 +7,8 @@ import {
   Linkedin,
   Github,
   FileText,
-  Save
+  Save,
+  Camera
 } from 'lucide-react';
 import { Card, SectionLabel, PRIMARY,
   PageSkeleton
@@ -18,8 +19,8 @@ import { Card, SectionLabel, PRIMARY,
  * Same section order — identity card, Short Bio, Personal Info, Academic
  * Details, Professional Handles — with a sticky Save action in the header.
  *
- * Profile photo upload is deliberately absent on web: the avatar renders as a
- * monogram derived from the student's name. Resume upload is unaffected.
+ * The avatar doubles as the photo picker; it falls back to a monogram derived
+ * from the student's name when no photo is set.
  */
 const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,9 @@ const StudentProfile = () => {
 
   const [resumeFile, setResumeFile] = useState(null);
   const [currentResume, setCurrentResume] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [currentPhoto, setCurrentPhoto] = useState('');
 
   const loadProfile = async () => {
     try {
@@ -63,6 +67,7 @@ const StudentProfile = () => {
         bio: p.bio || '',
       });
       setCurrentResume(p.resumeUrl || '');
+      setCurrentPhoto(p.photo || '');
     } catch (error) {
       toast.error('Failed to load profile details');
     } finally {
@@ -83,6 +88,7 @@ const StudentProfile = () => {
       updateData.append(key, profileData[key]);
     });
 
+    if (photoFile) updateData.append('photo', photoFile);
     if (resumeFile) updateData.append('resume', resumeFile);
 
     try {
@@ -91,6 +97,9 @@ const StudentProfile = () => {
       });
       toast.success('Profile updated successfully!');
       setCurrentResume(data.profile?.resumeUrl || '');
+      setCurrentPhoto(data.profile?.photo || '');
+      setPhotoFile(null);
+      setPhotoPreview('');
       loadProfile();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error saving profile details');
@@ -104,6 +113,37 @@ const StudentProfile = () => {
     onChange: (e) => setProfileData({ ...profileData, [key]: e.target.value }),
   });
 
+  // Keep the server's 15MB ceiling in sync here so an oversized file is
+  // rejected before it is uploaded rather than after.
+  const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file.');
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      toast.error('Image is too large. Maximum size is 15MB.');
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  // Release the preview object URL when the page goes away.
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
+
   if (loading) {
     return (
       <PageSkeleton variant="form" />
@@ -111,6 +151,8 @@ const StudentProfile = () => {
   }
 
   const monogram = profileData.name?.charAt(0).toUpperCase() || 'S';
+  // Local preview wins over the stored photo until the save completes.
+  const avatarSrc = photoPreview || (currentPhoto ? `${BACKEND_URL}${currentPhoto}` : '');
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6">
@@ -141,11 +183,31 @@ const StudentProfile = () => {
         </button>
       </Card>
 
-      {/* Identity card — monogram avatar, no photo upload */}
+      {/* Identity card — click the avatar to choose a photo */}
       <Card className="p-6 flex flex-col items-center text-center">
-        <div className="h-28 w-28 rounded-full border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center shadow-md">
-          <span className="text-4xl font-black text-indigo-700 dark:text-indigo-400">{monogram}</span>
-        </div>
+        <label className="relative group cursor-pointer" title="Change photo">
+          <div className="h-28 w-28 rounded-full border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center shadow-md overflow-hidden">
+            {avatarSrc ? (
+              <img src={avatarSrc} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-4xl font-black text-indigo-700 dark:text-indigo-400">{monogram}</span>
+            )}
+          </div>
+          <span className="absolute bottom-0 right-0 bg-[#4F46E5] p-2 rounded-full border-2 border-white flex items-center justify-center">
+            <Camera size={14} className="text-white" />
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,image/heif"
+            onChange={handlePhotoChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+        </label>
+        {photoFile && (
+          <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-2">
+            New photo selected — press Save to upload
+          </p>
+        )}
         <p className="text-[#0F172A] dark:text-white font-extrabold text-base mt-4">
           {profileData.name || 'Student'}
         </p>
