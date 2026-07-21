@@ -14,7 +14,8 @@ import {
   ChevronDown,
   ChevronUp,
   Upload,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Filter
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -33,6 +34,7 @@ const TrainerStudentsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [selectedBatchFilter, setSelectedBatchFilter] = useState('All');
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
   const [importingExcel, setImportingExcel] = useState(false);
@@ -42,7 +44,7 @@ const TrainerStudentsPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, selectedBatchFilter]);
 
   // Add Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -357,9 +359,37 @@ const TrainerStudentsPage = () => {
     toast.success('Template downloaded successfully!');
   };
 
-  const filteredStudents = students.filter(student => {
+  const studentBelongsToBatchFilter = (student, batchIdOrName) => {
+    if (!batchIdOrName || batchIdOrName === 'All') return true;
 
+    const bObj = batches.find(b => String(b._id) === String(batchIdOrName) || b.name === batchIdOrName);
+    const targetName = bObj ? bObj.name.trim().toLowerCase() : String(batchIdOrName).trim().toLowerCase();
+    const targetId = bObj ? String(bObj._id) : String(batchIdOrName);
+
+    const techName = student.technicalBatch?.trim()?.toLowerCase();
+    const commName = student.communicationBatch?.trim()?.toLowerCase();
+    const aptiName = student.aptitudeBatch?.trim()?.toLowerCase();
+    const legacyName = student.batch?.trim()?.toLowerCase();
+
+    if (techName && (techName.includes(targetName) || targetName.includes(techName))) return true;
+    if (commName && (commName.includes(targetName) || targetName.includes(commName))) return true;
+    if (aptiName && (aptiName.includes(targetName) || targetName.includes(aptiName))) return true;
+    if (legacyName && (legacyName.includes(targetName) || targetName.includes(legacyName))) return true;
+
+    if (Array.isArray(student.batches)) {
+      return student.batches.some(b => {
+        const bIdStr = String(b?._id || b);
+        const bNameStr = (b?.name || String(b)).trim().toLowerCase();
+        return bIdStr === targetId || bNameStr === targetName || bNameStr.includes(targetName) || targetName.includes(bNameStr);
+      });
+    }
+
+    return false;
+  };
+
+  const filteredStudents = students.filter(student => {
     const matchesSearch =
+      searchQuery === '' ||
       student.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       student.slaeId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -368,7 +398,10 @@ const TrainerStudentsPage = () => {
     const matchesStatus =
       statusFilter === 'All' || student.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesBatch =
+      selectedBatchFilter === 'All' || studentBelongsToBatchFilter(student, selectedBatchFilter);
+
+    return matchesSearch && matchesStatus && matchesBatch;
   });
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
@@ -429,20 +462,41 @@ const TrainerStudentsPage = () => {
             />
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-            {['All', 'Active', 'Enrolled', 'Completed', 'Inactive'].map(st => (
-              <button
-                key={st}
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1 rounded-lg text-xs font-extrabold transition cursor-pointer ${
-                  statusFilter === st
-                    ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Batch Filter Dropdown */}
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
+              <Filter size={14} className="text-purple-600 dark:text-purple-400" />
+              <span className="font-extrabold text-slate-600 dark:text-slate-300">Batch:</span>
+              <select
+                value={selectedBatchFilter}
+                onChange={(e) => setSelectedBatchFilter(e.target.value)}
+                className="bg-transparent font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer text-xs"
               >
-                {st}
-              </button>
-            ))}
+                <option value="All" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">All Batches ({batches.length})</option>
+                {batches.map(b => (
+                  <option key={b._id} value={b._id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                    {b.name} ({b.course || 'Training'})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Filter Buttons */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+              {['All', 'Active', 'Enrolled', 'Completed', 'Inactive'].map(st => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                    statusFilter === st
+                      ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
