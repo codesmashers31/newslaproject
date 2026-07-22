@@ -93,6 +93,17 @@ export default function LoginScreen() {
         deviceId,
         deviceInfo,
       });
+
+      if (data.role?.toLowerCase() !== 'student') {
+        Toast.show({
+          type: 'error',
+          text1: 'Access Denied',
+          text2: 'Only Student logins are permitted on the mobile app.',
+        });
+        setLoading(false);
+        return;
+      }
+
       await AsyncStorage.setItem('student_token', data.token);
       await AsyncStorage.setItem('student_profile', JSON.stringify(data));
       router.replace('/(tabs)');
