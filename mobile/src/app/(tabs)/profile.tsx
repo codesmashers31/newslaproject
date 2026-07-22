@@ -251,7 +251,7 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <ScreenSkeleton variant="form" />
+      <ScreenSkeleton variant="profile" />
     );
   }
 

@@ -65,7 +65,7 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <ScreenSkeleton variant="default" />
+      <ScreenSkeleton variant="dashboard" />
     );
   }
 

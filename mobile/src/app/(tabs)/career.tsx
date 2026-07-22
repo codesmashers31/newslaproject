@@ -62,7 +62,7 @@ export default function CareerScreen() {
 
   if (loading) {
     return (
-      <ScreenSkeleton variant="list" />
+      <ScreenSkeleton variant="career" />
     );
   }
 

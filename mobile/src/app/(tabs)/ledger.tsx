@@ -49,7 +49,7 @@ export default function LedgerScreen() {
 
   if (loading) {
     return (
-      <ScreenSkeleton variant="list" />
+      <ScreenSkeleton variant="scorecard" />
     );
   }
 

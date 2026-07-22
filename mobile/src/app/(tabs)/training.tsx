@@ -194,7 +194,7 @@ export default function TrainingScreen() {
 
   if (loading) {
     return (
-      <ScreenSkeleton variant="list" />
+      <ScreenSkeleton variant="training" />
     );
   }
 
