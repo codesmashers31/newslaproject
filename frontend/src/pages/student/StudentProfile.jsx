@@ -268,22 +268,22 @@ const StudentProfile = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label>College Name</label>
-            <input type="text" required {...field('collegeName')} className="w-full text-sm" placeholder="e.g. Stanford University" />
+            <input type="text" {...field('collegeName')} className="w-full text-sm" placeholder="e.g. Stanford University" />
           </div>
           <div>
             <label>Degree</label>
-            <input type="text" required {...field('degree')} className="w-full text-sm" placeholder="e.g. B.Tech / B.Sc" />
+            <input type="text" {...field('degree')} className="w-full text-sm" placeholder="e.g. B.Tech / B.Sc" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label>Department</label>
-            <input type="text" required {...field('department')} className="w-full text-sm" placeholder="e.g. Computer Science" />
+            <input type="text" {...field('department')} className="w-full text-sm" placeholder="e.g. Computer Science" />
           </div>
           <div>
             <label>Year of Passing</label>
-            <input type="text" required {...field('yearOfPassing')} className="w-full text-sm" placeholder="e.g. 2026" />
+            <input type="text" {...field('yearOfPassing')} className="w-full text-sm" placeholder="e.g. 2026" />
           </div>
         </div>
       </Card>
