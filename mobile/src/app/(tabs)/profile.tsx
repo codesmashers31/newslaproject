@@ -160,7 +160,8 @@ export default function ProfileScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions ? ImagePicker.MediaTypeOptions.Images : ['images'] as any,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.7,
+      base64: true,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -180,75 +181,38 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
-      // 1. Prepare FormData (React Native requires all non-file parts to be explicit primitives/strings)
-      const formData = new FormData();
-      
-      formData.append('name', String(profileData.name || ''));
-      formData.append('mobile', String(profileData.mobile || ''));
-      formData.append('collegeName', String(profileData.collegeName || ''));
-      formData.append('degree', String(profileData.degree || ''));
-      formData.append('department', String(profileData.department || ''));
-      formData.append('yearOfPassing', String(profileData.yearOfPassing || ''));
-      formData.append('dob', String(profileData.dob || ''));
-      formData.append('gender', String(profileData.gender || ''));
-      formData.append('address', String(profileData.address || ''));
-      formData.append('linkedin', String(profileData.linkedin || ''));
-      formData.append('github', String(profileData.github || ''));
-      formData.append('bio', String(profileData.bio || ''));
-      
-      formData.append('technicalBatch', String(profileData.technicalBatch || ''));
-      formData.append('technicalTrainer', String(profileData.technicalTrainer || ''));
-      formData.append('communicationBatch', String(profileData.communicationBatch || ''));
-      formData.append('communicationTrainer', String(profileData.communicationTrainer || ''));
-      formData.append('aptitudeBatch', String(profileData.aptitudeBatch || ''));
-      formData.append('aptitudeTrainer', String(profileData.aptitudeTrainer || ''));
-      
-      formData.append('skills', Array.isArray(profileData.skills) ? profileData.skills.join(', ') : String(profileData.skills || ''));
-
-      // Append photo if selected
+      let photoBase64 = null;
       if (selectedPhoto) {
-        let photoUri = typeof selectedPhoto === 'string' ? selectedPhoto : selectedPhoto.uri;
-        if (typeof photoUri === 'string' && photoUri.length > 0) {
-          const filename = selectedPhoto.fileName || photoUri.split('/').pop() || `photo_${Date.now()}.jpg`;
-          const ext = (filename.split('.').pop() || 'jpg').toLowerCase();
-          
-          let mimeType = 'image/jpeg';
-          if (selectedPhoto.mimeType && typeof selectedPhoto.mimeType === 'string' && selectedPhoto.mimeType.startsWith('image/')) {
-            mimeType = selectedPhoto.mimeType;
-          } else if (ext === 'png') {
-            mimeType = 'image/png';
-          } else if (ext === 'webp') {
-            mimeType = 'image/webp';
-          } else if (ext === 'gif') {
-            mimeType = 'image/gif';
-          }
-
-          formData.append('photo', {
-            uri: String(photoUri),
-            name: String(filename),
-            type: String(mimeType),
-          } as any);
+        if (selectedPhoto.base64) {
+          const mime = selectedPhoto.mimeType || 'image/jpeg';
+          photoBase64 = `data:${mime};base64,${selectedPhoto.base64}`;
         }
       }
 
-      // 2. Save via fetch
-      const token = await AsyncStorage.getItem('student_token');
-      const baseURL = API.defaults.baseURL || 'https://newslaproject.onrender.com/api';
-      const endpoint = `${baseURL}/student/profile`;
+      const payload = {
+        name: profileData.name || '',
+        mobile: profileData.mobile || '',
+        collegeName: profileData.collegeName || '',
+        degree: profileData.degree || '',
+        department: profileData.department || '',
+        yearOfPassing: profileData.yearOfPassing || '',
+        dob: profileData.dob || '',
+        gender: profileData.gender || '',
+        address: profileData.address || '',
+        linkedin: profileData.linkedin || '',
+        github: profileData.github || '',
+        bio: profileData.bio || '',
+        technicalBatch: profileData.technicalBatch || '',
+        technicalTrainer: profileData.technicalTrainer || '',
+        communicationBatch: profileData.communicationBatch || '',
+        communicationTrainer: profileData.communicationTrainer || '',
+        aptitudeBatch: profileData.aptitudeBatch || '',
+        aptitudeTrainer: profileData.aptitudeTrainer || '',
+        skills: Array.isArray(profileData.skills) ? profileData.skills.join(', ') : (profileData.skills || ''),
+        ...(photoBase64 ? { photoBase64 } : {}),
+      };
 
-      const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-        body: formData,
-      });
-
-      const resData = await response.json();
-      if (!response.ok) {
-        throw new Error(resData?.message || 'Failed to save profile details.');
-      }
+      const { data: resData } = await API.put('/student/profile', payload);
 
       // Update current photo path immediately from response
       const newPhoto = resData?.profile?.photo || resData?.user?.photo;
@@ -257,19 +221,11 @@ export default function ProfileScreen() {
       }
       setSelectedPhoto(null);
 
-      // Sync user basic details (name, mobile) to the auth model
+      // Sync user basic details (name, mobile) to auth model
       try {
-        await fetch(`${baseURL}/auth/me`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({
-            name: profileData.name,
-            mobile: profileData.mobile,
-          }),
+        await API.put('/auth/me', {
+          name: profileData.name,
+          mobile: profileData.mobile,
         });
       } catch (e) {}
 

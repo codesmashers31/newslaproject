@@ -19,8 +19,8 @@ export const uploadToCloudinary = async (filePath, folder = 'slaproject') => {
       resource_type: 'auto', // Automatically handles images, PDFs, docs
     });
 
-    // Delete local temporary file after successful Cloudinary upload
-    if (fs.existsSync(filePath)) {
+    // Delete local temporary file after successful Cloudinary upload (if not base64 string)
+    if (typeof filePath === 'string' && !filePath.startsWith('data:') && fs.existsSync(filePath)) {
       try {
         fs.unlinkSync(filePath);
       } catch (unlinkErr) {
@@ -32,7 +32,7 @@ export const uploadToCloudinary = async (filePath, folder = 'slaproject') => {
   } catch (error) {
     console.error('Cloudinary upload error:', error);
     // Cleanup temporary local file on upload error
-    if (fs.existsSync(filePath)) {
+    if (typeof filePath === 'string' && !filePath.startsWith('data:') && fs.existsSync(filePath)) {
       try {
         fs.unlinkSync(filePath);
       } catch (e) {}
