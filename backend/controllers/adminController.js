@@ -11,7 +11,7 @@ import fs from 'fs';
 import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
 import Enrollment from '../models/Enrollment.js';
 import DeviceResetRequest from '../models/DeviceResetRequest.js';
-import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
 
 // ==========================================
 // DASHBOARD ANALYTICS
@@ -769,6 +769,10 @@ export const updatePlacementDetails = async (req, res) => {
   try {
     let offerLetterUrl = '';
     if (req.file) {
+      const existingPlacement = await Placement.findOne({ student: studentId });
+      if (existingPlacement && existingPlacement.offerLetterUrl) {
+        await deleteFromCloudinary(existingPlacement.offerLetterUrl);
+      }
       offerLetterUrl = await uploadToCloudinary(req.file.path, 'offer_letters');
     }
 

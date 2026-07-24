@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import Student from '../models/Student.js';
 import Placement from '../models/Placement.js';
 import DeviceResetRequest from '../models/DeviceResetRequest.js';
-import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
+import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'lcp_secret_key_123456', {
@@ -247,6 +247,9 @@ export const updateUserProfile = async (req, res) => {
       user.name = req.body.name || user.name;
       user.mobile = req.body.mobile || user.mobile;
       if (req.file) {
+        if (user.photo) {
+          await deleteFromCloudinary(user.photo);
+        }
         const photoUrl = await uploadToCloudinary(req.file.path, 'user_photos');
         user.photo = photoUrl;
       }

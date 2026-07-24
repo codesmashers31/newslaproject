@@ -40,3 +40,40 @@ export const uploadToCloudinary = async (filePath, folder = 'slaproject') => {
     throw error;
   }
 };
+
+/**
+ * Deletes a file from Cloudinary given its HTTPS URL.
+ * Automatically extracts the public_id and resource_type.
+ */
+export const deleteFromCloudinary = async (url) => {
+  if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) {
+    return;
+  }
+
+  try {
+    const parts = url.split('/upload/');
+    if (parts.length < 2) return;
+
+    const pathAfterUpload = parts[1];
+    // Remove version prefix (e.g. v1721812345/)
+    const cleanPath = pathAfterUpload.replace(/^v\d+\//, '');
+
+    const isRaw = url.includes('/raw/');
+    const isVideo = url.includes('/video/');
+    const resourceType = isRaw ? 'raw' : isVideo ? 'video' : 'image';
+
+    let publicId = cleanPath;
+    if (!isRaw && cleanPath.includes('.')) {
+      publicId = cleanPath.substring(0, cleanPath.lastIndexOf('.'));
+    }
+
+    const res = await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+      invalidate: true,
+    });
+
+    console.log(`Cloudinary deletion result for [${publicId}]:`, res);
+  } catch (err) {
+    console.error(`Failed to delete old asset [${url}] from Cloudinary:`, err.message);
+  }
+};
