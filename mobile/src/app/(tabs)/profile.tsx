@@ -17,6 +17,7 @@ import { useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
 import { 
@@ -182,40 +183,33 @@ export default function ProfileScreen() {
       // 1. Prepare FormData
       const formData = new FormData();
       
-      // Append all profile data
       formData.append('name', profileData.name || '');
       formData.append('mobile', profileData.mobile || '');
-      formData.append('collegeName', profileData.collegeName);
-      formData.append('degree', profileData.degree);
-      formData.append('department', profileData.department);
-      formData.append('yearOfPassing', profileData.yearOfPassing);
-      formData.append('dob', profileData.dob);
-      formData.append('gender', profileData.gender);
-      formData.append('address', profileData.address);
-      formData.append('linkedin', profileData.linkedin);
-      formData.append('github', profileData.github);
-      formData.append('bio', profileData.bio);
+      formData.append('collegeName', profileData.collegeName || '');
+      formData.append('degree', profileData.degree || '');
+      formData.append('department', profileData.department || '');
+      formData.append('yearOfPassing', profileData.yearOfPassing || '');
+      formData.append('dob', profileData.dob || '');
+      formData.append('gender', profileData.gender || '');
+      formData.append('address', profileData.address || '');
+      formData.append('linkedin', profileData.linkedin || '');
+      formData.append('github', profileData.github || '');
+      formData.append('bio', profileData.bio || '');
       
-      // Append batch updates
-      formData.append('technicalBatch', profileData.technicalBatch);
-      formData.append('technicalTrainer', profileData.technicalTrainer);
-      formData.append('communicationBatch', profileData.communicationBatch);
-      formData.append('communicationTrainer', profileData.communicationTrainer);
-      formData.append('aptitudeBatch', profileData.aptitudeBatch);
-      formData.append('aptitudeTrainer', profileData.aptitudeTrainer);
+      formData.append('technicalBatch', profileData.technicalBatch || '');
+      formData.append('technicalTrainer', profileData.technicalTrainer || '');
+      formData.append('communicationBatch', profileData.communicationBatch || '');
+      formData.append('communicationTrainer', profileData.communicationTrainer || '');
+      formData.append('aptitudeBatch', profileData.aptitudeBatch || '');
+      formData.append('aptitudeTrainer', profileData.aptitudeTrainer || '');
       
-      // Send skills as a comma-separated string directly (which matches the backend's split parser)
       formData.append('skills', profileData.skills || '');
 
       // Append photo if selected
       if (selectedPhoto) {
-        const uri = selectedPhoto.uri || selectedPhoto;
-        let cleanUri = uri;
-        if (Platform.OS === 'android' && !cleanUri.startsWith('file://') && !cleanUri.startsWith('content://')) {
-          cleanUri = `file://${cleanUri}`;
-        }
-        const filename = selectedPhoto.fileName || cleanUri.split('/').pop() || 'photo.jpg';
-        const ext = (filename.split('.').pop() || '').toLowerCase();
+        const photoUri = selectedPhoto.uri || selectedPhoto;
+        const filename = selectedPhoto.fileName || photoUri.split('/').pop() || `photo_${Date.now()}.jpg`;
+        const ext = (filename.split('.').pop() || 'jpg').toLowerCase();
         
         let mimeType = 'image/jpeg';
         if (selectedPhoto.mimeType && selectedPhoto.mimeType.startsWith('image/')) {
@@ -229,29 +223,53 @@ export default function ProfileScreen() {
         }
 
         formData.append('photo', {
-          uri: cleanUri,
+          uri: photoUri,
           name: filename,
           type: mimeType,
         } as any);
       }
 
-      // 2. Save via API (Profile details and trainers)
-      const { data: resData } = await API.put('/student/profile', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // 2. Save via fetch (Native React Native fetch automatically generates multipart boundary)
+      const token = await AsyncStorage.getItem('student_token');
+      const baseURL = API.defaults.baseURL || 'https://newslaproject.onrender.com/api';
+      const endpoint = `${baseURL}/student/profile`;
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        body: formData,
       });
 
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData?.message || 'Failed to save profile details.');
+      }
+
       // Update current photo path immediately from response
-      const updatedPhoto = resData?.profile?.photo || resData?.user?.photo;
-      if (updatedPhoto) {
-        setCurrentPhotoPath(updatedPhoto);
+      const newPhoto = resData?.profile?.photo || resData?.user?.photo;
+      if (newPhoto) {
+        setCurrentPhotoPath(newPhoto);
       }
       setSelectedPhoto(null);
 
-      // 3. Sync user basic details (name, mobile) to the auth model
-      await API.put('/auth/me', {
-        name: profileData.name,
-        mobile: profileData.mobile,
-      });
+      // Sync user basic details (name, mobile) to the auth model
+      try {
+        await fetch(`${baseURL}/auth/me`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            name: profileData.name,
+            mobile: profileData.mobile,
+          }),
+        });
+      } catch (e) {}
 
       Toast.show({
         type: 'success',
@@ -261,7 +279,7 @@ export default function ProfileScreen() {
       loadProfileData();
     } catch (error: any) {
       console.error('Failed to update student profile', error);
-      const msg = error?.response?.data?.message || 'Error updating profile details.';
+      const msg = error?.message || 'Error updating profile details.';
       Toast.show({
         type: 'error',
         text1: 'Error',
