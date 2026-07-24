@@ -70,6 +70,20 @@ export default function DashboardScreen() {
   }
 
   const profile = data?.profile?.user || {};
+  const studentProfile = data?.profile || {};
+  const userPhoto = studentProfile.photo || profile.photo;
+  
+  const getServerRoot = () => {
+    const base = API.defaults.baseURL;
+    if (base) {
+      const root = base.replace('/api', '');
+      return root.endsWith('/') ? root.slice(0, -1) : root;
+    }
+    return 'https://newslaproject.onrender.com';
+  };
+
+  const photoUri = userPhoto ? (userPhoto.startsWith('http') ? userPhoto : `${getServerRoot()}${userPhoto.startsWith('/') ? '' : '/'}${userPhoto}`) : null;
+
   const batch = data?.batch || {};
   const todayRecords = data?.attendance?.todayRecords || [];
   const progress = data?.progress || { aptitude: 0, communication: 0, technical: 0 };
@@ -90,9 +104,10 @@ export default function DashboardScreen() {
         
         <TouchableOpacity 
           onPress={handleSignOut}
-          className="p-2.5 bg-red-50 border border-red-100 rounded-xl"
+          className="flex-row items-center bg-[#5B21B6]/10 px-3 py-2 rounded-xl border border-[#5B21B6]/20"
         >
-          <LogOut size={16} color="#ef4444" />
+          <LogOut size={16} color={primaryColor} style={{ marginRight: 6 }} />
+          <Text className="text-xs font-bold text-[#5B21B6]">Sign Out</Text>
         </TouchableOpacity>
       </View>
 
@@ -120,10 +135,14 @@ export default function DashboardScreen() {
                 {batch.name ? `Cohort: ${batch.name} • ${batch.course}` : 'Unassigned Batch. Contact admin.'}
               </Text>
             </View>
-            <View className="w-14 h-14 bg-indigo-50 rounded-full items-center justify-center border border-indigo-100">
-              <Text className="text-xl font-black text-indigo-700">
-                {profile.name?.charAt(0).toUpperCase() || 'S'}
-              </Text>
+            <View className="w-14 h-14 bg-indigo-50 rounded-full items-center justify-center border border-indigo-100 overflow-hidden relative shadow-xs">
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} className="h-full w-full" contentFit="cover" />
+              ) : (
+                <Text className="text-xl font-black text-indigo-700">
+                  {profile.name?.charAt(0).toUpperCase() || 'S'}
+                </Text>
+              )}
             </View>
           </View>
 

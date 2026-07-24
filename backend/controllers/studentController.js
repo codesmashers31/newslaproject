@@ -25,10 +25,10 @@ export const getStudentDashboard = async (req, res) => {
 
     // 1. Fetch Profile
     let profile = await Student.findOne({ user: studentId })
-      .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked')
+      .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
       .lean();
     if (!profile) {
-      const userObj = await User.findById(studentId).select('name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked').lean();
+      const userObj = await User.findById(studentId).select('name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo').lean();
       profile = { user: userObj };
     }
 

@@ -109,7 +109,7 @@ export default function ProfileScreen() {
         aptitudeBatch: student.aptitudeBatch || '',
         aptitudeTrainer: student.aptitudeTrainer || '',
       });
-      setCurrentPhotoPath(p.photo || '');
+      setCurrentPhotoPath(p.photo || student.photo || '');
       setSelectedPhoto(null);
 
       // Fetch active batches for selection dropdowns
@@ -208,10 +208,12 @@ export default function ProfileScreen() {
       // Append photo if selected
       if (selectedPhoto) {
         const uri = selectedPhoto.uri || selectedPhoto;
-        // On Android/iOS, make sure the URI includes the file:// scheme so the native engine fetches the binary
-        const cleanUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+        let cleanUri = uri;
+        if (Platform.OS === 'android' && !cleanUri.startsWith('file://') && !cleanUri.startsWith('content://')) {
+          cleanUri = `file://${cleanUri}`;
+        }
         const filename = selectedPhoto.fileName || cleanUri.split('/').pop() || 'photo.jpg';
-        const type = selectedPhoto.mimeType || 'image/jpeg';
+        const type = selectedPhoto.mimeType || selectedPhoto.type || 'image/jpeg';
         
         formData.append('photo', {
           uri: cleanUri,
@@ -221,8 +223,9 @@ export default function ProfileScreen() {
       }
 
       // 2. Save via API (Profile details and trainers)
-      // Omit manual Content-Type header in React Native to allow Axios to automatically generate boundary
-      await API.put('/student/profile', formData);
+      await API.put('/student/profile', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       // 3. Sync user basic details (name, mobile) to the auth model
       await API.put('/auth/me', {
