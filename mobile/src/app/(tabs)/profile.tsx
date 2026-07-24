@@ -180,56 +180,58 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
-      // 1. Prepare FormData
+      // 1. Prepare FormData (React Native requires all non-file parts to be explicit primitives/strings)
       const formData = new FormData();
       
-      formData.append('name', profileData.name || '');
-      formData.append('mobile', profileData.mobile || '');
-      formData.append('collegeName', profileData.collegeName || '');
-      formData.append('degree', profileData.degree || '');
-      formData.append('department', profileData.department || '');
-      formData.append('yearOfPassing', profileData.yearOfPassing || '');
-      formData.append('dob', profileData.dob || '');
-      formData.append('gender', profileData.gender || '');
-      formData.append('address', profileData.address || '');
-      formData.append('linkedin', profileData.linkedin || '');
-      formData.append('github', profileData.github || '');
-      formData.append('bio', profileData.bio || '');
+      formData.append('name', String(profileData.name || ''));
+      formData.append('mobile', String(profileData.mobile || ''));
+      formData.append('collegeName', String(profileData.collegeName || ''));
+      formData.append('degree', String(profileData.degree || ''));
+      formData.append('department', String(profileData.department || ''));
+      formData.append('yearOfPassing', String(profileData.yearOfPassing || ''));
+      formData.append('dob', String(profileData.dob || ''));
+      formData.append('gender', String(profileData.gender || ''));
+      formData.append('address', String(profileData.address || ''));
+      formData.append('linkedin', String(profileData.linkedin || ''));
+      formData.append('github', String(profileData.github || ''));
+      formData.append('bio', String(profileData.bio || ''));
       
-      formData.append('technicalBatch', profileData.technicalBatch || '');
-      formData.append('technicalTrainer', profileData.technicalTrainer || '');
-      formData.append('communicationBatch', profileData.communicationBatch || '');
-      formData.append('communicationTrainer', profileData.communicationTrainer || '');
-      formData.append('aptitudeBatch', profileData.aptitudeBatch || '');
-      formData.append('aptitudeTrainer', profileData.aptitudeTrainer || '');
+      formData.append('technicalBatch', String(profileData.technicalBatch || ''));
+      formData.append('technicalTrainer', String(profileData.technicalTrainer || ''));
+      formData.append('communicationBatch', String(profileData.communicationBatch || ''));
+      formData.append('communicationTrainer', String(profileData.communicationTrainer || ''));
+      formData.append('aptitudeBatch', String(profileData.aptitudeBatch || ''));
+      formData.append('aptitudeTrainer', String(profileData.aptitudeTrainer || ''));
       
-      formData.append('skills', profileData.skills || '');
+      formData.append('skills', Array.isArray(profileData.skills) ? profileData.skills.join(', ') : String(profileData.skills || ''));
 
       // Append photo if selected
       if (selectedPhoto) {
-        const photoUri = selectedPhoto.uri || selectedPhoto;
-        const filename = selectedPhoto.fileName || photoUri.split('/').pop() || `photo_${Date.now()}.jpg`;
-        const ext = (filename.split('.').pop() || 'jpg').toLowerCase();
-        
-        let mimeType = 'image/jpeg';
-        if (selectedPhoto.mimeType && selectedPhoto.mimeType.startsWith('image/')) {
-          mimeType = selectedPhoto.mimeType;
-        } else if (ext === 'png') {
-          mimeType = 'image/png';
-        } else if (ext === 'webp') {
-          mimeType = 'image/webp';
-        } else if (ext === 'gif') {
-          mimeType = 'image/gif';
-        }
+        let photoUri = typeof selectedPhoto === 'string' ? selectedPhoto : selectedPhoto.uri;
+        if (typeof photoUri === 'string' && photoUri.length > 0) {
+          const filename = selectedPhoto.fileName || photoUri.split('/').pop() || `photo_${Date.now()}.jpg`;
+          const ext = (filename.split('.').pop() || 'jpg').toLowerCase();
+          
+          let mimeType = 'image/jpeg';
+          if (selectedPhoto.mimeType && typeof selectedPhoto.mimeType === 'string' && selectedPhoto.mimeType.startsWith('image/')) {
+            mimeType = selectedPhoto.mimeType;
+          } else if (ext === 'png') {
+            mimeType = 'image/png';
+          } else if (ext === 'webp') {
+            mimeType = 'image/webp';
+          } else if (ext === 'gif') {
+            mimeType = 'image/gif';
+          }
 
-        formData.append('photo', {
-          uri: photoUri,
-          name: filename,
-          type: mimeType,
-        } as any);
+          formData.append('photo', {
+            uri: String(photoUri),
+            name: String(filename),
+            type: String(mimeType),
+          } as any);
+        }
       }
 
-      // 2. Save via fetch (Native React Native fetch automatically generates multipart boundary)
+      // 2. Save via fetch
       const token = await AsyncStorage.getItem('student_token');
       const baseURL = API.defaults.baseURL || 'https://newslaproject.onrender.com/api';
       const endpoint = `${baseURL}/student/profile`;
