@@ -137,7 +137,7 @@ export default function DashboardScreen() {
             </View>
             <View className="w-14 h-14 bg-indigo-50 rounded-full items-center justify-center border border-indigo-100 overflow-hidden relative shadow-xs">
               {photoUri ? (
-                <Image source={{ uri: photoUri }} className="h-full w-full" contentFit="cover" />
+                <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
               ) : (
                 <Text className="text-xl font-black text-indigo-700">
                   {profile.name?.charAt(0).toUpperCase() || 'S'}

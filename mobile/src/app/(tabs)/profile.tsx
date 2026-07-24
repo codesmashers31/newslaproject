@@ -304,6 +304,8 @@ export default function ProfileScreen() {
 
   const avatarSource = uriString ? { uri: uriString } : null;
 
+  const initialLetter = profileData.name ? profileData.name.charAt(0).toUpperCase() : 'S';
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
@@ -350,15 +352,22 @@ export default function ProfileScreen() {
           {/* Avatar Picture Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-6 items-center mb-6 shadow-sm">
             <TouchableOpacity onPress={handlePickImage} activeOpacity={0.8} className="relative">
-              <View className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-indigo-50 items-center justify-center shadow-md relative">
+              <View className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-indigo-100 items-center justify-center shadow-md relative">
                 {avatarSource ? (
-                  <Image key={uriString || 'photo'} source={avatarSource} className="h-full w-full" contentFit="cover" />
+                  <Image 
+                    key={uriString || 'photo'} 
+                    source={avatarSource} 
+                    style={{ width: '100%', height: '100%' }} 
+                    contentFit="cover" 
+                  />
                 ) : (
-                  <User size={48} color={mutedColor} />
+                  <Text className="text-4xl font-black text-indigo-700">
+                    {initialLetter}
+                  </Text>
                 )}
               </View>
-              <View className="absolute bottom-0 right-0 bg-[#4F46E5] p-2 rounded-full border-2 border-white">
-                <Camera size={14} color="#ffffff" />
+              <View className="absolute bottom-0 right-0 bg-[#4F46E5] p-2.5 rounded-full border-2 border-white shadow-sm">
+                <Camera size={16} color="#ffffff" />
               </View>
             </TouchableOpacity>
             
