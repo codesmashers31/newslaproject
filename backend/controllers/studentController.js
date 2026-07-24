@@ -14,6 +14,7 @@ import AttendanceLog from '../models/AttendanceLog.js';
 import jwt from 'jsonwebtoken';
 import Enrollment from '../models/Enrollment.js';
 import { calculateStudentScores, calculateAllRanks, calculatePlacementReadiness } from '../utils/calculations.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
 
 // @desc    Get student dashboard details
 // @route   GET /api/student/dashboard
@@ -266,10 +267,12 @@ export const updateStudentProfile = async (req, res) => {
     // Handle files if uploaded
     if (req.files) {
       if (req.files.photo && req.files.photo[0]) {
-        profile.photo = `/uploads/${req.files.photo[0].filename}`;
+        const photoUrl = await uploadToCloudinary(req.files.photo[0].path, 'student_photos');
+        profile.photo = photoUrl;
       }
       if (req.files.resume && req.files.resume[0]) {
-        profile.resumeUrl = `/uploads/${req.files.resume[0].filename}`;
+        const resumeUrl = await uploadToCloudinary(req.files.resume[0].path, 'resumes');
+        profile.resumeUrl = resumeUrl;
       }
     }
 

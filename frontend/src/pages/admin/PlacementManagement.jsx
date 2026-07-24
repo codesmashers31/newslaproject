@@ -327,7 +327,7 @@ const PlacementManagement = () => {
                   </div>
                   {selectedStudent.placement?.offerLetterUrl && (
                     <a 
-                      href={`${BACKEND_URL}${selectedStudent.placement.offerLetterUrl}`} 
+                      href={selectedStudent.placement.offerLetterUrl.startsWith('http') ? selectedStudent.placement.offerLetterUrl : `${BACKEND_URL}${selectedStudent.placement.offerLetterUrl}`} 
                       target="_blank" 
                       rel="noreferrer"
                       className="text-[10px] text-violet-800 dark:text-violet-400 hover:underline mt-2 flex items-center gap-1 font-bold"

@@ -11,6 +11,7 @@ import fs from 'fs';
 import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
 import Enrollment from '../models/Enrollment.js';
 import DeviceResetRequest from '../models/DeviceResetRequest.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
 
 // ==========================================
 // DASHBOARD ANALYTICS
@@ -768,7 +769,7 @@ export const updatePlacementDetails = async (req, res) => {
   try {
     let offerLetterUrl = '';
     if (req.file) {
-      offerLetterUrl = `/uploads/${req.file.filename}`;
+      offerLetterUrl = await uploadToCloudinary(req.file.path, 'offer_letters');
     }
 
     const updateFields = {

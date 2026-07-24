@@ -258,7 +258,7 @@ export default function ProfileScreen() {
   const uriString = selectedPhoto 
     ? (selectedPhoto.uri || selectedPhoto)
     : currentPhotoPath 
-    ? `${getServerRoot()}${currentPhotoPath.startsWith('/') ? '' : '/'}${currentPhotoPath}`
+    ? (currentPhotoPath.startsWith('http') ? currentPhotoPath : `${getServerRoot()}${currentPhotoPath.startsWith('/') ? '' : '/'}${currentPhotoPath}`)
     : null;
 
   const avatarSource = uriString ? { uri: uriString } : null;

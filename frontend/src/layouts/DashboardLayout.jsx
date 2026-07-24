@@ -282,7 +282,7 @@ const DashboardLayout = ({ children }) => {
                  <div className="bg-gray-100/50 dark:bg-gray-900/40 rounded-2xl p-3 mb-4 flex items-center space-x-3">
                    <div className="h-9 w-9 bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-lg flex items-center justify-center font-bold overflow-hidden relative">
                      {user?.photo ? (
-                       <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
+                       <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') || user.photo.startsWith('http') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
                      ) : (
                        user?.name?.charAt(0)
                      )}
@@ -412,7 +412,7 @@ const DashboardLayout = ({ children }) => {
               >
                 <div className="h-8 w-8 rounded-lg overflow-hidden bg-[#4F46E5] flex items-center justify-center font-extrabold text-white text-xs shadow-sm relative">
                   {user?.photo ? (
-                    <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
+                    <img src={user.photo.startsWith('data:') || user.photo.startsWith('blob:') || user.photo.startsWith('http') ? user.photo : `${BACKEND_URL}${user.photo}`} alt="Avatar" className="h-full w-full object-cover" />
                   ) : (
                     user?.name?.charAt(0)
                   )}

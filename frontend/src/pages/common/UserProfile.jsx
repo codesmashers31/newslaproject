@@ -128,7 +128,7 @@ const UserProfile = () => {
           <div className="relative group">
             <div className="h-28 w-28 rounded-full border-2 border-violet-500 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-lg relative">
               {currentPhoto ? (
-                <img src={currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
+                <img src={currentPhoto.startsWith('data:') || currentPhoto.startsWith('blob:') || currentPhoto.startsWith('http') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`} alt="Profile Avatar" className="h-full w-full object-cover" />
               ) : (
                 <span className="text-3xl font-extrabold text-[#4F46E5]">{user?.name?.charAt(0)}</span>
               )}

@@ -152,7 +152,7 @@ const StudentProfile = () => {
 
   const monogram = profileData.name?.charAt(0).toUpperCase() || 'S';
   // Local preview wins over the stored photo until the save completes.
-  const avatarSrc = photoPreview || (currentPhoto ? `${BACKEND_URL}${currentPhoto}` : '');
+  const avatarSrc = photoPreview || (currentPhoto ? (currentPhoto.startsWith('http') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`) : '');
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6">
@@ -337,7 +337,7 @@ const StudentProfile = () => {
 
         {currentResume && (
           <a
-            href={`${BACKEND_URL}${currentResume}`}
+            href={currentResume.startsWith('http') ? currentResume : `${BACKEND_URL}${currentResume}`}
             target="_blank"
             rel="noreferrer"
             className="text-xs text-indigo-700 dark:text-indigo-400 hover:underline flex items-center gap-1 font-semibold justify-center"
