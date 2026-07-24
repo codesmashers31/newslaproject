@@ -10,6 +10,7 @@ import {
   Save,
   Camera
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { Card, SectionLabel, PRIMARY,
   PageSkeleton
 } from '../../components/ui/primitives';
@@ -23,6 +24,7 @@ import { Card, SectionLabel, PRIMARY,
  * from the student's name when no photo is set.
  */
 const StudentProfile = () => {
+  const { user: authUser, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -100,6 +102,17 @@ const StudentProfile = () => {
       setCurrentPhoto(data.profile?.photo || '');
       setPhotoFile(null);
       setPhotoPreview('');
+
+      // Update active user state in AuthContext so navbar immediately reflects new name and photo
+      if (data.user && updateUser) {
+        updateUser({ ...authUser, ...data.user });
+      } else if (updateUser) {
+        try {
+          const meRes = await API.get('/auth/me');
+          if (meRes.data) updateUser({ ...authUser, ...meRes.data });
+        } catch (e) {}
+      }
+
       loadProfile();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error saving profile details');

@@ -362,7 +362,15 @@ export const updateStudentProfile = async (req, res) => {
       await Notification.deleteMany({ recipient: studentId, title: 'Profile Incomplete' });
     }
 
-    res.json({ message: 'Profile updated successfully', profile });
+    // Sync name and photo to User document for navbar/header display
+    const userDoc = await User.findById(studentId);
+    if (userDoc) {
+      if (req.body.name) userDoc.name = req.body.name;
+      if (profile.photo) userDoc.photo = profile.photo;
+      await userDoc.save();
+    }
+
+    res.json({ message: 'Profile updated successfully', profile, user: userDoc });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
