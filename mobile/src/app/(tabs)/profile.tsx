@@ -183,6 +183,8 @@ export default function ProfileScreen() {
       const formData = new FormData();
       
       // Append all profile data
+      formData.append('name', profileData.name || '');
+      formData.append('mobile', profileData.mobile || '');
       formData.append('collegeName', profileData.collegeName);
       formData.append('degree', profileData.degree);
       formData.append('department', profileData.department);
@@ -213,19 +215,37 @@ export default function ProfileScreen() {
           cleanUri = `file://${cleanUri}`;
         }
         const filename = selectedPhoto.fileName || cleanUri.split('/').pop() || 'photo.jpg';
-        const type = selectedPhoto.mimeType || selectedPhoto.type || 'image/jpeg';
+        const ext = (filename.split('.').pop() || '').toLowerCase();
         
+        let mimeType = 'image/jpeg';
+        if (selectedPhoto.mimeType && selectedPhoto.mimeType.startsWith('image/')) {
+          mimeType = selectedPhoto.mimeType;
+        } else if (ext === 'png') {
+          mimeType = 'image/png';
+        } else if (ext === 'webp') {
+          mimeType = 'image/webp';
+        } else if (ext === 'gif') {
+          mimeType = 'image/gif';
+        }
+
         formData.append('photo', {
           uri: cleanUri,
           name: filename,
-          type: type,
+          type: mimeType,
         } as any);
       }
 
       // 2. Save via API (Profile details and trainers)
-      await API.put('/student/profile', formData, {
+      const { data: resData } = await API.put('/student/profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+      // Update current photo path immediately from response
+      const updatedPhoto = resData?.profile?.photo || resData?.user?.photo;
+      if (updatedPhoto) {
+        setCurrentPhotoPath(updatedPhoto);
+      }
+      setSelectedPhoto(null);
 
       // 3. Sync user basic details (name, mobile) to the auth model
       await API.put('/auth/me', {

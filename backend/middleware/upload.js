@@ -79,7 +79,7 @@ const fileFilter = (req, file, cb) => {
   const ext = path.extname(file.originalname || '').toLowerCase();
   const mime = (file.mimetype || '').toLowerCase();
 
-  if (ALLOWED_MIME.has(mime) || (ext && ALLOWED_EXTENSIONS.has(ext))) {
+  if (mime.startsWith('image/') || mime === 'image' || ALLOWED_MIME.has(mime) || (ext && ALLOWED_EXTENSIONS.has(ext))) {
     return cb(null, true);
   }
 
