@@ -35,9 +35,8 @@ export const getAssignedStudents = async (req, res) => {
     const isAdmin = req.user.role === 'Admin' || req.user.role === 'Super Admin';
     const batchQuery = isAdmin ? {} : { trainers: req.user._id };
 
-    // Find batches where this trainer is assigned (or all batches for admin)
     const batches = await Batch.find(batchQuery)
-      .populate('students', 'name email mobile status slaeId technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
+      .populate('students', 'name email mobile status slaeId role technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
       .lean();
 
     // Fetch all batches in the database populated with trainers to resolve trainer names dynamically
@@ -122,6 +121,7 @@ export const getAssignedStudents = async (req, res) => {
 
     for (const batch of batches) {
       for (const std of batch.students) {
+        if (std.role !== 'Student') continue;
         if (!studentMap[std._id]) {
           const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
           const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
@@ -445,7 +445,7 @@ export const getTrainerDashboardStats = async (req, res) => {
 
     // Fetch batches populated with students
     const activeBatches = await Batch.find({ _id: { $in: targetBatchIds } })
-      .populate('students', 'name email mobile status')
+      .populate('students', 'name email mobile status role')
       .lean();
 
     // Collect all students (unique)
@@ -453,6 +453,7 @@ export const getTrainerDashboardStats = async (req, res) => {
     activeBatches.forEach(b => {
       if (b.students) {
         b.students.forEach(s => {
+          if (s.role !== 'Student') return;
           studentMap[s._id.toString()] = {
             _id: s._id,
             name: s.name,
