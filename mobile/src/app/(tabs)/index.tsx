@@ -168,9 +168,9 @@ export default function DashboardScreen() {
           <Svg height="100%" width="100%">
             <Defs>
               <LinearGradient id="topGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <Stop offset="0%" stopColor="#DDEBFC" stopOpacity="1" />
-                <Stop offset="50%" stopColor="#ECE9FD" stopOpacity="1" />
-                <Stop offset="100%" stopColor="#FDE6F2" stopOpacity="1" />
+                <Stop offset="0%" stopColor="#C7D2FE" stopOpacity="1" />
+                <Stop offset="50%" stopColor="#E0E7FF" stopOpacity="1" />
+                <Stop offset="100%" stopColor="#FBCFE8" stopOpacity="1" />
               </LinearGradient>
             </Defs>
             <Rect width="100%" height="100%" fill="url(#topGradient)" />
