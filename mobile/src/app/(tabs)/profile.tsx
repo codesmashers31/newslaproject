@@ -70,6 +70,11 @@ export default function ProfileScreen() {
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>('');
   // Bumped whenever the stored photo changes, to bust the image cache.
   const [photoVersion, setPhotoVersion] = useState<number>(Date.now());
+  const [imageError, setImageError] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [currentPhotoPath, selectedPhoto]);
 
   const [techSearch, setTechSearch] = useState('');
   const [commSearch, setCommSearch] = useState('');
@@ -329,12 +334,13 @@ export default function ProfileScreen() {
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-6 items-center mb-6 shadow-sm">
             <TouchableOpacity onPress={handlePickImage} activeOpacity={0.8} className="relative">
               <View className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-indigo-100 items-center justify-center shadow-md relative">
-                {avatarSource ? (
+                {avatarSource && !imageError ? (
                   <Image 
                     key={uriString || 'photo'} 
                     source={avatarSource} 
                     style={{ width: '100%', height: '100%' }} 
                     contentFit="cover" 
+                    onError={() => setImageError(true)}
                   />
                 ) : (
                   <Text className="text-4xl font-black text-indigo-700">

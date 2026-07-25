@@ -45,6 +45,7 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [imageError, setImageError] = useState(false);
   const primaryColor = '#4F46E5';
 
   const loadDashboardData = async () => {
@@ -99,6 +100,10 @@ export default function DashboardScreen() {
   };
 
   const photoUri = userPhoto ? (userPhoto.startsWith('http') ? userPhoto : `${getServerRoot()}${userPhoto.startsWith('/') ? '' : '/'}${userPhoto}`) : null;
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [photoUri]);
 
   const batch = data?.batch || {};
   const todayRecords = data?.attendance?.todayRecords || [];
@@ -227,8 +232,13 @@ export default function DashboardScreen() {
             <Text className="text-xl font-black text-slate-800 mt-0.5">👋 Hey, {profile.name || profile.mobile || 'Student'}</Text>
           </View>
           <View className="w-11 h-11 bg-white rounded-full items-center justify-center border border-white/80 overflow-hidden relative shadow-md shadow-indigo-600/5">
-            {photoUri ? (
-              <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            {photoUri && !imageError ? (
+              <Image 
+                source={{ uri: photoUri }} 
+                style={{ width: '100%', height: '100%' }} 
+                contentFit="cover" 
+                onError={() => setImageError(true)}
+              />
             ) : (
               <Text className="text-base font-black text-indigo-700">
                 {(profile.name || 'S').charAt(0).toUpperCase()}
