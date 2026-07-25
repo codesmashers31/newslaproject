@@ -7,8 +7,7 @@ import {
   RefreshControl,
   StatusBar,
   TextInput,
-  Dimensions,
-  FlatList
+  Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -16,10 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
 import { 
-  CalendarDays, 
   Clock, 
   CheckCircle2, 
-  AlertTriangle, 
   Camera, 
   LogOut, 
   Sparkles,
@@ -31,10 +28,13 @@ import {
   User,
   ChevronRight,
   BookOpen,
-  HelpCircle,
-  Phone
+  Phone,
+  MessageCircle,
+  Languages,
+  Bell
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import ProgressRing from '../../components/ProgressRing';
 
 const { width } = Dimensions.get('window');
@@ -104,7 +104,7 @@ export default function DashboardScreen() {
   const todayRecords = data?.attendance?.todayRecords || [];
   const progress = data?.progress || { aptitude: 0, communication: 0, technical: 0 };
 
-  // Calculate profile completeness (1/8 complete etc.)
+  // Calculate profile completeness
   let completedFields = 0;
   const totalFields = 8;
   if (studentProfile.collegeName) completedFields++;
@@ -152,28 +152,8 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
-      {/* 1. Header Navigation Bar */}
-      <View className="flex-row justify-between items-center px-6 py-4 border-b border-[#E2E8F0] bg-white shadow-xs z-10">
-        <View className="flex-row items-center gap-2">
-          <Image
-            source={require('../../../assets/images/branding/logo-buildx.png')}
-            style={{ height: 42, width: 42 }}
-            contentFit="contain"
-          />
-          <Text className="text-lg font-black text-slate-800 tracking-tight">SLA Portal</Text>
-        </View>
-        
-        <TouchableOpacity 
-          onPress={handleSignOut}
-          className="flex-row items-center bg-[#EF4444]/10 px-3.5 py-2 rounded-xl border border-[#EF4444]/20"
-        >
-          <LogOut size={14} color="#EF4444" style={{ marginRight: 6 }} />
-          <Text className="text-[11px] font-extrabold text-[#EF4444]">Sign Out</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView 
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
@@ -183,9 +163,62 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         
-        {/* 2. Top Interactive Search Bar */}
-        <View className="px-6 mt-5">
-          <View className="flex-row items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 py-3.5 shadow-sm">
+        {/* 2. Top Fluid Pastel Gradient Aura (SVG based for max compatibility) */}
+        <View className="absolute top-0 left-0 right-0 h-[280px]">
+          <Svg height="100%" width="100%">
+            <Defs>
+              <LinearGradient id="topGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <Stop offset="0%" stopColor="#DDEBFC" stopOpacity="1" />
+                <Stop offset="50%" stopColor="#ECE9FD" stopOpacity="1" />
+                <Stop offset="100%" stopColor="#FDE6F2" stopOpacity="1" />
+              </LinearGradient>
+            </Defs>
+            <Rect width="100%" height="100%" fill="url(#topGradient)" />
+          </Svg>
+        </View>
+
+        {/* 3. Top Header Row (Transparent to let gradient show through) */}
+        <View className="flex-row justify-between items-center px-6 pt-4 pb-2 z-10">
+          <View className="flex-row items-center gap-2">
+            <Image
+              source={require('../../../assets/images/branding/logo-buildx.png')}
+              style={{ height: 44, width: 44 }}
+              contentFit="contain"
+            />
+            <Text className="text-xl font-black text-slate-800 tracking-tight">SLA Portal</Text>
+          </View>
+          
+          {/* Quick Utility Icon Row (WhatsApp, Language, Bell, Sign Out) */}
+          <View className="flex-row items-center gap-3">
+            {/* WhatsApp */}
+            <TouchableOpacity className="w-8 h-8 bg-[#25D366]/10 rounded-full items-center justify-center border border-[#25D366]/20">
+              <MessageCircle size={16} color="#25D366" />
+            </TouchableOpacity>
+
+            {/* Language */}
+            <TouchableOpacity className="w-8 h-8 bg-white/40 rounded-full items-center justify-center border border-white/60">
+              <Languages size={16} color="#475569" />
+            </TouchableOpacity>
+
+            {/* Bell/Notification */}
+            <TouchableOpacity className="w-8 h-8 bg-white/40 rounded-full items-center justify-center border border-white/60 relative">
+              <Bell size={16} color="#475569" />
+              <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+            </TouchableOpacity>
+
+            {/* Sign Out */}
+            <TouchableOpacity 
+              onPress={handleSignOut}
+              className="w-8 h-8 bg-red-500/10 rounded-full items-center justify-center border border-red-500/20"
+            >
+              <LogOut size={14} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 4. Top Interactive Search Bar (matching Aadhaar search bar) */}
+        <View className="px-6 mt-3 z-10">
+          <View className="flex-row items-center bg-white border border-white/40 rounded-2xl px-4 py-3.5 shadow-md shadow-slate-200/50">
             <Search size={18} color="#94A3B8" style={{ marginRight: 10 }} />
             <TextInput
               value={searchQuery}
@@ -198,13 +231,13 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 3. Greeting Row */}
-        <View className="px-6 mt-5 flex-row justify-between items-center">
+        {/* 5. Greeting Row */}
+        <View className="px-6 mt-5 flex-row justify-between items-center z-10">
           <View>
             <Text className="text-slate-500 text-[10px] font-black uppercase tracking-wider">Welcome Back</Text>
             <Text className="text-xl font-black text-slate-800 mt-0.5">👋 Hey, {profile.name || profile.mobile || 'Student'}</Text>
           </View>
-          <View className="w-11 h-11 bg-indigo-50 rounded-full items-center justify-center border border-indigo-100 overflow-hidden relative shadow-xs">
+          <View className="w-11 h-11 bg-white rounded-full items-center justify-center border border-white/80 overflow-hidden relative shadow-md shadow-indigo-600/5">
             {photoUri ? (
               <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
             ) : (
@@ -215,8 +248,8 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 4. Horizontal Paged Carousel Banners */}
-        <View className="mt-5">
+        {/* 6. Horizontal Paged Carousel Banners */}
+        <View className="mt-5 z-10">
           <ScrollView
             horizontal
             pagingEnabled
@@ -260,7 +293,7 @@ export default function DashboardScreen() {
           </ScrollView>
         </View>
 
-        {/* 5. Quick Services Header & Horizontal Icon Row */}
+        {/* 7. Quick Services Header & Horizontal Icon Row */}
         <View className="px-6 mt-6">
           <Text className="text-xs font-black text-[#64748B] uppercase tracking-wider mb-3.5">Quick Services</Text>
           <View className="flex-row justify-between">
@@ -294,7 +327,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 6. Main Feature List Cards */}
+        {/* 8. Main Feature List Cards */}
         <View className="px-6 mt-7 gap-6">
           
           {/* Card A: Complete Profile Progress Card (Pink-Purple Gradient Style) */}
@@ -303,8 +336,18 @@ export default function DashboardScreen() {
             activeOpacity={0.9} 
             className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm overflow-hidden relative flex flex-row items-center"
           >
-            {/* Soft pink gradient absolute background styling */}
-            <View className="absolute right-0 top-0 bottom-0 left-0 bg-gradient-to-r from-pink-50 to-purple-50/50" />
+            {/* Soft pink gradient absolute background styling using SVG */}
+            <View className="absolute top-0 bottom-0 left-0 right-0">
+              <Svg height="100%" width="100%">
+                <Defs>
+                  <LinearGradient id="pinkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <Stop offset="0%" stopColor="#FFF1F2" stopOpacity="1" />
+                    <Stop offset="100%" stopColor="#F5F3FF" stopOpacity="0.8" />
+                  </LinearGradient>
+                </Defs>
+                <Rect width="100%" height="100%" fill="url(#pinkGrad)" />
+              </Svg>
+            </View>
             
             <View className="flex-1 pr-4 z-10">
               <View className="flex-row items-center mb-1">
@@ -326,7 +369,6 @@ export default function DashboardScreen() {
 
             {/* Circular Progress Ring Mockup */}
             <View className="w-[72px] h-[72px] rounded-full border-[6px] border-slate-100 items-center justify-center relative z-10">
-              {/* Colored progress sector mockup */}
               <View className="absolute top-0 bottom-0 left-0 right-0 rounded-full border-[6px] border-[#EC4899] opacity-20" />
               <Text className="text-base font-black text-[#EC4899]">{completedFields}/{totalFields}</Text>
             </View>
@@ -455,7 +497,7 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          {/* helpline/essential numbers section */}
+          {/* Helpline/essential numbers section */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm flex-row items-center justify-between">
             <View className="flex-row items-center">
               <View className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl mr-3">
