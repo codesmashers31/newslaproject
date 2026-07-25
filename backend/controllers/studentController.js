@@ -273,7 +273,7 @@ export const updateStudentProfile = async (req, res) => {
       profile.photo = photoUrl;
     } else if (req.body.photoBase64 || req.body.photo) {
       const incomingPhoto = req.body.photoBase64 || req.body.photo;
-      if (typeof incomingPhoto === 'string' && incomingPhoto.startsWith('data:image/')) {
+      if (typeof incomingPhoto === 'string' && (incomingPhoto.startsWith('data:image/') || incomingPhoto.startsWith('data:application/') || incomingPhoto.includes(';base64,'))) {
         if (profile.photo) {
           await deleteFromCloudinary(profile.photo);
         }
