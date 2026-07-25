@@ -216,20 +216,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 4. Top Interactive Search Bar (matching Aadhaar search bar) */}
-        <View className="px-6 mt-3 z-10">
-          <View className="flex-row items-center bg-white border border-white/40 rounded-2xl px-4 py-3.5 shadow-md shadow-slate-200/50">
-            <Search size={18} color="#94A3B8" style={{ marginRight: 10 }} />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder='Search for training topics, tests or history...'
-              placeholderTextColor="#94A3B8"
-              className="flex-1 text-slate-800 text-xs font-semibold"
-            />
-            <Mic size={18} color="#4F46E5" />
-          </View>
-        </View>
+
 
         {/* 5. Greeting Row */}
         <View className="px-6 mt-5 flex-row justify-between items-center z-10">
