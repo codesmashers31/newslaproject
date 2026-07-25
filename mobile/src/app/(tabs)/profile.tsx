@@ -68,6 +68,8 @@ export default function ProfileScreen() {
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>('');
+  // Bumped whenever the stored photo changes, to bust the image cache.
+  const [photoVersion, setPhotoVersion] = useState<number>(Date.now());
 
   const [techSearch, setTechSearch] = useState('');
   const [commSearch, setCommSearch] = useState('');
@@ -111,6 +113,7 @@ export default function ProfileScreen() {
         aptitudeTrainer: student.aptitudeTrainer || '',
       });
       setCurrentPhotoPath(p.photo || student.photo || '');
+      setPhotoVersion(Date.now());
       setSelectedPhoto(null);
 
       // Fetch active batches for selection dropdowns
@@ -254,11 +257,26 @@ export default function ProfileScreen() {
     );
   }
 
-  const uriString = selectedPhoto 
-    ? (selectedPhoto.uri || selectedPhoto)
-    : currentPhotoPath 
-    ? (currentPhotoPath.startsWith('http') ? currentPhotoPath : `${getServerRoot()}${currentPhotoPath.startsWith('/') ? '' : '/'}${currentPhotoPath}`)
-    : null;
+  // For a freshly picked photo, render the base64 data URI directly rather
+  // than the file:// path. The data URI is self-contained, so the preview
+  // shows immediately and does not depend on the native file provider being
+  // able to resolve a temporary picker path.
+  let uriString: string | null = null;
+  if (selectedPhoto) {
+    if (selectedPhoto.base64) {
+      const mime = selectedPhoto.mimeType || 'image/jpeg';
+      uriString = `data:${mime};base64,${selectedPhoto.base64}`;
+    } else {
+      uriString = selectedPhoto.uri || selectedPhoto;
+    }
+  } else if (currentPhotoPath) {
+    const abs = currentPhotoPath.startsWith('http')
+      ? currentPhotoPath
+      : `${getServerRoot()}${currentPhotoPath.startsWith('/') ? '' : '/'}${currentPhotoPath}`;
+    // Cache-bust so a re-uploaded photo at the same URL refreshes instead of
+    // showing the stale cached image.
+    uriString = `${abs}${abs.includes('?') ? '&' : '?'}t=${photoVersion}`;
+  }
 
   const avatarSource = uriString ? { uri: uriString } : null;
 
