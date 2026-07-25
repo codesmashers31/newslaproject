@@ -179,13 +179,15 @@ export default function DashboardScreen() {
 
         {/* 3. Top Header Row (Transparent to let gradient show through) */}
         <View className="flex-row justify-between items-center px-6 pt-4 pb-2 z-10">
-          <View className="flex-row items-center gap-2">
-            <Image
-              source={require('../../../assets/images/branding/logo-buildx.png')}
-              style={{ height: 44, width: 44 }}
-              contentFit="contain"
-            />
-            <Text className="text-xl font-black text-slate-800 tracking-tight">SLA Portal</Text>
+          <View className="flex-row items-center gap-2.5">
+            <View className="bg-white p-1 rounded-xl border border-white/80 shadow-xs">
+              <Image
+                source={require('../../../assets/images/branding/logo-buildx.png')}
+                style={{ height: 32, width: 32 }}
+                contentFit="contain"
+              />
+            </View>
+            <Text className="text-lg font-black text-slate-800 tracking-tight">SLA Portal</Text>
           </View>
           
           {/* Quick Utility Icon Row (WhatsApp, Language, Bell, Sign Out) */}
