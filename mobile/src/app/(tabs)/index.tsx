@@ -5,7 +5,10 @@ import {
   ScrollView, 
   TouchableOpacity, 
   RefreshControl,
-  StatusBar
+  StatusBar,
+  TextInput,
+  Dimensions,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -19,16 +22,29 @@ import {
   AlertTriangle, 
   Camera, 
   LogOut, 
-  Sparkles
+  Sparkles,
+  Search,
+  Mic,
+  Compass,
+  Award,
+  History,
+  User,
+  ChevronRight,
+  BookOpen,
+  HelpCircle,
+  Phone
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
-import BannerCarousel from '../../components/BannerCarousel';
 import ProgressRing from '../../components/ProgressRing';
+
+const { width } = Dimensions.get('window');
+const CAROUSEL_WIDTH = width - 48;
 
 export default function DashboardScreen() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const primaryColor = '#4F46E5';
 
   const loadDashboardData = async () => {
@@ -88,26 +104,73 @@ export default function DashboardScreen() {
   const todayRecords = data?.attendance?.todayRecords || [];
   const progress = data?.progress || { aptitude: 0, communication: 0, technical: 0 };
 
+  // Calculate profile completeness (1/8 complete etc.)
+  let completedFields = 0;
+  const totalFields = 8;
+  if (studentProfile.collegeName) completedFields++;
+  if (studentProfile.degree) completedFields++;
+  if (studentProfile.department) completedFields++;
+  if (studentProfile.yearOfPassing) completedFields++;
+  if (studentProfile.photo || profile.photo) completedFields++;
+  if (studentProfile.resumeUrl) completedFields++;
+  if (studentProfile.linkedin) completedFields++;
+  if (studentProfile.github) completedFields++;
+
+  // Interactive Banners data for horizontal scroll
+  const banners = [
+    {
+      id: 1,
+      title: 'Complete Profile',
+      desc: 'Unlock placement opportunities by keeping your profile updated.',
+      bgClass: 'bg-indigo-600',
+      btnText: 'Edit Profile',
+      tag: 'PLACEMENT READY',
+      icon: <User size={24} color="#ffffff" />,
+      onPress: () => router.push('/(tabs)/profile')
+    },
+    {
+      id: 2,
+      title: 'AI Career Coach',
+      desc: 'Get your custom training roadmaps and career benchmarks.',
+      bgClass: 'bg-violet-700',
+      btnText: 'View Roadmap',
+      tag: 'NEW FEATURE',
+      icon: <Compass size={24} color="#ffffff" />,
+      onPress: () => router.push('/(tabs)/career')
+    },
+    {
+      id: 3,
+      title: 'Digital Attendance',
+      desc: 'Check in to training lectures by scanning room QR codes.',
+      bgClass: 'bg-emerald-600',
+      btnText: 'Scan Attendance',
+      tag: 'DAILY ROLL CALL',
+      icon: <Camera size={24} color="#ffffff" />,
+      onPress: () => router.push('/(tabs)/scanner')
+    }
+  ];
+
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
       
-      {/* Top Header Row */}
-      <View className="flex-row justify-between items-center px-8 py-4 border-b border-[#E2E8F0] bg-white shadow-sm z-10">
-        <View className="flex-row items-center">
+      {/* 1. Header Navigation Bar */}
+      <View className="flex-row justify-between items-center px-6 py-4 border-b border-[#E2E8F0] bg-white shadow-xs z-10">
+        <View className="flex-row items-center gap-2">
           <Image
             source={require('../../../assets/images/branding/logo-buildx.png')}
-            style={{ height: 52, width: 52 }}
+            style={{ height: 42, width: 42 }}
             contentFit="contain"
           />
+          <Text className="text-lg font-black text-slate-800 tracking-tight">SLA Portal</Text>
         </View>
         
         <TouchableOpacity 
           onPress={handleSignOut}
-          className="flex-row items-center bg-[#5B21B6]/10 px-3 py-2 rounded-xl border border-[#5B21B6]/20"
+          className="flex-row items-center bg-[#EF4444]/10 px-3.5 py-2 rounded-xl border border-[#EF4444]/20"
         >
-          <LogOut size={16} color={primaryColor} style={{ marginRight: 6 }} />
-          <Text className="text-xs font-bold text-[#5B21B6]">Sign Out</Text>
+          <LogOut size={14} color="#EF4444" style={{ marginRight: 6 }} />
+          <Text className="text-[11px] font-extrabold text-[#EF4444]">Sign Out</Text>
         </TouchableOpacity>
       </View>
 
@@ -119,100 +182,257 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        <BannerCarousel />
+        
+        {/* 2. Top Interactive Search Bar */}
+        <View className="px-6 mt-5">
+          <View className="flex-row items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 py-3.5 shadow-sm">
+            <Search size={18} color="#94A3B8" style={{ marginRight: 10 }} />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder='Search for training topics, tests or history...'
+              placeholderTextColor="#94A3B8"
+              className="flex-1 text-slate-800 text-xs font-semibold"
+            />
+            <Mic size={18} color="#4F46E5" />
+          </View>
+        </View>
 
-        <View className="px-6 mt-4">
-          
-          {/* 1. Welcoming Header Banner */}
-          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-6 shadow-sm mb-6 flex-row items-center justify-between">
-            <View className="flex-1 pr-4">
-              <View className="flex-row items-center mb-1">
-                <Sparkles size={12} color="#f59e0b" style={{ marginRight: 4 }} />
-                <Text className="text-[9px] uppercase tracking-widest font-black text-amber-500">STUDENT PORTAL</Text>
-              </View>
-              <Text className="text-2xl font-black text-[#0F172A]">Hello, {profile.name || 'Student'}!</Text>
-              <Text className="text-xs text-[#64748B] mt-1 font-semibold leading-relaxed">
-                {batch.name ? `Cohort: ${batch.name} • ${batch.course}` : 'Unassigned Batch. Contact admin.'}
+        {/* 3. Greeting Row */}
+        <View className="px-6 mt-5 flex-row justify-between items-center">
+          <View>
+            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-wider">Welcome Back</Text>
+            <Text className="text-xl font-black text-slate-800 mt-0.5">👋 Hey, {profile.name || profile.mobile || 'Student'}</Text>
+          </View>
+          <View className="w-11 h-11 bg-indigo-50 rounded-full items-center justify-center border border-indigo-100 overflow-hidden relative shadow-xs">
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            ) : (
+              <Text className="text-base font-black text-indigo-700">
+                {(profile.name || 'S').charAt(0).toUpperCase()}
               </Text>
+            )}
+          </View>
+        </View>
+
+        {/* 4. Horizontal Paged Carousel Banners */}
+        <View className="mt-5">
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }}
+            snapToInterval={CAROUSEL_WIDTH + 16}
+            decelerationRate="fast"
+          >
+            {banners.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                onPress={item.onPress}
+                activeOpacity={0.95}
+                style={{ width: CAROUSEL_WIDTH }}
+                className={`rounded-3xl p-5 ${item.bgClass} shadow-md overflow-hidden relative min-h-[145px]`}
+              >
+                {/* Decorative absolute background shape */}
+                <View className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+                <View className="absolute -left-6 -bottom-6 w-20 h-20 bg-black/10 rounded-full" />
+
+                <View className="flex-1 pr-6 justify-between">
+                  <View>
+                    <View className="bg-white/20 self-start px-2.5 py-0.5 rounded-full mb-2.5">
+                      <Text className="text-white text-[9px] font-black tracking-widest uppercase">{item.tag}</Text>
+                    </View>
+                    <Text className="text-white text-base font-black leading-tight">{item.title}</Text>
+                    <Text className="text-white/80 text-[11px] font-semibold mt-1 leading-normal">{item.desc}</Text>
+                  </View>
+
+                  <View className="flex-row justify-between items-center mt-4">
+                    <View className="bg-white px-4 py-2 rounded-xl">
+                      <Text className={`text-[10px] font-black uppercase tracking-wider text-slate-800`}>{item.btnText}</Text>
+                    </View>
+                    <View className="w-9 h-9 bg-white/20 rounded-xl items-center justify-center">
+                      {item.icon}
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* 5. Quick Services Header & Horizontal Icon Row */}
+        <View className="px-6 mt-6">
+          <Text className="text-xs font-black text-[#64748B] uppercase tracking-wider mb-3.5">Quick Services</Text>
+          <View className="flex-row justify-between">
+            <TouchableOpacity onPress={() => router.push('/(tabs)/scanner')} className="items-center w-[76px]">
+              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
+                <Camera size={20} color="#4F46E5" />
+              </View>
+              <Text className="text-[10px] font-bold text-slate-700 text-center">Scan Attendance</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/(tabs)/career')} className="items-center w-[76px]">
+              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
+                <Compass size={20} color="#8B5CF6" />
+              </View>
+              <Text className="text-[10px] font-bold text-slate-700 text-center">AI Roadmap</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/(tabs)/ledger')} className="items-center w-[76px]">
+              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
+                <Award size={20} color="#F59E0B" />
+              </View>
+              <Text className="text-[10px] font-bold text-slate-700 text-center">Grades</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/(tabs)/history')} className="items-center w-[76px]">
+              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
+                <History size={20} color="#06B6D4" />
+              </View>
+              <Text className="text-[10px] font-bold text-slate-700 text-center">Logs</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* 6. Main Feature List Cards */}
+        <View className="px-6 mt-7 gap-6">
+          
+          {/* Card A: Complete Profile Progress Card (Pink-Purple Gradient Style) */}
+          <TouchableOpacity 
+            onPress={() => router.push('/(tabs)/profile')}
+            activeOpacity={0.9} 
+            className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm overflow-hidden relative flex flex-row items-center"
+          >
+            {/* Soft pink gradient absolute background styling */}
+            <View className="absolute right-0 top-0 bottom-0 left-0 bg-gradient-to-r from-pink-50 to-purple-50/50" />
+            
+            <View className="flex-1 pr-4 z-10">
+              <View className="flex-row items-center mb-1">
+                <Sparkles size={11} color="#EC4899" style={{ marginRight: 4 }} />
+                <Text className="text-[9px] font-black uppercase tracking-widest text-[#EC4899]">Profile Completeness</Text>
+              </View>
+              <Text className="text-base font-black text-slate-800 leading-tight">Complete Placement Profile</Text>
+              <Text className="text-slate-500 text-[11px] font-semibold mt-1 leading-normal">
+                Finish all sections to share your details with recruiters.
+              </Text>
+              
+              <TouchableOpacity 
+                onPress={() => router.push('/(tabs)/profile')}
+                className="bg-white border border-[#E2E8F0] px-4 py-2 rounded-xl self-start mt-4 shadow-xs"
+              >
+                <Text className="text-[#EC4899] text-[10px] font-extrabold uppercase tracking-wider">Update Profile</Text>
+              </TouchableOpacity>
             </View>
-            <View className="w-14 h-14 bg-indigo-50 rounded-full items-center justify-center border border-indigo-100 overflow-hidden relative shadow-xs">
-              {photoUri ? (
-                <Image source={{ uri: photoUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+
+            {/* Circular Progress Ring Mockup */}
+            <View className="w-[72px] h-[72px] rounded-full border-[6px] border-slate-100 items-center justify-center relative z-10">
+              {/* Colored progress sector mockup */}
+              <View className="absolute top-0 bottom-0 left-0 right-0 rounded-full border-[6px] border-[#EC4899] opacity-20" />
+              <Text className="text-base font-black text-[#EC4899]">{completedFields}/{totalFields}</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Card B: Daily Attendance Roll Call Status Card (EPFO Passbook Style) */}
+          <View className="bg-slate-900 rounded-3xl p-5 shadow-sm overflow-hidden relative min-h-[150px]">
+            <View className="absolute -right-8 -bottom-8 w-28 h-28 bg-[#4F46E5]/20 rounded-full" />
+            
+            <View className="flex-1 justify-between">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center">
+                  <View className="w-8 h-8 bg-white/10 rounded-xl items-center justify-center mr-3">
+                    <Clock size={16} color="#ffffff" />
+                  </View>
+                  <View>
+                    <Text className="text-white text-xs font-black uppercase tracking-wider">Daily Attendance Check-In</Text>
+                    <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-wider mt-0.5">
+                      Today: {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
+                  <Text className="text-[10px] font-extrabold text-[#4F46E5] bg-indigo-50 px-2.5 py-1 rounded-full">View Logs</Text>
+                </TouchableOpacity>
+              </View>
+
+              {todayRecords.length > 0 ? (
+                <View className="mt-4 gap-2.5">
+                  {todayRecords.map((record: any, index: number) => (
+                    <View key={index} className="flex-row items-center justify-between py-2 px-3.5 bg-white/5 border border-white/10 rounded-xl">
+                      <View className="flex-row items-center">
+                        <CheckCircle2 size={13} color="#10B981" style={{ marginRight: 8 }} />
+                        <Text className="text-white text-xs font-bold uppercase tracking-wider">{record.subject || 'Class'}</Text>
+                      </View>
+                      <Text className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded">
+                        {record.status}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               ) : (
-                <Text className="text-xl font-black text-indigo-700">
-                  {profile.name?.charAt(0).toUpperCase() || 'S'}
-                </Text>
+                <View className="mt-4">
+                  <Text className="text-slate-300 text-[11px] font-semibold leading-relaxed">
+                    Check-in is required to track your training sessions. Scan the room QR code to begin.
+                  </Text>
+                  
+                  <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/scanner')}
+                    activeOpacity={0.8}
+                    className="mt-4 w-full py-3.5 bg-[#4F46E5] rounded-xl flex-row items-center justify-center shadow-lg shadow-indigo-600/10"
+                  >
+                    <Camera size={14} color="#ffffff" style={{ marginRight: 6 }} />
+                    <Text className="text-white font-black text-[10px] uppercase tracking-widest">Scan Attendance QR</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
 
-          {/* 2. Today's Roll Call Check-in Card */}
-          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm mb-6">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center">
-                <View className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl mr-3">
-                  <Clock size={18} color={primaryColor} />
-                </View>
-                <View>
-                  <Text className="font-extrabold text-sm text-[#0F172A]">Daily Attendance Roll Call</Text>
-                  <Text className="text-[10px] text-[#64748B] mt-0.5">
-                    Today: {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
-                <Text className="text-[10px] font-black text-[#4F46E5]">View Logs</Text>
-              </TouchableOpacity>
+          {/* Card C: Assigned Training Cohorts Info */}
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+            <View className="flex-row items-center mb-4 border-b border-[#F1F5F9] pb-3">
+              <BookOpen size={16} color={primaryColor} style={{ marginRight: 8 }} />
+              <Text className="font-extrabold text-sm text-[#0F172A]">Assigned Cohorts & Trainers</Text>
             </View>
 
-            {todayRecords.length > 0 ? (
-              <View className="gap-3">
-                {todayRecords.map((record: any, index: number) => (
-                  <View key={index} className="flex-row items-center justify-between py-3.5 px-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
-                    <View className="flex-row items-center">
-                      <View className="w-8 h-8 bg-emerald-100/50 rounded-full items-center justify-center mr-3">
-                        <CheckCircle2 size={16} color="#059669" />
-                      </View>
-                      <View>
-                        <Text className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">{record.subject || 'Class'}</Text>
-                        <Text className="text-[10px] text-[#64748B] mt-0.5">
-                          {new Date(record.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text className="text-[10px] font-black text-emerald-700 uppercase tracking-widest bg-emerald-100 px-2.5 py-1 rounded-full">
-                      {record.status}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <View className="items-center py-4 bg-amber-50/40 border border-amber-100 rounded-2xl p-5">
-                <View className="w-12 h-12 bg-amber-100/50 rounded-full items-center justify-center mb-3">
-                  <AlertTriangle size={24} color="#f59e0b" />
+            <View className="gap-3 text-xs">
+              {/* Technical Domain */}
+              <View className="flex-row justify-between items-center py-2 border-b border-[#F1F5F9]/50">
+                <View>
+                  <Text className="font-extrabold text-[11px] text-slate-800">Technical Training</Text>
+                  <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {profile.technicalTrainer || 'Unassigned'}</Text>
                 </View>
-                <Text className="text-xs font-bold text-amber-700 uppercase tracking-widest bg-amber-100 px-3 py-1 rounded-full">
-                  Pending
+                <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
+                  {profile.technicalBatch || 'Unassigned'}
                 </Text>
-                <Text className="text-xs text-[#64748B] mt-2.5 font-semibold text-center leading-relaxed">
-                  You have not checked in for today's sessions yet.
-                </Text>
-                
-                <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/scanner')}
-                  activeOpacity={0.8}
-                  className="mt-5 w-full py-3.5 bg-[#4F46E5] rounded-xl flex-row items-center justify-center shadow-md shadow-indigo-600/10"
-                >
-                  <Camera size={16} color="#ffffff" style={{ marginRight: 6 }} />
-                  <Text className="text-white font-black text-xs uppercase tracking-wider">Scan Attendance QR</Text>
-                </TouchableOpacity>
               </View>
-            )}
+
+              {/* Communication Domain */}
+              <View className="flex-row justify-between items-center py-2 border-b border-[#F1F5F9]/50">
+                <View>
+                  <Text className="font-extrabold text-[11px] text-slate-800">Communication Skills</Text>
+                  <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {profile.communicationTrainer || 'Unassigned'}</Text>
+                </View>
+                <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
+                  {profile.communicationBatch || 'Unassigned'}
+                </Text>
+              </View>
+
+              {/* Aptitude Domain */}
+              <View className="flex-row justify-between items-center py-2">
+                <View>
+                  <Text className="font-extrabold text-[11px] text-slate-800">Aptitude & Reasoning</Text>
+                  <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {profile.aptitudeTrainer || 'Unassigned'}</Text>
+                </View>
+                <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
+                  {profile.aptitudeBatch || 'Unassigned'}
+                </Text>
+              </View>
+            </View>
           </View>
 
-          {/* 3. Module Progress Rings */}
-          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm mb-6">
-            <Text className="font-extrabold text-sm text-[#0F172A] mb-4">Module Progress</Text>
+          {/* Card D: Module Progress Stats */}
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
+            <Text className="font-extrabold text-sm text-[#0F172A] mb-4">Module Progress Ring Checks</Text>
             <View className="flex-row justify-between">
               <ProgressRing
                 percent={progress.aptitude}
@@ -235,78 +455,20 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          {/* 4. Assigned Cohorts & Trainers */}
-          <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-4 mt-2">Assigned Cohorts & Trainers</Text>
-
-          {/* Technical Domain */}
-          <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl mr-3">
-                <CalendarDays size={18} color={primaryColor} />
+          {/* helpline/essential numbers section */}
+          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <View className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl mr-3">
+                <Phone size={16} color="#64748B" />
               </View>
-              <View className="flex-1">
-                <Text className="font-extrabold text-sm text-[#0F172A]">Technical Training</Text>
-                <Text className="text-[10px] text-[#64748B]">Core technology track</Text>
+              <View>
+                <Text className="font-extrabold text-xs text-slate-800">Essential Help Desk Numbers</Text>
+                <Text className="text-[10px] text-slate-400 mt-0.5">Reach placement coordinators</Text>
               </View>
             </View>
-            <View className="space-y-2.5 pt-1 text-xs">
-              <View className="flex-row justify-between items-start border-b pb-2.5 border-[#F1F5F9] mb-2">
-                <Text className="font-semibold text-[#64748B] mt-0.5">Assigned Batch:</Text>
-                <Text className="font-bold text-[#0F172A] flex-1 text-right ml-4">{profile.technicalBatch || 'Unassigned'}</Text>
-              </View>
-              <View className="flex-row justify-between items-start pb-1">
-                <Text className="font-semibold text-[#64748B] mt-0.5">Trainer:</Text>
-                <Text className="font-bold text-indigo-700 flex-1 text-right ml-4">{profile.technicalTrainer || 'Unassigned'}</Text>
-              </View>
-            </View>
+            <ChevronRight size={18} color="#94A3B8" />
           </View>
 
-          {/* Communication Domain */}
-          <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl mr-3">
-                <CalendarDays size={18} color={primaryColor} />
-              </View>
-              <View className="flex-1">
-                <Text className="font-extrabold text-sm text-[#0F172A]">Communication Skills</Text>
-                <Text className="text-[10px] text-[#64748B]">Soft skills & interview prep</Text>
-              </View>
-            </View>
-            <View className="space-y-2.5 pt-1 text-xs">
-              <View className="flex-row justify-between items-start border-b pb-2.5 border-[#F1F5F9] mb-2">
-                <Text className="font-semibold text-[#64748B] mt-0.5">Assigned Batch:</Text>
-                <Text className="font-bold text-[#0F172A] flex-1 text-right ml-4">{profile.communicationBatch || 'Unassigned'}</Text>
-              </View>
-              <View className="flex-row justify-between items-start pb-1">
-                <Text className="font-semibold text-[#64748B] mt-0.5">Trainer:</Text>
-                <Text className="font-bold text-indigo-700 flex-1 text-right ml-4">{profile.communicationTrainer || 'Unassigned'}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Aptitude Domain */}
-          <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-            <View className="flex-row items-center mb-4">
-              <View className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl mr-3">
-                <CalendarDays size={18} color={primaryColor} />
-              </View>
-              <View className="flex-1">
-                <Text className="font-extrabold text-sm text-[#0F172A]">Aptitude & Reasoning</Text>
-                <Text className="text-[10px] text-[#64748B]">Quantitative & analytical prep</Text>
-              </View>
-            </View>
-            <View className="space-y-2.5 pt-1 text-xs">
-              <View className="flex-row justify-between items-start border-b pb-2.5 border-[#F1F5F9] mb-2">
-                <Text className="font-semibold text-[#64748B] mt-0.5">Assigned Batch:</Text>
-                <Text className="font-bold text-[#0F172A] flex-1 text-right ml-4">{profile.aptitudeBatch || 'Unassigned'}</Text>
-              </View>
-              <View className="flex-row justify-between items-start pb-1">
-                <Text className="font-semibold text-[#64748B] mt-0.5">Trainer:</Text>
-                <Text className="font-bold text-indigo-700 flex-1 text-right ml-4">{profile.aptitudeTrainer || 'Unassigned'}</Text>
-              </View>
-            </View>
-          </View>
-          
         </View>
       </ScrollView>
     </SafeAreaView>
