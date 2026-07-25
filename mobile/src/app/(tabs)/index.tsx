@@ -293,40 +293,6 @@ export default function DashboardScreen() {
           </ScrollView>
         </View>
 
-        {/* 7. Quick Services Header & Horizontal Icon Row */}
-        <View className="px-6 mt-6">
-          <Text className="text-xs font-black text-[#64748B] uppercase tracking-wider mb-3.5">Quick Services</Text>
-          <View className="flex-row justify-between">
-            <TouchableOpacity onPress={() => router.push('/(tabs)/scanner')} className="items-center w-[76px]">
-              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
-                <Camera size={20} color="#4F46E5" />
-              </View>
-              <Text className="text-[10px] font-bold text-slate-700 text-center">Scan Attendance</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push('/(tabs)/career')} className="items-center w-[76px]">
-              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
-                <Compass size={20} color="#8B5CF6" />
-              </View>
-              <Text className="text-[10px] font-bold text-slate-700 text-center">AI Roadmap</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push('/(tabs)/ledger')} className="items-center w-[76px]">
-              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
-                <Award size={20} color="#F59E0B" />
-              </View>
-              <Text className="text-[10px] font-bold text-slate-700 text-center">Grades</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.push('/(tabs)/history')} className="items-center w-[76px]">
-              <View className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-2xl items-center justify-center shadow-xs mb-2">
-                <History size={20} color="#06B6D4" />
-              </View>
-              <Text className="text-[10px] font-bold text-slate-700 text-center">Logs</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* 8. Main Feature List Cards */}
         <View className="px-6 mt-7 gap-6">
           
