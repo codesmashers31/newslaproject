@@ -80,12 +80,6 @@ export default function DashboardScreen() {
     router.replace('/login');
   };
 
-  if (loading) {
-    return (
-      <ScreenSkeleton variant="dashboard" />
-    );
-  }
-
   const profile = data?.profile?.user || {};
   const studentProfile = data?.profile || {};
   const userPhoto = studentProfile.photo || profile.photo;
@@ -104,6 +98,12 @@ export default function DashboardScreen() {
   React.useEffect(() => {
     setImageError(false);
   }, [photoUri]);
+
+  if (loading) {
+    return (
+      <ScreenSkeleton variant="dashboard" />
+    );
+  }
 
   const batch = data?.batch || {};
   const todayRecords = data?.attendance?.todayRecords || [];
@@ -172,10 +172,10 @@ export default function DashboardScreen() {
         <View className="absolute top-0 left-0 right-0 h-[280px]">
           <Svg height="100%" width="100%">
             <Defs>
-              <LinearGradient id="topGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <Stop offset="0%" stopColor="#C7D2FE" stopOpacity="1" />
-                <Stop offset="50%" stopColor="#E0E7FF" stopOpacity="1" />
-                <Stop offset="100%" stopColor="#FBCFE8" stopOpacity="1" />
+              <LinearGradient id="topGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <Stop offset="0%" stopColor="#DDD6FE" stopOpacity="1" />
+                <Stop offset="40%" stopColor="#EEF2FF" stopOpacity="0.8" />
+                <Stop offset="100%" stopColor="#F8FAFC" stopOpacity="1" />
               </LinearGradient>
             </Defs>
             <Rect width="100%" height="100%" fill="url(#topGradient)" />
