@@ -43,6 +43,12 @@
             "enableMinifyInReleaseBuilds": true
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow SLA BuildX to access your photos to select profile pictures."
+        }
       ]
     ],
     "experiments": {
