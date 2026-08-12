@@ -398,42 +398,41 @@ export default function DashboardScreen() {
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
             <View className="flex-row items-center mb-4 border-b border-[#F1F5F9] pb-3">
               <BookOpen size={16} color={primaryColor} style={{ marginRight: 8 }} />
-              <Text className="font-extrabold text-sm text-[#0F172A]">Assigned Cohorts & Trainers</Text>
+              <Text className="font-extrabold text-sm text-[#0F172A]">Assigned Cohorts & Attendance</Text>
             </View>
 
             <View className="gap-3 text-xs">
-              {/* Technical Domain */}
-              <View className="flex-row justify-between items-center py-2 border-b border-[#F1F5F9]/50">
-                <View>
-                  <Text className="font-extrabold text-[11px] text-slate-800">Technical Training</Text>
-                  <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {profile.technicalTrainer || 'Unassigned'}</Text>
-                </View>
-                <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
-                  {profile.technicalBatch || 'Unassigned'}
-                </Text>
-              </View>
-
-              {/* Communication Domain */}
-              <View className="flex-row justify-between items-center py-2 border-b border-[#F1F5F9]/50">
-                <View>
-                  <Text className="font-extrabold text-[11px] text-slate-800">Communication Skills</Text>
-                  <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {profile.communicationTrainer || 'Unassigned'}</Text>
-                </View>
-                <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
-                  {profile.communicationBatch || 'Unassigned'}
-                </Text>
-              </View>
-
-              {/* Aptitude Domain */}
-              <View className="flex-row justify-between items-center py-2">
-                <View>
-                  <Text className="font-extrabold text-[11px] text-slate-800">Aptitude & Reasoning</Text>
-                  <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {profile.aptitudeTrainer || 'Unassigned'}</Text>
-                </View>
-                <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
-                  {profile.aptitudeBatch || 'Unassigned'}
-                </Text>
-              </View>
+              {(data?.batches || []).length > 0 ? (
+                (data?.batches || []).map((b: any) => (
+                  <View key={b._id} className="py-2 border-b border-[#F1F5F9]/50">
+                    <View className="flex-row justify-between items-center mb-1.5">
+                      <View>
+                        <Text className="font-extrabold text-[11px] text-slate-800">{b.department ? `${b.department} Training` : 'Training Module'}</Text>
+                        <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers.map((t:any) => t.name).join(', ') : 'Unassigned'}</Text>
+                      </View>
+                      <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
+                        {b.name}
+                      </Text>
+                    </View>
+                    
+                    {b.attendanceStats && (
+                      <View className="flex-row items-center justify-between mt-1">
+                        <View className="flex-row items-center">
+                          <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                          <Text className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                            {b.attendanceStats.presentCount} / {b.attendanceStats.eligibleSessionsCount} Days Attended
+                          </Text>
+                        </View>
+                        <Text className={`text-[10px] font-black ${b.attendanceStats.percentage >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {b.attendanceStats.percentage}%
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <Text className="text-[11px] text-slate-400 italic text-center py-2">No batches assigned yet.</Text>
+              )}
             </View>
           </View>
 

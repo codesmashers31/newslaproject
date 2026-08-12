@@ -1176,7 +1176,7 @@ const TrainerDashboard = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredGradingStudents.map(student => {
+                  paginatedGradingStudents.map(student => {
                     const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
                     const attPct = student.attendancePct !== undefined ? student.attendancePct : 85;
                     const isEligible = attPct >= 70;
@@ -1251,6 +1251,40 @@ const TrainerDashboard = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Table Pagination Bar */}
+          {filteredGradingStudents.length > 0 && (
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/40 dark:bg-slate-900/30">
+              <div className="text-xs text-slate-500 font-semibold">
+                Showing <span className="font-bold text-slate-700 dark:text-slate-300">{gradingIndexOfFirstItem + 1}</span> to{' '}
+                <span className="font-bold text-slate-700 dark:text-slate-300">
+                  {Math.min(gradingIndexOfLastItem, filteredGradingStudents.length)}
+                </span>{' '}
+                of <span className="font-bold text-slate-700 dark:text-slate-300">{filteredGradingStudents.length}</span> students
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                >
+                  <ChevronLeft size={14} />
+                  <span>Previous</span>
+                </button>
+                <span className="px-3 py-1.5 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-800 dark:text-violet-400 text-xs font-extrabold">
+                  Page {currentPage} of {gradingTotalPages || 1}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradingTotalPages))}
+                  disabled={currentPage >= gradingTotalPages || gradingTotalPages === 0}
+                  className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1646,6 +1680,13 @@ const TrainerDashboard = () => {
                             <td className="px-5 py-4">
                               <div className="flex items-center gap-2">
                                 <div className="font-extrabold text-slate-800 dark:text-white text-sm">{student.name}</div>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                                  (student.attendancePct !== undefined ? student.attendancePct : 85) >= 70
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                    : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
+                                }`}>
+                                  {student.attendancePct !== undefined ? student.attendancePct : 85}%
+                                </span>
                                 {isGuest && (
                                   <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                                     Cross-Attend

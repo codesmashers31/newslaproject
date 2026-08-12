@@ -13,7 +13,7 @@ import AttendanceSession from '../models/AttendanceSession.js';
 import AttendanceLog from '../models/AttendanceLog.js';
 import jwt from 'jsonwebtoken';
 import Enrollment from '../models/Enrollment.js';
-import { calculateStudentScores, calculateAllRanks, calculatePlacementReadiness } from '../utils/calculations.js';
+import { calculateStudentScores, calculateAllRanks, calculatePlacementReadiness, calculateDynamicAttendance } from '../utils/calculations.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
 
 // @desc    Get student dashboard details
@@ -61,7 +61,7 @@ export const getStudentDashboard = async (req, res) => {
       return {
         _id: b._id,
         name: b.name,
-        course: b.course,
+        department: e.department,
         startDate: b.startDate,
         endDate: b.endDate,
         trainers: trainersList
@@ -83,9 +83,13 @@ export const getStudentDashboard = async (req, res) => {
 
     // 4. Fetch Attendance stats
     const attendanceRecords = await Attendance.find({ student: studentId }).lean();
+    
+    // Use dynamic score calculator
+    const calcScores = await calculateStudentScores(studentId);
+    const attendancePercent = calcScores.attendancePercent;
+    
     const totalDays = attendanceRecords.length;
     const presentDays = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
-    const attendancePercent = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
 
     const today = new Date();
     const startOfToday = new Date(today.setHours(0,0,0,0));
@@ -179,6 +183,21 @@ export const getStudentDashboard = async (req, res) => {
     const readiness = await calculatePlacementReadiness(studentId);
     const calculatedScores = await calculateStudentScores(studentId);
 
+    const batchesWithAttendance = await Promise.all(batches.map(async b => {
+      let dept = b.department || 'Technical';
+      const attStats = await calculateDynamicAttendance(studentId, dept);
+      return {
+        _id: b._id,
+        name: b.name,
+        department: b.department,
+        course: b.course,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        trainers: b.trainers,
+        attendanceStats: attStats
+      };
+    }));
+
     res.json({
       profile,
       placement,
@@ -190,14 +209,7 @@ export const getStudentDashboard = async (req, res) => {
         endDate: batch.endDate,
         trainers: batch.trainers
       } : null,
-      batches: batches.map(b => ({
-        _id: b._id,
-        name: b.name,
-        course: b.course,
-        startDate: b.startDate,
-        endDate: b.endDate,
-        trainers: b.trainers
-      })),
+      batches: batchesWithAttendance,
       attendance: {
         percentage: attendancePercent,
         totalClasses: totalDays,
@@ -641,6 +653,14 @@ export const scanQR = async (req, res) => {
       status = 'Late';
     } else if (diffMinutes > 20) {
       status = 'Absent';
+    }
+
+    // Set dynamic start date for Communication and Aptitude if this is the first scan
+    if ((session.subject === 'Communication' || session.subject === 'Aptitude') && activeEnrollment) {
+      if (!activeEnrollment.startDate && status !== 'Absent') {
+        activeEnrollment.startDate = sessionStartTime;
+        await activeEnrollment.save();
+      }
     }
 
     // 7. Save Attendance record

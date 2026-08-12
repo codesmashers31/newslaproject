@@ -33,6 +33,10 @@ const enrollmentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
+  startDate: {
+    type: Date,
+    default: null
+  },
   completedAt: {
     type: Date
   },

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Batch from '../models/Batch.js';
+import { calculateStudentScores } from '../utils/calculations.js';
 import Attendance from '../models/Attendance.js';
 import Score from '../models/Score.js';
 import Student from '../models/Student.js';
@@ -479,9 +480,18 @@ export const getTrainerDashboardStats = async (req, res) => {
     }).lean();
 
     const totalAttendanceCount = attendanceRecords.length;
-    const presentRecordsCount = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
-    const attendancePercentage = totalAttendanceCount > 0 
-      ? Math.round((presentRecordsCount / totalAttendanceCount) * 100) 
+    // Consistent dynamic calculation: average across trainer's active students
+    let totalAttendancePercent = 0;
+    let validStudentsCount = 0;
+    if (studentIds.length > 0) {
+      for (const sid of studentIds) {
+        const scores = await calculateStudentScores(sid);
+        totalAttendancePercent += scores.attendancePercent;
+        validStudentsCount++;
+      }
+    }
+    const attendancePercentage = validStudentsCount > 0 
+      ? Math.round(totalAttendancePercent / validStudentsCount) 
       : 100;
 
     // Present / Absent Today

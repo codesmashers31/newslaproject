@@ -8,6 +8,63 @@ import Assignment from '../models/Assignment.js';
 import AptitudeModule from '../models/AptitudeModule.js';
 import CommunicationModule from '../models/CommunicationModule.js';
 import TechnicalModule from '../models/TechnicalModule.js';
+import AttendanceSession from '../models/AttendanceSession.js';
+import Enrollment from '../models/Enrollment.js';
+
+export const calculateDynamicAttendance = async (studentId, department) => {
+  if (department === 'Technical') {
+    // Keep legacy Technical calculation logic
+    const attendanceRecords = await Attendance.find({ student: studentId, subject: 'Technical Training' }).lean();
+    const totalDays = attendanceRecords.length;
+    const presentDays = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
+    const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
+    return { attendancePercent: percentage, eligibleSessionsCount: totalDays, presentCount: presentDays };
+  }
+
+  // Find active enrollment for this department (Communication or Aptitude)
+  const enrollment = await Enrollment.findOne({ studentId, department, status: 'Active' }).lean();
+  
+  if (!enrollment || !enrollment.startDate) {
+    return { attendancePercent: 100, eligibleSessionsCount: 0, presentCount: 0 }; // Hasn't started training yet
+  }
+
+  // Maximum training days
+  const MAX_DAYS = department === 'Communication' ? 85 : 120;
+  
+  // Find all AttendanceSessions for this student's batch & subject that happened on or after startDate
+  let query = {
+    batch: enrollment.batchId,
+    subject: department === 'Communication' ? 'Communication Training' : 'Aptitude Training',
+    startTime: { $gte: enrollment.startDate }
+  };
+
+  // If completed early (e.g. mock completed), cap the calculation at completedAt date
+  if (enrollment.completedAt) {
+    query.startTime.$lte = enrollment.completedAt;
+  }
+
+  // Count eligible sessions up to the MAX_DAYS limit
+  const sessions = await AttendanceSession.find(query).sort({ startTime: 1 }).limit(MAX_DAYS).select('_id startTime').lean();
+  const eligibleSessionsCount = sessions.length;
+
+  if (eligibleSessionsCount === 0) {
+    return { attendancePercent: 100, eligibleSessionsCount: 0, presentCount: 0 };
+  }
+
+  // The last eligible session acts as the cap for attendance queries
+  const lastSessionTime = sessions[eligibleSessionsCount - 1].startTime;
+
+  // Find present/late attendances for this student within the eligible time window
+  const presentCount = await Attendance.countDocuments({
+    student: studentId,
+    subject: department === 'Communication' ? 'Communication Training' : 'Aptitude Training',
+    status: { $in: ['Present', 'Late'] },
+    date: { $gte: enrollment.startDate, $lte: lastSessionTime }
+  });
+
+  const percentage = Math.round((presentCount / eligibleSessionsCount) * 100);
+  return { attendancePercent: percentage, eligibleSessionsCount, presentCount };
+};
 
 // Calculate domain completion percentage
 const getDomainProgress = async (studentId, category, totalCount) => {
@@ -23,12 +80,13 @@ const getDomainProgress = async (studentId, category, totalCount) => {
 // Calculate detailed scores and final grade for a student
 export const calculateStudentScores = async (studentId) => {
   // 1. Attendance Score (10% weight)
-  const attendanceRecords = await Attendance.find({ student: studentId }).lean();
-  const totalDays = attendanceRecords.length;
-  const presentDays = attendanceRecords.filter(a => a.status === 'Present').length;
-  const lateDays = attendanceRecords.filter(a => a.status === 'Late').length;
-  // Late counts as half presence or we can calculate straight attendance percentage
-  const attendancePercent = totalDays > 0 ? ((presentDays + lateDays * 0.5) / totalDays) * 100 : 100;
+  // Get dynamic attendance percentages per module
+  const techAtt = await calculateDynamicAttendance(studentId, 'Technical');
+  const commAtt = await calculateDynamicAttendance(studentId, 'Communication');
+  const aptiAtt = await calculateDynamicAttendance(studentId, 'Aptitude');
+
+  // Average the attendance percentage across enrolled departments
+  const attendancePercent = Math.round((techAtt.attendancePercent + commAtt.attendancePercent + aptiAtt.attendancePercent) / 3);
   const attendanceScore = (attendancePercent / 100) * 10; // scaled out of 10
 
   // 2. Assignment Score (15% weight)

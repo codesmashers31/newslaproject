@@ -31,10 +31,18 @@ export const getDashboardStats = async (req, res) => {
 
     // Attendance stats
     const attendanceRecords = await Attendance.find({});
-    const totalAttendanceCount = attendanceRecords.length;
-    const presentRecords = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
-    const attendancePercentage = totalAttendanceCount > 0 
-      ? Math.round((presentRecords / totalAttendanceCount) * 100) 
+    
+    // Dynamic calculation: calculate average of all active students
+    let totalAttendancePercent = 0;
+    if (activeStudentsCount > 0) {
+      const activeStudents = await User.find({ role: 'Student', status: 'Active' });
+      for (const student of activeStudents) {
+        const scores = await calculateStudentScores(student._id);
+        totalAttendancePercent += scores.attendancePercent;
+      }
+    }
+    const attendancePercentage = activeStudentsCount > 0 
+      ? Math.round(totalAttendancePercent / activeStudentsCount)
       : 100;
 
     // Score calculations
