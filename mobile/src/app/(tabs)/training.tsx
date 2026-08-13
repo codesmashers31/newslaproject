@@ -21,7 +21,8 @@ import {
   BookOpen,
   CheckCircle2,
   ArrowLeft,
-  Search
+  Search,
+  Layers
 } from 'lucide-react-native';
 
 export default function TrainingScreen() {
@@ -82,11 +83,11 @@ export default function TrainingScreen() {
           if (parsed.myBatches) {
             setBatches(parsed.myBatches);
             const tech = parsed.myBatches.filter((b: any) => getBatchDomain(b) === 'Technical');
-            setSelectedTechIds(tech.map((b: any) => b._id));
+            setSelectedTechIds(tech.map((b: any) => String(b._id)));
             const apti = parsed.myBatches.find((b: any) => getBatchDomain(b) === 'Aptitude');
-            setSelectedAptiId(apti ? apti._id : null);
+            setSelectedAptiId(apti ? String(apti._id) : null);
             const comm = parsed.myBatches.find((b: any) => getBatchDomain(b) === 'Communication');
-            setSelectedCommId(comm ? comm._id : null);
+            setSelectedCommId(comm ? String(comm._id) : null);
           }
           if (parsed.available) setAvailableBatches(parsed.available);
           setLoading(false);
@@ -112,15 +113,15 @@ export default function TrainingScreen() {
 
       // Initialize selected tech ids
       const tech = myBatches.filter((b: any) => getBatchDomain(b) === 'Technical');
-      setSelectedTechIds(tech.map((b: any) => b._id));
+      setSelectedTechIds(tech.map((b: any) => String(b._id)));
       
       // Initialize selected apti id
       const apti = myBatches.find((b: any) => getBatchDomain(b) === 'Aptitude');
-      setSelectedAptiId(apti ? apti._id : null);
+      setSelectedAptiId(apti ? String(apti._id) : null);
 
       // Initialize selected comm id
       const comm = myBatches.find((b: any) => getBatchDomain(b) === 'Communication');
-      setSelectedCommId(comm ? comm._id : null);
+      setSelectedCommId(comm ? String(comm._id) : null);
       
     } catch (error) {
       console.error('Failed to load training data', error);
@@ -211,10 +212,11 @@ export default function TrainingScreen() {
   };
 
   const toggleTechBatch = (id: string) => {
-    if (selectedTechIds.includes(id)) {
-      setSelectedTechIds(selectedTechIds.filter(x => x !== id));
+    const stringId = String(id);
+    if (selectedTechIds.some(x => String(x) === stringId)) {
+      setSelectedTechIds(selectedTechIds.filter(x => String(x) !== stringId));
     } else {
-      setSelectedTechIds([...selectedTechIds, id]);
+      setSelectedTechIds([...selectedTechIds, stringId]);
     }
   };
 
@@ -262,37 +264,52 @@ export default function TrainingScreen() {
       >
         <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-4 mt-2">ASSIGNED BATCHES & TRAINERS</Text>
 
-        {/* 1. TECHNICAL TRAINING CARD */}
+        {/* 1. TECHNICAL TRAINING CARD (Multi-Course Display) */}
         <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">TECHNICAL TRAINING</Text>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">TECHNICAL TRAINING</Text>
+              {techBatches.length > 0 && (
+                <View className="bg-[#8B5CF6]/10 px-2 py-0.5 rounded-full flex-row items-center gap-1">
+                  <Layers size={10} color="#8B5CF6" />
+                  <Text className="text-[#8B5CF6] text-[10px] font-black">{techBatches.length} Courses Selected</Text>
+                </View>
+              )}
+            </View>
             <TouchableOpacity onPress={() => setTechModalVisible(true)} className="bg-[#F3E8FF] px-3.5 py-1.5 rounded-xl">
-              <Text className="text-[#8B5CF6] text-[11px] font-black">Manage</Text>
+              <Text className="text-[#8B5CF6] text-[11px] font-black">Manage ({selectedTechIds.length})</Text>
             </TouchableOpacity>
           </View>
           
-          <View className="space-y-4">
-            <View>
-              <Text className="text-[#64748B] text-[11px] font-semibold">Assigned Batch</Text>
-              <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {techBatches.length > 0 ? techBatches.map(b => b.name).join(', ') : 'Unassigned'}
-              </Text>
+          {techBatches.length === 0 ? (
+            <View className="py-4 items-center justify-center border border-dashed border-[#CBD5E1] rounded-2xl bg-[#F8FAFC]">
+              <Text className="text-[#64748B] text-xs font-semibold">No technical courses selected</Text>
+              <TouchableOpacity onPress={() => setTechModalVisible(true)} className="mt-2 bg-[#8B5CF6] px-4 py-1.5 rounded-xl">
+                <Text className="text-white text-xs font-bold">Select Courses</Text>
+              </TouchableOpacity>
             </View>
-            <View className="border-t border-[#F1F5F9] pt-3">
-              <Text className="text-[#64748B] text-[11px] font-semibold">Trainer</Text>
-              <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {techBatches.length > 0 && techBatches[0].trainers && techBatches[0].trainers.length > 0 
-                  ? techBatches[0].trainers[0].name 
-                  : 'Auto-Assigned'}
-              </Text>
+          ) : (
+            <View className="gap-3">
+              {techBatches.map((item, index) => (
+                <View key={String(item._id || index)} className="p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-[#0F172A] text-xs font-black flex-1 mr-2">{item.name}</Text>
+                    <View className="bg-[#E0E7FF] px-2 py-0.5 rounded-md">
+                      <Text className="text-[#4338CA] text-[9px] font-bold uppercase">{item.course || 'Technical'}</Text>
+                    </View>
+                  </View>
+                  <View className="flex-row justify-between items-center border-t border-[#E2E8F0] pt-2 mt-1">
+                    <Text className="text-[#64748B] text-[11px]">
+                      Trainer: <Text className="text-[#0F172A] font-bold">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</Text>
+                    </Text>
+                    <Text className="text-[#64748B] text-[11px]">
+                      {item.schedule || 'Mon-Fri • 9:00 AM'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
             </View>
-            <View className="border-t border-[#F1F5F9] pt-3">
-              <Text className="text-[#64748B] text-[11px] font-semibold">Schedule</Text>
-              <Text className="text-[#0F172A] text-xs font-black mt-1">
-                {techBatches.length > 0 ? techBatches[0].schedule || 'Mon-Fri • 9:00 AM' : 'N/A'}
-              </Text>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* 2. COMMUNICATION SKILLS CARD */}
@@ -362,18 +379,18 @@ export default function TrainingScreen() {
         </View>
       </ScrollView>
 
-      {/* Tech Batches Modal */}
+      {/* Tech Batches Multi-Select Modal */}
       <Modal visible={techModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setTechModalVisible(false)}>
         <SafeAreaView className="flex-1 bg-[#F8FAFC]">
           <View className="flex-1 px-6 pt-4 pb-6">
             <View className="flex-row items-center mb-6">
               <TouchableOpacity onPress={() => {
                 setTechModalVisible(false);
-                setSelectedTechIds(techBatches.map(b => b._id));
+                setSelectedTechIds(techBatches.map(b => String(b._id)));
               }} className="mr-4">
                 <ArrowLeft size={24} color={muted} />
               </TouchableOpacity>
-              <Text className="text-lg font-black text-[#0F172A] flex-1">Manage Technical Batches</Text>
+              <Text className="text-lg font-black text-[#0F172A] flex-1">Manage Technical Batches ({selectedTechIds.length} selected)</Text>
             </View>
           
             <View className="flex-row items-center bg-white border border-[#E2E8F0] rounded-xl px-3 py-2.5 mb-4">
@@ -389,10 +406,10 @@ export default function TrainingScreen() {
             
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
               {availTechBatches.map(b => {
-                const isSelected = selectedTechIds.includes(b._id);
+                const isSelected = selectedTechIds.some(id => String(id) === String(b._id));
                 return (
                   <TouchableOpacity 
-                    key={b._id} 
+                    key={String(b._id)} 
                     onPress={() => toggleTechBatch(b._id)}
                     className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
                   >
@@ -401,7 +418,8 @@ export default function TrainingScreen() {
                     </View>
                     <View className="flex-1">
                       <Text className="text-[#0F172A] font-bold">{b.name}</Text>
-                      <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
+                      <Text className="text-[#64748B] text-xs mt-1">Course: {b.course || 'Technical'}</Text>
+                      <Text className="text-[#64748B] text-xs mt-0.5">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
                     </View>
                   </TouchableOpacity>
                 )
@@ -409,7 +427,7 @@ export default function TrainingScreen() {
             </ScrollView>
             <View className="mt-4">
               <TouchableOpacity onPress={handleSaveTech} disabled={savingTech} className="w-full bg-[#4F46E5] py-3.5 rounded-xl items-center disabled:opacity-50">
-                {savingTech ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-white text-xs font-black">Save Selection</Text>}
+                {savingTech ? <ActivityIndicator size="small" color="#fff" /> : <Text className="text-white text-xs font-black">Save Technical Selection ({selectedTechIds.length})</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -423,7 +441,7 @@ export default function TrainingScreen() {
             <View className="flex-row items-center mb-6">
               <TouchableOpacity onPress={() => {
                 setAptiModalVisible(false);
-                setSelectedAptiId(aptiBatch ? aptiBatch._id : null);
+                setSelectedAptiId(aptiBatch ? String(aptiBatch._id) : null);
               }} className="mr-4">
                 <ArrowLeft size={24} color={muted} />
               </TouchableOpacity>
@@ -443,11 +461,11 @@ export default function TrainingScreen() {
             
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
               {availAptiBatches.map(b => {
-                const isSelected = selectedAptiId === b._id;
+                const isSelected = selectedAptiId ? String(selectedAptiId) === String(b._id) : false;
                 return (
                   <TouchableOpacity 
-                    key={b._id} 
-                    onPress={() => setSelectedAptiId(b._id)}
+                    key={String(b._id)} 
+                    onPress={() => setSelectedAptiId(String(b._id))}
                     className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
                   >
                     <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
@@ -477,7 +495,7 @@ export default function TrainingScreen() {
             <View className="flex-row items-center mb-6">
               <TouchableOpacity onPress={() => {
                 setCommModalVisible(false);
-                setSelectedCommId(commBatch ? commBatch._id : null);
+                setSelectedCommId(commBatch ? String(commBatch._id) : null);
               }} className="mr-4">
                 <ArrowLeft size={24} color={muted} />
               </TouchableOpacity>
@@ -497,11 +515,11 @@ export default function TrainingScreen() {
             
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
               {availCommBatches.map(b => {
-                const isSelected = selectedCommId === b._id;
+                const isSelected = selectedCommId ? String(selectedCommId) === String(b._id) : false;
                 return (
                   <TouchableOpacity 
-                    key={b._id} 
-                    onPress={() => setSelectedCommId(b._id)}
+                    key={String(b._id)} 
+                    onPress={() => setSelectedCommId(String(b._id))}
                     className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
                   >
                     <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
