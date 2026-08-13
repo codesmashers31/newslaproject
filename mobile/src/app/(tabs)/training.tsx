@@ -75,12 +75,29 @@ export default function TrainingScreen() {
       setIsTechLocked(!!uObj.isTechnicalLocked);
       setIsAptiLocked(!!uObj.isAptitudeLocked);
       
+      const getBatchDomain = (batch: any) => {
+        if (!batch) return 'Technical';
+        if (batch.department === 'Aptitude') return 'Aptitude';
+        if (batch.department === 'Communication') return 'Communication';
+        if (batch.department === 'Technical') return 'Technical';
+
+        const course = (batch.course || '').toLowerCase();
+        const name = (batch.name || '').toLowerCase();
+        if (course.includes('aptitude') || course.includes('quant') || course.includes('reasoning') || name.includes('aptitude') || name.includes('quant')) {
+          return 'Aptitude';
+        }
+        if (course.includes('communication') || course.includes('softskills') || course.includes('english') || course.includes('verbal') || name.includes('communication') || name.includes('softskill')) {
+          return 'Communication';
+        }
+        return 'Technical';
+      };
+
       // Initialize selected tech ids
-      const tech = myBatches.filter((b: any) => b.course?.includes('Technical'));
+      const tech = myBatches.filter((b: any) => getBatchDomain(b) === 'Technical');
       setSelectedTechIds(tech.map((b: any) => b._id));
       
       // Initialize selected apti id
-      const apti = myBatches.find((b: any) => b.course?.includes('Aptitude'));
+      const apti = myBatches.find((b: any) => getBatchDomain(b) === 'Aptitude');
       setSelectedAptiId(apti ? apti._id : null);
       
     } catch (error) {
@@ -198,17 +215,34 @@ export default function TrainingScreen() {
     );
   }
 
-  const techBatches = batches.filter(b => b.course?.includes('Technical'));
-  const commBatch = batches.find(b => b.course?.includes('Communication'));
-  const aptiBatch = batches.find(b => b.course?.includes('Aptitude'));
+  const getBatchDomain = (batch: any) => {
+    if (!batch) return 'Technical';
+    if (batch.department === 'Aptitude') return 'Aptitude';
+    if (batch.department === 'Communication') return 'Communication';
+    if (batch.department === 'Technical') return 'Technical';
+
+    const course = (batch.course || '').toLowerCase();
+    const name = (batch.name || '').toLowerCase();
+    if (course.includes('aptitude') || course.includes('quant') || course.includes('reasoning') || name.includes('aptitude') || name.includes('quant')) {
+      return 'Aptitude';
+    }
+    if (course.includes('communication') || course.includes('softskills') || course.includes('english') || course.includes('verbal') || name.includes('communication') || name.includes('softskill')) {
+      return 'Communication';
+    }
+    return 'Technical';
+  };
+
+  const techBatches = batches.filter(b => getBatchDomain(b) === 'Technical');
+  const commBatch = batches.find(b => getBatchDomain(b) === 'Communication');
+  const aptiBatch = batches.find(b => getBatchDomain(b) === 'Aptitude');
 
   const availTechBatches = availableBatches
-    .filter(b => b.course?.includes('Technical'))
-    .filter(b => b.name?.toLowerCase().includes(techSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(techSearchQuery.toLowerCase())));
+    .filter(b => getBatchDomain(b) === 'Technical')
+    .filter(b => b.name?.toLowerCase().includes(techSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name?.toLowerCase().includes(techSearchQuery.toLowerCase())));
     
   const availAptiBatches = availableBatches
-    .filter(b => b.course?.includes('Aptitude'))
-    .filter(b => b.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(aptiSearchQuery.toLowerCase())));
+    .filter(b => getBatchDomain(b) === 'Aptitude')
+    .filter(b => b.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase())));
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">

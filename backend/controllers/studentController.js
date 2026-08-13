@@ -61,6 +61,7 @@ export const getStudentDashboard = async (req, res) => {
       return {
         _id: b._id,
         name: b.name,
+        course: b.course || e.course || '',
         department: e.department,
         startDate: b.startDate,
         endDate: b.endDate,
@@ -1018,14 +1019,15 @@ export const updateStudentEnrollments = async (req, res) => {
       
       for (const batchId of technicalBatchIds) {
         const batch = await Batch.findById(batchId);
-        if (batch && batch.course.includes('Technical')) {
+        if (batch) {
           const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
           
           await Enrollment.findOneAndUpdate(
             { studentId, batchId: batch._id, department: 'Technical' },
             {
               trainerId: trainerId,
-              course: batch.course,
+              course: batch.course || 'Technical Training',
+              department: 'Technical',
               status: 'Active',
               enrolledAt: new Date()
             },
@@ -1047,7 +1049,7 @@ export const updateStudentEnrollments = async (req, res) => {
     // 2. Aptitude Batch (Single-Select)
     if (aptitudeBatchId && !isAptiAlreadyLocked) {
       const batch = await Batch.findById(aptitudeBatchId);
-      if (batch && batch.course.includes('Aptitude')) {
+      if (batch) {
         const activeAptiEnrollments = await Enrollment.find({ studentId, department: 'Aptitude', status: 'Active' });
         const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
 
@@ -1066,7 +1068,8 @@ export const updateStudentEnrollments = async (req, res) => {
             { studentId, batchId: batch._id, department: 'Aptitude' },
             {
               trainerId: trainerId,
-              course: batch.course,
+              course: batch.course || 'Aptitude & Reasoning',
+              department: 'Aptitude',
               status: 'Active',
               enrolledAt: new Date()
             },
