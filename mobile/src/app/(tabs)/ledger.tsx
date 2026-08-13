@@ -91,7 +91,8 @@ export default function LedgerScreen() {
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}
-        className="flex-1 px-6 py-4"
+        className="flex-1 px-5 py-4"
+        contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
         

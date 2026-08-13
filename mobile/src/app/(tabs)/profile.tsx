@@ -339,7 +339,8 @@ export default function ProfileScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor} />
           }
-          className="flex-1 px-6 py-4"
+          className="flex-1 px-5 py-4"
+          contentContainerStyle={{ paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >

@@ -251,15 +251,16 @@ export default function TrainingScreen() {
 
       <ScrollView 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}
-        className="flex-1 px-6 py-4"
+        className="flex-1 px-5 py-4"
+        contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
         <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-4 mt-2">ASSIGNED BATCHES & TRAINERS</Text>
 
         {/* 1. TECHNICAL TRAINING CARD (Multi-Course Display) */}
         <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-          <View className="flex-row justify-between items-center mb-4">
-            <View className="flex-row items-center gap-2">
+          <View className="flex-row justify-between items-center flex-wrap gap-2 mb-4">
+            <View className="flex-row items-center flex-wrap gap-2 flex-1">
               <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">TECHNICAL TRAINING</Text>
               {techBatches.length > 0 && (
                 <View className="bg-[#8B5CF6]/10 px-2 py-0.5 rounded-full flex-row items-center gap-1">
@@ -284,17 +285,17 @@ export default function TrainingScreen() {
             <View className="gap-3">
               {techBatches.map((item, index) => (
                 <View key={String(item._id || index)} className="p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
-                  <View className="flex-row justify-between items-center mb-2">
-                    <Text className="text-[#0F172A] text-xs font-black flex-1 mr-2">{item.name}</Text>
+                  <View className="flex-row justify-between items-center flex-wrap gap-2 mb-2">
+                    <Text className="text-[#0F172A] text-xs font-black flex-1 min-w-[120px]">{item.name}</Text>
                     <View className="bg-[#E0E7FF] px-2 py-0.5 rounded-md">
                       <Text className="text-[#4338CA] text-[9px] font-bold uppercase">{item.course || 'Technical'}</Text>
                     </View>
                   </View>
-                  <View className="flex-row justify-between items-center border-t border-[#E2E8F0] pt-2 mt-1">
-                    <Text className="text-[#64748B] text-[11px]">
+                  <View className="flex-row justify-between items-center border-t border-[#E2E8F0] pt-2 mt-1 flex-wrap gap-2">
+                    <Text className="text-[#64748B] text-[11px] flex-1 min-w-[130px]">
                       Trainer: <Text className="text-[#0F172A] font-bold">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</Text>
                     </Text>
-                    <Text className="text-[#64748B] text-[11px]">
+                    <Text className="text-[#64748B] text-[11px] font-semibold">
                       {item.schedule || 'Mon-Fri • 9:00 AM'}
                     </Text>
                   </View>
@@ -306,7 +307,7 @@ export default function TrainingScreen() {
 
         {/* 2. COMMUNICATION SKILLS CARD */}
         <View className="mb-4 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-          <View className="flex-row justify-between items-center mb-4">
+          <View className="flex-row justify-between items-center flex-wrap gap-2 mb-4">
             <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">COMMUNICATION SKILLS</Text>
             <TouchableOpacity onPress={() => setCommModalVisible(true)} className="bg-[#4F46E5] px-3.5 py-1.5 rounded-xl">
               <Text className="text-white text-[11px] font-black">Change</Text>
@@ -339,7 +340,7 @@ export default function TrainingScreen() {
 
         {/* 3. APTITUDE & REASONING CARD */}
         <View className="mb-8 bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
-          <View className="flex-row justify-between items-center mb-4">
+          <View className="flex-row justify-between items-center flex-wrap gap-2 mb-4">
             <Text className="text-[#0F172A] font-extrabold text-sm uppercase tracking-wide">APTITUDE & REASONING</Text>
             <TouchableOpacity onPress={() => setAptiModalVisible(true)} className="bg-[#4F46E5] px-3.5 py-1.5 rounded-xl">
               <Text className="text-white text-[11px] font-black">Change</Text>
