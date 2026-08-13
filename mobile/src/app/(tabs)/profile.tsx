@@ -89,11 +89,52 @@ export default function ProfileScreen() {
     return 'http://172.17.1.232:5000';
   };
 
+  React.useEffect(() => {
+    const loadCache = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('cached_profile_data');
+        if (cached) {
+          const { student, p, photo } = JSON.parse(cached);
+          setProfileData({
+            collegeName: p.collegeName || '',
+            degree: p.degree || '',
+            department: p.department || '',
+            yearOfPassing: p.yearOfPassing || '',
+            dob: p.dob ? new Date(p.dob).toISOString().split('T')[0] : '',
+            gender: p.gender || '',
+            address: p.address || '',
+            skills: p.skills?.join(', ') || '',
+            linkedin: p.linkedin || '',
+            github: p.github || '',
+            bio: p.bio || '',
+            name: student.name || '',
+            mobile: student.mobile || '',
+            email: student.email || '',
+            technicalBatch: student.technicalBatch || '',
+            technicalTrainer: student.technicalTrainer || '',
+            communicationBatch: student.communicationBatch || '',
+            communicationTrainer: student.communicationTrainer || '',
+            aptitudeBatch: student.aptitudeBatch || '',
+            aptitudeTrainer: student.aptitudeTrainer || '',
+          });
+          setCurrentPhotoPath(photo || '');
+          setLoading(false);
+        }
+      } catch (e) {}
+    };
+    loadCache();
+  }, []);
+
   const loadProfileData = async () => {
     try {
-      const { data } = await API.get('/student/dashboard');
+      const [{ data }, { data: batchesData }] = await Promise.all([
+        API.get('/student/dashboard'),
+        API.get('/student/batches').catch(() => ({ data: [] }))
+      ]);
+
       const student = data?.profile?.user || {};
       const p = data?.profile || {};
+      const photo = p.photo || student.photo || '';
       
       setProfileData({
         collegeName: p.collegeName || '',
@@ -117,17 +158,12 @@ export default function ProfileScreen() {
         aptitudeBatch: student.aptitudeBatch || '',
         aptitudeTrainer: student.aptitudeTrainer || '',
       });
-      setCurrentPhotoPath(p.photo || student.photo || '');
+      setCurrentPhotoPath(photo);
       setPhotoVersion(Date.now());
       setSelectedPhoto(null);
+      setAvailableBatches(batchesData || []);
 
-      // Fetch active batches for selection dropdowns
-      try {
-        const { data: batchesData } = await API.get('/student/batches');
-        setAvailableBatches(batchesData || []);
-      } catch (err) {
-        console.error('Failed to load available batches list', err);
-      }
+      AsyncStorage.setItem('cached_profile_data', JSON.stringify({ student, p, photo })).catch(() => {});
 
     } catch (error: any) {
       console.error('Failed to load profile details', error?.message);

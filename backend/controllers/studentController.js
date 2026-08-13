@@ -23,28 +23,54 @@ export const getStudentDashboard = async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // 1. Fetch Profile
-    let profile = await Student.findOne({ user: studentId })
-      .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
-      .lean();
-    if (!profile) {
-      const userObj = await User.findById(studentId).select('name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo').lean();
-      profile = { user: userObj };
-    }
+    // Parallelize all independent database lookups for maximum speed
+    const [
+      profileDoc,
+      userDoc,
+      placementData,
+      enrollments,
+      attendanceRecords,
+      scores,
+      aptMaster,
+      commMaster,
+      techMaster,
+      notifications,
+      certificates,
+      readiness,
+      calculatedScores
+    ] = await Promise.all([
+      Student.findOne({ user: studentId })
+        .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
+        .lean(),
+      User.findById(studentId).select('name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo').lean(),
+      Placement.findOne({ student: studentId }).lean(),
+      Enrollment.find({ studentId, status: 'Active' })
+        .populate({
+          path: 'batchId',
+          populate: { path: 'trainers', select: 'name email role mobile' }
+        })
+        .populate('trainerId', 'name email role mobile')
+        .lean(),
+      Attendance.find({ student: studentId }).lean(),
+      Score.find({ student: studentId })
+        .populate('updatedBy', 'name role')
+        .lean(),
+      AptitudeModule.find({}).sort({ order: 1 }).lean(),
+      CommunicationModule.find({}).sort({ order: 1 }).lean(),
+      TechnicalModule.find({}).sort({ order: 1 }).lean(),
+      Notification.find({ recipient: studentId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean(),
+      Certificate.find({ student: studentId }).lean(),
+      calculatePlacementReadiness(studentId),
+      calculateStudentScores(studentId)
+    ]);
 
-    // 2. Fetch Placement Status
-    const placement = await Placement.findOne({ student: studentId }) || {};
+    let profile = profileDoc || { user: userDoc };
+    const placement = placementData || {};
 
-    // 3. Fetch Batch details from active Enrollments
-    const enrollments = await Enrollment.find({ studentId, status: 'Active' })
-      .populate({
-        path: 'batchId',
-        populate: { path: 'trainers', select: 'name email role mobile' }
-      })
-      .populate('trainerId', 'name email role mobile')
-      .lean();
-
-    const batches = enrollments.map(e => {
+    const batches = (enrollments || []).map(e => {
       const b = e.batchId || {};
       const trainersList = [];
       if (e.trainerId) {
@@ -82,12 +108,7 @@ export const getStudentDashboard = async (req, res) => {
       profile.user.aptitudeTrainer = enrollments.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
     }
 
-    // 4. Fetch Attendance stats
-    const attendanceRecords = await Attendance.find({ student: studentId }).lean();
-    
-    // Use dynamic score calculator
-    const calcScores = await calculateStudentScores(studentId);
-    const attendancePercent = calcScores.attendancePercent;
+    const attendancePercent = calculatedScores.attendancePercent;
     
     const totalDays = attendanceRecords.length;
     const presentDays = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
@@ -111,16 +132,6 @@ export const getStudentDashboard = async (req, res) => {
         if (rec.status === 'Late') monthlyAttendance[m].Late += 1;
       }
     });
-
-    // 5. Fetch Scores and Calculate Progress
-    const scores = await Score.find({ student: studentId })
-      .populate('updatedBy', 'name role')
-      .lean();
-
-    // Fetch master modules list to determine full list
-    const aptMaster = await AptitudeModule.find({}).sort({ order: 1 }).lean();
-    const commMaster = await CommunicationModule.find({}).sort({ order: 1 }).lean();
-    const techMaster = await TechnicalModule.find({}).sort({ order: 1 }).lean();
 
     // Build lists with statuses, default to Not Started
     const buildScorecard = (masterList, scoreList, category) => {
@@ -161,15 +172,6 @@ export const getStudentDashboard = async (req, res) => {
       ? Math.round((completedModulesCount / totalModulesCount) * 100)
       : 0;
 
-    // 6. Fetch Notifications
-    const notifications = await Notification.find({ recipient: studentId })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean();
-
-    // 7. Fetch Certificates
-    const certificates = await Certificate.find({ student: studentId }).lean();
-
     // 8. Generate recommendations / timeline / upcoming classes mockup
     const upcomingClasses = [
       { id: 1, subject: 'Vedic Math Mock Test', time: '10:00 AM - 12:00 PM', date: 'Tomorrow', trainer: 'Aptitude Trainer' },
@@ -177,12 +179,7 @@ export const getStudentDashboard = async (req, res) => {
       { id: 3, subject: 'React Context API & Projects', time: '09:00 AM - 11:00 AM', date: 'Next Monday', trainer: 'Technical Trainer' }
     ];
 
-    // Compute grades, ranks and placement readiness metrics
-    // Rank calculations are too slow for synchronous dashboard load with 100+ users.
-    // Setting default to 0 to prevent Render API timeouts.
     const myRank = { instituteRank: 0, batchRank: 0 };
-    const readiness = await calculatePlacementReadiness(studentId);
-    const calculatedScores = await calculateStudentScores(studentId);
 
     const batchesWithAttendance = await Promise.all(batches.map(async b => {
       let dept = b.department || 'Technical';

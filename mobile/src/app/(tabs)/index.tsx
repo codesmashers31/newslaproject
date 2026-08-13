@@ -48,10 +48,25 @@ export default function DashboardScreen() {
   const [imageError, setImageError] = useState(false);
   const primaryColor = '#4F46E5';
 
+  // Load cached dashboard instantly for 0ms initial render speed
+  React.useEffect(() => {
+    const loadCache = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('cached_dashboard_data');
+        if (cached) {
+          setData(JSON.parse(cached));
+          setLoading(false);
+        }
+      } catch (e) {}
+    };
+    loadCache();
+  }, []);
+
   const loadDashboardData = async () => {
     try {
       const { data: dashboardData } = await API.get('/student/dashboard');
       setData(dashboardData);
+      AsyncStorage.setItem('cached_dashboard_data', JSON.stringify(dashboardData)).catch(() => {});
     } catch (error: any) {
       console.error('Failed to load student dashboard', error?.message);
       if (error?.response?.status === 401) {

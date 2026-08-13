@@ -23,6 +23,7 @@ import {
   Award,
   Bell
 } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
 
@@ -34,10 +35,24 @@ export default function CareerScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  React.useEffect(() => {
+    const loadCache = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('cached_career_data');
+        if (cached) {
+          setData(JSON.parse(cached));
+          setLoading(false);
+        }
+      } catch (e) {}
+    };
+    loadCache();
+  }, []);
+
   const loadData = async () => {
     try {
       const { data: dashboardData } = await API.get('/student/dashboard');
       setData(dashboardData);
+      AsyncStorage.setItem('cached_career_data', JSON.stringify(dashboardData)).catch(() => {});
     } catch (error: any) {
       console.error('Failed to load career data', error?.message);
       if (error?.response?.status === 401) {

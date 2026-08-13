@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { useFocusEffect } from 'expo-router';
 import { useColorScheme } from 'nativewind';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
 import { 
@@ -72,6 +73,29 @@ export default function TrainingScreen() {
     return 'Technical';
   };
 
+  useEffect(() => {
+    const loadCached = async () => {
+      try {
+        const cached = await AsyncStorage.getItem('cached_training_batches');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.myBatches) {
+            setBatches(parsed.myBatches);
+            const tech = parsed.myBatches.filter((b: any) => getBatchDomain(b) === 'Technical');
+            setSelectedTechIds(tech.map((b: any) => b._id));
+            const apti = parsed.myBatches.find((b: any) => getBatchDomain(b) === 'Aptitude');
+            setSelectedAptiId(apti ? apti._id : null);
+            const comm = parsed.myBatches.find((b: any) => getBatchDomain(b) === 'Communication');
+            setSelectedCommId(comm ? comm._id : null);
+          }
+          if (parsed.available) setAvailableBatches(parsed.available);
+          setLoading(false);
+        }
+      } catch (e) {}
+    };
+    loadCached();
+  }, []);
+
   const loadData = async () => {
     try {
       const [dashRes, batchRes] = await Promise.all([
@@ -80,8 +104,11 @@ export default function TrainingScreen() {
       ]);
       
       const myBatches = dashRes.data?.batches || [];
+      const available = batchRes.data || [];
       setBatches(myBatches);
-      setAvailableBatches(batchRes.data || []);
+      setAvailableBatches(available);
+
+      AsyncStorage.setItem('cached_training_batches', JSON.stringify({ myBatches, available })).catch(() => {});
 
       // Initialize selected tech ids
       const tech = myBatches.filter((b: any) => getBatchDomain(b) === 'Technical');
