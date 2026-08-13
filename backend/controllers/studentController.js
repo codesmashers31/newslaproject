@@ -997,24 +997,13 @@ export const getAvailableTrainers = async (req, res) => {
 export const updateStudentEnrollments = async (req, res) => {
   try {
     const studentId = req.user._id;
-    const { technicalBatchIds, aptitudeBatchId, isPermanent, targetDomain } = req.body;
+    const { technicalBatchIds, aptitudeBatchId, communicationBatchId, isPermanent, targetDomain } = req.body;
 
     const studentUser = await User.findById(studentId);
     if (!studentUser) return res.status(404).json({ message: 'User not found' });
-    
-    // Check per-domain lock strictly independently
-    const isTechAlreadyLocked = !!studentUser.isTechnicalLocked;
-    const isAptiAlreadyLocked = !!studentUser.isAptitudeLocked;
-
-    if (targetDomain === 'Technical' && isTechAlreadyLocked) {
-      return res.status(403).json({ message: 'Your Technical batch selection is permanently locked.' });
-    }
-    if (targetDomain === 'Aptitude' && isAptiAlreadyLocked) {
-      return res.status(403).json({ message: 'Your Aptitude batch selection is permanently locked.' });
-    }
 
     // 1. Technical Batches (Multi-Select)
-    if (technicalBatchIds && Array.isArray(technicalBatchIds) && !isTechAlreadyLocked) {
+    if (technicalBatchIds && Array.isArray(technicalBatchIds)) {
       const activeTechEnrollments = await Enrollment.find({ studentId, department: 'Technical', status: 'Active' });
       
       for (const batchId of technicalBatchIds) {
@@ -1047,7 +1036,7 @@ export const updateStudentEnrollments = async (req, res) => {
     }
 
     // 2. Aptitude Batch (Single-Select)
-    if (aptitudeBatchId && !isAptiAlreadyLocked) {
+    if (aptitudeBatchId) {
       const batch = await Batch.findById(aptitudeBatchId);
       if (batch) {
         const activeAptiEnrollments = await Enrollment.find({ studentId, department: 'Aptitude', status: 'Active' });
@@ -1080,25 +1069,45 @@ export const updateStudentEnrollments = async (req, res) => {
       }
     }
 
-    // Lock domain specific or all
-    if (isPermanent) {
-      if (targetDomain === 'Technical') {
-        studentUser.isTechnicalLocked = true;
-      } else if (targetDomain === 'Aptitude') {
-        studentUser.isAptitudeLocked = true;
-      } else {
-        studentUser.isBatchesLocked = true;
-        studentUser.isTechnicalLocked = true;
-        studentUser.isAptitudeLocked = true;
+    // 3. Communication Batch (Single-Select)
+    if (communicationBatchId) {
+      const batch = await Batch.findById(communicationBatchId);
+      if (batch) {
+        const activeCommEnrollments = await Enrollment.find({ studentId, department: 'Communication', status: 'Active' });
+        const trainerId = batch.trainers && batch.trainers.length > 0 ? batch.trainers[0] : null;
+
+        let isDifferent = true;
+        for (const old of activeCommEnrollments) {
+          if (old.batchId.toString() === communicationBatchId) {
+            isDifferent = false; // Already active
+          } else {
+            await Enrollment.findByIdAndUpdate(old._id, { status: 'Completed' });
+            await Batch.findByIdAndUpdate(old.batchId, { $pull: { students: studentId } });
+          }
+        }
+
+        if (isDifferent) {
+          await Enrollment.findOneAndUpdate(
+            { studentId, batchId: batch._id, department: 'Communication' },
+            {
+              trainerId: trainerId,
+              course: batch.course || 'Communication Skills',
+              department: 'Communication',
+              status: 'Active',
+              enrolledAt: new Date()
+            },
+            { upsert: true, new: true }
+          );
+          await Batch.findByIdAndUpdate(batch._id, { $addToSet: { students: studentId } });
+        }
       }
-      await studentUser.save();
     }
 
     res.json({
       message: 'Enrollments updated successfully',
-      isTechnicalLocked: !!studentUser.isTechnicalLocked,
-      isAptitudeLocked: !!studentUser.isAptitudeLocked,
-      isBatchesLocked: !!studentUser.isBatchesLocked
+      isTechnicalLocked: false,
+      isAptitudeLocked: false,
+      isBatchesLocked: false
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
