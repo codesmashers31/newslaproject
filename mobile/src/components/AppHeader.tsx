@@ -24,16 +24,26 @@ import {
   Bell, 
   LogOut, 
   CheckCircle2, 
-  X 
+  X,
+  ArrowLeft
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
 interface AppHeaderProps {
   title?: string;
+  subtitle?: string;
+  showBack?: boolean;
+  rightAction?: React.ReactNode;
   onRefreshData?: () => void;
 }
 
-export default function AppHeader({ title, onRefreshData }: AppHeaderProps) {
+export default function AppHeader({ 
+  title, 
+  subtitle, 
+  showBack, 
+  rightAction, 
+  onRefreshData 
+}: AppHeaderProps) {
   const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [notifModalVisible, setNotifModalVisible] = useState(false);
@@ -162,6 +172,33 @@ export default function AppHeader({ title, onRefreshData }: AppHeaderProps) {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Compact Sub-Header Bar (Back Arrow, Subtitle & Action Button) */}
+      {(subtitle || showBack || rightAction) && (
+        <View className="flex-row justify-between items-center px-5 py-2.5 bg-white border-b border-slate-200/60 shadow-xs z-20">
+          <View className="flex-row items-center gap-2 flex-1 mr-2">
+            {showBack && (
+              <TouchableOpacity 
+                onPress={() => router.back()} 
+                className="p-1.5 bg-slate-100 rounded-xl border border-slate-200/60 items-center justify-center"
+              >
+                <ArrowLeft size={16} color="#475569" />
+              </TouchableOpacity>
+            )}
+            {subtitle && (
+              <Text className="text-xs text-slate-500 font-bold shrink" numberOfLines={1}>
+                {subtitle}
+              </Text>
+            )}
+          </View>
+
+          {rightAction && (
+            <View>
+              {rightAction}
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Language Selection Modal */}
       <Modal visible={langModalVisible} animationType="fade" transparent={true} onRequestClose={() => setLangModalVisible(false)}>

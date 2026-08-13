@@ -88,7 +88,7 @@ export default function HistoryScreen() {
       <StatusBar barStyle="dark-content" />
       
       {/* Universal Fixed Top Navbar */}
-      <AppHeader title="Attendance Logs" onRefreshData={loadHistoryData} />
+      <AppHeader title="Attendance Logs" subtitle="View check-in times and rolling stats" showBack={true} onRefreshData={loadHistoryData} />
 
       <ScrollView 
         refreshControl={

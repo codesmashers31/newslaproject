@@ -144,7 +144,7 @@ export default function CareerScreen() {
       <StatusBar barStyle="dark-content" />
 
       {/* Universal Fixed Top Navbar */}
-      <AppHeader title="Career Portal" onRefreshData={loadData} />
+      <AppHeader title="Career Portal" subtitle="Explore placements, mock tests, and AI tools" showBack={true} onRefreshData={loadData} />
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}

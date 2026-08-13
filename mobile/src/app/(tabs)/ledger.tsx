@@ -87,7 +87,7 @@ export default function LedgerScreen() {
       <StatusBar barStyle="dark-content" />
 
       {/* Universal Fixed Top Navbar */}
-      <AppHeader title="My Scorecard" onRefreshData={loadLedgerData} />
+      <AppHeader title="My Scorecard" subtitle="Module scores & mock interview progress" showBack={true} onRefreshData={loadLedgerData} />
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}

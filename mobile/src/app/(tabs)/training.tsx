@@ -247,7 +247,7 @@ export default function TrainingScreen() {
       <StatusBar barStyle="dark-content" />
       
       {/* Universal Fixed Top Navbar */}
-      <AppHeader title="My Training" onRefreshData={loadData} />
+      <AppHeader title="My Training" subtitle="Manage your batch enrollments" showBack={true} onRefreshData={loadData} />
 
       <ScrollView 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}

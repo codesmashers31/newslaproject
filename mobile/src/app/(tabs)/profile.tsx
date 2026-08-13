@@ -328,8 +328,29 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
       
-      {/* Universal Fixed Top Navbar */}
-      <AppHeader title="My Profile" onRefreshData={loadProfileData} />
+      {/* Universal Fixed Top Navbar + Sub-Header Action Bar */}
+      <AppHeader 
+        title="My Profile" 
+        subtitle="Update academic info & details"
+        showBack={true}
+        onRefreshData={loadProfileData}
+        rightAction={
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={saving}
+            className="bg-[#4F46E5] px-4 py-1.5 rounded-xl flex-row items-center shadow-sm"
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <>
+                <Save size={13} color="#ffffff" style={{ marginRight: 4 }} />
+                <Text className="text-white text-xs font-black">Save</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        }
+      />
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

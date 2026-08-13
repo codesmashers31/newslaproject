@@ -128,7 +128,7 @@ export default function QRScannerScreen() {
       <StatusBar barStyle="dark-content" />
       
       {/* Universal Fixed Top Navbar */}
-      <AppHeader title="QR Scanner" />
+      <AppHeader title="QR Scanner" subtitle="Point camera at session QR code" showBack={true} />
 
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View className="flex-1 px-6 py-6 justify-between">
