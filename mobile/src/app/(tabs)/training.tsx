@@ -17,6 +17,7 @@ import { useColorScheme } from 'nativewind';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
+import AppHeader from '../../components/AppHeader';
 import { 
   BookOpen,
   CheckCircle2,
@@ -241,21 +242,12 @@ export default function TrainingScreen() {
   const availCommBatches = availableBatches
     .filter(b => getBatchDomain(b) === 'Communication')
     .filter(b => b.name?.toLowerCase().includes(commSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name?.toLowerCase().includes(commSearchQuery.toLowerCase())));
-
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
-      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center gap-3.5">
-        <View className="p-2.5 bg-[#F3E8FF] rounded-2xl border border-[#D8B4FE]/30">
-          <BookOpen size={20} color="#8B5CF6" />
-        </View>
-        <View>
-          <Text className="text-2xl font-black text-[#0F172A]">My Training</Text>
-          <Text className="text-xs text-[#64748B] mt-0.5">Manage your batch enrollments</Text>
-        </View>
-      </View>
+      {/* Universal Fixed Top Navbar */}
+      <AppHeader title="My Training" onRefreshData={loadData} />
 
       <ScrollView 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}

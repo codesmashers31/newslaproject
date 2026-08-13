@@ -20,6 +20,7 @@ import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
+import AppHeader from '../../components/AppHeader';
 import { 
   User, 
   Mail, 
@@ -327,32 +328,8 @@ export default function ProfileScreen() {
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
-      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row justify-between items-center z-10">
-        <View className="flex-row items-center gap-3.5">
-          <View className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200/50">
-            <User size={20} color="#64748B" />
-          </View>
-          <View>
-            <Text className="text-2xl font-black text-[#0F172A]">Edit Profile</Text>
-            <Text className="text-xs text-[#64748B] mt-0.5">Update academic info & details</Text>
-          </View>
-        </View>
-        <TouchableOpacity
-          onPress={handleSave}
-          disabled={saving}
-          className="bg-[#4F46E5] px-5 py-2.5 rounded-xl flex-row items-center space-x-1.5 shadow-sm"
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <>
-              <Save size={14} color="#ffffff" style={{ marginRight: 4 }} />
-              <Text className="text-white text-xs font-black">Save</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+      {/* Universal Fixed Top Navbar */}
+      <AppHeader title="My Profile" onRefreshData={loadProfileData} />
 
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

@@ -16,6 +16,7 @@ import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
+import AppHeader from '../../components/AppHeader';
 import { 
   LANGUAGES, 
   LanguageCode, 
@@ -232,59 +233,8 @@ export default function DashboardScreen() {
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       
-      {/* Fixed Top Header Bar (Pinned at top, stays fixed during scroll) */}
-      <View className="flex-row justify-between items-center px-5 py-3 bg-white/95 border-b border-slate-200/80 shadow-xs z-30">
-        <View className="flex-row items-center gap-2.5">
-          <View className="bg-white p-1 rounded-xl border border-slate-200/80 shadow-xs">
-            <Image
-              source={require('../../../assets/images/branding/logo-buildx.png')}
-              style={{ height: 34, width: 34 }}
-              contentFit="contain"
-            />
-          </View>
-          <Text className="text-lg font-black text-slate-800 tracking-tight">{getText(currentLang, 'portalTitle')}</Text>
-        </View>
-        
-        {/* Quick Utility Icon Row (WhatsApp, Language, Bell, Sign Out) */}
-        <View className="flex-row items-center gap-2.5">
-          {/* WhatsApp Support */}
-          <TouchableOpacity 
-            onPress={openWhatsAppSupport}
-            className="w-11 h-11 bg-emerald-500/10 rounded-2xl items-center justify-center border border-emerald-500/25 shadow-xs"
-          >
-            <MessageCircle size={20} color="#10B981" />
-          </TouchableOpacity>
-
-          {/* Language Selector */}
-          <TouchableOpacity 
-            onPress={() => setLangModalVisible(true)}
-            className="w-11 h-11 bg-white rounded-2xl items-center justify-center border border-slate-200/80 shadow-xs"
-          >
-            <Languages size={20} color="#475569" />
-          </TouchableOpacity>
-
-          {/* Notification Bell */}
-          <TouchableOpacity 
-            onPress={() => setNotifModalVisible(true)}
-            className="w-11 h-11 bg-white rounded-2xl items-center justify-center border border-slate-200/80 shadow-xs relative"
-          >
-            <Bell size={20} color="#475569" />
-            {unreadCount > 0 && (
-              <View className="absolute -top-1 -right-1 bg-rose-500 rounded-full px-1.5 py-0.5 min-w-[18px] items-center justify-center border-2 border-white shadow-xs">
-                <Text className="text-white text-[9px] font-black">{unreadCount > 99 ? '99+' : unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Sign Out */}
-          <TouchableOpacity 
-            onPress={handleSignOut}
-            className="w-11 h-11 bg-rose-500/10 rounded-2xl items-center justify-center border border-rose-500/25 shadow-xs"
-          >
-            <LogOut size={18} color="#F43F5E" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Universal Fixed Top Navbar */}
+      <AppHeader title={getText(currentLang, 'portalTitle')} onRefreshData={loadDashboardData} />
 
       <ScrollView 
         refreshControl={

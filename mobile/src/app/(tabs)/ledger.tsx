@@ -13,6 +13,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Video, Code2, MessageSquare, Brain, Award } from 'lucide-react-native';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
+import AppHeader from '../../components/AppHeader';
 
 export default function LedgerScreen() {
   const primary = '#4F46E5';
@@ -81,21 +82,12 @@ export default function LedgerScreen() {
   const dashOffset = circumference * (1 - overallVal / 100);
 
   const placement = data?.placement || {};
-
   return (
     <SafeAreaView className="flex-1 bg-[#F8FAFC]">
       <StatusBar barStyle="dark-content" />
 
-      {/* Header */}
-      <View className="px-6 py-5 border-b border-[#E2E8F0] bg-white flex-row items-center gap-3.5">
-        <View className="p-2.5 bg-indigo-50 rounded-2xl border border-indigo-100/50">
-          <Award size={20} color="#4F46E5" />
-        </View>
-        <View>
-          <Text className="text-2xl font-black text-[#0F172A]">My Scorecard</Text>
-          <Text className="text-xs text-[#64748B] mt-0.5">Module scores & mock interview progress</Text>
-        </View>
-      </View>
+      {/* Universal Fixed Top Navbar */}
+      <AppHeader title="My Scorecard" onRefreshData={loadLedgerData} />
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primary} />}
