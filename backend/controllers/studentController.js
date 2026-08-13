@@ -238,6 +238,7 @@ export const getStudentDashboard = async (req, res) => {
         overall: overallProgress
       },
       notifications,
+      unreadNotificationsCount: (notifications || []).filter(n => !n.isRead).length,
       certificates,
       upcomingClasses,
       leaderboardRank: {
@@ -393,6 +394,14 @@ export const updateStudentProfile = async (req, res) => {
       if (profile.photo) userDoc.photo = profile.photo;
       await userDoc.save();
     }
+
+    // Create dynamic notification for student
+    await Notification.create({
+      recipient: studentId,
+      title: 'Profile Updated',
+      message: 'Your student placement profile details and photo have been updated successfully.',
+      isRead: false
+    }).catch(() => {});
 
     res.json({ message: 'Profile updated successfully', profile, user: userDoc });
   } catch (error) {
@@ -1099,6 +1108,15 @@ export const updateStudentEnrollments = async (req, res) => {
         }
       }
     }
+
+    // Create dynamic notification for student
+    const domainTitle = targetDomain ? `${targetDomain} Selection Saved` : 'Training Selection Saved';
+    await Notification.create({
+      recipient: studentId,
+      title: domainTitle,
+      message: `Your ${targetDomain || 'batch'} training selection has been successfully updated and saved.`,
+      isRead: false
+    }).catch(() => {});
 
     res.json({
       message: 'Enrollments updated successfully',

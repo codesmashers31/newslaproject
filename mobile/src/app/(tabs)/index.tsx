@@ -113,6 +113,35 @@ export default function DashboardScreen() {
     loadDashboardData();
   };
 
+  const handleMarkAllRead = async () => {
+    try {
+      await API.put('/student/notifications/read');
+      setData((prev: any) => {
+        if (!prev) return prev;
+        const updated = (prev.notifications || []).map((n: any) => ({ ...n, isRead: true }));
+        const newObj = { ...prev, notifications: updated, unreadNotificationsCount: 0 };
+        AsyncStorage.setItem('cached_dashboard_data', JSON.stringify(newObj)).catch(() => {});
+        return newObj;
+      });
+    } catch (e) {}
+  };
+
+  const handleMarkSingleRead = async (notifId: string) => {
+    try {
+      await API.put('/student/notifications/read', { notificationId: notifId });
+      setData((prev: any) => {
+        if (!prev) return prev;
+        const updated = (prev.notifications || []).map((n: any) => 
+          n._id === notifId ? { ...n, isRead: true } : n
+        );
+        const count = updated.filter((n: any) => !n.isRead).length;
+        const newObj = { ...prev, notifications: updated, unreadNotificationsCount: count };
+        AsyncStorage.setItem('cached_dashboard_data', JSON.stringify(newObj)).catch(() => {});
+        return newObj;
+      });
+    } catch (e) {}
+  };
+
   const handleSignOut = async () => {
     await AsyncStorage.removeItem('student_token');
     await AsyncStorage.removeItem('student_profile');
@@ -151,6 +180,7 @@ export default function DashboardScreen() {
   const todayRecords = data?.attendance?.todayRecords || [];
   const progress = data?.progress || { aptitude: 0, communication: 0, technical: 0 };
   const notificationsList = data?.notifications || [];
+  const unreadCount = data?.unreadNotificationsCount ?? notificationsList.filter((n: any) => !n.isRead).length;
 
   // Calculate profile completeness
   let completedFields = 0;
@@ -239,8 +269,10 @@ export default function DashboardScreen() {
             className="w-11 h-11 bg-white rounded-2xl items-center justify-center border border-slate-200/80 shadow-xs relative"
           >
             <Bell size={20} color="#475569" />
-            {notificationsList.length > 0 && (
-              <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
+            {unreadCount > 0 && (
+              <View className="absolute -top-1 -right-1 bg-rose-500 rounded-full px-1.5 py-0.5 min-w-[18px] items-center justify-center border-2 border-white shadow-xs">
+                <Text className="text-white text-[9px] font-black">{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
             )}
           </TouchableOpacity>
 
@@ -581,11 +613,24 @@ export default function DashboardScreen() {
                 <View className="p-2.5 bg-amber-50 rounded-2xl border border-amber-200/50">
                   <Bell size={20} color="#D97706" />
                 </View>
-                <Text className="text-xl font-black text-slate-800">{getText(currentLang, 'notifications')}</Text>
+                <View>
+                  <Text className="text-xl font-black text-slate-800">{getText(currentLang, 'notifications')}</Text>
+                  {unreadCount > 0 && (
+                    <Text className="text-[10px] text-rose-500 font-extrabold">{unreadCount} Unread</Text>
+                  )}
+                </View>
               </View>
-              <TouchableOpacity onPress={() => setNotifModalVisible(false)} className="p-2 bg-slate-200/60 rounded-full">
-                <X size={20} color="#64748B" />
-              </TouchableOpacity>
+              
+              <View className="flex-row items-center gap-2">
+                {unreadCount > 0 && (
+                  <TouchableOpacity onPress={handleMarkAllRead} className="bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100">
+                    <Text className="text-indigo-600 text-xs font-black">Mark All Read</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setNotifModalVisible(false)} className="p-2 bg-slate-200/60 rounded-full">
+                  <X size={20} color="#64748B" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -595,17 +640,28 @@ export default function DashboardScreen() {
                   <Text className="text-slate-500 font-bold text-sm mt-3">{getText(currentLang, 'noNotifications')}</Text>
                 </View>
               ) : (
-                notificationsList.map((item: any, idx: number) => (
-                  <View key={item._id || idx} className="p-4 mb-3 bg-white border border-slate-200 rounded-2xl shadow-xs">
-                    <View className="flex-row justify-between items-start mb-1">
-                      <Text className="text-slate-900 font-bold text-sm flex-1 mr-2">{item.title || 'Notification'}</Text>
-                      <Text className="text-[10px] text-slate-400 font-semibold">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today'}
-                      </Text>
-                    </View>
-                    <Text className="text-slate-600 text-xs mt-1 leading-relaxed">{item.message}</Text>
-                  </View>
-                ))
+                notificationsList.map((item: any, idx: number) => {
+                  const isUnread = !item.isRead;
+                  return (
+                    <TouchableOpacity 
+                      key={item._id || idx} 
+                      onPress={() => isUnread && item._id && handleMarkSingleRead(item._id)}
+                      activeOpacity={0.8}
+                      className={`p-4 mb-3 rounded-2xl border ${isUnread ? 'bg-indigo-50/70 border-indigo-200 shadow-xs' : 'bg-white border-slate-200'}`}
+                    >
+                      <View className="flex-row justify-between items-start mb-1">
+                        <View className="flex-row items-center flex-1 mr-2 gap-1.5">
+                          {isUnread && <View className="w-2 h-2 rounded-full bg-indigo-600" />}
+                          <Text className="text-slate-900 font-bold text-sm flex-1">{item.title || 'Notification'}</Text>
+                        </View>
+                        <Text className="text-[10px] text-slate-400 font-semibold">
+                          {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today'}
+                        </Text>
+                      </View>
+                      <Text className="text-slate-600 text-xs mt-1 leading-relaxed">{item.message}</Text>
+                    </TouchableOpacity>
+                  );
+                })
               )}
             </ScrollView>
           </View>
