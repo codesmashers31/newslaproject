@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type LanguageCode = 'en' | 'te' | 'hi' | 'ml' | 'kn';
+export type LanguageCode = 'en' | 'te' | 'hi' | 'ml' | 'kn' | 'ta';
 
 export interface LanguageOption {
   code: LanguageCode;
@@ -12,6 +12,7 @@ export interface LanguageOption {
 
 export const LANGUAGES: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English', region: 'Default', flag: '🌐' },
+  { code: 'ta', name: 'Tamil', nativeName: 'தமிழ்', region: 'Tamil Nadu', flag: '🇮🇳' },
   { code: 'te', name: 'Telugu', nativeName: 'తెలుగు', region: 'Andhra & Telangana', flag: '🇮🇳' },
   { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', region: 'India', flag: '🇮🇳' },
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം', region: 'Kerala', flag: '🇮🇳' },
@@ -38,6 +39,26 @@ export const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     close: 'Close',
     saveLanguage: 'Save Language',
     languageUpdated: 'Language updated successfully',
+  },
+  ta: {
+    portalTitle: 'SLA போர்டல்',
+    welcomeBack: 'மீண்டும் வருக',
+    hey: 'வணக்கம்',
+    placementReady: 'பிளேஸ்மென்ட் தயார்',
+    completeProfile: 'சுயவிவரத்தைப் பூர்த்தி செய்க',
+    editProfile: 'சுயவிவரத்தைத் திருத்து',
+    updateProfile: 'சுயவிவரத்தைப் புதுப்பி',
+    dailyAttendance: 'தினசரி வருகைப் பதிவு',
+    scanQr: 'வருகை QR ஸ்கேன் செய்க',
+    viewLogs: 'பதிவுகளைப் பார்க்கவும்',
+    assignedCohorts: 'ஒதுக்கப்பட்ட பேட்ச்கள் & வருகை',
+    daysAttended: 'வருகை தந்த நாட்கள்',
+    notifications: 'அறிவிப்புகள்',
+    selectLanguage: 'மொழியைத் தேர்ந்தெடுக்கவும்',
+    noNotifications: 'தற்போது அறிவிப்புகள் எதுவும் இல்லை',
+    close: 'மூடு',
+    saveLanguage: 'மொழியைச் சேமிக்கவும்',
+    languageUpdated: 'மொழி வெற்றிகரமாக புதுப்பிக்கப்பட்டது',
   },
   te: {
     portalTitle: 'SLA పోర్టల్',
@@ -126,7 +147,7 @@ const LANG_KEY = 'user_selected_language';
 export const getStoredLanguage = async (): Promise<LanguageCode> => {
   try {
     const lang = await AsyncStorage.getItem(LANG_KEY);
-    if (lang && (lang === 'en' || lang === 'te' || lang === 'hi' || lang === 'ml' || lang === 'kn')) {
+    if (lang && (lang === 'en' || lang === 'te' || lang === 'hi' || lang === 'ml' || lang === 'kn' || lang === 'ta')) {
       return lang as LanguageCode;
     }
   } catch (e) {}
