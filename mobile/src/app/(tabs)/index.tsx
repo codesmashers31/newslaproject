@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -7,13 +7,22 @@ import {
   RefreshControl,
   StatusBar,
   TextInput,
-  Dimensions
+  Dimensions,
+  Modal,
+  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../../services/api';
 import { ScreenSkeleton } from '../../components/Skeleton';
+import { 
+  LANGUAGES, 
+  LanguageCode, 
+  getStoredLanguage, 
+  setStoredLanguage, 
+  getText 
+} from '../../services/language';
 import { 
   Clock, 
   CheckCircle2, 
@@ -31,25 +40,40 @@ import {
   Phone,
   MessageCircle,
   Languages,
-  Bell
+  Bell,
+  X
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import ProgressRing from '../../components/ProgressRing';
 
 const { width } = Dimensions.get('window');
-const CAROUSEL_WIDTH = width - 48;
+const CAROUSEL_WIDTH = width - 40;
 
 export default function DashboardScreen() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [imageError, setImageError] = useState(false);
   const primaryColor = '#4F46E5';
 
+  // Language & Modals
+  const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
+  const [langModalVisible, setLangModalVisible] = useState(false);
+  const [notifModalVisible, setNotifModalVisible] = useState(false);
+
+  useEffect(() => {
+    getStoredLanguage().then(setCurrentLang);
+  }, []);
+
+  const changeLanguage = async (code: LanguageCode) => {
+    setCurrentLang(code);
+    await setStoredLanguage(code);
+    setLangModalVisible(false);
+  };
+
   // Load cached dashboard instantly for 0ms initial render speed
-  React.useEffect(() => {
+  useEffect(() => {
     const loadCache = async () => {
       try {
         const cached = await AsyncStorage.getItem('cached_dashboard_data');
@@ -95,6 +119,10 @@ export default function DashboardScreen() {
     router.replace('/login');
   };
 
+  const openWhatsAppSupport = () => {
+    Linking.openURL('https://wa.me/919876543210?text=Hello%20SLA%20Portal%20Support').catch(() => {});
+  };
+
   const profile = data?.profile?.user || {};
   const studentProfile = data?.profile || {};
   const userPhoto = studentProfile.photo || profile.photo;
@@ -110,7 +138,7 @@ export default function DashboardScreen() {
 
   const photoUri = userPhoto ? (userPhoto.startsWith('http') ? userPhoto : `${getServerRoot()}${userPhoto.startsWith('/') ? '' : '/'}${userPhoto}`) : null;
 
-  React.useEffect(() => {
+  useEffect(() => {
     setImageError(false);
   }, [photoUri]);
 
@@ -120,9 +148,9 @@ export default function DashboardScreen() {
     );
   }
 
-  const batch = data?.batch || {};
   const todayRecords = data?.attendance?.todayRecords || [];
   const progress = data?.progress || { aptitude: 0, communication: 0, technical: 0 };
+  const notificationsList = data?.notifications || [];
 
   // Calculate profile completeness
   let completedFields = 0;
@@ -140,11 +168,11 @@ export default function DashboardScreen() {
   const banners = [
     {
       id: 1,
-      title: 'Complete Profile',
+      title: getText(currentLang, 'completeProfile'),
       desc: 'Unlock placement opportunities by keeping your profile updated.',
       bgClass: 'bg-indigo-600',
-      btnText: 'Edit Profile',
-      tag: 'PLACEMENT READY',
+      btnText: getText(currentLang, 'editProfile'),
+      tag: getText(currentLang, 'placementReady'),
       icon: <User size={24} color="#ffffff" />,
       onPress: () => router.push('/(tabs)/profile')
     },
@@ -183,7 +211,7 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         
-        {/* 2. Top Fluid Pastel Gradient Aura (SVG based for max compatibility) */}
+        {/* Top Fluid Pastel Gradient Aura */}
         <View className="absolute top-0 left-0 right-0 h-[280px]">
           <Svg height="100%" width="100%">
             <Defs>
@@ -197,54 +225,63 @@ export default function DashboardScreen() {
           </Svg>
         </View>
 
-        {/* 3. Top Header Row (Transparent to let gradient show through) */}
-        <View className="flex-row justify-between items-center px-6 pt-4 pb-2 z-10">
+        {/* Top Header Row (Enhanced Prominent Icon Touch Targets) */}
+        <View className="flex-row justify-between items-center px-5 pt-3 pb-2 z-10">
           <View className="flex-row items-center gap-2.5">
             <View className="bg-white p-1 rounded-xl border border-white/80 shadow-xs">
               <Image
                 source={require('../../../assets/images/branding/logo-buildx.png')}
-                style={{ height: 32, width: 32 }}
+                style={{ height: 34, width: 34 }}
                 contentFit="contain"
               />
             </View>
-            <Text className="text-lg font-black text-slate-800 tracking-tight">SLA Portal</Text>
+            <Text className="text-lg font-black text-slate-800 tracking-tight">{getText(currentLang, 'portalTitle')}</Text>
           </View>
           
           {/* Quick Utility Icon Row (WhatsApp, Language, Bell, Sign Out) */}
-          <View className="flex-row items-center gap-3">
-            {/* WhatsApp */}
-            <TouchableOpacity className="w-8 h-8 bg-[#25D366]/10 rounded-full items-center justify-center border border-[#25D366]/20">
-              <MessageCircle size={16} color="#25D366" />
+          <View className="flex-row items-center gap-2.5">
+            {/* WhatsApp Support */}
+            <TouchableOpacity 
+              onPress={openWhatsAppSupport}
+              className="w-11 h-11 bg-emerald-500/10 rounded-2xl items-center justify-center border border-emerald-500/25 shadow-xs"
+            >
+              <MessageCircle size={20} color="#10B981" />
             </TouchableOpacity>
 
-            {/* Language */}
-            <TouchableOpacity className="w-8 h-8 bg-white/40 rounded-full items-center justify-center border border-white/60">
-              <Languages size={16} color="#475569" />
+            {/* Language Selector */}
+            <TouchableOpacity 
+              onPress={() => setLangModalVisible(true)}
+              className="w-11 h-11 bg-white rounded-2xl items-center justify-center border border-slate-200/80 shadow-xs"
+            >
+              <Languages size={20} color="#475569" />
             </TouchableOpacity>
 
-            {/* Bell/Notification */}
-            <TouchableOpacity className="w-8 h-8 bg-white/40 rounded-full items-center justify-center border border-white/60 relative">
-              <Bell size={16} color="#475569" />
-              <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+            {/* Notification Bell */}
+            <TouchableOpacity 
+              onPress={() => setNotifModalVisible(true)}
+              className="w-11 h-11 bg-white rounded-2xl items-center justify-center border border-slate-200/80 shadow-xs relative"
+            >
+              <Bell size={20} color="#475569" />
+              {notificationsList.length > 0 && (
+                <View className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
+              )}
             </TouchableOpacity>
 
             {/* Sign Out */}
             <TouchableOpacity 
               onPress={handleSignOut}
-              className="w-8 h-8 bg-red-500/10 rounded-full items-center justify-center border border-red-500/20"
+              className="w-11 h-11 bg-rose-500/10 rounded-2xl items-center justify-center border border-rose-500/25 shadow-xs"
             >
-              <LogOut size={14} color="#EF4444" />
+              <LogOut size={18} color="#F43F5E" />
             </TouchableOpacity>
           </View>
         </View>
 
-
-
-        {/* 5. Greeting Row */}
-        <View className="px-6 mt-5 flex-row justify-between items-center z-10">
+        {/* Greeting Row */}
+        <View className="px-5 mt-4 flex-row justify-between items-center z-10">
           <View>
-            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-wider">Welcome Back</Text>
-            <Text className="text-xl font-black text-slate-800 mt-0.5">👋 Hey, {profile.name || profile.mobile || 'Student'}</Text>
+            <Text className="text-slate-500 text-[10px] font-black uppercase tracking-wider">{getText(currentLang, 'welcomeBack')}</Text>
+            <Text className="text-xl font-black text-slate-800 mt-0.5">👋 {getText(currentLang, 'hey')}, {profile.name || profile.mobile || 'Student'}</Text>
           </View>
           <View className="w-11 h-11 bg-white rounded-full items-center justify-center border border-white/80 overflow-hidden relative shadow-md shadow-indigo-600/5">
             {photoUri && !imageError ? (
@@ -262,14 +299,14 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* 6. Horizontal Paged Carousel Banners */}
+        {/* Horizontal Paged Carousel Banners */}
         <View className="mt-5 z-10">
           <ScrollView
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }}
-            snapToInterval={CAROUSEL_WIDTH + 16}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 14 }}
+            snapToInterval={CAROUSEL_WIDTH + 14}
             decelerationRate="fast"
           >
             {banners.map((item) => (
@@ -280,7 +317,6 @@ export default function DashboardScreen() {
                 style={{ width: CAROUSEL_WIDTH }}
                 className={`rounded-3xl p-5 ${item.bgClass} shadow-md overflow-hidden relative min-h-[145px]`}
               >
-                {/* Decorative absolute background shape */}
                 <View className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
                 <View className="absolute -left-6 -bottom-6 w-20 h-20 bg-black/10 rounded-full" />
 
@@ -307,16 +343,15 @@ export default function DashboardScreen() {
           </ScrollView>
         </View>
 
-        {/* 8. Main Feature List Cards */}
-        <View className="px-6 mt-7 gap-6">
+        {/* Main Feature Cards */}
+        <View className="px-5 mt-6 gap-5">
           
-          {/* Card A: Complete Profile Progress Card (Pink-Purple Gradient Style) */}
+          {/* Card A: Complete Profile Progress Card */}
           <TouchableOpacity 
             onPress={() => router.push('/(tabs)/profile')}
             activeOpacity={0.9} 
             className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm overflow-hidden relative flex flex-row items-center"
           >
-            {/* Soft pink gradient absolute background styling using SVG */}
             <View className="absolute top-0 bottom-0 left-0 right-0">
               <Svg height="100%" width="100%">
                 <Defs>
@@ -334,7 +369,7 @@ export default function DashboardScreen() {
                 <Sparkles size={11} color="#EC4899" style={{ marginRight: 4 }} />
                 <Text className="text-[9px] font-black uppercase tracking-widest text-[#EC4899]">Profile Completeness</Text>
               </View>
-              <Text className="text-base font-black text-slate-800 leading-tight">Complete Placement Profile</Text>
+              <Text className="text-base font-black text-slate-800 leading-tight">{getText(currentLang, 'completeProfile')}</Text>
               <Text className="text-slate-500 text-[11px] font-semibold mt-1 leading-normal">
                 Finish all sections to share your details with recruiters.
               </Text>
@@ -343,18 +378,18 @@ export default function DashboardScreen() {
                 onPress={() => router.push('/(tabs)/profile')}
                 className="bg-white border border-[#E2E8F0] px-4 py-2 rounded-xl self-start mt-4 shadow-xs"
               >
-                <Text className="text-[#EC4899] text-[10px] font-extrabold uppercase tracking-wider">Update Profile</Text>
+                <Text className="text-[#EC4899] text-[10px] font-extrabold uppercase tracking-wider">{getText(currentLang, 'updateProfile')}</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Circular Progress Ring Mockup */}
+            {/* Circular Progress Ring */}
             <View className="w-[72px] h-[72px] rounded-full border-[6px] border-slate-100 items-center justify-center relative z-10">
               <View className="absolute top-0 bottom-0 left-0 right-0 rounded-full border-[6px] border-[#EC4899] opacity-20" />
               <Text className="text-base font-black text-[#EC4899]">{completedFields}/{totalFields}</Text>
             </View>
           </TouchableOpacity>
 
-          {/* Card B: Daily Attendance Roll Call Status Card (EPFO Passbook Style) */}
+          {/* Card B: Daily Attendance Roll Call Status Card */}
           <View className="bg-slate-900 rounded-3xl p-5 shadow-sm overflow-hidden relative min-h-[150px]">
             <View className="absolute -right-8 -bottom-8 w-28 h-28 bg-[#4F46E5]/20 rounded-full" />
             
@@ -365,14 +400,14 @@ export default function DashboardScreen() {
                     <Clock size={16} color="#ffffff" />
                   </View>
                   <View>
-                    <Text className="text-white text-xs font-black uppercase tracking-wider">Daily Attendance Check-In</Text>
+                    <Text className="text-white text-xs font-black uppercase tracking-wider">{getText(currentLang, 'dailyAttendance')}</Text>
                     <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-wider mt-0.5">
                       Today: {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                     </Text>
                   </View>
                 </View>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/history')}>
-                  <Text className="text-[10px] font-extrabold text-[#4F46E5] bg-indigo-50 px-2.5 py-1 rounded-full">View Logs</Text>
+                  <Text className="text-[10px] font-extrabold text-[#4F46E5] bg-indigo-50 px-2.5 py-1 rounded-full">{getText(currentLang, 'viewLogs')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -402,7 +437,7 @@ export default function DashboardScreen() {
                     className="mt-4 w-full py-3.5 bg-[#4F46E5] rounded-xl flex-row items-center justify-center shadow-lg shadow-indigo-600/10"
                   >
                     <Camera size={14} color="#ffffff" style={{ marginRight: 6 }} />
-                    <Text className="text-white font-black text-[10px] uppercase tracking-widest">Scan Attendance QR</Text>
+                    <Text className="text-white font-black text-[10px] uppercase tracking-widest">{getText(currentLang, 'scanQr')}</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -413,7 +448,7 @@ export default function DashboardScreen() {
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm">
             <View className="flex-row items-center mb-4 border-b border-[#F1F5F9] pb-3">
               <BookOpen size={16} color={primaryColor} style={{ marginRight: 8 }} />
-              <Text className="font-extrabold text-sm text-[#0F172A]">Assigned Cohorts & Attendance</Text>
+              <Text className="font-extrabold text-sm text-[#0F172A]">{getText(currentLang, 'assignedCohorts')}</Text>
             </View>
 
             <View className="gap-3 text-xs">
@@ -435,7 +470,7 @@ export default function DashboardScreen() {
                         <View className="flex-row items-center">
                           <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
                           <Text className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                            {b.attendanceStats.presentCount} / {b.attendanceStats.eligibleSessionsCount} Days Attended
+                            {b.attendanceStats.presentCount} / {b.attendanceStats.eligibleSessionsCount} {getText(currentLang, 'daysAttended')}
                           </Text>
                         </View>
                         <Text className={`text-[10px] font-black ${b.attendanceStats.percentage >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
@@ -476,22 +511,107 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          {/* Helpline/essential numbers section */}
-          <View className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm flex-row items-center justify-between">
+          {/* Helpline */}
+          <TouchableOpacity 
+            onPress={openWhatsAppSupport}
+            className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm flex-row items-center justify-between"
+          >
             <View className="flex-row items-center">
-              <View className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl mr-3">
-                <Phone size={16} color="#64748B" />
+              <View className="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl mr-3">
+                <Phone size={16} color="#10B981" />
               </View>
               <View>
-                <Text className="font-extrabold text-xs text-slate-800">Essential Help Desk Numbers</Text>
+                <Text className="font-extrabold text-xs text-slate-800">Essential Help Desk & WhatsApp</Text>
                 <Text className="text-[10px] text-slate-400 mt-0.5">Reach placement coordinators</Text>
               </View>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
-          </View>
+          </TouchableOpacity>
 
         </View>
       </ScrollView>
+
+      {/* Language Selection Modal */}
+      <Modal visible={langModalVisible} animationType="fade" transparent={true} onRequestClose={() => setLangModalVisible(false)}>
+        <View className="flex-1 bg-black/50 justify-center items-center px-6">
+          <View className="w-full bg-white rounded-3xl p-6 shadow-2xl">
+            <View className="flex-row justify-between items-center mb-4">
+              <View className="flex-row items-center gap-2">
+                <View className="p-2 bg-indigo-50 rounded-xl">
+                  <Languages size={20} color="#4F46E5" />
+                </View>
+                <Text className="text-lg font-black text-slate-800">{getText(currentLang, 'selectLanguage')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setLangModalVisible(false)} className="p-2 bg-slate-100 rounded-full">
+                <X size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <View className="gap-2.5 my-2">
+              {LANGUAGES.map((lang) => {
+                const isSelected = currentLang === lang.code;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    onPress={() => changeLanguage(lang.code)}
+                    className={`flex-row items-center justify-between p-3.5 rounded-2xl border ${isSelected ? 'bg-indigo-50/80 border-indigo-500' : 'bg-slate-50/60 border-slate-200'}`}
+                  >
+                    <View className="flex-row items-center gap-3">
+                      <Text className="text-xl">{lang.flag}</Text>
+                      <View>
+                        <Text className="text-sm font-black text-slate-800">{lang.nativeName}</Text>
+                        <Text className="text-[11px] text-slate-500 font-medium">{lang.name} • {lang.region}</Text>
+                      </View>
+                    </View>
+                    {isSelected && <CheckCircle2 size={18} color="#4F46E5" />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Notifications Drawer / Modal */}
+      <Modal visible={notifModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setNotifModalVisible(false)}>
+        <SafeAreaView className="flex-1 bg-[#F8FAFC]">
+          <View className="flex-1 px-6 pt-4 pb-6">
+            <View className="flex-row items-center justify-between mb-6">
+              <View className="flex-row items-center gap-2.5">
+                <View className="p-2.5 bg-amber-50 rounded-2xl border border-amber-200/50">
+                  <Bell size={20} color="#D97706" />
+                </View>
+                <Text className="text-xl font-black text-slate-800">{getText(currentLang, 'notifications')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setNotifModalVisible(false)} className="p-2 bg-slate-200/60 rounded-full">
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+              {notificationsList.length === 0 ? (
+                <View className="py-16 items-center justify-center">
+                  <Bell size={40} color="#94A3B8" />
+                  <Text className="text-slate-500 font-bold text-sm mt-3">{getText(currentLang, 'noNotifications')}</Text>
+                </View>
+              ) : (
+                notificationsList.map((item: any, idx: number) => (
+                  <View key={item._id || idx} className="p-4 mb-3 bg-white border border-slate-200 rounded-2xl shadow-xs">
+                    <View className="flex-row justify-between items-start mb-1">
+                      <Text className="text-slate-900 font-bold text-sm flex-1 mr-2">{item.title || 'Notification'}</Text>
+                      <Text className="text-[10px] text-slate-400 font-semibold">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today'}
+                      </Text>
+                    </View>
+                    <Text className="text-slate-600 text-xs mt-1 leading-relaxed">{item.message}</Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
     </SafeAreaView>
   );
 }
