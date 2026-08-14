@@ -148,9 +148,11 @@ export const calculateDynamicAttendance = async (studentId, department) => {
   const remainingDays = Math.max(0, TOTAL_TARGET_DAYS - trainingDay);
 
   // 8. Fixed-Denominator Attendance % and Progress %
-  // Communication = Present / 80 * 100
-  // Aptitude = Present / 120 * 100
-  const attendancePercent = Number(((presentCount / TOTAL_TARGET_DAYS) * 100).toFixed(2));
+  // Rule: Count ONLY actual absences against the fixed training duration.
+  // Aptitude: (120 - absentCount) / 120 * 100 (e.g. 1 absence = 119/120 = 99.17%)
+  // Communication: (80 - absentCount) / 80 * 100 (e.g. 1 absence = 79/80 = 98.75%)
+  const effectivePresentDays = Math.max(0, TOTAL_TARGET_DAYS - absentCount);
+  const attendancePercent = Number(((effectivePresentDays / TOTAL_TARGET_DAYS) * 100).toFixed(2));
   const progressPercent = Number(((trainingDay / TOTAL_TARGET_DAYS) * 100).toFixed(2));
 
   return {

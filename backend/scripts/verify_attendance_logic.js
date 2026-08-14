@@ -111,11 +111,11 @@ async function runTests() {
     );
 
     // TEST 4: Automatic No-Training-Day Rule (0 scans on weekday = No Training Day)
-    // On a weekday without any scans, verify training day count is 0 and attendance % is 0.00%
+    // On a weekday without any scans, verify training day count is 0, absent count is 0, and attendance % is 100.00% (since 0 absences counted)
     assert(
-      initialCommStats.trainingDay === 0 && initialCommStats.attendancePercent === 0,
-      'Test 14 & 15: Weekday with 0 scans automatically becomes No Training Day (0 absences created)',
-      `TrainingDay: ${initialCommStats.trainingDay}, AttendancePercent: ${initialCommStats.attendancePercent}%`
+      initialCommStats.trainingDay === 0 && initialCommStats.absentCount === 0 && initialCommStats.attendancePercent === 100,
+      'Test 14 & 15: Weekday with 0 scans automatically becomes No Training Day (0 absences created -> 100.00% attendance)',
+      `TrainingDay: ${initialCommStats.trainingDay}, Absences: ${initialCommStats.absentCount}, AttendancePercent: ${initialCommStats.attendancePercent}%`
     );
 
     // TEST 5: Actual Training Day & Attendance Calculations (Fixed Denominators)
@@ -133,37 +133,36 @@ async function runTests() {
     });
 
     const comm1DayStats = await calculateDynamicAttendance(dummyUser._id, 'Communication');
-    // 1 Present / 80 = 1.25% Attendance
+    // 0 Absences = (80 - 0) / 80 = 100% Attendance
     assert(
-      comm1DayStats.attendancePercent === 1.25,
-      'Test 5: 1 Present Day out of 80 = 1.25% (Does NOT show 100% elapsed-day percentage)',
+      comm1DayStats.attendancePercent === 100,
+      'Test 5: Student with 0 absences has 100.00% attendance',
       `Got: ${comm1DayStats.attendancePercent}%`
     );
 
-    // TEST 6: Math Verification for 79 Present / 1 Absent = 98.75%
-    // Simulate 79 Present records and 1 Absent day on actual training days
-    const p79Comm = Number(((79 / 80) * 100).toFixed(2));
+    // TEST 6: Math Verification for 1 Absent = 98.75% for Communication
+    const p79Comm = Number((((80 - 1) / 80) * 100).toFixed(2));
     assert(
       p79Comm === 98.75,
       'Test 6: Communication with 1 absence (79/80) = 98.75%',
       `Got: ${p79Comm}%`
     );
 
-    const p78Comm = Number(((78 / 80) * 100).toFixed(2));
+    const p78Comm = Number((((80 - 2) / 80) * 100).toFixed(2));
     assert(
       p78Comm === 97.50,
       'Test 7: Communication with 2 absences (78/80) = 97.50%',
       `Got: ${p78Comm}%`
     );
 
-    const p119Apti = Number(((119 / 120) * 100).toFixed(2));
+    const p119Apti = Number((((120 - 1) / 120) * 100).toFixed(2));
     assert(
       p119Apti === 99.17,
       'Test 8: Aptitude with 1 absence (119/120) = 99.17%',
       `Got: ${p119Apti}%`
     );
 
-    const p118Apti = Number(((118 / 120) * 100).toFixed(2));
+    const p118Apti = Number((((120 - 2) / 120) * 100).toFixed(2));
     assert(
       p118Apti === 98.33,
       'Test 9: Aptitude with 2 absences (118/120) = 98.33%',
