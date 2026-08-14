@@ -1699,27 +1699,43 @@ const TrainerDashboard = () => {
                                   const currentBatchObj = batches.find(b => String(b._id) === String(selectedBatchId));
                                   const currentCourse = currentBatchObj?.course || '';
 
-                                  let pctValue = student.attendancePct;
+                                  let finalPct = student.attendancePct;
 
-                                  if (currentCourse === 'Communication Skills' || user?.role === 'Communication Trainer') {
-                                    pctValue = student.communicationAttendancePct ?? pctValue;
-                                  }
-                                  if (currentCourse === 'Aptitude & Reasoning' || user?.role === 'Aptitude Trainer') {
-                                    pctValue = student.aptitudeAttendancePct ?? pctValue;
-                                  }
-                                  if (currentCourse === 'Technical Training' || user?.role === 'Technical Trainer') {
-                                    pctValue = student.technicalAttendancePct ?? pctValue;
+                                  if (currentCourse === 'Communication Skills') {
+                                    finalPct = student.communicationAttendancePct ?? finalPct;
+                                  } else if (currentCourse === 'Aptitude & Reasoning') {
+                                    finalPct = student.aptitudeAttendancePct ?? finalPct;
+                                  } else if (currentCourse === 'Technical Training') {
+                                    finalPct = student.technicalAttendancePct ?? finalPct;
+                                  } else {
+                                    finalPct = Math.min(
+                                      student.communicationAttendancePct ?? 100,
+                                      student.aptitudeAttendancePct ?? 100,
+                                      student.technicalAttendancePct ?? 100,
+                                      student.attendancePct ?? 100
+                                    );
                                   }
 
-                                  const finalPct = pctValue !== undefined ? pctValue : 100;
+                                  // Guarantee that if the student has any counted absence in any enrolled course, it reflects the lower percentage
+                                  const lowestPct = Math.min(
+                                    student.communicationAttendancePct ?? 100,
+                                    student.aptitudeAttendancePct ?? 100,
+                                    student.technicalAttendancePct ?? 100
+                                  );
+
+                                  if (lowestPct < 100) {
+                                    finalPct = Math.min(finalPct, lowestPct);
+                                  }
+
+                                  const displayValue = finalPct !== undefined ? finalPct : 100;
 
                                   return (
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                                      finalPct >= 70
+                                      displayValue >= 70
                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : 'bg-rose-50 text-rose-700 border-rose-200'
                                     }`}>
-                                      {finalPct}%
+                                      {displayValue}%
                                     </span>
                                   );
                                 })()}

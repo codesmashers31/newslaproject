@@ -200,6 +200,13 @@ export const getAssignedStudents = async (req, res) => {
       const aptiStats = await calculateDynamicAttendance(id, 'Aptitude');
       const techStats = await calculateDynamicAttendance(id, 'Technical');
 
+      // Overall attendance percentage reflects any counted absence across active enrolled courses
+      const overallAttPct = Math.min(
+        commStats.attendancePercent ?? 100,
+        aptiStats.attendancePercent ?? 100,
+        techStats.attendancePercent ?? 100
+      );
+
       const attStats = dept === 'Communication' ? commStats : dept === 'Aptitude' ? aptiStats : techStats;
 
       return {
@@ -208,7 +215,7 @@ export const getAssignedStudents = async (req, res) => {
         communicationTrainer: resolvedCommunicationTrainer,
         aptitudeTrainer: resolvedAptitudeTrainer,
         profile,
-        attendancePct: attStats.attendancePercent,
+        attendancePct: overallAttPct,
         communicationAttendancePct: commStats.attendancePercent,
         aptitudeAttendancePct: aptiStats.attendancePercent,
         technicalAttendancePct: techStats.attendancePercent,
