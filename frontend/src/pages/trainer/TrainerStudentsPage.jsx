@@ -18,6 +18,7 @@ import {
   Filter
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import EnterpriseTable from '../../components/common/EnterpriseTable';
 
 const TrainerStudentsPage = () => {
   const { user } = useAuth();
@@ -449,229 +450,118 @@ const TrainerStudentsPage = () => {
 
       {/* Main Card with Toolbar & Table */}
       <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        {/* Toolbar */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by SLAEID, Student Name, Email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 w-full text-slate-800 dark:text-white"
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Batch Filter Dropdown */}
-            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/60 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs shadow-sm">
-              <Filter size={14} className="text-purple-600 dark:text-purple-400" />
-              <span className="font-extrabold text-slate-600 dark:text-slate-300">Batch:</span>
-              <select
-                value={selectedBatchFilter}
-                onChange={(e) => setSelectedBatchFilter(e.target.value)}
-                className="bg-transparent font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer text-xs"
-              >
-                <option value="All" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">All Batches ({batches.length})</option>
-                {batches.map(b => (
-                  <option key={b._id} value={b._id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
-                    {b.name} ({b.course || 'Training'})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Filter Buttons */}
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-              {['All', 'Active', 'Enrolled', 'Completed', 'Inactive'].map(st => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 rounded-lg text-xs font-extrabold transition cursor-pointer ${
-                    statusFilter === st
-                      ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-400 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Students Enterprise Table */}
+        <div className="p-4 sm:p-6">
+          <EnterpriseTable
+            title="Enrolled Students Roster"
+            data={students}
+            loading={loading}
+            searchableFields={['name', 'email', 'mobile', 'slaeId', 'technicalBatch.name', 'communicationBatch.name', 'aptitudeBatch.name']}
+            filterDefinitions={[
+              {
+                key: 'status',
+                label: 'Status',
+                type: 'select',
+                options: ['Active', 'Enrolled', 'Completed', 'Inactive'],
+              },
+              {
+                key: 'batches',
+                label: 'Batch',
+                type: 'select',
+                options: batches.map(b => ({ label: `${b.name} (${b.course || 'Training'})`, value: b._id })),
+              },
+            ]}
+            sortOptions={[
+              { label: 'Default', key: null, direction: 'asc' },
+              { label: 'Name: A → Z', key: 'name', direction: 'asc' },
+              { label: 'Name: Z → A', key: 'name', direction: 'desc' },
+              { label: 'SLAE ID', key: 'slaeId', direction: 'asc' },
+            ]}
+            columns={[
+              {
+                key: 'slaeId',
+                header: 'SLAE ID',
+                width: '120px',
+                render: (row) => (
+                  <span className="font-mono font-bold text-indigo-600">
+                    {row.slaeId || `SLA-${row._id?.toString().slice(-5).toUpperCase()}`}
+                  </span>
+                ),
+              },
+              {
+                key: 'name',
+                header: 'Student Name',
+                width: '200px',
+                render: (row) => (
+                  <div>
+                    <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
+                    <div className="text-[11px] text-slate-400 font-normal">{row.mobile || row.email}</div>
+                  </div>
+                ),
+              },
+              {
+                key: 'technicalBatch',
+                header: 'Technical Batch',
+                width: '180px',
+                render: (row) => renderStudentBatchStatus(row, row.technicalBatch, 'technicalTrainer'),
+              },
+              {
+                key: 'communicationBatch',
+                header: 'Communication Batch',
+                width: '180px',
+                render: (row) => renderStudentBatchStatus(row, row.communicationBatch, 'communicationTrainer'),
+              },
+              {
+                key: 'aptitudeBatch',
+                header: 'Aptitude Batch',
+                width: '180px',
+                render: (row) => renderStudentBatchStatus(row, row.aptitudeBatch, 'aptitudeTrainer'),
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                align: 'center',
+                width: '110px',
+                render: (row) => (
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
+                    row.status === 'Active' || row.status === 'Enrolled'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : row.status === 'Completed'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}>
+                    <CheckCircle2 size={11} />
+                    {row.status || 'Active'}
+                  </span>
+                ),
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                align: 'right',
+                width: '100px',
+                render: (row) => (
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => handleOpenEdit(row)}
+                      title="Edit Student"
+                      className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteStudent(row._id, row.name)}
+                      title="Delete Student"
+                      className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
-
-        {/* Students Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-5 py-4">SLAEID</th>
-                <th className="px-5 py-4">Student Name</th>
-                <th className="px-5 py-4">Technical Batch & Time</th>
-                <th className="px-5 py-4">Communication Batch & Time</th>
-                <th className="px-5 py-4">Aptitude Batch & Time</th>
-                <th className="px-5 py-4 text-center">Status</th>
-                <th className="px-5 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold">
-                    Loading students directory...
-                  </td>
-                </tr>
-              ) : filteredStudents.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold italic">
-                    No students found matching your filter criteria.
-                  </td>
-                </tr>
-              ) : (
-                paginatedStudents.map((student) => {
-                  const displaySlaeId = student.slaeId || `SLA-${student._id.toString().slice(-5).toUpperCase()}`;
-                  const techSchedule = getBatchSchedule(student.technicalBatch);
-                  const commSchedule = getBatchSchedule(student.communicationBatch);
-                  const aptiSchedule = getBatchSchedule(student.aptitudeBatch);
-
-                  return (
-                    <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-5 py-4 font-mono font-bold text-purple-600 dark:text-purple-400">
-                        {displaySlaeId}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="font-extrabold text-slate-800 dark:text-white text-sm">
-                          {student.name}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {student.mobile || student.email}
-                        </div>
-                      </td>
-
-                      {/* Technical Batch */}
-                      <td className="px-5 py-4">
-                        {renderStudentBatchStatus(student, student.technicalBatch, 'technicalTrainer')}
-                      </td>
-
-                      {/* Communication Batch */}
-                      <td className="px-5 py-4">
-                        {renderStudentBatchStatus(student, student.communicationBatch, 'communicationTrainer')}
-                      </td>
-
-                      {/* Aptitude Batch */}
-                      <td className="px-5 py-4">
-                        {renderStudentBatchStatus(student, student.aptitudeBatch, 'aptitudeTrainer')}
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 ${
-                          student.status === 'Active' || student.status === 'Enrolled'
-                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                            : student.status === 'Completed'
-                            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
-                        }`}>
-                          <CheckCircle2 size={12} />
-                          {student.status || 'Active'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleOpenEdit(student)}
-                            title="Edit Student"
-                            className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition cursor-pointer"
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStudent(student._id, student.name)}
-                            title="Delete Student"
-                            className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition cursor-pointer"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Controls */}
-        {filteredStudents.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 text-xs">
-            <div className="text-slate-500 font-semibold">
-              Showing {Math.min(filteredStudents.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(filteredStudents.length, currentPage * itemsPerPage)} of {filteredStudents.length} entries
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 font-semibold">Show:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
-                >
-                  Previous
-                </button>
-
-                {Array.from({ length: totalPages }).map((_, idx) => {
-                  const pageNum = idx + 1;
-                  if (pageNum === 1 || pageNum === totalPages || Math.abs(pageNum - currentPage) <= 1) {
-                    return (
-                      <button
-                        key={pageNum}
-                        type="button"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                          currentPage === pageNum
-                            ? 'bg-purple-600 text-white shadow-md shadow-purple-500/10'
-                            : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  }
-                  if (pageNum === 2 || pageNum === totalPages - 1) {
-                    return <span key={pageNum} className="px-1 text-gray-400">...</span>;
-                  }
-                  return null;
-                })}
-
-                <button
-                  type="button"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Add Student Modal */}

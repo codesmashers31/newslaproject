@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import EnterpriseTable from '../../components/common/EnterpriseTable';
 
 const formatTime12Hour = (time24) => {
   if (!time24) return '';
@@ -937,155 +938,170 @@ const TrainerBatchesPage = () => {
         ))}
       </div>
 
-      {/* Main Card with Toolbar & Table */}
+      {/* Main Card with Enterprise Batches Table */}
       <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        {/* Toolbar */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by Batch ID, Name, Course..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
-            />
-          </div>
-
-          <div className="text-xs text-slate-500 font-semibold">
-            Showing <span className="font-bold text-violet-800 dark:text-violet-400">{filteredBatches.length}</span> active batch(es)
-          </div>
-        </div>
-
-        {/* Batches Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-6 py-4">Batch ID</th>
-                <th className="px-6 py-4">Batch Name & Course</th>
-                <th className="px-6 py-4">Trainer</th>
-                <th className="px-6 py-4">Schedule</th>
-                <th className="px-6 py-4 text-center">Student Count</th>
-                <th className="px-6 py-4 text-center">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
-              {loading ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold">
-                    Loading batches...
-                  </td>
-                </tr>
-              ) : filteredBatches.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold italic">
-                    No batches found.
-                  </td>
-                </tr>
-              ) : (
-                filteredBatches.map((batch, idx) => {
-                  const displayId = batch.batchId || `BATCH-${(idx + 1).toString().padStart(3, '0')}`;
-                  const displayTime = batch.schedule || '09:00 AM - 11:00 AM (Mon - Fri)';
-                  const displayStatus = batch.status || 'Active';
-                  const domainBadge = batch.course || 'Technical Training';
-                  const studentCount = batch.students?.length || 0;
-
+        <div className="p-4 sm:p-6">
+          <EnterpriseTable
+            title="Assigned Batches Overview"
+            data={batches}
+            loading={loading}
+            searchableFields={['name', 'batchId', 'course', 'schedule', 'trainerName']}
+            filterDefinitions={[
+              {
+                key: 'course',
+                label: 'Course',
+                type: 'select',
+                options: ['Communication Skills', 'Aptitude & Reasoning', 'Technical Training'],
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                type: 'select',
+                options: ['Active', 'Upcoming', 'Completed'],
+              },
+            ]}
+            sortOptions={[
+              { label: 'Default', key: null, direction: 'asc' },
+              { label: 'Name: A → Z', key: 'name', direction: 'asc' },
+              { label: 'Name: Z → A', key: 'name', direction: 'desc' },
+              { label: 'Student Count: Highest', key: (row) => row.students?.length || 0, direction: 'desc' },
+              { label: 'Student Count: Lowest', key: (row) => row.students?.length || 0, direction: 'asc' },
+            ]}
+            columns={[
+              {
+                key: 'batchId',
+                header: 'Batch ID',
+                width: '130px',
+                render: (row, val, idx) => (
+                  <span className="font-mono font-bold text-indigo-600">
+                    {row.batchId || `BATCH-${(idx + 1).toString().padStart(3, '0')}`}
+                  </span>
+                ),
+              },
+              {
+                key: 'name',
+                header: 'Batch Name & Course',
+                width: '220px',
+                render: (row) => {
+                  const domainBadge = row.course || 'Technical Training';
                   return (
-                    <tr key={batch._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-violet-800 dark:text-violet-400">
-                        {displayId}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-extrabold text-slate-800 dark:text-white text-sm">
-                          {batch.name}
-                        </div>
-                        <div className="mt-1">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
-                            domainBadge.includes('Communication')
-                              ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300'
-                              : domainBadge.includes('Aptitude')
-                              ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
-                              : 'bg-violet-100 dark:bg-violet-950/50 text-violet-900 dark:text-violet-300'
-                          }`}>
-                            {domainBadge}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1 font-bold text-slate-700 dark:text-slate-300">
-                          {batch.trainers && batch.trainers.length > 0 ? (
-                            batch.trainers.map((t, idx) => (
-                              <div key={t._id || idx} className="flex items-center gap-1.5">
-                                <UserCheck size={14} className="text-violet-500" />
-                                <span>{t.name} <span className="text-[10px] text-gray-400 font-normal">({t.role})</span></span>
-                              </div>
-                            ))
-                          ) : batch.trainerName ? (
-                            <div className="flex items-center gap-1.5">
-                              <UserCheck size={14} className="text-violet-500" />
-                              <span>{batch.trainerName}</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1.5 text-gray-450 font-normal italic">
-                              No trainers assigned
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">
-                        <div className="flex items-center gap-1.5">
-                          <Clock size={13} className="text-slate-400" />
-                          <span>{displayTime}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-300">
-                        {studentCount}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1 ${
-                          displayStatus === 'Active'
-                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                            : displayStatus === 'Completed'
-                            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                            : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                    <div>
+                      <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
+                      <div className="mt-1">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                          domainBadge.includes('Communication')
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : domainBadge.includes('Aptitude')
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-indigo-100 text-indigo-800'
                         }`}>
-                          <CheckCircle2 size={12} />
-                          {displayStatus}
+                          {domainBadge}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleViewStudents(batch)}
-                            title="Manage Students"
-                            className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 transition cursor-pointer"
-                          >
-                            <Users size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(batch)}
-                            title="Edit Batch"
-                            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
-                          >
-                            <Edit3 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteBatch(batch._id, batch.name)}
-                            title="Delete Batch"
-                            className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition cursor-pointer"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
-                })
-              )}
-            </tbody>
-          </table>
+                },
+              },
+              {
+                key: 'trainers',
+                header: 'Assigned Trainer',
+                width: '180px',
+                render: (row) => (
+                  <div className="flex flex-col gap-1 font-bold text-slate-700">
+                    {row.trainers && row.trainers.length > 0 ? (
+                      row.trainers.map((t, idx) => (
+                        <div key={t._id || idx} className="flex items-center gap-1.5">
+                          <UserCheck size={14} className="text-indigo-500" />
+                          <span>{t.name} <span className="text-[10px] text-slate-400 font-normal">({t.role})</span></span>
+                        </div>
+                      ))
+                    ) : row.trainerName ? (
+                      <div className="flex items-center gap-1.5">
+                        <UserCheck size={14} className="text-indigo-500" />
+                        <span>{row.trainerName}</span>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 font-normal italic">No trainers assigned</span>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                key: 'schedule',
+                header: 'Schedule',
+                width: '190px',
+                render: (row) => (
+                  <div className="flex items-center gap-1.5 font-medium text-slate-600">
+                    <Clock size={13} className="text-slate-400" />
+                    <span>{row.schedule || '09:00 AM - 11:00 AM'}</span>
+                  </div>
+                ),
+              },
+              {
+                key: 'students',
+                header: 'Students',
+                align: 'center',
+                width: '90px',
+                render: (row) => (
+                  <span className="font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-full text-xs">
+                    {row.students?.length || 0}
+                  </span>
+                ),
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                align: 'center',
+                width: '110px',
+                render: (row) => {
+                  const displayStatus = row.status || 'Active';
+                  return (
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
+                      displayStatus === 'Active'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : displayStatus === 'Completed'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>
+                      <CheckCircle2 size={11} />
+                      {displayStatus}
+                    </span>
+                  );
+                },
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                align: 'right',
+                width: '120px',
+                render: (row) => (
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => handleViewStudents(row)}
+                      title="Manage Students"
+                      className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                    >
+                      <Users size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleOpenEdit(row)}
+                      title="Edit Batch"
+                      className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBatch(row._id, row.name)}
+                      title="Delete Batch"
+                      className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
       </div>
 

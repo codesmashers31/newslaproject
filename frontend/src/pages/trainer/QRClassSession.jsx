@@ -3,6 +3,7 @@ import API from '../../services/api';
 import { Camera, MapPin, Users, BookOpen, Clock, AlertCircle, RefreshCw, XCircle, School, ChevronDown, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import EnterpriseTable from '../../components/common/EnterpriseTable';
 
 const QRClassSession = () => {
   const [batches, setBatches] = useState([]);
@@ -363,6 +364,68 @@ const QRClassSession = () => {
               </button>
             </div>
           </motion.div>
+
+          {/* Live Session Student Attendance Scans Table */}
+          <div className="mt-8">
+            <EnterpriseTable
+              title="Live Session Student Attendance Scans"
+              data={activeSession?.attendees || []}
+              searchableFields={['name', 'email', 'slaeId', 'status']}
+              filterDefinitions={[
+                { key: 'status', label: 'Scan Status', type: 'select', options: ['Verified', 'Pending', 'Manual'] },
+              ]}
+              sortOptions={[
+                { label: 'Default', key: null, direction: 'asc' },
+                { label: 'Name: A → Z', key: 'name', direction: 'asc' },
+                { label: 'Scan Time: Newest', key: 'scannedAt', direction: 'desc' },
+              ]}
+              emptyMessage="No student QR scans recorded yet for this session."
+              columns={[
+                {
+                  key: 'slaeId',
+                  header: 'SLAE ID',
+                  width: '120px',
+                  render: (row) => (
+                    <span className="font-mono font-bold text-indigo-600">
+                      {row.slaeId || `SLA-${row._id?.slice(-5).toUpperCase()}`}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'name',
+                  header: 'Student Name',
+                  width: '200px',
+                  render: (row) => (
+                    <div>
+                      <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
+                      <div className="text-[11px] text-slate-400 font-normal">{row.email}</div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'scannedAt',
+                  header: 'Scan Time',
+                  width: '140px',
+                  render: (row) => (
+                    <span className="font-medium text-slate-600">
+                      {row.scannedAt ? new Date(row.scannedAt).toLocaleTimeString() : 'Just now'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  align: 'center',
+                  width: '120px',
+                  render: (row) => (
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      QR Verified
+                    </span>
+                  ),
+                },
+              ]}
+            />
+          </div>
         </div>
       )}
     </div>

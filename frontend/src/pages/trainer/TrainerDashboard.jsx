@@ -40,6 +40,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { jsPDF } from 'jspdf';
+import EnterpriseTable from '../../components/common/EnterpriseTable';
 
 const TrainerDashboard = () => {
   const { user } = useAuth();
@@ -1152,139 +1153,169 @@ const TrainerDashboard = () => {
             </div>
           </div>
 
-          {/* Table content */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/40 text-gray-500 text-[11px] font-bold uppercase tracking-wider">
-                  <th className="px-5 py-3.5">SLAEID</th>
-                  <th className="px-5 py-3.5">Student Name</th>
-                  <th className="px-5 py-3.5">Batch</th>
-                  <th className="px-5 py-3.5">Technical Trainer</th>
-                  <th className="px-5 py-3.5">Batch Status</th>
-                  <th className="px-5 py-3.5">Attendance %</th>
-                  <th className="px-5 py-3.5">Mock Status</th>
-                  <th className="px-5 py-3.5">Remarks</th>
-                  <th className="px-5 py-3.5 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-xs">
-                {filteredGradingStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="text-center py-12 text-gray-400 italic">
-                      No students found matching your filters.
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedGradingStudents.map(student => {
-                    const displaySlaeId = student.slaeId || `SLA-${student._id.slice(-5).toUpperCase()}`;
-                    const attPct = student.attendancePct !== undefined ? student.attendancePct : 85;
+          {/* Enterprise Table content */}
+          <div className="p-3 sm:p-5">
+            <EnterpriseTable
+              title="Student Progress & Spoken Mock Evaluation"
+              data={students}
+              loading={loading}
+              searchableFields={['name', 'email', 'slaeId', 'technicalTrainer']}
+              filterDefinitions={[
+                {
+                  key: 'selectedBatch',
+                  label: 'Batch',
+                  type: 'select',
+                  options: batches.map(b => ({ label: b.name, value: b._id })),
+                },
+                {
+                  key: 'status',
+                  label: 'Status',
+                  type: 'select',
+                  options: ['Active', 'Enrolled', 'Completed'],
+                },
+              ]}
+              sortOptions={[
+                { label: 'Default', key: null, direction: 'asc' },
+                { label: 'Name: A → Z', key: 'name', direction: 'asc' },
+                { label: 'Name: Z → A', key: 'name', direction: 'desc' },
+                { label: 'Attendance %: Highest', key: (row) => row.attendancePct ?? 85, direction: 'desc' },
+                { label: 'Attendance %: Lowest', key: (row) => row.attendancePct ?? 85, direction: 'asc' },
+              ]}
+              columns={[
+                {
+                  key: 'slaeId',
+                  header: 'SLAE ID',
+                  width: '120px',
+                  render: (row) => (
+                    <span className="font-mono font-bold text-indigo-600">
+                      {row.slaeId || `SLA-${row._id?.slice(-5).toUpperCase()}`}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'name',
+                  header: 'Student Name',
+                  width: '200px',
+                  render: (row) => (
+                    <div>
+                      <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
+                      <div className="text-[11px] text-slate-400 font-normal">{row.email}</div>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'batch',
+                  header: 'Batch',
+                  width: '150px',
+                  render: (row) => (
+                    <span className="font-bold text-slate-700">
+                      {batches.find(b => b._id === selectedBatchId)?.name || row.batches?.[0]?.name || 'Communication'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'technicalTrainer',
+                  header: 'Technical Trainer',
+                  width: '160px',
+                  render: (row) => (
+                    <span className="font-semibold text-slate-600">
+                      {row.technicalTrainer || '—'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  align: 'center',
+                  width: '110px',
+                  render: (row) => (
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
+                      row.status === 'Active' || row.status === 'Enrolled'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : row.status === 'Completed'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                    }`}>
+                      {row.status || 'Active'}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'attendancePct',
+                  header: 'Attendance %',
+                  width: '150px',
+                  render: (row) => {
+                    const attPct = row.attendancePct !== undefined ? row.attendancePct : 85;
                     const isEligible = attPct >= 70;
-                    const mockScore = student.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
-                    const currentMockStatus = mockScore.mockStatus || mockScore.status || 'Not Evaluated';
-
                     return (
-                      <tr key={student._id} className="hover:bg-gray-50/60 dark:hover:bg-gray-900/40 transition-colors">
-                        <td className="px-5 py-4 font-mono font-bold text-purple-600 dark:text-purple-400">
-                          {displaySlaeId}
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="font-extrabold text-gray-900 dark:text-white text-sm">{student.name}</div>
-                          <div className="text-[11px] text-gray-400 mt-0.5">{student.email}</div>
-                        </td>
-                        <td className="px-5 py-4 font-semibold text-gray-600 dark:text-gray-300">
-                          {batches.find(b => b._id === selectedBatchId)?.name || student.batches?.[0]?.name || 'Communication'}
-                        </td>
-                        <td className="px-5 py-4 font-semibold text-gray-600 dark:text-gray-300">
-                          {student.technicalTrainer || '—'}
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                            student.status === 'Active' || student.status === 'Enrolled'
-                              ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
-                              : student.status === 'Completed'
-                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                              : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                          }`}>
-                            {student.status || 'Active'}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-sm text-gray-800 dark:text-gray-200">{attPct}%</span>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                              isEligible
-                                ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                : 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
-                            }`}>
-                              {isEligible ? 'Eligible' : '< 70%'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-4">
-                          <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-extrabold border ${getMockBadgeStyle(currentMockStatus)}`}>
-                            {currentMockStatus}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-gray-500 dark:text-gray-400 max-w-xs truncate">
-                          {mockScore.remarks || '—'}
-                        </td>
-                        <td className="px-5 py-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => openMockModal(student)}
-                            title={isEligible ? "Update Spoken Mock Evaluation" : `Not eligible (${attPct}% attendance < 70%)`}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
-                              isEligible
-                                ? 'bg-[#4F46E5] hover:bg-violet-500 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-rose-50 hover:text-rose-600'
-                            }`}
-                          >
-                            <Edit3 size={13} />
-                            <span>Update Mock</span>
-                          </button>
-                        </td>
-                      </tr>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-sm text-slate-900">{attPct}%</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                          isEligible
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                            : 'bg-rose-50 border-rose-300 text-rose-700'
+                        }`}>
+                          {isEligible ? 'Eligible' : '< 70%'}
+                        </span>
+                      </div>
                     );
-                  })
-                )}
-              </tbody>
-            </table>
+                  },
+                },
+                {
+                  key: 'mockStatus',
+                  header: 'Mock Status',
+                  width: '140px',
+                  render: (row) => {
+                    const mockScore = row.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
+                    const currentMockStatus = mockScore.mockStatus || mockScore.status || 'Not Evaluated';
+                    return (
+                      <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-extrabold border ${getMockBadgeStyle(currentMockStatus)}`}>
+                        {currentMockStatus}
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: 'remarks',
+                  header: 'Remarks',
+                  width: '180px',
+                  render: (row) => {
+                    const mockScore = row.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
+                    return (
+                      <span className="text-slate-500 max-w-[180px] truncate block" title={mockScore.remarks || ''}>
+                        {mockScore.remarks || '—'}
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: 'actions',
+                  header: 'Action',
+                  align: 'right',
+                  width: '140px',
+                  render: (row) => {
+                    const attPct = row.attendancePct !== undefined ? row.attendancePct : 85;
+                    const isEligible = attPct >= 70;
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => openMockModal(row)}
+                        title={isEligible ? "Update Spoken Mock Evaluation" : `Not eligible (${attPct}% attendance < 70%)`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                          isEligible
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600'
+                        }`}
+                      >
+                        <Edit3 size={13} />
+                        <span>Update Mock</span>
+                      </button>
+                    );
+                  },
+                },
+              ]}
+            />
           </div>
-
-          {/* Table Pagination Bar */}
-          {filteredGradingStudents.length > 0 && (
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/40 dark:bg-slate-900/30">
-              <div className="text-xs text-slate-500 font-semibold">
-                Showing <span className="font-bold text-slate-700 dark:text-slate-300">{gradingIndexOfFirstItem + 1}</span> to{' '}
-                <span className="font-bold text-slate-700 dark:text-slate-300">
-                  {Math.min(gradingIndexOfLastItem, filteredGradingStudents.length)}
-                </span>{' '}
-                of <span className="font-bold text-slate-700 dark:text-slate-300">{filteredGradingStudents.length}</span> students
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
-                >
-                  <ChevronLeft size={14} />
-                  <span>Previous</span>
-                </button>
-                <span className="px-3 py-1.5 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-800 dark:text-violet-400 text-xs font-extrabold">
-                  Page {currentPage} of {gradingTotalPages || 1}
-                </span>
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, gradingTotalPages))}
-                  disabled={currentPage >= gradingTotalPages || gradingTotalPages === 0}
-                  className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
-                >
-                  <span>Next</span>
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     );
