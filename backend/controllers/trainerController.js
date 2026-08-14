@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Batch from '../models/Batch.js';
-import { calculateStudentScores } from '../utils/calculations.js';
+import { calculateStudentScores, calculateDynamicAttendance } from '../utils/calculations.js';
 import Attendance from '../models/Attendance.js';
 import Score from '../models/Score.js';
 import Student from '../models/Student.js';
@@ -183,20 +183,12 @@ export const getAssignedStudents = async (req, res) => {
       const profile = profiles.find(p => p.user.toString() === id.toString()) || {};
       const studentScores = scores.filter(s => s.student.toString() === id.toString());
       
-      const stuLogs = attendanceLogs.filter(a => a.student?.toString() === id.toString());
-      const totalDays = stuLogs.length;
-      const presentDays = stuLogs.filter(a => a.status === 'Present' || a.status === 'Late').length;
-      const calcAttendancePct = totalDays > 0 
-        ? Math.round((presentDays / totalDays) * 100) 
-        : (profile.attendance !== undefined ? Number(profile.attendance) : 85);
+      let dept = 'Technical';
+      if (category.includes('Communication')) dept = 'Communication';
+      else if (category.includes('Aptitude')) dept = 'Aptitude';
 
-      // Calculate overall progress in trainer's category
-      let totalModules = 16; // Aptitude
-      if (category === 'Communication') totalModules = 11;
-      if (category === 'Technical') totalModules = 14;
-
-      const completedCount = studentScores.filter(s => s.status === 'Completed').length;
-      const progressPercent = Math.round((completedCount / totalModules) * 100);
+      // Unified calculation matching Student Mobile, Web, and Admin
+      const attStats = await calculateDynamicAttendance(id, dept);
 
       return {
         ...studentData,
@@ -204,8 +196,14 @@ export const getAssignedStudents = async (req, res) => {
         communicationTrainer: resolvedCommunicationTrainer,
         aptitudeTrainer: resolvedAptitudeTrainer,
         profile,
-        attendancePct: calcAttendancePct,
-        progress: progressPercent,
+        attendancePct: attStats.attendancePercent,
+        progress: attStats.progressPercent,
+        trainingDay: attStats.trainingDay,
+        totalTrainingDays: attStats.totalTrainingDays,
+        presentCount: attStats.presentCount,
+        absentCount: attStats.absentCount,
+        remainingDays: attStats.remainingDays,
+        attendanceStats: attStats,
         scores: studentScores,
       };
     });

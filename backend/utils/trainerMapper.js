@@ -39,16 +39,30 @@ export const syncStudentTrainers = async (studentId) => {
         trainer = batch.trainers[0];
       }
 
-      await Enrollment.findOneAndUpdate(
-        { studentId, batchId: batch._id, department: dept },
-        {
+      const existing = await Enrollment.findOne({ studentId, batchId: batch._id, department: dept });
+      const studentUser = await User.findById(studentId).lean();
+      const defaultStart = studentUser?.createdAt || new Date();
+
+      if (!existing) {
+        await Enrollment.create({
+          studentId,
+          batchId: batch._id,
+          department: dept,
           trainerId: trainer ? trainer._id : null,
           course: batch.course,
           status: 'Active',
-          enrolledAt: new Date()
-        },
-        { upsert: true, new: true }
-      );
+          enrolledAt: new Date(),
+          startDate: defaultStart
+        });
+      } else {
+        existing.trainerId = trainer ? trainer._id : null;
+        existing.course = batch.course;
+        existing.status = 'Active';
+        if (!existing.startDate) {
+          existing.startDate = defaultStart;
+        }
+        await existing.save();
+      }
     }
     console.log(`Synced enrollments for student ${studentId} based on active batches.`);
   } catch (error) {

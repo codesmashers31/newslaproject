@@ -11,6 +11,8 @@ import TechnicalModule from '../models/TechnicalModule.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import Enrollment from '../models/Enrollment.js';
 
+import Holiday from '../models/Holiday.js';
+
 export const calculateDynamicAttendance = async (studentId, department) => {
   if (department === 'Technical') {
     // Keep legacy Technical calculation logic
@@ -18,52 +20,155 @@ export const calculateDynamicAttendance = async (studentId, department) => {
     const totalDays = attendanceRecords.length;
     const presentDays = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
     const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
-    return { attendancePercent: percentage, eligibleSessionsCount: totalDays, presentCount: presentDays };
+    return { 
+      department: 'Technical',
+      batchName: 'Technical Training',
+      startDate: null,
+      trainingDay: totalDays,
+      totalTrainingDays: totalDays,
+      presentCount: presentDays, 
+      absentCount: totalDays - presentDays,
+      remainingDays: 0,
+      attendancePercent: percentage, 
+      progressPercent: 100,
+      eligibleSessionsCount: totalDays, 
+      percentage 
+    };
   }
 
-  // Find active enrollment for this department (Communication or Aptitude)
-  const enrollment = await Enrollment.findOne({ studentId, department, status: 'Active' }).lean();
+  const TOTAL_TARGET_DAYS = department === 'Communication' ? 80 : 120;
+  const subjectName = department === 'Communication' ? 'Communication Training' : 'Aptitude Training';
+
+  // 1. Fetch Student User & Active Enrollment
+  const studentUser = await User.findById(studentId).lean();
+  let enrollment = await Enrollment.findOne({ studentId, department, status: 'Active' })
+    .populate('batchId', 'name')
+    .lean();
   
-  if (!enrollment || !enrollment.startDate) {
-    return { attendancePercent: 100, eligibleSessionsCount: 0, presentCount: 0 }; // Hasn't started training yet
+  if (!enrollment) {
+    enrollment = await Enrollment.findOne({ studentId, department })
+      .populate('batchId', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
   }
 
-  // Maximum training days
-  const MAX_DAYS = department === 'Communication' ? 85 : 120;
-  
-  // Find all AttendanceSessions for this student's batch & subject that happened on or after startDate
-  let query = {
-    batch: enrollment.batchId,
-    subject: department === 'Communication' ? 'Communication Training' : 'Aptitude Training',
-    startTime: { $gte: enrollment.startDate }
-  };
+  // 2. Resolve Official Training Start Date (MUST NOT depend on QR scan)
+  let rawStartDate = enrollment?.startDate || enrollment?.enrolledAt || enrollment?.createdAt || studentUser?.createdAt || new Date();
+  const startDate = new Date(rawStartDate);
+  startDate.setHours(0, 0, 0, 0);
 
-  // If completed early (e.g. mock completed), cap the calculation at completedAt date
-  if (enrollment.completedAt) {
-    query.startTime.$lte = enrollment.completedAt;
-  }
+  let rawEndDate = enrollment?.completedAt || new Date();
+  const endDate = new Date(rawEndDate);
+  endDate.setHours(23, 59, 59, 999);
 
-  // Count eligible sessions up to the MAX_DAYS limit
-  const sessions = await AttendanceSession.find(query).sort({ startTime: 1 }).limit(MAX_DAYS).select('_id startTime').lean();
-  const eligibleSessionsCount = sessions.length;
+  const formattedStartDate = `${startDate.getDate().toString().padStart(2, '0')}-${startDate.toLocaleString('en-US', { month: 'short' })}-${startDate.getFullYear()}`;
+  const batchName = enrollment?.batchId?.name || (department === 'Communication' ? studentUser?.communicationBatch : studentUser?.aptitudeBatch) || 'Unassigned Batch';
 
-  if (eligibleSessionsCount === 0) {
-    return { attendancePercent: 100, eligibleSessionsCount: 0, presentCount: 0 };
-  }
+  // 3. Fetch all Holidays to exclude
+  const holidayDocs = await Holiday.find().lean();
+  const holidaySet = new Set(holidayDocs.map(h => {
+    const d = new Date(h.date);
+    return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+  }));
 
-  // The last eligible session acts as the cap for attendance queries
-  const lastSessionTime = sessions[eligibleSessionsCount - 1].startTime;
+  // 4. Find all weekday dates where at least ONE student performed a valid QR scan in this subject
+  // This satisfies the AUTOMATIC NO-TRAINING-DAY RULE:
+  // If 0 students scanned on a weekday, it is automatically treated as a No Training Day (excluded).
+  const allDomainAttendances = await Attendance.find({
+    subject: subjectName,
+    date: { $gte: startDate, $lte: endDate },
+    status: { $in: ['Present', 'Late'] }
+  }).select('date').lean();
 
-  // Find present/late attendances for this student within the eligible time window
-  const presentCount = await Attendance.countDocuments({
-    student: studentId,
-    subject: department === 'Communication' ? 'Communication Training' : 'Aptitude Training',
-    status: { $in: ['Present', 'Late'] },
-    date: { $gte: enrollment.startDate, $lte: lastSessionTime }
+  const domainScannedDates = new Set();
+  allDomainAttendances.forEach(a => {
+    const d = new Date(a.date);
+    const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+    domainScannedDates.add(dateStr);
   });
 
-  const percentage = Math.round((presentCount / eligibleSessionsCount) * 100);
-  return { attendancePercent: percentage, eligibleSessionsCount, presentCount };
+  // Also include dates with active sessions for backward compatibility
+  const domainSessions = await AttendanceSession.find({
+    subject: subjectName,
+    startTime: { $gte: startDate, $lte: endDate }
+  }).select('startTime').lean();
+
+  domainSessions.forEach(s => {
+    const d = new Date(s.startTime);
+    const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+    domainScannedDates.add(dateStr);
+  });
+
+  // 5. Build list of Actual Training Days for this department
+  const actualTrainingDates = [];
+  const curr = new Date(startDate);
+
+  while (curr <= endDate && actualTrainingDates.length < TOTAL_TARGET_DAYS) {
+    const dayOfWeek = curr.getDay(); // 0 = Sunday, 6 = Saturday
+    const dateStr = `${curr.getFullYear()}-${(curr.getMonth() + 1).toString().padStart(2, '0')}-${curr.getDate().toString().padStart(2, '0')}`;
+
+    // Rule 1: Exclude Weekends (Saturday & Sunday)
+    // Rule 2: Exclude Holidays
+    // Rule 3: Automatic No-Training-Day Rule (must have at least 1 scan/session in domain)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dateStr) && domainScannedDates.has(dateStr)) {
+      actualTrainingDates.push(dateStr);
+    }
+
+    curr.setDate(curr.getDate() + 1);
+  }
+
+  // 6. Fetch target student's attendance records in the eligible date range
+  const studentAttendances = await Attendance.find({
+    student: studentId,
+    subject: subjectName,
+    date: { $gte: startDate, $lte: endDate }
+  }).lean();
+
+  const studentAttMap = new Map();
+  studentAttendances.forEach(a => {
+    const d = new Date(a.date);
+    const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+    studentAttMap.set(dateStr, a.status);
+  });
+
+  // 7. Calculate Present and Absent counts against Actual Training Days
+  let presentCount = 0;
+  let absentCount = 0;
+
+  actualTrainingDates.forEach(dateStr => {
+    const status = studentAttMap.get(dateStr);
+    if (status === 'Present' || status === 'Late') {
+      presentCount++;
+    } else {
+      absentCount++;
+    }
+  });
+
+  const trainingDay = actualTrainingDates.length;
+  const remainingDays = Math.max(0, TOTAL_TARGET_DAYS - trainingDay);
+
+  // 8. Fixed-Denominator Attendance % and Progress %
+  // Communication = Present / 80 * 100
+  // Aptitude = Present / 120 * 100
+  const attendancePercent = Number(((presentCount / TOTAL_TARGET_DAYS) * 100).toFixed(2));
+  const progressPercent = Number(((trainingDay / TOTAL_TARGET_DAYS) * 100).toFixed(2));
+
+  return {
+    department,
+    batchName,
+    startDate: formattedStartDate,
+    rawStartDate: startDate,
+    trainingDay,
+    totalTrainingDays: TOTAL_TARGET_DAYS,
+    presentCount,
+    absentCount,
+    remainingDays,
+    attendancePercent,
+    progressPercent,
+    // Legacy fields for backward compatibility
+    eligibleSessionsCount: trainingDay,
+    percentage: Math.round(attendancePercent)
+  };
 };
 
 // Calculate domain completion percentage

@@ -12,6 +12,7 @@ import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings }
 import Enrollment from '../models/Enrollment.js';
 import DeviceResetRequest from '../models/DeviceResetRequest.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
+import { calculateDynamicAttendance } from '../utils/calculations.js';
 
 // ==========================================
 // DASHBOARD ANALYTICS
@@ -141,7 +142,7 @@ export const getStudents = async (req, res) => {
       .populate('trainerId', 'name')
       .lean();
 
-    let result = students.map(student => {
+    let result = await Promise.all(students.map(async student => {
       const profile = profiles.find(p => p.user.toString() === student._id.toString()) || {};
       const placement = placements.find(p => p.student.toString() === student._id.toString()) || {};
       const studentBatches = batches.filter(b => b.students.some(sId => sId.toString() === student._id.toString()));
@@ -157,6 +158,9 @@ export const getStudents = async (req, res) => {
       const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
       const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
 
+      const commSummary = await calculateDynamicAttendance(student._id, 'Communication');
+      const aptiSummary = await calculateDynamicAttendance(student._id, 'Aptitude');
+
       return {
         ...student,
         profile,
@@ -167,10 +171,12 @@ export const getStudents = async (req, res) => {
         communicationTrainer,
         aptitudeBatch,
         aptitudeTrainer,
+        communicationSummary: commSummary,
+        aptitudeSummary: aptiSummary,
         batches: studentBatches.map(b => ({ _id: b._id, name: b.name, course: b.course })),
         batch: studentBatches[0] ? { _id: studentBatches[0]._id, name: studentBatches[0].name, course: studentBatches[0].course } : null,
       };
-    });
+    }));
 
     // Apply secondary filters
     if (batchId) {

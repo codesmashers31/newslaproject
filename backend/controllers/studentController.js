@@ -181,6 +181,9 @@ export const getStudentDashboard = async (req, res) => {
 
     const myRank = { instituteRank: 0, batchRank: 0 };
 
+    const commSummary = await calculateDynamicAttendance(studentId, 'Communication');
+    const aptiSummary = await calculateDynamicAttendance(studentId, 'Aptitude');
+
     const batchesWithAttendance = await Promise.all(batches.map(async b => {
       let dept = b.department || 'Technical';
       const attStats = await calculateDynamicAttendance(studentId, dept);
@@ -208,6 +211,8 @@ export const getStudentDashboard = async (req, res) => {
         trainers: batch.trainers
       } : null,
       batches: batchesWithAttendance,
+      communicationSummary: commSummary,
+      aptitudeSummary: aptiSummary,
       attendance: {
         percentage: attendancePercent,
         totalClasses: totalDays,
@@ -662,13 +667,7 @@ export const scanQR = async (req, res) => {
       status = 'Absent';
     }
 
-    // Set dynamic start date for Communication and Aptitude if this is the first scan
-    if ((session.subject === 'Communication' || session.subject === 'Aptitude') && activeEnrollment) {
-      if (!activeEnrollment.startDate && status !== 'Absent') {
-        activeEnrollment.startDate = sessionStartTime;
-        await activeEnrollment.save();
-      }
-    }
+    // Note: Training start date comes strictly from enrollment/entry date and is NEVER mutated by QR scanning.
 
     // 7. Save Attendance record
     const attendance = await Attendance.create({
