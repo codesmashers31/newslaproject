@@ -515,9 +515,11 @@ const TrainerDashboard = () => {
       });
       toast.success(`Marked ${status} successfully`);
       
-      // Refresh todayRecords to update UI check-in timestamps
+      // Refresh todayRecords to update UI check-in timestamps & reload updated attendance calculations
       const { data: existingRecords } = await API.get(`/trainer/attendance?date=${attendanceDate}`);
       setTodayRecords(existingRecords);
+      
+      await loadData();
       
       if (isCommunicationTrainer) {
         loadStats(selectedBatchId);
@@ -1694,19 +1696,30 @@ const TrainerDashboard = () => {
                               <div className="flex items-center gap-2">
                                 <div className="font-extrabold text-slate-900 text-sm">{student.name}</div>
                                 {(() => {
-                                  const displayAttPct = user?.role === 'Communication Trainer'
-                                    ? (student.communicationAttendancePct ?? student.attendancePct ?? 100)
-                                    : user?.role === 'Aptitude Trainer'
-                                    ? (student.aptitudeAttendancePct ?? student.attendancePct ?? 100)
-                                    : (student.attendancePct ?? 100);
+                                  const currentBatchObj = batches.find(b => String(b._id) === String(selectedBatchId));
+                                  const currentCourse = currentBatchObj?.course || '';
+
+                                  let pctValue = student.attendancePct;
+
+                                  if (currentCourse === 'Communication Skills' || user?.role === 'Communication Trainer') {
+                                    pctValue = student.communicationAttendancePct ?? pctValue;
+                                  }
+                                  if (currentCourse === 'Aptitude & Reasoning' || user?.role === 'Aptitude Trainer') {
+                                    pctValue = student.aptitudeAttendancePct ?? pctValue;
+                                  }
+                                  if (currentCourse === 'Technical Training' || user?.role === 'Technical Trainer') {
+                                    pctValue = student.technicalAttendancePct ?? pctValue;
+                                  }
+
+                                  const finalPct = pctValue !== undefined ? pctValue : 100;
 
                                   return (
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                                      displayAttPct >= 70
+                                      finalPct >= 70
                                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                         : 'bg-rose-50 text-rose-700 border-rose-200'
                                     }`}>
-                                      {displayAttPct}%
+                                      {finalPct}%
                                     </span>
                                   );
                                 })()}
