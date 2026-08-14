@@ -162,7 +162,7 @@ export const getAssignedStudents = async (req, res) => {
     const scores = await Score.find({ student: { $in: studentIds }, category }).lean();
     const attendanceLogs = await Attendance.find({ student: { $in: studentIds } }).lean();
     
-    const studentsList = studentIds.map(id => {
+    const studentsList = await Promise.all(studentIds.map(async id => {
       const studentData = studentMap[id];
       
       let resolvedTechnicalTrainer = studentData.technicalTrainer || '';
@@ -206,7 +206,7 @@ export const getAssignedStudents = async (req, res) => {
         attendanceStats: attStats,
         scores: studentScores,
       };
-    });
+    }));
 
     res.json(studentsList);
   } catch (error) {
