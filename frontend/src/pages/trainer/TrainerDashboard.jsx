@@ -1563,17 +1563,17 @@ const TrainerDashboard = () => {
         {/* 2. ADVANCED CLASS ATTENDANCE MARKING PORTAL */}
         {isAttendance && (
           <div className="w-full space-y-4 font-sans text-slate-800">
-            {/* Top Header Bar */}
+            {/* Single Clean Top Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">Mark Class Attendance</h1>
                 <p className="text-xs text-slate-500 mt-0.5">Record and update daily roll call sheets for your assigned training batches.</p>
               </div>
 
-              {/* Date Selector Pill */}
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3.5 py-1.5 shadow-2xs">
-                <Calendar size={15} className="text-indigo-600" />
-                <span className="text-xs font-bold text-slate-600">Class Date:</span>
+              {/* Sleek Date Selector Pill */}
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs self-start sm:self-auto">
+                <Calendar size={14} className="text-indigo-600 shrink-0" />
+                <span className="text-xs font-bold text-slate-600">Date:</span>
                 <input
                   type="date"
                   value={attendanceDate}
@@ -1585,12 +1585,12 @@ const TrainerDashboard = () => {
 
             {/* Single Enterprise Table Container */}
             <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-              {/* Single Control Toolbar */}
-              <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 flex-wrap flex-1">
-                  {/* Compact Search Input (w-64) */}
-                  <div className="relative w-64 max-w-full">
-                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              {/* Responsive Single Control Toolbar */}
+              <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Compact Search Input (w-56 to w-64) */}
+                  <div className="relative w-56 max-w-full">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       placeholder="Search student or SLAEID..."
@@ -1599,10 +1599,10 @@ const TrainerDashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="w-full pl-8.5 pr-8 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
+                      className="w-full pl-8.5 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
                     />
                     {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5">
+                      <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5">
                         <X size={13} />
                       </button>
                     )}
@@ -1644,8 +1644,8 @@ const TrainerDashboard = () => {
                   </div>
                 </div>
 
-                {/* Export Buttons */}
-                <div className="flex items-center gap-2 shrink-0">
+                {/* Export Action Buttons */}
+                <div className="flex items-center gap-2">
                   <button
                     onClick={exportAttendanceToExcel}
                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all"
