@@ -274,7 +274,7 @@ export const markAttendance = async (req, res) => {
       } else {
         if (req.user.role === 'Communication Trainer') dept = 'Communication';
         else if (req.user.role === 'Aptitude Trainer') dept = 'Aptitude';
-      }
+
         // Fallback to active enrollment batch for this trainer's department
         const enroll = await Enrollment.findOne({ studentId: rec.studentId, department: dept, status: 'Active' });
         if (enroll) {
