@@ -544,17 +544,17 @@ const TrainerDashboard = () => {
     const techCol = {
       key: 'technical',
       header: 'Technical Training',
-      isInteractive: role === 'Technical Trainer' || role === 'Super Admin' || role === 'Admin'
+      isInteractive: true
     };
     const commCol = {
       key: 'communication',
       header: 'Communication Skills',
-      isInteractive: role === 'Communication Trainer' || role === 'Super Admin' || role === 'Admin'
+      isInteractive: true
     };
     const aptiCol = {
       key: 'aptitude',
       header: 'Aptitude & Reasoning',
-      isInteractive: role === 'Aptitude Trainer' || role === 'Super Admin' || role === 'Admin'
+      isInteractive: true
     };
 
     if (role === 'Communication Trainer') {

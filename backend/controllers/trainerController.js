@@ -261,17 +261,20 @@ export const markAttendance = async (req, res) => {
         effectiveBatchId = foundBatchId;
       }
 
-      // Determine subject (department)
-      let dept = 'Technical';
-      if (req.user.role === 'Communication Trainer') dept = 'Communication';
-      if (req.user.role === 'Aptitude Trainer') dept = 'Aptitude';
-
-      // Find student's batch matching the course category / department
+      // Determine subject (department) from target batch course
       let saveBatchId = effectiveBatchId;
       const targetBatch = await Batch.findById(effectiveBatchId);
+      let dept = 'Technical';
+
       if (targetBatch) {
         saveBatchId = targetBatch._id;
+        if (targetBatch.course?.includes('Communication')) dept = 'Communication';
+        else if (targetBatch.course?.includes('Aptitude')) dept = 'Aptitude';
+        else if (targetBatch.course?.includes('Technical')) dept = 'Technical';
       } else {
+        if (req.user.role === 'Communication Trainer') dept = 'Communication';
+        else if (req.user.role === 'Aptitude Trainer') dept = 'Aptitude';
+      }
         // Fallback to active enrollment batch for this trainer's department
         const enroll = await Enrollment.findOne({ studentId: rec.studentId, department: dept, status: 'Active' });
         if (enroll) {
