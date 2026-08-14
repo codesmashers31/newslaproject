@@ -195,8 +195,12 @@ export const getAssignedStudents = async (req, res) => {
       if (category.includes('Communication')) dept = 'Communication';
       else if (category.includes('Aptitude')) dept = 'Aptitude';
 
-      // Unified calculation matching Student Mobile, Web, and Admin
-      const attStats = await calculateDynamicAttendance(id, dept);
+      // Unified calculations for all departments
+      const commStats = await calculateDynamicAttendance(id, 'Communication');
+      const aptiStats = await calculateDynamicAttendance(id, 'Aptitude');
+      const techStats = await calculateDynamicAttendance(id, 'Technical');
+
+      const attStats = dept === 'Communication' ? commStats : dept === 'Aptitude' ? aptiStats : techStats;
 
       return {
         ...studentData,
@@ -205,6 +209,9 @@ export const getAssignedStudents = async (req, res) => {
         aptitudeTrainer: resolvedAptitudeTrainer,
         profile,
         attendancePct: attStats.attendancePercent,
+        communicationAttendancePct: commStats.attendancePercent,
+        aptitudeAttendancePct: aptiStats.attendancePercent,
+        technicalAttendancePct: techStats.attendancePercent,
         progress: attStats.progressPercent,
         trainingDay: attStats.trainingDay,
         totalTrainingDays: attStats.totalTrainingDays,

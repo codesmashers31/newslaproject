@@ -1693,13 +1693,23 @@ const TrainerDashboard = () => {
                             <td className="py-3.5 px-4">
                               <div className="flex items-center gap-2">
                                 <div className="font-extrabold text-slate-900 text-sm">{student.name}</div>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                                  (student.attendancePct !== undefined ? student.attendancePct : 85) >= 70
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : 'bg-rose-50 text-rose-700 border-rose-200'
-                                }`}>
-                                  {student.attendancePct !== undefined ? student.attendancePct : 85}%
-                                </span>
+                                {(() => {
+                                  const displayAttPct = user?.role === 'Communication Trainer'
+                                    ? (student.communicationAttendancePct ?? student.attendancePct ?? 100)
+                                    : user?.role === 'Aptitude Trainer'
+                                    ? (student.aptitudeAttendancePct ?? student.attendancePct ?? 100)
+                                    : (student.attendancePct ?? 100);
+
+                                  return (
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                                      displayAttPct >= 70
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        : 'bg-rose-50 text-rose-700 border-rose-200'
+                                    }`}>
+                                      {displayAttPct}%
+                                    </span>
+                                  );
+                                })()}
                                 {isGuest && (
                                   <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
                                     Cross-Attend

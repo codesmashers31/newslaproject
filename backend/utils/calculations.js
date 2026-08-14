@@ -72,10 +72,17 @@ export const calculateDynamicAttendance = async (studentId, department) => {
   }));
 
   // 4. Find all weekday dates where at least ONE student performed a valid QR scan in this subject
-  // This satisfies the AUTOMATIC NO-TRAINING-DAY RULE:
-  // If 0 students scanned on a weekday, it is automatically treated as a No Training Day (excluded).
+  // Matches both full name ("Communication Skills") and short name ("Communication")
+  const subjectFilter = {
+    $in: [
+      department,
+      subjectName,
+      department === 'Communication' ? 'Communication Skills' : department === 'Aptitude' ? 'Aptitude & Reasoning' : 'Technical Training'
+    ]
+  };
+
   const allDomainAttendances = await Attendance.find({
-    subject: subjectName,
+    subject: subjectFilter,
     date: { $gte: startDate, $lte: endDate },
     status: { $in: ['Present', 'Late'] }
   }).select('date').lean();
@@ -89,7 +96,7 @@ export const calculateDynamicAttendance = async (studentId, department) => {
 
   // Also include dates with active sessions for backward compatibility
   const domainSessions = await AttendanceSession.find({
-    subject: subjectName,
+    $or: [{ subject: subjectName }, { subject: department }],
     startTime: { $gte: startDate, $lte: endDate }
   }).select('startTime').lean();
 
@@ -120,30 +127,36 @@ export const calculateDynamicAttendance = async (studentId, department) => {
   // 6. Fetch target student's attendance records in the eligible date range
   const studentAttendances = await Attendance.find({
     student: studentId,
-    subject: subjectName,
+    subject: subjectFilter,
     date: { $gte: startDate, $lte: endDate }
   }).lean();
 
   const studentAttMap = new Map();
+  const explicitAbsentDates = new Set();
+
   studentAttendances.forEach(a => {
     const d = new Date(a.date);
     const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
     studentAttMap.set(dateStr, a.status);
+    if (a.status === 'Absent') {
+      explicitAbsentDates.add(dateStr);
+    }
   });
 
-  // 7. Calculate Present and Absent counts against Actual Training Days
+  // 7. Calculate Present and Absent counts against Actual Training Days & explicit Absences
+  const countedAbsentDates = new Set([...explicitAbsentDates]);
   let presentCount = 0;
-  let absentCount = 0;
 
   actualTrainingDates.forEach(dateStr => {
     const status = studentAttMap.get(dateStr);
     if (status === 'Present' || status === 'Late') {
       presentCount++;
     } else {
-      absentCount++;
+      countedAbsentDates.add(dateStr);
     }
   });
 
+  const absentCount = countedAbsentDates.size;
   const trainingDay = actualTrainingDates.length;
   const remainingDays = Math.max(0, TOTAL_TARGET_DAYS - trainingDay);
 
