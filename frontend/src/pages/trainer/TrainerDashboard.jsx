@@ -1121,205 +1121,167 @@ const TrainerDashboard = () => {
           </div>
         </div>
 
-        {/* Single Unified Table Card */}
-        <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
-          {/* Top Filter & Search Bar */}
-          <div className="p-5 border-b border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <h2 className="text-base font-black text-gray-900 dark:text-white font-sans">Spoken Mock Performance Evaluation</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Single table view for spoken mock grading. Requires at least 70% attendance to update.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-60">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search student or SLAEID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900/50 text-xs focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-gray-700 dark:text-gray-200 font-medium"
-                />
-              </div>
-              <div className="flex items-center space-x-1.5 border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-1.5 bg-gray-50 dark:bg-gray-900/50 text-xs">
-                <Filter size={13} className="text-gray-400" />
-                <select
-                  value={selectedBatchId}
-                  onChange={(e) => setSelectedBatchId(e.target.value)}
-                  className="bg-transparent focus:outline-none text-xs font-bold cursor-pointer text-gray-700 dark:text-gray-300"
-                >
-                  <option value="all">All Batches</option>
-                  {batches.map(b => (
-                    <option key={b._id} value={b._id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Enterprise Table content */}
-          <div className="p-3 sm:p-5">
-            <EnterpriseTable
-              title="Student Progress & Spoken Mock Evaluation"
-              data={students}
-              loading={loading}
-              searchableFields={['name', 'email', 'slaeId', 'technicalTrainer']}
-              filterDefinitions={[
-                {
-                  key: 'selectedBatch',
-                  label: 'Batch',
-                  type: 'select',
-                  options: batches.map(b => ({ label: b.name, value: b._id })),
-                },
-                {
-                  key: 'status',
-                  label: 'Status',
-                  type: 'select',
-                  options: ['Active', 'Enrolled', 'Completed'],
-                },
-              ]}
-              sortOptions={[
-                { label: 'Default', key: null, direction: 'asc' },
-                { label: 'Name: A → Z', key: 'name', direction: 'asc' },
-                { label: 'Name: Z → A', key: 'name', direction: 'desc' },
-                { label: 'Attendance %: Highest', key: (row) => row.attendancePct ?? 85, direction: 'desc' },
-                { label: 'Attendance %: Lowest', key: (row) => row.attendancePct ?? 85, direction: 'asc' },
-              ]}
-              columns={[
-                {
-                  key: 'slaeId',
-                  header: 'SLAE ID',
-                  width: '120px',
-                  render: (row) => (
-                    <span className="font-mono font-bold text-indigo-600">
-                      {row.slaeId || `SLA-${row._id?.slice(-5).toUpperCase()}`}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'name',
-                  header: 'Student Name',
-                  width: '200px',
-                  render: (row) => (
-                    <div>
-                      <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
-                      <div className="text-[11px] text-slate-400 font-normal">{row.email}</div>
-                    </div>
-                  ),
-                },
-                {
-                  key: 'batch',
-                  header: 'Batch',
-                  width: '150px',
-                  render: (row) => (
-                    <span className="font-bold text-slate-700">
-                      {batches.find(b => b._id === selectedBatchId)?.name || row.batches?.[0]?.name || 'Communication'}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'technicalTrainer',
-                  header: 'Technical Trainer',
-                  width: '160px',
-                  render: (row) => (
-                    <span className="font-semibold text-slate-600">
-                      {row.technicalTrainer || '—'}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'status',
-                  header: 'Status',
-                  align: 'center',
-                  width: '110px',
-                  render: (row) => (
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
-                      row.status === 'Active' || row.status === 'Enrolled'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : row.status === 'Completed'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+        {/* Single Enterprise Table Card */}
+        <EnterpriseTable
+          title="Student Progress & Spoken Mock Evaluation"
+          data={students}
+          loading={loading}
+          searchableFields={['name', 'email', 'slaeId', 'technicalTrainer']}
+          filterDefinitions={[
+            {
+              key: 'selectedBatch',
+              label: 'Batch',
+              type: 'select',
+              options: batches.map(b => ({ label: b.name, value: b._id })),
+            },
+            {
+              key: 'status',
+              label: 'Status',
+              type: 'select',
+              options: ['Active', 'Enrolled', 'Completed'],
+            },
+          ]}
+          sortOptions={[
+            { label: 'Default', key: null, direction: 'asc' },
+            { label: 'Name: A → Z', key: 'name', direction: 'asc' },
+            { label: 'Name: Z → A', key: 'name', direction: 'desc' },
+            { label: 'Attendance %: Highest', key: (row) => row.attendancePct ?? 85, direction: 'desc' },
+            { label: 'Attendance %: Lowest', key: (row) => row.attendancePct ?? 85, direction: 'asc' },
+          ]}
+          columns={[
+            {
+              key: 'slaeId',
+              header: 'SLAE ID',
+              width: '120px',
+              render: (row) => (
+                <span className="font-mono font-bold text-indigo-600">
+                  {row.slaeId || `SLA-${row._id?.slice(-5).toUpperCase()}`}
+                </span>
+              ),
+            },
+            {
+              key: 'name',
+              header: 'Student Name',
+              width: '200px',
+              render: (row) => (
+                <div>
+                  <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
+                  <div className="text-[11px] text-slate-400 font-normal">{row.email}</div>
+                </div>
+              ),
+            },
+            {
+              key: 'batch',
+              header: 'Batch',
+              width: '150px',
+              render: (row) => (
+                <span className="font-bold text-slate-700">
+                  {batches.find(b => b._id === selectedBatchId)?.name || row.batches?.[0]?.name || 'Communication'}
+                </span>
+              ),
+            },
+            {
+              key: 'technicalTrainer',
+              header: 'Technical Trainer',
+              width: '160px',
+              render: (row) => (
+                <span className="font-semibold text-slate-600">
+                  {row.technicalTrainer || '—'}
+                </span>
+              ),
+            },
+            {
+              key: 'status',
+              header: 'Status',
+              align: 'center',
+              width: '110px',
+              render: (row) => (
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
+                  row.status === 'Active' || row.status === 'Enrolled'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : row.status === 'Completed'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}>
+                  {row.status || 'Active'}
+                </span>
+              ),
+            },
+            {
+              key: 'attendancePct',
+              header: 'Attendance %',
+              width: '150px',
+              render: (row) => {
+                const attPct = row.attendancePct !== undefined ? row.attendancePct : 85;
+                const isEligible = attPct >= 70;
+                return (
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-sm text-slate-900">{attPct}%</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                      isEligible
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                        : 'bg-rose-50 border-rose-300 text-rose-700'
                     }`}>
-                      {row.status || 'Active'}
+                      {isEligible ? 'Eligible' : '< 70%'}
                     </span>
-                  ),
-                },
-                {
-                  key: 'attendancePct',
-                  header: 'Attendance %',
-                  width: '150px',
-                  render: (row) => {
-                    const attPct = row.attendancePct !== undefined ? row.attendancePct : 85;
-                    const isEligible = attPct >= 70;
-                    return (
-                      <div className="flex items-center gap-2">
-                        <span className="font-black text-sm text-slate-900">{attPct}%</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
-                          isEligible
-                            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                            : 'bg-rose-50 border-rose-300 text-rose-700'
-                        }`}>
-                          {isEligible ? 'Eligible' : '< 70%'}
-                        </span>
-                      </div>
-                    );
-                  },
-                },
-                {
-                  key: 'mockStatus',
-                  header: 'Mock Status',
-                  width: '140px',
-                  render: (row) => {
-                    const mockScore = row.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
-                    const currentMockStatus = mockScore.mockStatus || mockScore.status || 'Not Evaluated';
-                    return (
-                      <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-extrabold border ${getMockBadgeStyle(currentMockStatus)}`}>
-                        {currentMockStatus}
-                      </span>
-                    );
-                  },
-                },
-                {
-                  key: 'remarks',
-                  header: 'Remarks',
-                  width: '180px',
-                  render: (row) => {
-                    const mockScore = row.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
-                    return (
-                      <span className="text-slate-500 max-w-[180px] truncate block" title={mockScore.remarks || ''}>
-                        {mockScore.remarks || '—'}
-                      </span>
-                    );
-                  },
-                },
-                {
-                  key: 'actions',
-                  header: 'Action',
-                  align: 'right',
-                  width: '140px',
-                  render: (row) => {
-                    const attPct = row.attendancePct !== undefined ? row.attendancePct : 85;
-                    const isEligible = attPct >= 70;
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => openMockModal(row)}
-                        title={isEligible ? "Update Spoken Mock Evaluation" : `Not eligible (${attPct}% attendance < 70%)`}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
-                          isEligible
-                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                            : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600'
-                        }`}
-                      >
-                        <Edit3 size={13} />
-                        <span>Update Mock</span>
-                      </button>
-                    );
-                  },
-                },
-              ]}
-            />
-          </div>
-        </div>
+                  </div>
+                );
+              },
+            },
+            {
+              key: 'mockStatus',
+              header: 'Mock Status',
+              width: '140px',
+              render: (row) => {
+                const mockScore = row.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
+                const currentMockStatus = mockScore.mockStatus || mockScore.status || 'Not Evaluated';
+                return (
+                  <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-extrabold border ${getMockBadgeStyle(currentMockStatus)}`}>
+                    {currentMockStatus}
+                  </span>
+                );
+              },
+            },
+            {
+              key: 'remarks',
+              header: 'Remarks',
+              width: '180px',
+              render: (row) => {
+                const mockScore = row.scores?.find(sc => sc.moduleName === 'Mock Evaluation') || {};
+                return (
+                  <span className="text-slate-500 max-w-[180px] truncate block" title={mockScore.remarks || ''}>
+                    {mockScore.remarks || '—'}
+                  </span>
+                );
+              },
+            },
+            {
+              key: 'actions',
+              header: 'Action',
+              align: 'right',
+              width: '140px',
+              render: (row) => {
+                const attPct = row.attendancePct !== undefined ? row.attendancePct : 85;
+                const isEligible = attPct >= 70;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => openMockModal(row)}
+                    title={isEligible ? "Update Spoken Mock Evaluation" : `Not eligible (${attPct}% attendance < 70%)`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                      isEligible
+                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                        : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-600'
+                    }`}
+                  >
+                    <Edit3 size={13} />
+                    <span>Update Mock</span>
+                  </button>
+                );
+              },
+            },
+          ]}
+        />
       </div>
     );
   };

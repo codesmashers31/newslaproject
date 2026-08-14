@@ -187,42 +187,40 @@ const EnterpriseTable = ({
   };
 
   return (
-    <div className="w-full space-y-4 font-sans text-slate-800">
-      {/* HEADER BAR (Optional Title & Actions) */}
-      {(title || headerActions) && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-          {title && <h2 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h2>}
-          {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
-        </div>
-      )}
+    <div className="w-full space-y-3 font-sans text-slate-800">
+      {/* HEADER & COMPACT CONTROL BAR */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-20">
+        {/* Title / Left section */}
+        {title ? (
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h1>
+        ) : (
+          <div />
+        )}
 
-      {/* SMART CONTROL BAR */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-20">
-        {/* Left: Search input */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Search records..."
-            className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        {/* Right: Filter, Sort, Clear buttons */}
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        {/* Right Controls: Search, Filter, Sort, Actions */}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end">
+          {/* Compact Search input (w-64) */}
+          <div className="relative w-64 max-w-full">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search records..."
+              className="w-full pl-8.5 pr-8 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs transition-all"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
           {/* Filter Popover Trigger */}
           <div className="relative">
             <button
@@ -381,11 +379,18 @@ const EnterpriseTable = ({
             <button
               onClick={handleClearFilters}
               title="Clear search and filters"
-              className="flex items-center gap-1 px-2.5 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors"
             >
               <RotateCcw size={13} />
               <span className="hidden sm:inline">Reset</span>
             </button>
+          )}
+
+          {/* Optional Action Buttons (e.g. Add Batch, Export) */}
+          {headerActions && (
+            <div className="flex items-center gap-2">
+              {headerActions}
+            </div>
           )}
         </div>
       </div>

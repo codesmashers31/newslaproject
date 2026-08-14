@@ -938,10 +938,8 @@ const TrainerBatchesPage = () => {
         ))}
       </div>
 
-      {/* Main Card with Enterprise Batches Table */}
-      <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-6">
-          <EnterpriseTable
+      {/* Enterprise Batches Table */}
+      <EnterpriseTable
             title={
               user?.role === 'Communication Trainer'
                 ? 'My Communication Batches'
@@ -1104,8 +1102,6 @@ const TrainerBatchesPage = () => {
               },
             ]}
           />
-        </div>
-      </div>
 
       {/* Add Batch Modal */}
       <AnimatePresence>

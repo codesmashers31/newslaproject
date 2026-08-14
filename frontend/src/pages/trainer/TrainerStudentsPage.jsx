@@ -448,11 +448,8 @@ const TrainerStudentsPage = () => {
         </div>
       </div>
 
-      {/* Main Card with Toolbar & Table */}
-      <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        {/* Students Enterprise Table */}
-        <div className="p-4 sm:p-6">
-          <EnterpriseTable
+      {/* Students Enterprise Table */}
+      <EnterpriseTable
             title={
               user?.role === 'Communication Trainer'
                 ? 'My Communication Students'
@@ -569,8 +566,6 @@ const TrainerStudentsPage = () => {
               },
             ]}
           />
-        </div>
-      </div>
 
       {/* Add Student Modal */}
         {showAddModal && (
