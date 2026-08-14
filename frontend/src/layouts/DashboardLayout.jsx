@@ -324,19 +324,20 @@ const DashboardLayout = ({ children }) => {
         
         {/* Sticky Header */}
         <header className="h-16 bg-white/70 dark:bg-[#0b0c10]/70 backdrop-blur-md border-b border-gray-200 dark:border-gray-800/80 sticky top-0 z-20 px-4 lg:px-8 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <button 
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="lg:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
-            {user?.role !== 'Communication Trainer' && (
-              <div className="hidden sm:flex items-center space-x-2 text-xs font-medium bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 px-3 py-1.5 rounded-full border border-violet-100/40 dark:border-violet-950/30">
-                <Sparkles size={13} />
-                <span>{user?.role} Workspace</span>
-              </div>
-            )}
+            <div className="hidden sm:flex items-center space-x-2 text-xs">
+              <span className="font-extrabold text-slate-900">{user?.name}</span>
+              <span className="text-slate-400">•</span>
+              <span className="font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full">
+                {user?.role}
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
