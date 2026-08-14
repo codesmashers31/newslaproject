@@ -535,29 +535,32 @@ const TrainerDashboard = () => {
   };
 
   const getColumnsConfig = (role) => {
-    const techCol = {
-      key: 'technical',
-      header: 'Technical Training',
-      isInteractive: role === 'Technical Trainer' || role === 'Super Admin' || role === 'Admin'
-    };
-    const commCol = {
-      key: 'communication',
-      header: 'Communication Skills',
-      isInteractive: role === 'Communication Trainer' || role === 'Super Admin' || role === 'Admin'
-    };
-    const aptiCol = {
-      key: 'aptitude',
-      header: 'Aptitude & Reasoning',
-      isInteractive: role === 'Aptitude Trainer' || role === 'Super Admin' || role === 'Admin'
-    };
-
     if (role === 'Communication Trainer') {
-      return [commCol, techCol, aptiCol];
-    } else if (role === 'Aptitude Trainer') {
-      return [aptiCol, techCol, commCol];
-    } else {
-      return [techCol, commCol, aptiCol];
+      return [{
+        key: 'communication',
+        header: 'Communication Attendance',
+        isInteractive: true
+      }];
     }
+    if (role === 'Aptitude Trainer') {
+      return [{
+        key: 'aptitude',
+        header: 'Aptitude Attendance',
+        isInteractive: true
+      }];
+    }
+    if (role === 'Technical Trainer') {
+      return [{
+        key: 'technical',
+        header: 'Technical Attendance',
+        isInteractive: true
+      }];
+    }
+    return [
+      { key: 'technical', header: 'Technical Training', isInteractive: true },
+      { key: 'communication', header: 'Communication Skills', isInteractive: true },
+      { key: 'aptitude', header: 'Aptitude & Reasoning', isInteractive: true }
+    ];
   };
 
   const renderSubjectCell = (student, batchName, batchId, trainerName, isInteractive, isGuestValue = false, subjectName = '') => {

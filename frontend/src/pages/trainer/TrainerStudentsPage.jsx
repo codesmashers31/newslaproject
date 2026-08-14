@@ -453,10 +453,18 @@ const TrainerStudentsPage = () => {
         {/* Students Enterprise Table */}
         <div className="p-4 sm:p-6">
           <EnterpriseTable
-            title="Enrolled Students Roster"
+            title={
+              user?.role === 'Communication Trainer'
+                ? 'My Communication Students'
+                : user?.role === 'Aptitude Trainer'
+                ? 'My Aptitude Students'
+                : user?.role === 'Technical Trainer'
+                ? 'My Technical Students'
+                : 'Enrolled Students Roster'
+            }
             data={students}
             loading={loading}
-            searchableFields={['name', 'email', 'mobile', 'slaeId', 'technicalBatch.name', 'communicationBatch.name', 'aptitudeBatch.name']}
+            searchableFields={['name', 'email', 'mobile', 'slaeId']}
             filterDefinitions={[
               {
                 key: 'status',
@@ -468,7 +476,7 @@ const TrainerStudentsPage = () => {
                 key: 'batches',
                 label: 'Batch',
                 type: 'select',
-                options: batches.map(b => ({ label: `${b.name} (${b.course || 'Training'})`, value: b._id })),
+                options: batches.map(b => ({ label: b.name, value: b._id })),
               },
             ]}
             sortOptions={[

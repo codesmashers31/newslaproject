@@ -36,6 +36,14 @@ export const getAssignedStudents = async (req, res) => {
     const isAdmin = req.user.role === 'Admin' || req.user.role === 'Super Admin';
     const batchQuery = isAdmin ? {} : { trainers: req.user._id };
 
+    if (req.user.role === 'Communication Trainer') {
+      batchQuery.course = 'Communication Skills';
+    } else if (req.user.role === 'Aptitude Trainer') {
+      batchQuery.course = 'Aptitude & Reasoning';
+    } else if (req.user.role === 'Technical Trainer') {
+      batchQuery.course = 'Technical Training';
+    }
+
     const batches = await Batch.find(batchQuery)
       .populate('students', 'name email mobile status slaeId role technicalTrainer communicationTrainer aptitudeTrainer technicalBatch communicationBatch aptitudeBatch')
       .lean();
@@ -415,9 +423,18 @@ export const getQRToken = async (req, res) => {
 export const getTrainerDashboardStats = async (req, res) => {
   try {
     const trainerId = req.user._id;
+    const batchQuery = { trainers: trainerId };
+
+    if (req.user.role === 'Communication Trainer') {
+      batchQuery.course = 'Communication Skills';
+    } else if (req.user.role === 'Aptitude Trainer') {
+      batchQuery.course = 'Aptitude & Reasoning';
+    } else if (req.user.role === 'Technical Trainer') {
+      batchQuery.course = 'Technical Training';
+    }
 
     // Find batches where this trainer is assigned
-    const batches = await Batch.find({ trainers: trainerId }).lean();
+    const batches = await Batch.find(batchQuery).lean();
     const batchIds = batches.map(b => b._id);
 
     if (batches.length === 0) {
@@ -617,6 +634,15 @@ export const getTrainerBatches = async (req, res) => {
   try {
     const isAdmin = req.user.role === 'Admin' || req.user.role === 'Super Admin';
     const query = isAdmin ? {} : { trainers: req.user._id };
+
+    if (req.user.role === 'Communication Trainer') {
+      query.course = 'Communication Skills';
+    } else if (req.user.role === 'Aptitude Trainer') {
+      query.course = 'Aptitude & Reasoning';
+    } else if (req.user.role === 'Technical Trainer') {
+      query.course = 'Technical Training';
+    }
+
     const batches = await Batch.find(query).sort({ createdAt: -1 }).lean();
     res.json(batches);
   } catch (error) {

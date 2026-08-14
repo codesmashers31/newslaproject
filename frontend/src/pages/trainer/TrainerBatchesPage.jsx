@@ -942,20 +942,22 @@ const TrainerBatchesPage = () => {
       <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-6">
           <EnterpriseTable
-            title="Assigned Batches Overview"
+            title={
+              user?.role === 'Communication Trainer'
+                ? 'My Communication Batches'
+                : user?.role === 'Aptitude Trainer'
+                ? 'My Aptitude Batches'
+                : user?.role === 'Technical Trainer'
+                ? 'My Technical Batches'
+                : 'Assigned Batches Directory'
+            }
             data={batches}
             loading={loading}
-            searchableFields={['name', 'batchId', 'course', 'schedule', 'trainerName']}
+            searchableFields={['name', 'batchId', 'schedule', 'trainerName']}
             filterDefinitions={[
               {
-                key: 'course',
-                label: 'Course',
-                type: 'select',
-                options: ['Communication Skills', 'Aptitude & Reasoning', 'Technical Training'],
-              },
-              {
                 key: 'status',
-                label: 'Status',
+                label: 'Batch Status',
                 type: 'select',
                 options: ['Active', 'Upcoming', 'Completed'],
               },
