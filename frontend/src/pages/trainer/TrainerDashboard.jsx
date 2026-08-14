@@ -392,8 +392,12 @@ const TrainerDashboard = () => {
       setStudents(relevantStudents);
       setBatches(relevantBatches);
       
-      if (!selectedBatchId) {
-        setSelectedBatchId('all');
+      if (!selectedBatchId || selectedBatchId === 'all') {
+        if (relevantBatches.length > 0) {
+          setSelectedBatchId(relevantBatches[0]._id);
+        } else {
+          setSelectedBatchId('all');
+        }
       }
     } catch (error) {
       toast.error('Failed to load students');
@@ -1556,57 +1560,71 @@ const TrainerDashboard = () => {
           </div>
         )}
 
-        {/* 2. SINGLE ADVANCED STUDENT ATTENDANCE PORTAL */}
+        {/* 2. ADVANCED CLASS ATTENDANCE MARKING PORTAL */}
         {isAttendance && (
-          <div className="space-y-6">
-            {/* Single Advanced Table Card */}
-            <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              {/* Table Toolbar */}
-              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  {/* Search Input */}
-                  <div className="relative">
-                    <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+          <div className="w-full space-y-4 font-sans text-slate-800">
+            {/* Top Header Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900 tracking-tight">Mark Class Attendance</h1>
+                <p className="text-xs text-slate-500 mt-0.5">Record and update daily roll call sheets for your assigned training batches.</p>
+              </div>
+
+              {/* Date Selector Pill */}
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3.5 py-1.5 shadow-2xs">
+                <Calendar size={15} className="text-indigo-600" />
+                <span className="text-xs font-bold text-slate-600">Class Date:</span>
+                <input
+                  type="date"
+                  value={attendanceDate}
+                  onChange={(e) => setAttendanceDate(e.target.value)}
+                  className="bg-transparent text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Single Enterprise Table Container */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+              {/* Single Control Toolbar */}
+              <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 flex-wrap flex-1">
+                  {/* Compact Search Input (w-64) */}
+                  <div className="relative w-64 max-w-full">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search student by name, ID..."
+                      placeholder="Search student or SLAEID..."
                       value={searchQuery}
                       onChange={(e) => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 w-full sm:w-56 text-slate-700 dark:text-slate-200"
+                      className="w-full pl-8.5 pr-8 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
                     />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5">
+                        <X size={13} />
+                      </button>
+                    )}
                   </div>
 
-                  {/* Batch Dropdown */}
+                  {/* Batch Select Dropdown */}
                   <select
-                    value={selectedBatchId || 'all'}
+                    value={selectedBatchId || (batches[0]?._id || 'all')}
                     onChange={(e) => {
                       setSelectedBatchId(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer shadow-2xs"
                   >
-                    <option value="all">All Batches</option>
+                    <option value="all">All Batches ({batches.length})</option>
                     {batches.map(b => (
                       <option key={b._id} value={b._id}>{b.name}</option>
                     ))}
                   </select>
 
-                  {/* Date Selector */}
-                  <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 bg-slate-50 dark:bg-slate-900/50 text-xs font-bold text-violet-800 dark:text-violet-400">
-                    <Calendar size={13} />
-                    <input
-                      type="date"
-                      value={attendanceDate}
-                      onChange={(e) => setAttendanceDate(e.target.value)}
-                      className="bg-transparent focus:outline-none cursor-pointer"
-                    />
-                  </div>
-
-                  {/* Status Filter */}
-                  <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+                  {/* Status Segmented Pill */}
+                  <div className="flex items-center bg-slate-200/60 p-0.5 rounded-xl">
                     {['All', 'Present', 'Absent', 'Late'].map(st => (
                       <button
                         key={st}
@@ -1614,10 +1632,10 @@ const TrainerDashboard = () => {
                           setAttendanceStatusFilter(st);
                           setCurrentPage(1);
                         }}
-                        className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                           attendanceStatusFilter === st
-                            ? 'bg-white dark:bg-slate-700 text-violet-800 dark:text-violet-400 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            ? 'bg-white text-indigo-700 shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
                         {st}
@@ -1625,41 +1643,43 @@ const TrainerDashboard = () => {
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 self-end lg:self-auto shrink-0">
+
+                {/* Export Buttons */}
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={exportAttendanceToExcel}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm shadow-emerald-600/10 cursor-pointer transition select-none"
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all"
                   >
-                    <FileSpreadsheet size={14} />
-                    <span>Export Excel</span>
+                    <FileSpreadsheet size={13} />
+                    <span>Excel</span>
                   </button>
                   <button
                     onClick={exportAttendanceToCSV}
-                    className="px-4 py-2 bg-violet-800 hover:bg-violet-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm shadow-violet-800/10 cursor-pointer transition select-none"
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all"
                   >
-                    <FileDown size={14} />
-                    <span>Export CSV</span>
+                    <FileDown size={13} />
+                    <span>CSV</span>
                   </button>
                 </div>
               </div>
 
-              {/* Advanced Single Table */}
-              <div className="overflow-x-auto">
+              {/* Data Table */}
+              <div className="overflow-x-auto relative">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
-                      <th className="px-5 py-4">SLAEID</th>
-                      <th className="px-5 py-4">Student Details</th>
+                    <tr className="border-b border-slate-200/80 bg-slate-50/90 text-slate-500 text-[11px] font-extrabold uppercase tracking-wider sticky top-0 z-10 backdrop-blur-xs">
+                      <th className="py-3.5 px-4 w-[120px]">SLAEID</th>
+                      <th className="py-3.5 px-4 w-[220px]">Student Details</th>
                       {getColumnsConfig(user?.role).map(c => (
-                        <th key={c.key} className="px-5 py-4">{c.header}</th>
+                        <th key={c.key} className="py-3.5 px-4">{c.header}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
-                    {paginatedAttendanceStudents.length === 0 ? (
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {filteredAttendanceStudents.length === 0 ? (
                       <tr>
                         <td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic">
-                          No students found matching your search or batch selection.
+                          No students found for this batch and date selection.
                         </td>
                       </tr>
                     ) : (
@@ -1669,32 +1689,32 @@ const TrainerDashboard = () => {
                         const cols = getColumnsConfig(user?.role);
                         
                         return (
-                          <tr key={student._id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors ${isGuest ? 'bg-amber-500/5 dark:bg-amber-500/[0.02]' : ''}`}>
-                            <td className="px-5 py-4 font-mono font-bold text-purple-600 dark:text-purple-400">
+                          <tr key={student._id} className={`hover:bg-slate-50/60 transition-colors ${isGuest ? 'bg-amber-500/5' : ''}`}>
+                            <td className="py-3.5 px-4 font-mono font-bold text-indigo-600">
                               {displaySlaeId}
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="py-3.5 px-4">
                               <div className="flex items-center gap-2">
-                                <div className="font-extrabold text-slate-800 dark:text-white text-sm">{student.name}</div>
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                                <div className="font-extrabold text-slate-900 text-sm">{student.name}</div>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
                                   (student.attendancePct !== undefined ? student.attendancePct : 85) >= 70
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                    : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-rose-50 text-rose-700 border-rose-200'
                                 }`}>
                                   {student.attendancePct !== undefined ? student.attendancePct : 85}%
                                 </span>
                                 {isGuest && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-50 text-amber-700 border border-amber-200">
                                     Cross-Attend
                                   </span>
                                 )}
                               </div>
-                              <div className="text-[11px] text-slate-400 mt-0.5">{student.email}</div>
+                              <div className="text-[11px] text-slate-400 font-normal mt-0.5">{student.email}</div>
                             </td>
                             {cols.map(c => {
                               if (c.key === 'technical') {
                                 return (
-                                  <td key={c.key} className="px-5 py-4">
+                                  <td key={c.key} className="py-3.5 px-4">
                                     {renderSubjectCell(
                                       student, 
                                       student.technicalBatch, 
@@ -1708,7 +1728,7 @@ const TrainerDashboard = () => {
                                 );
                               } else if (c.key === 'communication') {
                                 return (
-                                  <td key={c.key} className="px-5 py-4">
+                                  <td key={c.key} className="py-3.5 px-4">
                                     {renderSubjectCell(
                                       student, 
                                       isGuest ? (student.guestRecord.batch?.name || 'Unassigned') : student.communicationBatch, 
@@ -1722,7 +1742,7 @@ const TrainerDashboard = () => {
                                 );
                               } else {
                                 return (
-                                  <td key={c.key} className="px-5 py-4">
+                                  <td key={c.key} className="py-3.5 px-4">
                                     {renderSubjectCell(
                                       student, 
                                       student.aptitudeBatch, 
@@ -1746,30 +1766,30 @@ const TrainerDashboard = () => {
 
               {/* Table Pagination Bar */}
               {filteredAttendanceStudents.length > 0 && (
-                <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/40 dark:bg-slate-900/30">
+                <div className="p-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50">
                   <div className="text-xs text-slate-500 font-semibold">
-                    Showing <span className="font-bold text-slate-700 dark:text-slate-300">{attIndexOfFirstItem + 1}</span> to{' '}
-                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                    Showing <span className="font-bold text-slate-800">{attIndexOfFirstItem + 1}</span> to{' '}
+                    <span className="font-bold text-slate-800">
                       {Math.min(attIndexOfLastItem, filteredAttendanceStudents.length)}
                     </span>{' '}
-                    of <span className="font-bold text-slate-700 dark:text-slate-300">{filteredAttendanceStudents.length}</span> students
+                    of <span className="font-bold text-slate-800">{filteredAttendanceStudents.length}</span> students
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-700"
                     >
                       <ChevronLeft size={14} />
                       <span>Previous</span>
                     </button>
-                    <span className="px-3 py-1.5 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-800 dark:text-violet-400 text-xs font-extrabold">
+                    <span className="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-extrabold">
                       Page {currentPage} of {attTotalPages || 1}
                     </span>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, attTotalPages))}
-                      disabled={currentPage === attTotalPages || attTotalPages === 0}
-                      className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-600 dark:text-slate-300"
+                      disabled={currentPage >= attTotalPages || attTotalPages === 0}
+                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1 text-slate-700"
                     >
                       <span>Next</span>
                       <ChevronRight size={14} />
