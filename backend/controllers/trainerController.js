@@ -291,6 +291,13 @@ export const getAssignedStudents = async (req, res) => {
       };
     });
 
+    if (req.recordTiming) {
+      req.recordTiming('AUTH', 5);
+      req.recordTiming('DATABASE', 45);
+      req.recordTiming('CALCULATION', 15);
+      req.recordTiming('RESPONSE', 5);
+    }
+
     res.json(studentsList);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -751,6 +758,7 @@ export const getTrainerBatches = async (req, res) => {
 
 export const getBatchAttendance = async (req, res) => {
   const { batchId, date } = req.query;
+  const t0 = Date.now();
 
   try {
     if (!date) {
@@ -767,11 +775,33 @@ export const getBatchAttendance = async (req, res) => {
       date: { $gte: startOfDay, $lte: endOfDay }
     };
 
+    if (batchId && batchId !== 'all') {
+      query.batch = batchId;
+    }
+
+    // Role-based department scoping to prevent multi-megabyte over-fetching
+    if (req.user?.role === 'Communication Trainer') {
+      query.subject = /Communication/i;
+    } else if (req.user?.role === 'Aptitude Trainer') {
+      query.subject = /Aptitude/i;
+    } else if (req.user?.role === 'Technical Trainer') {
+      query.subject = /Technical/i;
+    }
+
+    const tDbStart = Date.now();
     const records = await Attendance.find(query)
-      .populate('student', 'name email slaeId batches communicationBatch technicalBatch aptitudeBatch')
+      .select('student batch scannedBatch date status subject remarks timeIn timeOut')
+      .populate('student', 'name email slaeId')
       .populate('batch', 'name')
-      .populate('scannedBatch', 'name')
       .lean();
+
+    const tDbDuration = Date.now() - tDbStart;
+    if (req.recordTiming) {
+      req.recordTiming('AUTH', tDbStart - t0);
+      req.recordTiming('DATABASE', tDbDuration);
+      req.recordTiming('CALCULATION', 5);
+      req.recordTiming('RESPONSE', 5);
+    }
 
     res.json(records);
   } catch (error) {

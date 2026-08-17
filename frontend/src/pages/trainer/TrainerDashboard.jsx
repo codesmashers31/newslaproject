@@ -340,82 +340,99 @@ const TrainerDashboard = () => {
   };
 
   // Load students and batches
-  const loadData = async () => {
+  // Unified, optimized dashboard data loading
+  const loadData = async (bIdOverride) => {
     setLoading(true);
     try {
-      const [studentRes, batchRes] = await Promise.all([
+      const activeBatchId = bIdOverride !== undefined ? bIdOverride : selectedBatchId;
+
+      const [studentRes, batchRes, attRes] = await Promise.all([
         API.get(`/trainer/students?date=${attendanceDate}`),
-        API.get('/trainer/batches')
+        API.get('/trainer/batches'),
+        API.get(`/trainer/attendance?date=${attendanceDate}`)
       ]);
+
       const data = studentRes.data || [];
       const batchData = batchRes.data || [];
+      const attData = attRes.data || [];
 
-      let relevantBatches = batchData || [];
-      let relevantStudents = data || [];
+      setAllBatches(batchData);
+      setStudents(data);
+      setTodayRecords(attData);
 
-      setAllBatches(batchData || []);
+      // Initialize attendance map states
+      const nextState = {};
+      const nextRemarks = {};
+      const nextTimes = {};
+      const nextOutTimes = {};
+
+      attData.forEach(record => {
+        const sId = record.student?._id || record.student;
+        const bId = record.batch?._id || record.batch;
+        if (sId && bId) {
+          const key = `${sId}_${bId}`;
+          nextState[key] = record.status;
+          nextRemarks[key] = record.remarks || '';
+          nextTimes[key] = record.timeIn || '09:00 AM';
+          nextOutTimes[key] = record.timeOut || '05:00 PM';
+        }
+      });
+
+      setAttendanceState(nextState);
+      setAttendanceRemarks(nextRemarks);
+      setCheckInTimes(nextTimes);
+      setCheckOutTimes(nextOutTimes);
 
       // Collect all unique batches the loaded relevantStudents belong to
       const studentBatchNamesAndIds = new Set();
-      relevantStudents.forEach(s => {
-        if (s.communicationBatch) {
-          s.communicationBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
-        }
-        if (s.technicalBatch) {
-          s.technicalBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
-        }
-        if (s.aptitudeBatch) {
-          s.aptitudeBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
-        }
-        if (s.batch) {
-          s.batch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
-        }
+      data.forEach(s => {
+        if (s.communicationBatch) s.communicationBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        if (s.technicalBatch) s.technicalBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        if (s.aptitudeBatch) s.aptitudeBatch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
+        if (s.batch) s.batch.split(',').forEach(part => studentBatchNamesAndIds.add(part.trim().toLowerCase()));
         if (Array.isArray(s.batches)) {
           s.batches.forEach(b => {
             if (b?._id) studentBatchNamesAndIds.add(String(b._id));
             if (b?.name) studentBatchNamesAndIds.add(b.name.trim().toLowerCase());
-            if (typeof b === 'string') studentBatchNamesAndIds.add(b.trim().toLowerCase());
           });
         }
       });
 
-      relevantBatches = relevantBatches.filter(b => {
-        // Direct assignment check
-        const isAssigned = b.trainers?.some(t => {
-          const tId = typeof t === 'object' ? t?._id : t;
-          return String(tId) === String(user?._id);
-        }) || b.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
-
-        // Student presence check
-        const hasStudents = studentBatchNamesAndIds.has(String(b._id)) || 
-                            studentBatchNamesAndIds.has(b.name?.trim()?.toLowerCase());
-
+      const relevantBatches = batchData.filter(b => {
+        const isAssigned = b.trainers?.some(t => String(typeof t === 'object' ? t?._id : t) === String(user?._id)) || b.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+        const hasStudents = studentBatchNamesAndIds.has(String(b._id)) || studentBatchNamesAndIds.has(b.name?.trim()?.toLowerCase());
         return isAssigned || hasStudents;
       });
 
-      setStudents(relevantStudents);
       setBatches(relevantBatches);
-      
-      if (!selectedBatchId || selectedBatchId === 'all') {
+
+      let targetBatchId = activeBatchId;
+      if (!targetBatchId || targetBatchId === 'all') {
         if (relevantBatches.length > 0) {
-          setSelectedBatchId(relevantBatches[0]._id);
-        } else {
-          setSelectedBatchId('all');
+          targetBatchId = relevantBatches[0]._id;
+          setSelectedBatchId(targetBatchId);
         }
       }
+
+      // Fetch dashboard stats for communication trainer
+      if (isCommunicationTrainer) {
+        const statsUrl = (targetBatchId && targetBatchId !== 'all') ? `/trainer/dashboard-stats?batchId=${targetBatchId}` : '/trainer/dashboard-stats';
+        const { data: statsData } = await API.get(statsUrl);
+        setStats(statsData);
+      }
     } catch (error) {
-      toast.error('Failed to load students');
+      console.error('Error loading trainer data:', error);
+      toast.error('Failed to load students data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Load analytics statistics (only for Communication Trainer)
   const loadStats = async (batchId) => {
     if (!isCommunicationTrainer) return;
     setStatsLoading(true);
     try {
-      const url = batchId ? `/trainer/dashboard-stats?batchId=${batchId}` : '/trainer/dashboard-stats';
+      const url = (batchId && batchId !== 'all') ? `/trainer/dashboard-stats?batchId=${batchId}` : '/trainer/dashboard-stats';
       const { data } = await API.get(url);
       setStats(data);
     } catch (error) {
@@ -425,15 +442,10 @@ const TrainerDashboard = () => {
     }
   };
 
+  // Single mount effect to initialize page data cleanly without duplicate cascades
   useEffect(() => {
     loadData();
   }, [attendanceDate]);
-
-  useEffect(() => {
-    if (selectedBatchId && isCommunicationTrainer) {
-      loadStats(selectedBatchId);
-    }
-  }, [selectedBatchId, location.pathname, isCommunicationTrainer]);
 
   const selectedBatchObj = batches.find(b => String(b._id) === String(selectedBatchId) || String(b.name) === String(selectedBatchId));
 
@@ -457,42 +469,6 @@ const TrainerDashboard = () => {
 
         return inBatchesArray || matchesDomainBatch;
       });
-
-  // Fetch existing attendance logs and initialize state
-  useEffect(() => {
-    const fetchAndInitializeAttendance = async () => {
-      try {
-        const { data: existingRecords } = await API.get(`/trainer/attendance?date=${attendanceDate}`);
-        setTodayRecords(existingRecords);
-        
-        const nextState = {};
-        const nextRemarks = {};
-        const nextTimes = {};
-        const nextOutTimes = {};
-
-        existingRecords.forEach(record => {
-          const sId = record.student?._id || record.student;
-          const bId = record.batch?._id || record.batch;
-          if (sId && bId) {
-            const key = `${sId}_${bId}`;
-            nextState[key] = record.status;
-            nextRemarks[key] = record.remarks || '';
-            nextTimes[key] = record.timeIn || '09:00 AM';
-            nextOutTimes[key] = record.timeOut || '05:00 PM';
-          }
-        });
-
-        setAttendanceState(nextState);
-        setAttendanceRemarks(nextRemarks);
-        setCheckInTimes(nextTimes);
-        setCheckOutTimes(nextOutTimes);
-      } catch (error) {
-        console.error('Failed to load today\'s attendance logs', error);
-      }
-    };
-
-    fetchAndInitializeAttendance();
-  }, [attendanceDate, students]);
 
   const handleAttendanceChange = async (studentId, batchId, status) => {
     if (!batchId) {
