@@ -564,35 +564,30 @@ export const scanQR = async (req, res) => {
 
     let activeEnrollment = null;
 
-    if (session.subject === 'Technical Training') {
-      // STRICT CHECK: For Technical, student must be in this exact batch
-      activeEnrollment = await Enrollment.findOne({
-        studentId: studentId,
-        batchId: sessionBatch._id,
-        status: 'Active'
-      });
-    } else {
-      // FLEXIBLE CHECK: For Comm/Apti, student just needs ANY active enrollment
-      activeEnrollment = await Enrollment.findOne({
-        studentId: studentId,
-        status: 'Active'
-      });
-    }
+    let targetDept = 'Technical';
+    if (session.subject?.includes('Communication')) targetDept = 'Communication';
+    else if (session.subject?.includes('Aptitude')) targetDept = 'Aptitude';
+
+    // Verify student is allocated to this batch or this department
+    activeEnrollment = await Enrollment.findOne({
+      studentId: studentId,
+      $or: [
+        { batchId: sessionBatch._id },
+        { department: targetDept }
+      ],
+      status: 'Active'
+    });
 
     if (!activeEnrollment) {
       await AttendanceLog.create({
         student: studentId,
         scannedToken: token,
         status: 'Failed',
-        reason: session.subject === 'Technical Training' 
-          ? `Student not allocated to this Technical batch.` 
-          : `Student has no active enrollments.`,
+        reason: `Student not allocated to ${sessionBatch.name} or ${targetDept} department.`,
         ipAddress: req.ip || ''
       });
       return res.status(403).json({ 
-        message: session.subject === 'Technical Training'
-          ? `Access Denied: You are not allocated to this Technical Batch.`
-          : `Access Denied: You do not have any active enrollments.`
+        message: `Access Denied: You are not allocated to ${sessionBatch.name} (${targetDept}).`
       });
     }
 
