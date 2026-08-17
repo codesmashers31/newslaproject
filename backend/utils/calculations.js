@@ -84,7 +84,7 @@ export const calculateDynamicAttendance = async (studentId, department) => {
   const allDomainAttendances = await Attendance.find({
     subject: subjectFilter,
     date: { $gte: startDate, $lte: endDate },
-    status: { $in: ['Present', 'Late'] }
+    status: { $in: ['Present', 'Late', 'Absent'] }
   }).select('date').lean();
 
   const domainScannedDates = new Set();
@@ -154,16 +154,7 @@ export const calculateDynamicAttendance = async (studentId, department) => {
   });
 
   // 7. Calculate Present and Absent counts against Actual Training Days & explicit Absences
-  const countedAbsentDates = new Set([...explicitAbsentDates]);
-
-  actualTrainingDates.forEach(dateStr => {
-    const status = studentAttMap.get(dateStr);
-    if (status !== 'Present' && status !== 'Late') {
-      countedAbsentDates.add(dateStr);
-    }
-  });
-
-  const absentCount = countedAbsentDates.size;
+  const absentCount = explicitAbsentDates.size;
   const presentCount = explicitPresentCount;
   const trainingDay = actualTrainingDates.length;
   const remainingDays = Math.max(0, TOTAL_TARGET_DAYS - trainingDay);
