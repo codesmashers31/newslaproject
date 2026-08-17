@@ -678,19 +678,38 @@ export const scanQR = async (req, res) => {
       status = 'Absent';
     }
 
-    // Note: Training start date comes strictly from enrollment/entry date and is NEVER mutated by QR scanning.
+    // 7. Normalize date and subject for reliable web dashboard matching & auto-close updates
+    const normalizedDate = parseNormalizedDate(session.startTime || scanTime);
+    normalizedDate.setHours(0, 0, 0, 0);
 
-    // 7. Save Attendance record
-    const attendance = await Attendance.create({
-      student: studentId,
-      batch: sessionBatch._id,
-      scannedBatch: sessionBatch._id,
-      date: session.startTime,
-      subject: session.subject,
-      status,
-      session: session._id,
-      markedBy: session.trainer
-    });
+    let normSubject = 'Technical';
+    if (session.subject?.includes('Communication')) normSubject = 'Communication';
+    else if (session.subject?.includes('Aptitude')) normSubject = 'Aptitude';
+    else if (session.subject?.includes('Technical')) normSubject = 'Technical';
+
+    const formattedTimeIn = scanTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Upsert attendance record so duplicate/auto-close records are updated seamlessly
+    const attendance = await Attendance.findOneAndUpdate(
+      { 
+        student: studentId, 
+        date: normalizedDate, 
+        subject: normSubject 
+      },
+      {
+        student: studentId,
+        batch: sessionBatch._id,
+        scannedBatch: sessionBatch._id,
+        date: normalizedDate,
+        subject: normSubject,
+        status,
+        timeIn: formattedTimeIn,
+        session: session._id,
+        markedBy: session.trainer || studentId,
+        remarks: `QR Scanned at ${formattedTimeIn}`
+      },
+      { new: true, upsert: true }
+    );
 
     // 8. Save Immutable log
     await AttendanceLog.create({
