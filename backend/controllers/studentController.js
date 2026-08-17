@@ -84,13 +84,24 @@ export const getStudentDashboard = async (req, res) => {
         });
       }
 
+      let scheduleStr = b.schedule || '';
+      if (b.startTime && b.endTime) {
+        scheduleStr = `${b.startTime} – ${b.endTime}`;
+      } else if (b.startTime) {
+        scheduleStr = b.startTime;
+      }
+
       return {
         _id: b._id,
         name: b.name,
+        batchId: b.batchId,
         course: b.course || e.course || '',
         department: e.department,
         startDate: b.startDate,
         endDate: b.endDate,
+        startTime: b.startTime || '',
+        endTime: b.endTime || '',
+        schedule: scheduleStr,
         trainers: trainersList
       };
     });

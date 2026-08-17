@@ -58,6 +58,22 @@ export default function DashboardScreen() {
   const [imageError, setImageError] = useState(false);
   const primaryColor = '#4F46E5';
 
+  const resolveBatchSchedule = (batch: any) => {
+    if (!batch) return 'Schedule Not Set';
+    if (batch.startTime && batch.endTime) {
+      const daysPrefix = batch.days ? `${batch.days} • ` : (batch.scheduleDays ? `${batch.scheduleDays} • ` : '');
+      return `${daysPrefix}${batch.startTime} – ${batch.endTime}`;
+    }
+    if (batch.startTime) {
+      const daysPrefix = batch.days ? `${batch.days} • ` : '';
+      return `${daysPrefix}${batch.startTime}`;
+    }
+    if (batch.schedule && typeof batch.schedule === 'string') {
+      return batch.schedule;
+    }
+    return 'Schedule Not Set';
+  };
+
   // Language & Modals
   const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
   const [langModalVisible, setLangModalVisible] = useState(false);
@@ -441,6 +457,7 @@ export default function DashboardScreen() {
                       <View>
                         <Text className="font-extrabold text-[11px] text-slate-800">{b.department ? `${b.department} Training` : 'Training Module'}</Text>
                         <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers.map((t:any) => t.name).join(', ') : 'Unassigned'}</Text>
+                        <Text className="text-[10px] text-indigo-600 font-extrabold mt-0.5">Schedule: {resolveBatchSchedule(b)}</Text>
                       </View>
                       <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
                         {b.name}

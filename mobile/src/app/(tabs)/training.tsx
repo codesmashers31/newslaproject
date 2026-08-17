@@ -76,6 +76,22 @@ export default function TrainingScreen() {
     return 'Technical';
   };
 
+  const resolveBatchSchedule = (batch: any) => {
+    if (!batch) return 'Schedule Not Set';
+    if (batch.startTime && batch.endTime) {
+      const daysPrefix = batch.days ? `${batch.days} • ` : (batch.scheduleDays ? `${batch.scheduleDays} • ` : '');
+      return `${daysPrefix}${batch.startTime} – ${batch.endTime}`;
+    }
+    if (batch.startTime) {
+      const daysPrefix = batch.days ? `${batch.days} • ` : '';
+      return `${daysPrefix}${batch.startTime}`;
+    }
+    if (batch.schedule && typeof batch.schedule === 'string') {
+      return batch.schedule;
+    }
+    return 'Schedule Not Set';
+  };
+
   useEffect(() => {
     const loadCached = async () => {
       try {
@@ -297,8 +313,8 @@ export default function TrainingScreen() {
                     <Text className="text-[#64748B] text-[11px] flex-1 min-w-[130px]">
                       Trainer: <Text className="text-[#0F172A] font-bold">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</Text>
                     </Text>
-                    <Text className="text-[#64748B] text-[11px] font-semibold">
-                      {item.schedule || 'Mon-Fri • 9:00 AM'}
+                    <Text className="text-indigo-600 text-[11px] font-extrabold">
+                      {resolveBatchSchedule(item)}
                     </Text>
                   </View>
                 </View>
@@ -339,6 +355,12 @@ export default function TrainingScreen() {
                     <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
                     <Text className="text-[#0F172A] text-xs font-black mt-0.5">
                       {commBatch ? commBatch.name : 'Unassigned'}
+                    </Text>
+                  </View>
+                  <View className="items-center">
+                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Schedule</Text>
+                    <Text className="text-indigo-600 text-xs font-extrabold mt-0.5">
+                      {resolveBatchSchedule(commBatch)}
                     </Text>
                   </View>
                   <View className="items-end">
@@ -412,6 +434,12 @@ export default function TrainingScreen() {
                     <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
                     <Text className="text-[#0F172A] text-xs font-black mt-0.5">
                       {aptiBatch ? aptiBatch.name : 'Unassigned'}
+                    </Text>
+                  </View>
+                  <View className="items-center">
+                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Schedule</Text>
+                    <Text className="text-indigo-600 text-xs font-extrabold mt-0.5">
+                      {resolveBatchSchedule(aptiBatch)}
                     </Text>
                   </View>
                   <View className="items-end">
