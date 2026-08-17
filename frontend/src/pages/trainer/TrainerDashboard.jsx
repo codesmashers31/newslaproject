@@ -423,7 +423,7 @@ const TrainerDashboard = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [attendanceDate]);
 
   useEffect(() => {
     if (selectedBatchId && isCommunicationTrainer) {
