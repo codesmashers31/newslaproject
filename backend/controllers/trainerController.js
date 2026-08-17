@@ -14,6 +14,40 @@ import fs from 'fs';
 import * as xlsx from 'xlsx';
 import Placement from '../models/Placement.js';
 
+// Helper to parse dates robustly handling YYYY-MM-DD, DD-MM-YYYY, and Date instances
+const parseNormalizedDate = (dateInput) => {
+  if (!dateInput) return null;
+  if (dateInput instanceof Date) {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  const str = String(dateInput).trim();
+  if (str.includes('-')) {
+    const parts = str.split('-');
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        d.setHours(0, 0, 0, 0);
+        return d;
+      }
+    } else if (parts[2].length === 4) {
+      // DD-MM-YYYY
+      const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      if (!isNaN(d.getTime())) {
+        d.setHours(0, 0, 0, 0);
+        return d;
+      }
+    }
+  }
+  const d = new Date(str);
+  if (isNaN(d.getTime())) return null;
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 // Helper to map trainer role to score category
 const getCategoryByRole = (role) => {
   if (role === 'Aptitude Trainer') return 'Aptitude';
@@ -89,10 +123,7 @@ export const getAssignedStudents = async (req, res) => {
         .lean();
     }
 
-    const selectedDateParam = req.query.date ? new Date(req.query.date) : null;
-    if (selectedDateParam) {
-      selectedDateParam.setHours(0, 0, 0, 0);
-    }
+    const selectedDateParam = parseNormalizedDate(req.query.date);
 
     const allStudentIds = allStudentUsers.map(s => s._id);
 
@@ -112,9 +143,8 @@ export const getAssignedStudents = async (req, res) => {
       // and selected date MUST be on or before enrollment end/completion date.
       if (selectedDateParam && studentEnrolls.length > 0) {
         const isEnrolledOnDate = studentEnrolls.some(e => {
-          const start = new Date(e.startDate || e.createdAt);
-          start.setHours(0, 0, 0, 0);
-          const end = e.completedAt ? new Date(e.completedAt) : (e.endDate ? new Date(e.endDate) : null);
+          const start = parseNormalizedDate(e.startDate || e.createdAt);
+          const end = e.completedAt ? parseNormalizedDate(e.completedAt) : (e.endDate ? parseNormalizedDate(e.endDate) : null);
           if (end) end.setHours(23, 59, 59, 999);
           return selectedDateParam >= start && (!end || selectedDateParam <= end);
         });
@@ -281,7 +311,7 @@ export const markAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Invalid attendance submit details' });
     }
 
-    const formattedDate = new Date(date);
+    const formattedDate = parseNormalizedDate(date) || new Date();
     formattedDate.setHours(0, 0, 0, 0); // normalize date
 
     const savedRecords = [];
@@ -291,9 +321,8 @@ export const markAttendance = async (req, res) => {
       const studentEnrolls = await Enrollment.find({ studentId: rec.studentId });
       if (studentEnrolls.length > 0) {
         const isEligibleOnDate = studentEnrolls.some(e => {
-          const start = new Date(e.startDate || e.createdAt);
-          start.setHours(0, 0, 0, 0);
-          const end = e.completedAt ? new Date(e.completedAt) : (e.endDate ? new Date(e.endDate) : null);
+          const start = parseNormalizedDate(e.startDate || e.createdAt);
+          const end = e.completedAt ? parseNormalizedDate(e.completedAt) : (e.endDate ? parseNormalizedDate(e.endDate) : null);
           if (end) end.setHours(23, 59, 59, 999);
           return formattedDate >= start && (!end || formattedDate <= end);
         });
