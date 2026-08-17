@@ -568,27 +568,47 @@ export const scanQR = async (req, res) => {
     if (session.subject?.includes('Communication')) targetDept = 'Communication';
     else if (session.subject?.includes('Aptitude')) targetDept = 'Aptitude';
 
-    // Verify student is allocated to this batch or this department
-    activeEnrollment = await Enrollment.findOne({
-      studentId: studentId,
-      $or: [
-        { batchId: sessionBatch._id },
-        { department: targetDept }
-      ],
-      status: 'Active'
-    });
+    if (targetDept === 'Technical') {
+      // STRICT CHECK FOR TECHNICAL: Student MUST be enrolled in this exact Technical batch
+      activeEnrollment = await Enrollment.findOne({
+        studentId: studentId,
+        batchId: sessionBatch._id,
+        status: 'Active'
+      });
 
-    if (!activeEnrollment) {
-      await AttendanceLog.create({
-        student: studentId,
-        scannedToken: token,
-        status: 'Failed',
-        reason: `Student not allocated to ${sessionBatch.name} or ${targetDept} department.`,
-        ipAddress: req.ip || ''
+      if (!activeEnrollment) {
+        await AttendanceLog.create({
+          student: studentId,
+          scannedToken: token,
+          status: 'Failed',
+          reason: `Student not allocated to Technical batch ${sessionBatch.name}.`,
+          ipAddress: req.ip || ''
+        });
+        return res.status(403).json({ 
+          message: `Access Denied: Technical Training requires exact batch allocation. You are not allocated to ${sessionBatch.name}.`
+        });
+      }
+    } else {
+      // FLEXIBLE CROSS-BATCH SCANS FOR COMMUNICATION & APTITUDE:
+      // Student must have an active enrollment in this department (e.g. Communication or Aptitude)
+      activeEnrollment = await Enrollment.findOne({
+        studentId: studentId,
+        department: targetDept,
+        status: 'Active'
       });
-      return res.status(403).json({ 
-        message: `Access Denied: You are not allocated to ${sessionBatch.name} (${targetDept}).`
-      });
+
+      if (!activeEnrollment) {
+        await AttendanceLog.create({
+          student: studentId,
+          scannedToken: token,
+          status: 'Failed',
+          reason: `Student has no active ${targetDept} enrollment.`,
+          ipAddress: req.ip || ''
+        });
+        return res.status(403).json({ 
+          message: `Access Denied: You do not have an active ${targetDept} enrollment.`
+        });
+      }
     }
 
     // 5. Verify student has not marked attendance for this subject today
