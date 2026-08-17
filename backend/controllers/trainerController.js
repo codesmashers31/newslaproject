@@ -155,14 +155,31 @@ export const getAssignedStudents = async (req, res) => {
     for (const batch of batches) {
       for (const std of batch.students) {
         if (std.role !== 'Student') continue;
+
+        const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
+        if (selectedDateParam && studentEnrolls.length > 0) {
+          const isEnrolledOnDate = studentEnrolls.some(e => {
+            const start = new Date(e.startDate || e.createdAt);
+            start.setHours(0, 0, 0, 0);
+            const end = e.completedAt ? new Date(e.completedAt) : (e.endDate ? new Date(e.endDate) : null);
+            if (end) end.setHours(23, 59, 59, 999);
+            return selectedDateParam >= start && (!end || selectedDateParam <= end);
+          });
+
+          if (!isEnrolledOnDate) {
+            // Student was NOT enrolled on selected date -> skip!
+            continue;
+          }
+        }
+
         if (!studentMap[std._id]) {
-          const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
-          const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
-          const technicalTrainer = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
-          const communicationBatch = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
-          const communicationTrainer = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
-          const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
-          const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+          const activeEnrolls = studentEnrolls.filter(e => e.status === 'Active');
+          const technicalBatch = activeEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
+          const technicalTrainer = activeEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+          const communicationBatch = activeEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
+          const communicationTrainer = activeEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+          const aptitudeBatch = activeEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
+          const aptitudeTrainer = activeEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
 
           studentMap[std._id] = {
             _id: std._id,
