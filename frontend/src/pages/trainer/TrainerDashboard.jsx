@@ -529,14 +529,23 @@ const TrainerDashboard = () => {
     }
   };
 
-  const getBatchIdByName = (batchName) => {
+  const getBatchIdByName = (batchName, courseCategory = '') => {
     if (!batchName) return null;
     const cleanStr = String(batchName).trim().toLowerCase();
-    const b = allBatches.find(x => 
-      String(x.name || '').trim().toLowerCase() === cleanStr ||
-      String(x.batchId || '').trim().toLowerCase() === cleanStr ||
-      String(x._id || '').trim().toLowerCase() === cleanStr
-    );
+    const cleanCategory = String(courseCategory || '').trim().toLowerCase();
+
+    const b = allBatches.find(x => {
+      const matchName = String(x.name || '').trim().toLowerCase() === cleanStr ||
+                        String(x.batchId || '').trim().toLowerCase() === cleanStr ||
+                        String(x._id || '').trim().toLowerCase() === cleanStr;
+      const matchCourse = !cleanCategory || (
+        (cleanCategory.includes('communication') && String(x.course || '').toLowerCase().includes('communication')) ||
+        (cleanCategory.includes('aptitude') && String(x.course || '').toLowerCase().includes('aptitude')) ||
+        (cleanCategory.includes('technical') && String(x.course || '').toLowerCase().includes('technical'))
+      );
+      return matchName && matchCourse;
+    });
+
     return b ? b._id : null;
   };
 
@@ -567,17 +576,22 @@ const TrainerDashboard = () => {
   };
 
   const renderSubjectCell = (student, batchName, batchId, trainerName, isInteractive, isGuestValue = false, subjectName = '') => {
-    const resolvedBatchId = batchId || getBatchIdByName(batchName);
+    const resolvedBatchId = batchId || getBatchIdByName(batchName, subjectName);
 
     const record = isGuestValue
       ? student.guestRecord
-      : todayRecords?.find(r => 
-          String(r?.student?._id || r?.student) === String(student?._id) &&
-          (
-            (resolvedBatchId && String(r?.batch?._id || r?.batch) === String(resolvedBatchId)) ||
-            (subjectName && (r?.subject === subjectName || r?.course === subjectName))
-          )
-        );
+      : todayRecords?.find(r => {
+          const matchStudent = String(r?.student?._id || r?.student) === String(student?._id);
+          const matchSubject = subjectName && (
+            r?.subject === subjectName ||
+            r?.course === subjectName ||
+            (subjectName.includes('Communication') && (r?.subject === 'Communication' || r?.subject === 'Communication Skills')) ||
+            (subjectName.includes('Aptitude') && (r?.subject === 'Aptitude' || r?.subject === 'Aptitude & Reasoning')) ||
+            (subjectName.includes('Technical') && (r?.subject === 'Technical' || r?.subject === 'Technical Training'))
+          );
+          const matchBatch = resolvedBatchId && String(r?.batch?._id || r?.batch) === String(resolvedBatchId);
+          return matchStudent && (matchSubject || matchBatch);
+        });
 
     const effectiveBatchId = resolvedBatchId || (record?.batch?._id || record?.batch);
     const currentStatus = record 
@@ -1736,7 +1750,7 @@ const TrainerDashboard = () => {
                                     {renderSubjectCell(
                                       student, 
                                       student.technicalBatch, 
-                                      getBatchIdByName(student.technicalBatch), 
+                                      getBatchIdByName(student.technicalBatch, 'Technical Training'), 
                                       student.technicalTrainer, 
                                       c.isInteractive,
                                       false,
@@ -1750,7 +1764,7 @@ const TrainerDashboard = () => {
                                     {renderSubjectCell(
                                       student, 
                                       isGuest ? (student.guestRecord.batch?.name || 'Unassigned') : student.communicationBatch, 
-                                      isGuest ? student.guestRecord.batch?._id : getBatchIdByName(student.communicationBatch), 
+                                      isGuest ? student.guestRecord.batch?._id : getBatchIdByName(student.communicationBatch, 'Communication Skills'), 
                                       student.communicationTrainer, 
                                       c.isInteractive,
                                       isGuest,
@@ -1764,7 +1778,7 @@ const TrainerDashboard = () => {
                                     {renderSubjectCell(
                                       student, 
                                       student.aptitudeBatch, 
-                                      getBatchIdByName(student.aptitudeBatch), 
+                                      getBatchIdByName(student.aptitudeBatch, 'Aptitude & Reasoning'), 
                                       student.aptitudeTrainer, 
                                       c.isInteractive,
                                       false,
