@@ -444,7 +444,16 @@ const TrainerDashboard = () => {
 
   // Single mount effect to initialize page data cleanly without duplicate cascades
   useEffect(() => {
-    loadData();
+    let ignore = false;
+    const initialize = async () => {
+      if (!ignore) {
+        await loadData();
+      }
+    };
+    initialize();
+    return () => {
+      ignore = true;
+    };
   }, [attendanceDate]);
 
   const selectedBatchObj = batches.find(b => String(b._id) === String(selectedBatchId) || String(b.name) === String(selectedBatchId));
