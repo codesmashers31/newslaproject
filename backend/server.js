@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import connectDB from './config/db.js';
 import { initAttendanceCronJob } from './services/cronService.js';
+import { perfLogger } from './middleware/perfMiddleware.js';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -38,6 +39,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
+app.use(perfLogger);
 app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));

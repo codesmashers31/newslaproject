@@ -343,8 +343,12 @@ const TrainerDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const { data } = await API.get(`/trainer/students?date=${attendanceDate}`);
-      const { data: batchData } = await API.get('/trainer/batches');
+      const [studentRes, batchRes] = await Promise.all([
+        API.get(`/trainer/students?date=${attendanceDate}`),
+        API.get('/trainer/batches')
+      ]);
+      const data = studentRes.data || [];
+      const batchData = batchRes.data || [];
 
       let relevantBatches = batchData || [];
       let relevantStudents = data || [];

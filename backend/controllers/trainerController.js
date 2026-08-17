@@ -589,13 +589,18 @@ export const getTrainerDashboardStats = async (req, res) => {
     }).lean();
 
     const totalAttendanceCount = attendanceRecords.length;
-    // Consistent dynamic calculation: average across trainer's active students
+    // Consistent dynamic calculation: average across trainer's active students in bulk
     let totalAttendancePercent = 0;
     let validStudentsCount = 0;
     if (studentIds.length > 0) {
+      let dept = 'Technical';
+      if (req.user.role === 'Communication Trainer') dept = 'Communication';
+      else if (req.user.role === 'Aptitude Trainer') dept = 'Aptitude';
+
+      const bulkStats = await calculateBulkStudentsAttendance(studentIds, dept);
       for (const sid of studentIds) {
-        const scores = await calculateStudentScores(sid);
-        totalAttendancePercent += scores.attendancePercent;
+        const p = bulkStats[sid]?.attendancePercent ?? 100;
+        totalAttendancePercent += p;
         validStudentsCount++;
       }
     }
