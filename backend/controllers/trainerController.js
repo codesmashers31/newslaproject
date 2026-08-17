@@ -89,10 +89,15 @@ export const getAssignedStudents = async (req, res) => {
         .lean();
     }
 
+    const selectedDateParam = req.query.date ? new Date(req.query.date) : null;
+    if (selectedDateParam) {
+      selectedDateParam.setHours(0, 0, 0, 0);
+    }
+
     const allStudentIds = allStudentUsers.map(s => s._id);
 
-    // Fetch active enrollments for these students
-    const enrollments = await Enrollment.find({ studentId: { $in: allStudentIds }, status: 'Active' })
+    // Fetch active/all enrollments for these students
+    const enrollments = await Enrollment.find({ studentId: { $in: allStudentIds } })
       .populate('batchId', 'name')
       .populate('trainerId', 'name')
       .lean();
@@ -102,14 +107,33 @@ export const getAssignedStudents = async (req, res) => {
     for (const std of allStudentUsers) {
       const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
       
-      const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
-      const technicalTrainer = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      // Enrollment date filtering rule:
+      // If a selected date is provided, student MUST be enrolled on or before selected date,
+      // and selected date MUST be on or before enrollment end/completion date.
+      if (selectedDateParam && studentEnrolls.length > 0) {
+        const isEnrolledOnDate = studentEnrolls.some(e => {
+          const start = new Date(e.startDate || e.createdAt);
+          start.setHours(0, 0, 0, 0);
+          const end = e.completedAt ? new Date(e.completedAt) : (e.endDate ? new Date(e.endDate) : null);
+          if (end) end.setHours(23, 59, 59, 999);
+          return selectedDateParam >= start && (!end || selectedDateParam <= end);
+        });
+
+        if (!isEnrolledOnDate) {
+          // Student was NOT enrolled on selected date -> skip from attendance roster!
+          continue;
+        }
+      }
+
+      const activeEnrolls = studentEnrolls.filter(e => e.status === 'Active');
+      const technicalBatch = activeEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const technicalTrainer = activeEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
       
-      const communicationBatch = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
-      const communicationTrainer = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      const communicationBatch = activeEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const communicationTrainer = activeEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
       
-      const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
-      const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      const aptitudeBatch = activeEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
+      const aptitudeTrainer = activeEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
 
       studentMap[std._id] = {
         _id: std._id,
@@ -246,6 +270,23 @@ export const markAttendance = async (req, res) => {
     const savedRecords = [];
 
     for (const rec of records) {
+      // Check enrollment date rule before creating attendance
+      const studentEnrolls = await Enrollment.find({ studentId: rec.studentId });
+      if (studentEnrolls.length > 0) {
+        const isEligibleOnDate = studentEnrolls.some(e => {
+          const start = new Date(e.startDate || e.createdAt);
+          start.setHours(0, 0, 0, 0);
+          const end = e.completedAt ? new Date(e.completedAt) : (e.endDate ? new Date(e.endDate) : null);
+          if (end) end.setHours(23, 59, 59, 999);
+          return formattedDate >= start && (!end || formattedDate <= end);
+        });
+
+        if (!isEligibleOnDate) {
+          // Cannot mark attendance before enrollment startDate or after completedAt -> Skip!
+          continue;
+        }
+      }
+
       let effectiveBatchId = batchId;
       if (!effectiveBatchId || effectiveBatchId === 'all' || !mongoose.Types.ObjectId.isValid(effectiveBatchId)) {
         const stu = await User.findById(rec.studentId);

@@ -343,7 +343,7 @@ const TrainerDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const { data } = await API.get('/trainer/students');
+      const { data } = await API.get(`/trainer/students?date=${attendanceDate}`);
       const { data: batchData } = await API.get('/trainer/batches');
 
       let relevantBatches = batchData || [];
@@ -1691,8 +1691,8 @@ const TrainerDashboard = () => {
                   <tbody className="divide-y divide-slate-100 text-xs">
                     {filteredAttendanceStudents.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic">
-                          No students found for this batch and date selection.
+                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic font-medium">
+                          No students were enrolled in this batch on this date.
                         </td>
                       </tr>
                     ) : (
