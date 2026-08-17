@@ -67,27 +67,38 @@ const StudentDashboard = () => {
   const hasCheckedIn = todayRecords.length > 0;
 
   // The three domain cards, in the same order as the mobile home screen.
+  const commBatch = (data?.batches || []).find(b => b.department === 'Communication' || b.course?.includes('Communication'));
+  const aptiBatch = (data?.batches || []).find(b => b.department === 'Aptitude' || b.course?.includes('Aptitude'));
+  const techBatch = (data?.batches || []).find(b => b.department === 'Technical' || b.course?.includes('Technical'));
+
+  const commStats = commBatch?.attendanceStats || data?.communicationSummary || { presentCount: 0, totalTrainingDays: 80, attendancePercent: 100 };
+  const aptiStats = aptiBatch?.attendanceStats || data?.aptitudeSummary || { presentCount: 0, totalTrainingDays: 120, attendancePercent: 100 };
+  const techStats = techBatch?.attendanceStats || { presentCount: 0, totalTrainingDays: 80, attendancePercent: 100 };
+
   const domains = [
     {
       key: 'technical',
       title: 'Technical Training',
       caption: 'Core technology track',
-      batch: user.technicalBatch,
-      trainer: user.technicalTrainer,
+      batch: user.technicalBatch || techBatch?.name,
+      trainer: user.technicalTrainer || (techBatch?.trainers && techBatch.trainers[0]?.name),
+      stats: techStats
     },
     {
       key: 'communication',
       title: 'Communication Skills',
       caption: 'Soft skills & interview prep',
-      batch: user.communicationBatch,
-      trainer: user.communicationTrainer,
+      batch: user.communicationBatch || commBatch?.name,
+      trainer: user.communicationTrainer || (commBatch?.trainers && commBatch.trainers[0]?.name),
+      stats: commStats
     },
     {
       key: 'aptitude',
       title: 'Aptitude & Reasoning',
       caption: 'Quantitative & analytical prep',
-      batch: user.aptitudeBatch,
-      trainer: user.aptitudeTrainer,
+      batch: user.aptitudeBatch || aptiBatch?.name,
+      trainer: user.aptitudeTrainer || (aptiBatch?.trainers && aptiBatch.trainers[0]?.name),
+      stats: aptiStats
     },
   ];
 
@@ -179,20 +190,36 @@ const StudentDashboard = () => {
       <div className="space-y-4">
         <SectionLabel>Assigned Cohorts &amp; Trainers</SectionLabel>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {domains.map((domain) => (
-            <Card key={domain.key}>
-              <CardHeader
-                icon={CalendarDays}
-                title={domain.title}
-                subtitle={domain.caption}
-                className="mb-4"
-              />
-              <div className="space-y-2.5">
-                <InfoRow label="Assigned Batch:" value={domain.batch || 'Unassigned'} />
-                <InfoRow label="Trainer:" value={domain.trainer || 'Unassigned'} accent />
-              </div>
-            </Card>
-          ))}
+          {domains.map((domain) => {
+            const st = domain.stats || {};
+            const totalDays = st.totalTrainingDays || st.eligibleSessionsCount || (domain.key === 'aptitude' ? 120 : 80);
+            const presentCount = st.presentCount || 0;
+            const pct = st.attendancePercent ?? st.percentage ?? 100;
+
+            return (
+              <Card key={domain.key}>
+                <CardHeader
+                  icon={CalendarDays}
+                  title={domain.title}
+                  subtitle={domain.caption}
+                  className="mb-4"
+                />
+                <div className="space-y-2.5">
+                  <InfoRow label="Assigned Batch:" value={domain.batch || 'Unassigned'} />
+                  <InfoRow label="Trainer:" value={domain.trainer || 'Unassigned'} accent />
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      {presentCount} / {totalDays} DAYS ATTENDED
+                    </span>
+                    <span className={`text-[11px] font-black ${pct >= 70 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                      {pct}%
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

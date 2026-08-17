@@ -37,6 +37,7 @@ export default function TrainingScreen() {
   
   const [batches, setBatches] = useState<any[]>([]);
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+  const [dashData, setDashData] = useState<any>(null);
   
   // Modals
   const [techModalVisible, setTechModalVisible] = useState(false);
@@ -107,6 +108,7 @@ export default function TrainingScreen() {
       
       const myBatches = dashRes.data?.batches || [];
       const available = batchRes.data || [];
+      setDashData(dashRes.data);
       setBatches(myBatches);
       setAvailableBatches(available);
 
@@ -307,14 +309,14 @@ export default function TrainingScreen() {
 
         {/* 2. COMMUNICATION SKILLS CARD */}
         {(() => {
-          const stats = commBatch?.attendanceStats || {
+          const stats = commBatch?.attendanceStats || dashData?.communicationSummary || {
             startDate: '14-Aug-2026',
             trainingDay: 0,
             totalTrainingDays: 80,
             presentCount: 0,
             absentCount: 0,
             remainingDays: 80,
-            attendancePercent: 0,
+            attendancePercent: 100,
             progressPercent: 0
           };
           return (
@@ -365,7 +367,7 @@ export default function TrainingScreen() {
                   <View className="flex-row justify-between items-center border-t border-slate-200/60 pt-2 mt-1">
                     <View>
                       <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</Text>
-                      <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent || 0}%</Text>
+                      <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</Text>
                     </View>
                     <View className="items-end">
                       <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Progress %</Text>
@@ -380,14 +382,14 @@ export default function TrainingScreen() {
 
         {/* 3. APTITUDE & REASONING CARD */}
         {(() => {
-          const stats = aptiBatch?.attendanceStats || {
+          const stats = aptiBatch?.attendanceStats || dashData?.aptitudeSummary || {
             startDate: '14-Aug-2026',
             trainingDay: 0,
             totalTrainingDays: 120,
             presentCount: 0,
             absentCount: 0,
             remainingDays: 120,
-            attendancePercent: 0,
+            attendancePercent: 100,
             progressPercent: 0
           };
           return (
@@ -438,7 +440,7 @@ export default function TrainingScreen() {
                   <View className="flex-row justify-between items-center border-t border-slate-200/60 pt-2 mt-1">
                     <View>
                       <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</Text>
-                      <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent || 0}%</Text>
+                      <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</Text>
                     </View>
                     <View className="items-end">
                       <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Progress %</Text>

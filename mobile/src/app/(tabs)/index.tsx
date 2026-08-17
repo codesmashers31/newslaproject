@@ -452,11 +452,11 @@ export default function DashboardScreen() {
                         <View className="flex-row items-center">
                           <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
                           <Text className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                            {b.attendanceStats.presentCount} / {b.attendanceStats.eligibleSessionsCount} {getText(currentLang, 'daysAttended')}
+                            {b.attendanceStats.presentCount} / {b.attendanceStats.totalTrainingDays || b.attendanceStats.eligibleSessionsCount || 80} {getText(currentLang, 'daysAttended')}
                           </Text>
                         </View>
-                        <Text className={`text-[10px] font-black ${b.attendanceStats.percentage >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {b.attendanceStats.percentage}%
+                        <Text className={`text-[10px] font-black ${(b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage) >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage}%
                         </Text>
                       </View>
                     )}

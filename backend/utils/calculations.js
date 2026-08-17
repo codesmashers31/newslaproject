@@ -124,39 +124,47 @@ export const calculateDynamicAttendance = async (studentId, department) => {
     curr.setDate(curr.getDate() + 1);
   }
 
-  // 6. Fetch target student's attendance records in the eligible date range
+  // 6. Fetch target student's attendance records
   const studentAttendances = await Attendance.find({
-    student: studentId,
-    subject: subjectFilter,
-    date: { $gte: startDate, $lte: endDate }
+    student: studentId
   }).lean();
 
   const studentAttMap = new Map();
   const explicitAbsentDates = new Set();
+  let explicitPresentCount = 0;
 
   studentAttendances.forEach(a => {
-    const d = new Date(a.date);
-    const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-    studentAttMap.set(dateStr, a.status);
-    if (a.status === 'Absent') {
-      explicitAbsentDates.add(dateStr);
+    const isSubjectMatch = !a.subject ||
+      a.subject === department ||
+      a.subject === subjectName ||
+      (department === 'Communication' && (a.subject === 'Communication Skills' || a.subject === 'Communication Training')) ||
+      (department === 'Aptitude' && (a.subject === 'Aptitude & Reasoning' || a.subject === 'Aptitude Training')) ||
+      (department === 'Technical' && (a.subject === 'Technical Training'));
+
+    if (isSubjectMatch) {
+      const d = new Date(a.date);
+      const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      studentAttMap.set(dateStr, a.status);
+      if (a.status === 'Present' || a.status === 'Late') {
+        explicitPresentCount++;
+      } else if (a.status === 'Absent') {
+        explicitAbsentDates.add(dateStr);
+      }
     }
   });
 
   // 7. Calculate Present and Absent counts against Actual Training Days & explicit Absences
   const countedAbsentDates = new Set([...explicitAbsentDates]);
-  let presentCount = 0;
 
   actualTrainingDates.forEach(dateStr => {
     const status = studentAttMap.get(dateStr);
-    if (status === 'Present' || status === 'Late') {
-      presentCount++;
-    } else {
+    if (status !== 'Present' && status !== 'Late') {
       countedAbsentDates.add(dateStr);
     }
   });
 
   const absentCount = countedAbsentDates.size;
+  const presentCount = explicitPresentCount;
   const trainingDay = actualTrainingDates.length;
   const remainingDays = Math.max(0, TOTAL_TARGET_DAYS - trainingDay);
 
@@ -180,8 +188,8 @@ export const calculateDynamicAttendance = async (studentId, department) => {
     remainingDays,
     attendancePercent,
     progressPercent,
-    // Legacy fields for backward compatibility
-    eligibleSessionsCount: trainingDay,
+    // Fixed denominator for backward compatibility
+    eligibleSessionsCount: TOTAL_TARGET_DAYS,
     percentage: Math.round(attendancePercent)
   };
 };
