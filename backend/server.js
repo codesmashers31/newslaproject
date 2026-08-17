@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import connectDB from './config/db.js';
+import { initAttendanceCronJob } from './services/cronService.js';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -20,6 +21,7 @@ dotenv.config();
 
 // Connect to Database
 connectDB();
+initAttendanceCronJob();
 
 const app = express();
 

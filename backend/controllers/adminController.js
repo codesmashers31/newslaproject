@@ -8,7 +8,7 @@ import Placement from '../models/Placement.js';
 import bcrypt from 'bcryptjs';
 import * as xlsx from 'xlsx';
 import fs from 'fs';
-import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings } from '../utils/trainerMapper.js';
+import { syncStudentTrainers, syncBatchStudents, syncStudentBatchesFromStrings, bulkSyncStudentBatches } from '../utils/trainerMapper.js';
 import Enrollment from '../models/Enrollment.js';
 import DeviceResetRequest from '../models/DeviceResetRequest.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
@@ -109,9 +109,11 @@ export const getDashboardStats = async (req, res) => {
 // STUDENT MANAGEMENT
 // ==========================================
 
+import { calculateBulkStudentsAttendance } from '../services/attendanceService.js';
+
 // Get all students with optional filters and pagination
 export const getStudents = async (req, res) => {
-  const { search, batchId, placementStatus } = req.query;
+  const { search, batchId, placementStatus, page, limit } = req.query;
 
   try {
     let query = { role: 'Student' };
@@ -122,44 +124,63 @@ export const getStudents = async (req, res) => {
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
         { mobile: { $regex: search, $options: 'i' } },
+        { slaeId: { $regex: search, $options: 'i' } },
       ];
     }
 
-    // Retrieve users
-    let students = await User.find(query).select('-password').lean();
+    if (batchId) {
+      const targetBatch = await Batch.findById(batchId).select('students').lean();
+      if (targetBatch && targetBatch.students) {
+        query._id = { $in: targetBatch.students };
+      }
+    }
 
-    // Map profiles and batches
+    const isPaginated = page !== undefined || limit !== undefined;
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 25;
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalStudents = await User.countDocuments(query);
+
+    let studentsQuery = User.find(query).select('-password').sort({ createdAt: -1 }).lean();
+    if (isPaginated) {
+      studentsQuery = studentsQuery.skip(skip).limit(limitNum);
+    }
+
+    const students = await studentsQuery;
     const studentIds = students.map(s => s._id);
+
+    // Bulk fetch profiles, placements, batches, and enrollments
     const profiles = await Student.find({ user: { $in: studentIds } }).lean();
     const placements = await Placement.find({ student: { $in: studentIds } }).lean();
-    
-    // Find batches that contain student IDs
-    const batches = await Batch.find({ students: { $in: studentIds } }).lean();
-
-    // Fetch all active enrollments for these students
+    const batches = await Batch.find({ students: { $in: studentIds } }).select('name course students').lean();
     const enrollments = await Enrollment.find({ studentId: { $in: studentIds }, status: 'Active' })
       .populate('batchId', 'name')
       .populate('trainerId', 'name')
       .lean();
 
-    let result = await Promise.all(students.map(async student => {
-      const profile = profiles.find(p => p.user.toString() === student._id.toString()) || {};
-      const placement = placements.find(p => p.student.toString() === student._id.toString()) || {};
-      const studentBatches = batches.filter(b => b.students.some(sId => sId.toString() === student._id.toString()));
+    // Bulk calculate attendance for Communication & Aptitude ONCE for all returned students
+    const commStatsMap = await calculateBulkStudentsAttendance(studentIds, 'Communication');
+    const aptiStatsMap = await calculateBulkStudentsAttendance(studentIds, 'Aptitude');
 
-      const studentEnrolls = enrollments.filter(e => e.studentId.toString() === student._id.toString());
-      
+    let result = students.map(student => {
+      const sId = student._id.toString();
+      const profile = profiles.find(p => p.user.toString() === sId) || {};
+      const placement = placements.find(p => p.student.toString() === sId) || {};
+      const studentBatches = batches.filter(b => b.students.some(id => id.toString() === sId));
+      const studentEnrolls = enrollments.filter(e => e.studentId.toString() === sId);
+
       const technicalBatch = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
       const technicalTrainer = studentEnrolls.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
-      
+
       const communicationBatch = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
       const communicationTrainer = studentEnrolls.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
-      
+
       const aptitudeBatch = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
       const aptitudeTrainer = studentEnrolls.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
 
-      const commSummary = await calculateDynamicAttendance(student._id, 'Communication');
-      const aptiSummary = await calculateDynamicAttendance(student._id, 'Aptitude');
+      const commSummary = commStatsMap.get(sId);
+      const aptiSummary = aptiStatsMap.get(sId);
 
       return {
         ...student,
@@ -176,14 +197,20 @@ export const getStudents = async (req, res) => {
         batches: studentBatches.map(b => ({ _id: b._id, name: b.name, course: b.course })),
         batch: studentBatches[0] ? { _id: studentBatches[0]._id, name: studentBatches[0].name, course: studentBatches[0].course } : null,
       };
-    }));
+    });
 
-    // Apply secondary filters
-    if (batchId) {
-      result = result.filter(s => s.batches && s.batches.some(b => b._id.toString() === batchId));
-    }
     if (placementStatus) {
       result = result.filter(s => s.placement && s.placement.status === placementStatus);
+    }
+
+    if (isPaginated) {
+      return res.json({
+        students: result,
+        total: totalStudents,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalStudents / limitNum)
+      });
     }
 
     res.json(result);
@@ -305,6 +332,7 @@ export const deleteStudent = async (req, res) => {
 };
 
 export const importStudentsExcel = async (req, res) => {
+  const startTime = Date.now();
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload an Excel file' });
@@ -319,7 +347,20 @@ export const importStudentsExcel = async (req, res) => {
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
 
     if (!data || data.length === 0) {
-      return res.json({ message: 'Successfully imported 0 students' });
+      return res.json({ 
+        message: 'Import completed', 
+        summary: {
+          totalRows: 0,
+          createdStudents: 0,
+          updatedStudents: 0,
+          existingStudents: 0,
+          createdEnrollments: 0,
+          duplicateRows: 0,
+          skippedRows: 0,
+          failedRows: 0,
+          processingTimeMs: Date.now() - startTime
+        } 
+      });
     }
 
     // Pre-fetch all batches for fast in-memory resolution
@@ -336,6 +377,8 @@ export const importStudentsExcel = async (req, res) => {
     };
 
     const rowsToProcess = [];
+    let skippedCount = 0;
+
     for (const row of data) {
       const rowKeys = Object.keys(row);
       const getVal = (possibleKeys) => {
@@ -347,7 +390,10 @@ export const importStudentsExcel = async (req, res) => {
       };
 
       const slaeId = getVal(['slaeid', 'eid', 'id', 'studentworkid', 'rollno', 'registerid']);
-      if (!slaeId) continue;
+      if (!slaeId) {
+        skippedCount++;
+        continue;
+      }
 
       const nameVal = getVal(['name', 'studentname', 'fullname', 'username']);
       const technicalBatchInput = getVal(['technicalbatchid', 'technicalbatch', 'techbatchid', 'techbatch']);
@@ -393,7 +439,20 @@ export const importStudentsExcel = async (req, res) => {
     }
 
     if (rowsToProcess.length === 0) {
-      return res.json({ message: 'Successfully imported 0 students' });
+      return res.json({ 
+        message: 'Import completed', 
+        summary: {
+          totalRows: data.length,
+          createdStudents: 0,
+          updatedStudents: 0,
+          existingStudents: 0,
+          createdEnrollments: 0,
+          duplicateRows: 0,
+          skippedRows: data.length,
+          failedRows: 0,
+          processingTimeMs: Date.now() - startTime
+        } 
+      });
     }
 
     const slaeIds = [...new Set(rowsToProcess.map(r => r.slaeId))];
@@ -410,10 +469,11 @@ export const importStudentsExcel = async (req, res) => {
       if (u.email) userMap.set(u.email.toLowerCase(), u);
     });
 
-    let importCount = 0;
     const newUsersToCreate = [];
     const createdSlaeSet = new Set();
     const existingUsersToSync = [];
+    const syncItems = [];
+    let duplicateCount = 0;
     const salt = await bcrypt.genSalt(10);
 
     for (const r of rowsToProcess) {
@@ -423,14 +483,16 @@ export const importStudentsExcel = async (req, res) => {
       if (existing) {
         existingUsersToSync.push({
           userId: existing._id,
-          name: r.nameVal || existing.name,
+          name: r.nameVal || existing.name
+        });
+        syncItems.push({
+          studentId: existing._id,
           batches: {
             technicalBatch: r.technicalBatch,
             communicationBatch: r.communicationBatch,
             aptitudeBatch: r.aptitudeBatch
           }
         });
-        importCount++;
       } else if (!createdSlaeSet.has(lowerSlae)) {
         const name = r.nameVal || `Student ${r.slaeId}`;
         const email = `${lowerSlae}@lcp.com`;
@@ -445,22 +507,26 @@ export const importStudentsExcel = async (req, res) => {
           password: hashedPassword,
           role: 'Student',
           status: 'Active',
-          slaeId: r.slaeId,
-          batchesToSync: {
+          slaeId: r.slaeId
+        });
+
+        syncItems.push({
+          studentId: newId,
+          batches: {
             technicalBatch: r.technicalBatch,
             communicationBatch: r.communicationBatch,
             aptitudeBatch: r.aptitudeBatch
           }
         });
         createdSlaeSet.add(lowerSlae);
-        importCount++;
+      } else {
+        duplicateCount++;
       }
     }
 
     // Insert new users in bulk
     if (newUsersToCreate.length > 0) {
-      const usersToInsert = newUsersToCreate.map(({ batchesToSync, ...u }) => u);
-      await User.insertMany(usersToInsert, { ordered: false });
+      await User.insertMany(newUsersToCreate, { ordered: false });
 
       const newStudentProfiles = newUsersToCreate.map(u => ({
         user: u._id,
@@ -475,22 +541,39 @@ export const importStudentsExcel = async (req, res) => {
         student: u._id
       }));
       await Placement.insertMany(newPlacements, { ordered: false });
+    }
 
-      // Sync batch strings for new users
-      for (const u of newUsersToCreate) {
-        if (u.batchesToSync.technicalBatch || u.batchesToSync.communicationBatch || u.batchesToSync.aptitudeBatch) {
-          await syncStudentBatchesFromStrings(u._id, u.batchesToSync);
+    // Update existing user names in bulk if changed
+    if (existingUsersToSync.length > 0) {
+      const userBulkOps = existingUsersToSync.map(item => ({
+        updateOne: {
+          filter: { _id: item.userId },
+          update: { $set: { name: item.name } }
         }
-      }
+      }));
+      await User.bulkWrite(userBulkOps, { ordered: false });
     }
 
-    // Sync existing users in parallel
-    for (const item of existingUsersToSync) {
-      await User.findByIdAndUpdate(item.userId, { $set: { name: item.name } });
-      await syncStudentBatchesFromStrings(item.userId, item.batches);
-    }
+    // Ultra-fast bulk sync of all batch enrollments in 5 bulk operations
+    await bulkSyncStudentBatches(syncItems);
 
-    res.json({ message: `Successfully imported ${importCount} students` });
+    const processingTimeMs = Date.now() - startTime;
+    const summary = {
+      totalRows: data.length,
+      createdStudents: newUsersToCreate.length,
+      updatedStudents: existingUsersToSync.length,
+      existingStudents: existingUsersToSync.length,
+      createdEnrollments: syncItems.length,
+      duplicateRows: duplicateCount,
+      skippedRows: skippedCount,
+      failedRows: 0,
+      processingTimeMs
+    };
+
+    res.json({ 
+      message: 'Import completed', 
+      summary
+    });
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);

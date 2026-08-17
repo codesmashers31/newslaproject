@@ -163,3 +163,149 @@ export const syncStudentBatchesFromStrings = async (studentId, batchStrings = {}
     console.error(`Failed to sync student batches from strings for student ${studentId}:`, error);
   }
 };
+
+/**
+ * Ultra-fast bulk synchronization of batch enrollments for multiple students at once using bulkWrite
+ * @param {Array<{studentId: ObjectId|string, batches: {technicalBatch: string, communicationBatch: string, aptitudeBatch: string}}>} items
+ */
+export const bulkSyncStudentBatches = async (items) => {
+  if (!items || items.length === 0) return;
+
+  try {
+    // 1. Pre-fetch all batches and users
+    const allBatches = await Batch.find().lean();
+    const batchMap = new Map();
+    allBatches.forEach(b => {
+      batchMap.set(b.name.trim().toLowerCase(), b);
+      if (b.batchId) batchMap.set(b.batchId.trim().toLowerCase(), b);
+    });
+
+    const studentIds = items.map(i => i.studentId);
+    const users = await User.find({ _id: { $in: studentIds } }).lean();
+    const userMap = new Map();
+    users.forEach(u => userMap.set(u._id.toString(), u));
+
+    // 2. Identify missing batches and create them in bulk
+    const missingBatchesToCreate = [];
+    const createdBatchNames = new Set();
+
+    for (const item of items) {
+      const { technicalBatch, communicationBatch, aptitudeBatch } = item.batches;
+      const names = [
+        { name: technicalBatch, course: 'Technical Training' },
+        { name: communicationBatch, course: 'Communication Skills' },
+        { name: aptitudeBatch, course: 'Aptitude & Reasoning' }
+      ];
+
+      for (const n of names) {
+        if (!n.name) continue;
+        const cleanName = n.name.trim();
+        const lowerName = cleanName.toLowerCase();
+        if (!batchMap.has(lowerName) && !createdBatchNames.has(lowerName)) {
+          createdBatchNames.add(lowerName);
+          missingBatchesToCreate.push({
+            name: cleanName,
+            batchId: cleanName.toUpperCase().replace(/\s+/g, ''),
+            course: n.course,
+            students: [],
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+          });
+        }
+      }
+    }
+
+    if (missingBatchesToCreate.length > 0) {
+      const created = await Batch.insertMany(missingBatchesToCreate, { ordered: false });
+      created.forEach(b => {
+        batchMap.set(b.name.trim().toLowerCase(), b);
+        if (b.batchId) batchMap.set(b.batchId.trim().toLowerCase(), b);
+      });
+    }
+
+    // 3. Build bulkWrite operations for Batch student arrays
+    const batchStudentAddMap = new Map(); // batchId -> Set of studentIds
+
+    items.forEach(item => {
+      const sId = item.studentId.toString();
+      const { technicalBatch, communicationBatch, aptitudeBatch } = item.batches;
+      const bNames = [technicalBatch, communicationBatch, aptitudeBatch].filter(Boolean).map(s => s.trim().toLowerCase());
+
+      bNames.forEach(bName => {
+        const b = batchMap.get(bName);
+        if (b) {
+          const bId = b._id.toString();
+          if (!batchStudentAddMap.has(bId)) {
+            batchStudentAddMap.set(bId, new Set());
+          }
+          batchStudentAddMap.get(bId).add(sId);
+        }
+      });
+    });
+
+    const batchBulkOps = [];
+    batchStudentAddMap.forEach((sIdSet, bId) => {
+      batchBulkOps.push({
+        updateOne: {
+          filter: { _id: bId },
+          update: { $addToSet: { students: { $each: Array.from(sIdSet) } } }
+        }
+      });
+    });
+
+    if (batchBulkOps.length > 0) {
+      await Batch.bulkWrite(batchBulkOps, { ordered: false });
+    }
+
+    // 4. Pre-fetch existing Enrollments for all students
+    const existingEnrollments = await Enrollment.find({
+      studentId: { $in: studentIds }
+    }).lean();
+
+    const enrollmentSet = new Set();
+    existingEnrollments.forEach(e => {
+      enrollmentSet.add(`${e.studentId.toString()}_${e.batchId.toString()}_${e.department}`);
+    });
+
+    const newEnrollmentsToCreate = [];
+
+    items.forEach(item => {
+      const sId = item.studentId.toString();
+      const studentUser = userMap.get(sId);
+      const defaultStart = studentUser?.createdAt || new Date();
+      const { technicalBatch, communicationBatch, aptitudeBatch } = item.batches;
+
+      const deptConfigs = [
+        { name: technicalBatch, dept: 'Technical', course: 'Technical Training' },
+        { name: communicationBatch, dept: 'Communication', course: 'Communication Skills' },
+        { name: aptitudeBatch, dept: 'Aptitude', course: 'Aptitude & Reasoning' }
+      ];
+
+      deptConfigs.forEach(cfg => {
+        if (!cfg.name) return;
+        const b = batchMap.get(cfg.name.trim().toLowerCase());
+        if (b) {
+          const key = `${sId}_${b._id.toString()}_${cfg.dept}`;
+          if (!enrollmentSet.has(key)) {
+            enrollmentSet.add(key);
+            newEnrollmentsToCreate.push({
+              studentId: item.studentId,
+              batchId: b._id,
+              department: cfg.dept,
+              course: b.course || cfg.course,
+              status: 'Active',
+              enrolledAt: new Date(),
+              startDate: defaultStart
+            });
+          }
+        }
+      });
+    });
+
+    if (newEnrollmentsToCreate.length > 0) {
+      await Enrollment.insertMany(newEnrollmentsToCreate, { ordered: false });
+    }
+  } catch (error) {
+    console.error('Failed bulkSyncStudentBatches:', error);
+  }
+};

@@ -99,6 +99,10 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// Indexes for high-performance querying and bulk operations
+userSchema.index({ slaeId: 1 });
+userSchema.index({ role: 1, status: 1 });
+
 // Hash password before saving if not already hashed
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {

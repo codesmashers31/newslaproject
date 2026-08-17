@@ -45,6 +45,7 @@ const scoreSchema = new mongoose.Schema({
 
 // Compound index to ensure a student has at most one score entry per module
 scoreSchema.index({ student: 1, moduleName: 1, category: 1 }, { unique: true });
+scoreSchema.index({ student: 1, category: 1 });
 
 scoreSchema.pre('save', function (next) {
   this.updatedAt = Date.now();

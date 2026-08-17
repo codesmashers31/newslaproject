@@ -120,6 +120,10 @@ const StudentManagement = () => {
     return batches;
   };
 
+  const [importStage, setImportStage] = useState('');
+  const [importSummary, setImportSummary] = useState(null);
+  const [totalServerStudents, setTotalServerStudents] = useState(0);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -130,13 +134,22 @@ const StudentManagement = () => {
       setBatches(batchRes.data);
       setTrainers(trainerRes.data || []);
 
-      const params = {};
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage
+      };
       if (search) params.search = search;
       if (selectedBatch) params.batchId = selectedBatch;
       if (selectedPlacement) params.placementStatus = selectedPlacement;
 
       const studentRes = await API.get('/admin/students', { params });
-      setStudents(studentRes.data);
+      if (studentRes.data && studentRes.data.students) {
+        setStudents(studentRes.data.students);
+        setTotalServerStudents(studentRes.data.total || studentRes.data.students.length);
+      } else {
+        setStudents(studentRes.data || []);
+        setTotalServerStudents(studentRes.data?.length || 0);
+      }
     } catch (error) {
       toast.error('Failed to load students');
     } finally {
@@ -215,15 +228,26 @@ const StudentManagement = () => {
     uploadData.append('file', excelFile);
 
     setImportingExcel(true);
+    setImportSummary(null);
+    setImportStage('Uploading...');
+
     try {
+      setTimeout(() => setImportStage('Parsing Excel...'), 200);
+      setTimeout(() => setImportStage('Validating & Deduplicating...'), 400);
+      setTimeout(() => setImportStage('Bulk Processing Students & Enrollments...'), 600);
+
       const { data } = await API.post('/admin/students/import', uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+      setImportStage('Completed');
+      if (data.summary) {
+        setImportSummary(data.summary);
+      }
       toast.success(data.message || 'Imported students successfully!');
-      setImportModalOpen(false);
-      setExcelFile(null);
       loadData();
     } catch (error) {
+      setImportStage('');
       toast.error(error.response?.data?.message || 'Error importing Excel sheet');
     } finally {
       setImportingExcel(false);
@@ -1306,38 +1330,68 @@ const StudentManagement = () => {
                   </button>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-violet-50/10 transition-colors relative cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls"
-                    onChange={(e) => setExcelFile(e.target.files[0])}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="space-y-2">
-                    <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl flex items-center justify-center mx-auto">
-                      <FileSpreadsheet size={24} />
+                {importSummary ? (
+                  <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-emerald-500/30 space-y-3">
+                    <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-2">
+                      <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">Import Completed 🎉</span>
+                      <span className="text-[11px] font-semibold text-gray-500">{importSummary.processingTimeMs} ms</span>
                     </div>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                      {excelFile ? excelFile.name : 'Click or Drag Excel sheet here'}
-                    </p>
-                    <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: SLAEID, Name, Technical Batch ID, Communication Batch ID, Aptitude Batch ID)</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <div>Total Rows: <span className="font-bold text-slate-900 dark:text-white">{importSummary.totalRows}</span></div>
+                      <div>Created Students: <span className="font-bold text-emerald-600">{importSummary.createdStudents}</span></div>
+                      <div>Existing Students: <span className="font-bold text-indigo-600">{importSummary.existingStudents}</span></div>
+                      <div>Created Enrollments: <span className="font-bold text-violet-600">{importSummary.createdEnrollments}</span></div>
+                      <div>Duplicate Rows: <span className="font-bold text-amber-600">{importSummary.duplicateRows}</span></div>
+                      <div>Failed Rows: <span className="font-bold text-rose-600">{importSummary.failedRows}</span></div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImportModalOpen(false);
+                        setImportSummary(null);
+                        setExcelFile(null);
+                      }}
+                      className="w-full mt-2 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs"
+                    >
+                      Done & Close
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center hover:bg-violet-50/10 transition-colors relative cursor-pointer">
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        onChange={(e) => setExcelFile(e.target.files[0])}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="space-y-2">
+                        <div className="h-10 w-10 bg-violet-50 dark:bg-violet-950/20 text-violet-800 dark:text-violet-400 rounded-xl flex items-center justify-center mx-auto">
+                          <FileSpreadsheet size={24} />
+                        </div>
+                        <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                          {excelFile ? excelFile.name : 'Click or Drag Excel sheet here'}
+                        </p>
+                        <p className="text-[10px] text-gray-400">Supported files: .xlsx or .xls (Columns: SLAEID, Name, Technical Batch ID, Communication Batch ID, Aptitude Batch ID)</p>
+                      </div>
+                    </div>
 
-                <button
-                  type="submit"
-                  disabled={!excelFile || importingExcel}
-                  className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/10 flex items-center justify-center gap-2"
-                >
-                  {importingExcel ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Importing...</span>
-                    </>
-                  ) : (
-                    <span>Upload & Import</span>
-                  )}
-                </button>
+                    <button
+                      type="submit"
+                      disabled={!excelFile || importingExcel}
+                      className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/10 flex items-center justify-center gap-2"
+                    >
+                      {importingExcel ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>{importStage || 'Importing...'}</span>
+                        </>
+                      ) : (
+                        <span>Upload & Import</span>
+                      )}
+                    </button>
+                  </>
+                )}
               </form>
             </div>
           </>

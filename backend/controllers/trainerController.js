@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Batch from '../models/Batch.js';
 import { calculateStudentScores, calculateDynamicAttendance } from '../utils/calculations.js';
+import { calculateBulkStudentsAttendance } from '../services/attendanceService.js';
 import Attendance from '../models/Attendance.js';
 import Score from '../models/Score.js';
 import Student from '../models/Student.js';
@@ -239,9 +240,15 @@ export const getAssignedStudents = async (req, res) => {
     // Fetch profiles, scores, and attendance counts
     const profiles = await Student.find({ user: { $in: studentIds } }).lean();
     const scores = await Score.find({ student: { $in: studentIds }, category }).lean();
-    const attendanceLogs = await Attendance.find({ student: { $in: studentIds } }).lean();
-    
-    const studentsList = await Promise.all(studentIds.map(async id => {
+
+    let dept = 'Technical';
+    if (category.includes('Communication')) dept = 'Communication';
+    else if (category.includes('Aptitude')) dept = 'Aptitude';
+
+    // Bulk calculate attendance ONCE for all assigned students in this trainer's department
+    const deptStatsMap = await calculateBulkStudentsAttendance(studentIds, dept);
+
+    const studentsList = studentIds.map(id => {
       const studentData = studentMap[id];
       
       let resolvedTechnicalTrainer = studentData.technicalTrainer || '';
@@ -261,17 +268,7 @@ export const getAssignedStudents = async (req, res) => {
 
       const profile = profiles.find(p => p.user.toString() === id.toString()) || {};
       const studentScores = scores.filter(s => s.student.toString() === id.toString());
-      
-      let dept = 'Technical';
-      if (category.includes('Communication')) dept = 'Communication';
-      else if (category.includes('Aptitude')) dept = 'Aptitude';
-
-      // Unified calculations for all departments
-      const commStats = await calculateDynamicAttendance(id, 'Communication');
-      const aptiStats = await calculateDynamicAttendance(id, 'Aptitude');
-      const techStats = await calculateDynamicAttendance(id, 'Technical');
-
-      const attStats = dept === 'Communication' ? commStats : dept === 'Aptitude' ? aptiStats : techStats;
+      const attStats = deptStatsMap.get(id.toString()) || {};
 
       return {
         ...studentData,
@@ -279,20 +276,20 @@ export const getAssignedStudents = async (req, res) => {
         communicationTrainer: resolvedCommunicationTrainer,
         aptitudeTrainer: resolvedAptitudeTrainer,
         profile,
-        attendancePct: attStats.attendancePercent,
-        communicationAttendancePct: commStats.attendancePercent,
-        aptitudeAttendancePct: aptiStats.attendancePercent,
-        technicalAttendancePct: techStats.attendancePercent,
-        progress: attStats.progressPercent,
-        trainingDay: attStats.trainingDay,
-        totalTrainingDays: attStats.totalTrainingDays,
-        presentCount: attStats.presentCount,
-        absentCount: attStats.absentCount,
-        remainingDays: attStats.remainingDays,
+        attendancePct: attStats.attendancePercent || 100,
+        communicationAttendancePct: dept === 'Communication' ? (attStats.attendancePercent || 100) : 100,
+        aptitudeAttendancePct: dept === 'Aptitude' ? (attStats.attendancePercent || 100) : 100,
+        technicalAttendancePct: dept === 'Technical' ? (attStats.attendancePercent || 100) : 100,
+        progress: attStats.progressPercent || 0,
+        trainingDay: attStats.trainingDay || 1,
+        totalTrainingDays: attStats.totalTrainingDays || (dept === 'Aptitude' ? 120 : 80),
+        presentCount: attStats.presentCount || 0,
+        absentCount: attStats.absentCount || 0,
+        remainingDays: attStats.remainingDays || (dept === 'Aptitude' ? 120 : 80),
         attendanceStats: attStats,
         scores: studentScores,
       };
-    }));
+    });
 
     res.json(studentsList);
   } catch (error) {

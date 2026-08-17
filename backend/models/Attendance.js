@@ -49,6 +49,9 @@ const attendanceSchema = new mongoose.Schema({
 
 // Compound index to ensure a student only gets one attendance record per day per batch per subject
 attendanceSchema.index({ student: 1, batch: 1, date: 1, subject: 1 }, { unique: true });
+attendanceSchema.index({ student: 1, subject: 1, date: 1 });
+attendanceSchema.index({ batch: 1, date: 1, subject: 1 });
+attendanceSchema.index({ date: 1, subject: 1, status: 1 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 export default Attendance;

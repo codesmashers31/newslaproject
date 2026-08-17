@@ -48,6 +48,9 @@ const enrollmentSchema = new mongoose.Schema({
 
 // Prevent duplicate active enrollments for the same student in the same batch
 enrollmentSchema.index({ studentId: 1, batchId: 1, status: 1 }, { unique: true });
+enrollmentSchema.index({ studentId: 1, department: 1, status: 1 });
+enrollmentSchema.index({ batchId: 1, status: 1 });
+enrollmentSchema.index({ studentId: 1, startDate: 1, completedAt: 1 });
 
 const Enrollment = mongoose.model('Enrollment', enrollmentSchema);
 export default Enrollment;
