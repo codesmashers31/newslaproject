@@ -98,7 +98,6 @@ const TrainerStudentsPage = () => {
   };
 
   useEffect(() => {
-    let ignore = false;
     const load = async () => {
       setLoading(true);
       try {
@@ -108,15 +107,14 @@ const TrainerStudentsPage = () => {
           API.get('/trainer/batches'),
           API.get(`/trainer/attendance?date=${todayStr}`)
         ]);
-        if (!ignore) {
-          setStudents(studentsRes.data || []);
-          setBatches(batchesRes.data || []);
-          setTodayRecords(attendanceRes.data || []);
-        }
+        setStudents(studentsRes.data || []);
+        setBatches(batchesRes.data || []);
+        setTodayRecords(attendanceRes.data || []);
       } catch (error) {
-        if (!ignore) toast.error('Failed to load students directory');
+        console.error('Failed to load students directory:', error);
+        toast.error('Failed to load students directory');
       } finally {
-        if (!ignore) setLoading(false);
+        setLoading(false);
       }
     };
 
@@ -128,7 +126,6 @@ const TrainerStudentsPage = () => {
     };
     window.addEventListener('click', handleCloseDropdowns);
     return () => {
-      ignore = true;
       window.removeEventListener('click', handleCloseDropdowns);
     };
   }, []);
