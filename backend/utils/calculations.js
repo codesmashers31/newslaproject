@@ -143,12 +143,22 @@ export const calculateDynamicAttendance = async (studentId, department) => {
 
     if (isSubjectMatch) {
       const d = new Date(a.date);
+      d.setHours(0, 0, 0, 0);
+      const dayOfWeek = d.getDay();
       const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-      studentAttMap.set(dateStr, a.status);
-      if (a.status === 'Present' || a.status === 'Late') {
-        explicitPresentCount++;
-      } else if (a.status === 'Absent') {
-        explicitAbsentDates.add(dateStr);
+
+      // Rule 1: Must be on or after official enrollment startDate
+      // Rule 2: Must be a weekday (Monday - Friday)
+      // Rule 3: Must NOT be an institute holiday
+      const isValidTrainingDay = d >= startDate && dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dateStr);
+
+      if (isValidTrainingDay) {
+        studentAttMap.set(dateStr, a.status);
+        if (a.status === 'Present' || a.status === 'Late') {
+          explicitPresentCount++;
+        } else if (a.status === 'Absent') {
+          explicitAbsentDates.add(dateStr);
+        }
       }
     }
   });
