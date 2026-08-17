@@ -98,13 +98,39 @@ const TrainerStudentsPage = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    let ignore = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const [studentsRes, batchesRes, attendanceRes] = await Promise.all([
+          API.get('/trainer/students'),
+          API.get('/trainer/batches'),
+          API.get(`/trainer/attendance?date=${todayStr}`)
+        ]);
+        if (!ignore) {
+          setStudents(studentsRes.data || []);
+          setBatches(batchesRes.data || []);
+          setTodayRecords(attendanceRes.data || []);
+        }
+      } catch (error) {
+        if (!ignore) toast.error('Failed to load students directory');
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    load();
+
     const handleCloseDropdowns = () => {
       setOpenDropdownAdd(null);
       setOpenDropdownEdit(null);
     };
     window.addEventListener('click', handleCloseDropdowns);
-    return () => window.removeEventListener('click', handleCloseDropdowns);
+    return () => {
+      ignore = true;
+      window.removeEventListener('click', handleCloseDropdowns);
+    };
   }, []);
 
   const getBatchSchedule = (batchName) => {
@@ -124,6 +150,21 @@ const TrainerStudentsPage = () => {
     );
 
     const schedule = getBatchSchedule(batchName);
+
+    // Format scan timestamp safely only for Present / Late records with a valid date
+    const getFormattedTime = (r) => {
+      if (!r || r.status === 'Absent') return '';
+      if (r.timeIn) return r.timeIn;
+      if (r.createdAt) {
+        const d = new Date(r.createdAt);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+      }
+      return '';
+    };
+
+    const formattedTime = getFormattedTime(record);
 
     return (
       <div className="space-y-1.5">
@@ -160,11 +201,11 @@ const TrainerStudentsPage = () => {
               </span>
             )}
             
-            {record && (
+            {formattedTime ? (
               <span className="text-[9px] text-slate-500 dark:text-slate-400 font-mono font-bold">
-                {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {formattedTime}
               </span>
-            )}
+            ) : null}
             {record?.scannedBatch && (
               <span className="text-[8px] font-black text-indigo-750 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20 px-1 py-0.5 rounded border border-violet-500/10 uppercase">
                 Scanned: {record.scannedBatch.name || record.scannedBatch}
