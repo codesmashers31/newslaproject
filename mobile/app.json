@@ -68,7 +68,9 @@
         {
           "photosPermission": "Allow SLA BuildX to access your photos to select profile pictures."
         }
-      ]
+      ],
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
