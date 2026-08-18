@@ -139,6 +139,28 @@ const StudentTrainingPage = () => {
     .filter((b) => b.course?.includes('Aptitude'))
     .filter((b) => b.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(aptiSearchQuery.toLowerCase())));
 
+  const resolveSchedule = (b) => {
+    if (!b) return 'TBD';
+    if (b.schedule && b.schedule !== 'Schedule Not Set') return b.schedule;
+    if (b.startTime && b.endTime) return `${b.startTime} - ${b.endTime}`;
+    if (b.startTime) return b.startTime;
+    
+    if (b.name) {
+      const match = b.name.match(/(\d{1,2})-(\d{1,2})/);
+      if (match) {
+        const start = parseInt(match[1]);
+        const end = parseInt(match[2]);
+        const formatTime = (h) => {
+          if (h === 12) return '12:00 PM';
+          if (h < 8) return `0${h}:00 PM`; // 1, 2, 3, etc. are PM
+          return `${h < 10 ? '0' : ''}${h}:00 AM`;
+        };
+        return `Mon - Fri • ${formatTime(start)} – ${formatTime(end)}`;
+      }
+    }
+    return 'TBD';
+  };
+
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 space-y-6">
       {/* Header */}
@@ -192,7 +214,7 @@ const StudentTrainingPage = () => {
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
-                  {techBatches.length > 0 && techBatches[0].schedule && techBatches[0].schedule !== 'Schedule Not Set' ? techBatches[0].schedule : (techBatches[0]?.startTime ? `${techBatches[0].startTime} - ${techBatches[0].endTime || ''}` : 'TBD')}
+                  {techBatches.length > 0 ? resolveSchedule(techBatches[0]) : 'TBD'}
                 </p>
               </div>
             </div>
@@ -226,7 +248,9 @@ const StudentTrainingPage = () => {
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
-                <p className="text-gray-900 dark:text-white font-black mt-0.5">Tue & Thu • 2:00 PM</p>
+                <p className="text-gray-900 dark:text-white font-black mt-0.5">
+                  {resolveSchedule(commBatch)}
+                </p>
               </div>
             </div>
           </div>
@@ -269,7 +293,7 @@ const StudentTrainingPage = () => {
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
-                  {aptiBatch ? (aptiBatch.schedule && aptiBatch.schedule !== 'Schedule Not Set' ? aptiBatch.schedule : (aptiBatch.startTime ? `${aptiBatch.startTime} - ${aptiBatch.endTime || ''}` : 'TBD')) : 'TBD'}
+                  {aptiBatch ? resolveSchedule(aptiBatch) : 'TBD'}
                 </p>
               </div>
             </div>
