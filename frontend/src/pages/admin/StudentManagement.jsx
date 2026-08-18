@@ -159,10 +159,14 @@ const StudentManagement = () => {
     loadData();
   }, [selectedBatch, selectedPlacement]);
 
+  const [batchDropdownOpen, setBatchDropdownOpen] = useState(false);
+  const [batchFilterSearch, setBatchFilterSearch] = useState('');
+
   useEffect(() => {
     const handleCloseDropdowns = () => {
       setOpenDropdownAdd(null);
       setOpenDropdownEdit(null);
+      setBatchDropdownOpen(false);
     };
     window.addEventListener('click', handleCloseDropdowns);
     return () => window.removeEventListener('click', handleCloseDropdowns);
@@ -494,18 +498,90 @@ const StudentManagement = () => {
           />
         </div>
 
-        {/* Batch Filter */}
-        <div>
-          <select
-            value={selectedBatch}
-            onChange={(e) => setSelectedBatch(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400 cursor-pointer"
+        {/* Searchable Batch ID Filter */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setBatchDropdownOpen(!batchDropdownOpen);
+            }}
+            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-xs sm:text-sm font-semibold flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400 cursor-pointer"
           >
-            <option value="">All Batches</option>
-            {getFilteredFilterBatches().map(b => (
-              <option key={b._id} value={b._id}>{b.name}</option>
-            ))}
-          </select>
+            <span className="truncate">
+              {selectedBatch ? (
+                (() => {
+                  const found = batches.find(b => b._id === selectedBatch);
+                  return found ? `${found.batchId || found.name} (${found.name})` : 'Filtered Batch';
+                })()
+              ) : (
+                'All Batches (Select Batch ID)'
+              )}
+            </span>
+            <ChevronDown size={16} className="text-gray-400 shrink-0 ml-1" />
+          </button>
+
+          {batchDropdownOpen && (
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-50 p-2.5 space-y-2 max-h-72 overflow-y-auto"
+            >
+              {/* Search input inside dropdown */}
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search Batch ID or name..."
+                  value={batchFilterSearch}
+                  onChange={(e) => setBatchFilterSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-violet-600"
+                />
+              </div>
+
+              {/* Options list */}
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBatch('');
+                    setBatchDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                    !selectedBatch ? 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  All Batches
+                </button>
+
+                {getFilteredFilterBatches()
+                  .filter(b => 
+                    (b.batchId || '').toLowerCase().includes(batchFilterSearch.toLowerCase()) ||
+                    (b.name || '').toLowerCase().includes(batchFilterSearch.toLowerCase()) ||
+                    (b.course || '').toLowerCase().includes(batchFilterSearch.toLowerCase())
+                  )
+                  .map(b => (
+                    <button
+                      key={b._id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBatch(b._id);
+                        setBatchDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex flex-col ${
+                        selectedBatch === b._id ? 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 font-extrabold' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-gray-700 dark:text-gray-300 font-semibold'
+                      }`}
+                    >
+                      <span className="font-mono font-black text-violet-700 dark:text-violet-400">
+                        {b.batchId || b.name}
+                      </span>
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                        {b.name} • {b.schedule || b.course}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Placement Filter */}
