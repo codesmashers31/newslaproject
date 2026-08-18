@@ -90,7 +90,7 @@ const StudentDashboard = () => {
       title: 'Technical Training',
       caption: 'Core technology track',
       batch: user.technicalBatch || techBatch?.name,
-      trainer: user.technicalTrainer || (techBatch?.trainers && techBatch.trainers[0]?.name),
+      trainer: user.technicalTrainer || techBatch?.trainerName || (techBatch?.trainers && techBatch.trainers[0]?.name) || 'Balamugunthan S',
       schedule: resolveDomainSchedule(techBatch, 'technical'),
       stats: techStats
     },
@@ -99,7 +99,7 @@ const StudentDashboard = () => {
       title: 'Communication Skills',
       caption: 'Soft skills & interview prep',
       batch: user.communicationBatch || commBatch?.name,
-      trainer: user.communicationTrainer || (commBatch?.trainers && commBatch.trainers[0]?.name),
+      trainer: user.communicationTrainer || commBatch?.trainerName || (commBatch?.trainers && commBatch.trainers[0]?.name) || 'Maariya',
       schedule: resolveDomainSchedule(commBatch, 'communication'),
       stats: commStats
     },
@@ -108,7 +108,7 @@ const StudentDashboard = () => {
       title: 'Aptitude & Reasoning',
       caption: 'Quantitative & analytical prep',
       batch: user.aptitudeBatch || aptiBatch?.name,
-      trainer: user.aptitudeTrainer || (aptiBatch?.trainers && aptiBatch.trainers[0]?.name),
+      trainer: user.aptitudeTrainer || aptiBatch?.trainerName || (aptiBatch?.trainers && aptiBatch.trainers[0]?.name) || 'Mari Priyan',
       schedule: resolveDomainSchedule(aptiBatch, 'aptitude'),
       stats: aptiStats
     },

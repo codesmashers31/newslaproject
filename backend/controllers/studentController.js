@@ -120,14 +120,26 @@ export const getStudentDashboard = async (req, res) => {
     const batch = batches[0] || null;
 
     if (profile && profile.user) {
+      const getTrainerNameForDept = (deptName, fallbackName) => {
+        const matchingEnrollments = enrollments.filter(e => e.department === deptName);
+        for (const e of matchingEnrollments) {
+          if (e.trainerId?.name) return e.trainerId.name;
+          if (e.batchId?.trainers && e.batchId.trainers.length > 0 && e.batchId.trainers[0]?.name) {
+            return e.batchId.trainers[0].name;
+          }
+          if (e.batchId?.trainerName) return e.batchId.trainerName;
+        }
+        return fallbackName;
+      };
+
       profile.user.technicalBatch = enrollments.filter(e => e.department === 'Technical').map(e => e.batchId?.name).filter(Boolean).join(', ');
-      profile.user.technicalTrainer = enrollments.filter(e => e.department === 'Technical').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      profile.user.technicalTrainer = getTrainerNameForDept('Technical', 'Balamugunthan S');
       
       profile.user.communicationBatch = enrollments.filter(e => e.department === 'Communication').map(e => e.batchId?.name).filter(Boolean).join(', ');
-      profile.user.communicationTrainer = enrollments.filter(e => e.department === 'Communication').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      profile.user.communicationTrainer = getTrainerNameForDept('Communication', 'Maariya');
       
       profile.user.aptitudeBatch = enrollments.filter(e => e.department === 'Aptitude').map(e => e.batchId?.name).filter(Boolean).join(', ');
-      profile.user.aptitudeTrainer = enrollments.filter(e => e.department === 'Aptitude').map(e => e.trainerId?.name).filter(Boolean).join(', ');
+      profile.user.aptitudeTrainer = getTrainerNameForDept('Aptitude', 'Mari Priyan');
     }
 
     const attendancePercent = calculatedScores.attendancePercent;

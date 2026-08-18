@@ -186,7 +186,7 @@ const StudentTrainingPage = () => {
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
                   {techBatches.length > 0 && techBatches[0].trainers && techBatches[0].trainers.length > 0
                     ? techBatches[0].trainers.map(t => t.name).join(', ')
-                    : 'Auto-Assigned'}
+                    : (techBatches[0]?.trainerName || 'Balamugunthan S')}
                 </p>
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
@@ -219,7 +219,7 @@ const StudentTrainingPage = () => {
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
                   {commBatch && commBatch.trainers && commBatch.trainers.length > 0
                     ? commBatch.trainers.map(t => t.name).join(', ')
-                    : 'Auto-Assigned'}
+                    : (commBatch?.trainerName || 'Maariya')}
                 </p>
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
@@ -261,7 +261,7 @@ const StudentTrainingPage = () => {
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
                   {aptiBatch && aptiBatch.trainers && aptiBatch.trainers.length > 0
                     ? aptiBatch.trainers.map(t => t.name).join(', ')
-                    : 'Auto-Assigned'}
+                    : (aptiBatch?.trainerName || 'Mari Priyan')}
                 </p>
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
