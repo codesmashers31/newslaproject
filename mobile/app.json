@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/logo.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.buildx.sla"
+      "package": "com.buildx.sla",
+      "versionCode": 1
     },
     "web": {
       "output": "static",
@@ -61,9 +62,6 @@
         "projectId": "8495fb85-16b6-47c4-9788-2169721201c7"
       }
     },
-    "owner": "bsakthi691s-team",
-    "cli": {
-      "appVersionSource": "remote"
-    }
+    "owner": "bsakthi691s-team"
   }
 }
