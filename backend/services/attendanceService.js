@@ -95,18 +95,20 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
 
     const logs = studentLogsMap.get(sId) || [];
     
-    // Count valid absences
+    // Count actual Present and Absent logs
     let absentCount = 0;
+    let presentCount = 0;
 
-    // A. Count explicit Absent logs
     logs.forEach(log => {
-      if (log.status === 'Absent') {
-        const dStr = formatDateISO(log.date);
-        if (dStr && dStr >= startDateISO) {
-          const dObj = new Date(log.date);
-          const dayOfWeek = dObj.getDay();
-          // Exclude Saturday (6) and Sunday (0) and holidays
-          if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr)) {
+      const dStr = formatDateISO(log.date);
+      if (dStr && dStr >= startDateISO) {
+        const dObj = new Date(log.date);
+        const dayOfWeek = dObj.getDay();
+        // Exclude Saturday (6) and Sunday (0) and holidays
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr)) {
+          if (log.status === 'Present' || log.status === 'Late') {
+            presentCount++;
+          } else if (log.status === 'Absent') {
             absentCount++;
           }
         }
@@ -132,13 +134,18 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       }
     }
 
-    if (trainingDayCount < 1) trainingDayCount = 1;
+    // Account for conducting days where student was not logged present
+    const totalLogged = presentCount + absentCount;
+    if (trainingDayCount > totalLogged) {
+      absentCount += (trainingDayCount - totalLogged);
+    }
 
-    // Fixed Denominator Attendance Percentage Calculation:
-    // (fixedTotalDays - absentCount) / fixedTotalDays * 100
     const remainingDays = Math.max(0, fixedTotalDays - trainingDayCount);
-    const earnedDays = fixedTotalDays - absentCount;
-    const attendancePercent = parseFloat(Math.max(0, (earnedDays / fixedTotalDays) * 100).toFixed(2));
+    // Real-world Attendance % = (presentCount / trainingDayCount) * 100
+    // If no training days held yet for student, default to 100%
+    const attendancePercent = trainingDayCount > 0
+      ? parseFloat(((presentCount / trainingDayCount) * 100).toFixed(2))
+      : 100;
     const progressPercent = parseFloat(Math.min(100, (trainingDayCount / fixedTotalDays) * 100).toFixed(2));
 
     const startDateFormatted = rawStartDate ? new Date(rawStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
@@ -150,7 +157,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       rawStartDate,
       trainingDay: trainingDayCount,
       totalTrainingDays: fixedTotalDays,
-      presentCount: Math.max(0, trainingDayCount - absentCount),
+      presentCount,
       absentCount,
       remainingDays,
       attendancePercent,
