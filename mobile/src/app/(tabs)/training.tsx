@@ -311,11 +311,11 @@ export default function TrainingScreen() {
                       <Text className="text-[#4338CA] text-[9px] font-bold uppercase">{item.course || 'Technical'}</Text>
                     </View>
                   </View>
-                  <View className="flex-row justify-between items-center border-t border-[#E2E8F0] pt-2 mt-1 flex-wrap gap-2">
-                    <Text className="text-[#64748B] text-[11px] flex-1 min-w-[130px]">
+                  <View className="flex-col border-t border-[#E2E8F0] pt-2.5 mt-1.5 gap-1.5">
+                    <Text className="text-[#64748B] text-[11px]">
                       Trainer: <Text className="text-[#0F172A] font-bold">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</Text>
                     </Text>
-                    <Text className="text-indigo-600 text-[11px] font-extrabold">
+                    <Text className="text-[#4F46E5] text-[11px] font-extrabold">
                       {resolveBatchSchedule(item)}
                     </Text>
                   </View>
@@ -352,23 +352,25 @@ export default function TrainingScreen() {
               </View>
               
               <View className="space-y-3">
-                <View className="flex-row justify-between items-center">
-                  <View>
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
-                    <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                      {commBatch ? commBatch.name : 'Unassigned'}
-                    </Text>
+                <View className="flex-col gap-3">
+                  <View className="flex-row justify-between items-center">
+                    <View>
+                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
+                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                        {commBatch ? commBatch.name : 'Unassigned'}
+                      </Text>
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
+                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                        {stats.startDate || '14-Aug-2026'}
+                      </Text>
+                    </View>
                   </View>
-                  <View className="items-center">
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Schedule</Text>
-                    <Text className="text-indigo-600 text-xs font-extrabold mt-0.5">
+                  <View className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
+                    <Text className="text-[#64748B] text-[10px] font-bold uppercase flex-row items-center">Schedule</Text>
+                    <Text className="text-[#4F46E5] text-[11px] font-extrabold mt-0.5">
                       {resolveBatchSchedule(commBatch, 'Communication')}
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
-                    <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                      {stats.startDate || '14-Aug-2026'}
                     </Text>
                   </View>
                 </View>
@@ -431,23 +433,25 @@ export default function TrainingScreen() {
               </View>
               
               <View className="space-y-3">
-                <View className="flex-row justify-between items-center">
-                  <View>
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
-                    <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                      {aptiBatch ? aptiBatch.name : 'Unassigned'}
-                    </Text>
+                <View className="flex-col gap-3">
+                  <View className="flex-row justify-between items-center">
+                    <View>
+                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
+                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                        {aptiBatch ? aptiBatch.name : 'Unassigned'}
+                      </Text>
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
+                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                        {stats.startDate || '14-Aug-2026'}
+                      </Text>
+                    </View>
                   </View>
-                  <View className="items-center">
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Schedule</Text>
-                    <Text className="text-indigo-600 text-xs font-extrabold mt-0.5">
+                  <View className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
+                    <Text className="text-[#64748B] text-[10px] font-bold uppercase flex-row items-center">Schedule</Text>
+                    <Text className="text-[#4F46E5] text-[11px] font-extrabold mt-0.5">
                       {resolveBatchSchedule(aptiBatch, 'Aptitude')}
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
-                    <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                      {stats.startDate || '14-Aug-2026'}
                     </Text>
                   </View>
                 </View>
