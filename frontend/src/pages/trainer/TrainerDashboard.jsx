@@ -462,19 +462,25 @@ const TrainerDashboard = () => {
     ? students
     : students.filter(s => {
         const selId = String(selectedBatchId);
+        const selBatchId = selectedBatchObj?.batchId?.trim()?.toLowerCase();
         const selName = selectedBatchObj?.name?.trim()?.toLowerCase();
 
-        const inBatchesArray = s.batches?.some(b => 
-          String(b?._id || b) === selId ||
-          (selName && String(b?.name || b).trim().toLowerCase() === selName)
-        );
+        const inBatchesArray = s.batches?.some(b => {
+          const bIdStr = String(b?._id || b);
+          const bNameStr = String(b?.name || b).trim().toLowerCase();
+          return bIdStr === selId || (selName && bNameStr === selName);
+        });
 
-        const matchesDomainBatch = Boolean(selName && (
-          String(s.communicationBatch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName) ||
-          String(s.technicalBatch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName) ||
-          String(s.aptitudeBatch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName) ||
-          String(s.batch || '').toLowerCase().split(',').map(item => item.trim()).includes(selName)
-        ));
+        const sComm = (s.communicationBatch || '').toLowerCase();
+        const sTech = (s.technicalBatch || '').toLowerCase();
+        const sApti = (s.aptitudeBatch || '').toLowerCase();
+        const sLegacy = (s.batch || '').toLowerCase();
+
+        const matchesDomainBatch = Boolean(
+          (selName && (sComm.includes(selName) || sTech.includes(selName) || sApti.includes(selName) || sLegacy.includes(selName))) ||
+          (selBatchId && (sComm.includes(selBatchId) || sTech.includes(selBatchId) || sApti.includes(selBatchId) || sLegacy.includes(selBatchId))) ||
+          (selName && (selName.includes(sComm) || selName.includes(sTech) || selName.includes(sApti)))
+        );
 
         return inBatchesArray || matchesDomainBatch;
       });
@@ -1580,7 +1586,7 @@ const TrainerDashboard = () => {
           <div className="w-full space-y-4 font-sans text-slate-800">
 
             {/* Single Enterprise Table Container */}
-            <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+            <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-visible relative">
               {/* Responsive Single Control Toolbar */}
               <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2.5">
