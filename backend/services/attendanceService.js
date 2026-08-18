@@ -33,7 +33,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
   // Parallelize all independent database pre-fetches for instant response
   const domainSubjectRegex = isComm ? /comm/i : isApti ? /apti/i : /tech/i;
 
-  const [enrollments, holidays, sessions, subjectAttendances, attendanceLogs] = await Promise.all([
+  const [enrollments, holidays, sessions, attendanceLogs] = await Promise.all([
     Enrollment.find({
       studentId: { $in: objectStudentIds },
       department: dept,
@@ -43,8 +43,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
     AttendanceSession.find({
       status: 'Active',
       $or: [{ subject: domainSubjectRegex }, { category: domainSubjectRegex }]
-    }).lean(),
-    Attendance.find({ subject: domainSubjectRegex }).select('date').lean(),
+    }).select('createdAt').limit(100).lean(),
     Attendance.find({
       student: { $in: objectStudentIds },
       subject: domainSubjectRegex
@@ -67,7 +66,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
     if (dStr) domainScannedDates.add(dStr);
   });
 
-  (subjectAttendances || []).forEach(a => {
+  (attendanceLogs || []).forEach(a => {
     const dStr = formatDateISO(a.date);
     if (dStr) domainScannedDates.add(dStr);
   });

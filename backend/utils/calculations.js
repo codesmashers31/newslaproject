@@ -178,13 +178,18 @@ export const calculatePlacementReadiness = async (studentId) => {
   const student = await Student.findOne({ user: studentId }).lean();
   const placement = await Placement.findOne({ student: studentId }).lean();
   
-  const aptCount = await AptitudeModule.countDocuments();
-  const commCount = await CommunicationModule.countDocuments();
-  const techCount = await TechnicalModule.countDocuments();
+  const [aptCount, commCount, techCount, aptScores, commScores, techScores] = await Promise.all([
+    AptitudeModule.countDocuments(),
+    CommunicationModule.countDocuments(),
+    TechnicalModule.countDocuments(),
+    Score.countDocuments({ student: studentId, category: 'Aptitude', status: { $in: ['Completed', 'Mastered'] } }),
+    Score.countDocuments({ student: studentId, category: 'Communication', status: { $in: ['Completed', 'Mastered'] } }),
+    Score.countDocuments({ student: studentId, category: 'Technical', status: { $in: ['Completed', 'Mastered'] } }),
+  ]);
 
-  const aptProgress = await getDomainProgress(studentId, 'Aptitude', aptCount);
-  const commProgress = await getDomainProgress(studentId, 'Communication', commCount);
-  const techProgress = await getDomainProgress(studentId, 'Technical', techCount);
+  const aptProgress = aptCount > 0 ? Math.round((aptScores / aptCount) * 100) : 0;
+  const commProgress = commCount > 0 ? Math.round((commScores / commCount) * 100) : 0;
+  const techProgress = techCount > 0 ? Math.round((techScores / techCount) * 100) : 0;
 
   if (!placement) {
     return { percentage: 0, status: 'Critical', recommendations: ['Complete account setup'] };
