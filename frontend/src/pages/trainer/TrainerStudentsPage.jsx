@@ -164,18 +164,18 @@ const TrainerStudentsPage = () => {
     const formattedTime = getFormattedTime(record);
 
     return (
-      <div className="space-y-1.5">
-        <div>
-          <div className="font-extrabold text-slate-800 dark:text-white text-xs">
+      <div className="space-y-1.5 max-w-[200px]">
+        <div className="min-w-0">
+          <div className="font-extrabold text-slate-800 dark:text-white text-xs truncate" title={batchName || 'Unassigned'}>
             {batchName || 'Unassigned'}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
+          <div className="text-[10px] text-slate-400 mt-0.5 truncate" title={`Trainer: ${student[trainerField] || 'Unassigned'}`}>
             Trainer: {student[trainerField] || 'Unassigned'}
           </div>
           {batchName && (
-            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
-              <Clock size={11} className="text-violet-400" />
-              <span>{schedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold truncate" title={schedule || '09:00 AM - 11:00 AM (Mon - Fri)'}>
+              <Clock size={11} className="text-violet-400 shrink-0" />
+              <span className="truncate">{schedule || '09:00 AM - 11:00 AM (Mon - Fri)'}</span>
             </div>
           )}
         </div>
@@ -615,16 +615,16 @@ const TrainerStudentsPage = () => {
       {/* Roster Table */}
       <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+          <table className="w-full text-left border-collapse min-w-[1100px] table-fixed">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[11px] font-black uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/40">
-                <th className="px-6 py-4">Student Info</th>
-                <th className="px-6 py-4">Mobile</th>
-                <th className="px-6 py-4">Technical Track</th>
-                <th className="px-6 py-4">Communication Track</th>
-                <th className="px-6 py-4">Aptitude Track</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-4 py-4 w-1/5">Student Info</th>
+                <th className="px-4 py-4 w-[10%]">Mobile</th>
+                <th className="px-4 py-4 w-1/5">Technical Track</th>
+                <th className="px-4 py-4 w-1/5">Communication Track</th>
+                <th className="px-4 py-4 w-1/5">Aptitude Track</th>
+                <th className="px-4 py-4 w-[8%]">Status</th>
+                <th className="px-4 py-4 text-right w-[8%]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -645,15 +645,15 @@ const TrainerStudentsPage = () => {
                 paginatedStudents.map((student) => (
                   <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
                     {/* Student Info */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center space-x-3 max-w-[220px]">
                         <div className="h-10 w-10 rounded-2xl bg-violet-100 dark:bg-violet-950/50 text-[#7C3AED] dark:text-violet-300 font-black text-sm flex items-center justify-center shrink-0 border border-violet-200/50 dark:border-violet-900/40">
                           {student.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 overflow-hidden">
                           <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate">{student.name}</p>
                           <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">{student.email}</p>
-                          <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
+                          <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30 truncate max-w-full">
                             {student.slaeId || student.profile?.studentId || student.email?.split('@')[0]?.toUpperCase()}
                           </span>
                         </div>

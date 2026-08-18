@@ -13,7 +13,8 @@ import AttendanceSession from '../models/AttendanceSession.js';
 import AttendanceLog from '../models/AttendanceLog.js';
 import jwt from 'jsonwebtoken';
 import Enrollment from '../models/Enrollment.js';
-import { calculateStudentScores, calculateAllRanks, calculatePlacementReadiness, calculateDynamicAttendance } from '../utils/calculations.js';
+import Assignment from '../models/Assignment.js';
+import { calculateStudentScores, calculateAllRanks, calculateDynamicAttendance } from '../utils/calculations.js';
 import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinaryUpload.js';
 
 // @desc    Get student dashboard details
