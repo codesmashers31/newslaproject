@@ -16,11 +16,13 @@ import {
   UserCheck,
   Upload,
   FileSpreadsheet,
+  FileDown,
   Clock,
   Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
 import { useAuth } from '../../context/AuthContext';
 
 const AVAILABLE_STACKS = [
