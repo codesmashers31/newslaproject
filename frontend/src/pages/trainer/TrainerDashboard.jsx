@@ -415,13 +415,7 @@ const TrainerDashboard = () => {
 
       setBatches(relevantBatches);
 
-      let targetBatchId = activeBatchId;
-      if (!targetBatchId || targetBatchId === 'all') {
-        if (relevantBatches.length > 0) {
-          targetBatchId = relevantBatches[0]._id;
-          setSelectedBatchId(targetBatchId);
-        }
-      }
+      let targetBatchId = activeBatchId || 'all';
 
       // Fetch dashboard stats for communication trainer
       if (isCommunicationTrainer) {
