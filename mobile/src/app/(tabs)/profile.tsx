@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
@@ -33,7 +34,9 @@ import {
   Sparkles,
   Camera,
   Save,
-  GraduationCap
+  GraduationCap,
+  Shield,
+  ExternalLink,
 } from 'lucide-react-native';
 
 export default function ProfileScreen() {
@@ -601,6 +604,20 @@ export default function ProfileScreen() {
                   className="flex-1 text-[#0F172A] text-xs font-semibold"
                 />
               </View>
+            </View>
+
+            {/* Privacy Policy Link */}
+            <View className="mt-4 mb-2">
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://newslaproject.vercel.app/privacy-policy')}
+                className="flex-row items-center justify-between bg-white border border-[#E2E8F0] rounded-2xl px-4 h-13 shadow-sm py-3"
+              >
+                <View className="flex-row items-center">
+                  <Shield size={16} color="#6366F1" style={{ marginRight: 8 }} />
+                  <Text className="text-xs font-bold text-[#0F172A]">Privacy Policy & Data Security</Text>
+                </View>
+                <ExternalLink size={14} color="#94A3B8" />
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

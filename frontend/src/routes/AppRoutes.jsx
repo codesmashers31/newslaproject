@@ -6,6 +6,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 // Pages
 import Login from '../pages/Login';
 import Register from '../pages/Register';
+import PrivacyPolicyPage from '../pages/PrivacyPolicyPage';
 import NotFound from '../pages/NotFound';
 
 // Admin Pages
@@ -43,6 +44,7 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       
       {/* Root redirect */}
       <Route path="/" element={<Navigate to="/login" replace />} />
