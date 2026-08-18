@@ -1612,9 +1612,9 @@ const TrainerDashboard = () => {
                         e.stopPropagation();
                         setDashboardBatchDropdownOpen(!dashboardBatchDropdownOpen);
                       }}
-                      className="w-full px-3.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-between text-slate-800 dark:text-white cursor-pointer shadow-2xs"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold flex items-center justify-between text-slate-700 dark:text-slate-200 cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     >
-                      <span className="truncate font-bold">
+                      <span className="truncate">
                         {selectedBatchId && selectedBatchId !== 'all' ? (
                           (() => {
                             const found = batches.find(b => String(b._id) === String(selectedBatchId));
@@ -1624,26 +1624,28 @@ const TrainerDashboard = () => {
                           `All Batches (${batches.length})`
                         )}
                       </span>
-                      <ChevronDown size={14} className="text-slate-400 shrink-0 ml-1" />
+                      <ChevronDown size={14} className="text-slate-400 shrink-0 ml-2" />
                     </button>
 
                     {dashboardBatchDropdownOpen && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-2.5 space-y-2 max-h-72 overflow-y-auto"
+                        className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-[#1e1f29] border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col"
                       >
-                        <div className="relative">
-                          <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
-                          <input
-                            type="text"
-                            placeholder="Search Batch ID..."
-                            value={dashboardBatchSearch}
-                            onChange={(e) => setDashboardBatchSearch(e.target.value)}
-                            className="w-full pl-8 pr-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 dark:text-white"
-                          />
+                        <div className="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#1e1f29]">
+                          <div className="relative">
+                            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                              type="text"
+                              placeholder="Search Batch ID..."
+                              value={dashboardBatchSearch}
+                              onChange={(e) => setDashboardBatchSearch(e.target.value)}
+                              className="w-full pl-7 pr-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white placeholder-slate-400"
+                            />
+                          </div>
                         </div>
 
-                        <div className="space-y-1">
+                        <div className="max-h-60 overflow-y-auto py-1">
                           <button
                             type="button"
                             onClick={() => {
@@ -1651,8 +1653,10 @@ const TrainerDashboard = () => {
                               setCurrentPage(1);
                               setDashboardBatchDropdownOpen(false);
                             }}
-                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
-                              selectedBatchId === 'all' ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300'
+                            className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors cursor-pointer flex items-center justify-between ${
+                              selectedBatchId === 'all' 
+                                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' 
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                             }`}
                           >
                             All Batches ({batches.length})
@@ -1673,11 +1677,13 @@ const TrainerDashboard = () => {
                                   setCurrentPage(1);
                                   setDashboardBatchDropdownOpen(false);
                                 }}
-                                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-between ${
-                                  selectedBatchId === b._id ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-extrabold' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300 font-semibold'
+                                className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors cursor-pointer flex items-center justify-between ${
+                                  selectedBatchId === b._id 
+                                    ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' 
+                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                                 }`}
                               >
-                                <span className="font-mono font-black text-xs text-indigo-700 dark:text-indigo-400">
+                                <span className="truncate">
                                   {b.batchId || b.name}
                                 </span>
                               </button>
