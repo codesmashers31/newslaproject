@@ -1624,7 +1624,7 @@ const TrainerDashboard = () => {
                         {selectedBatchId && selectedBatchId !== 'all' ? (
                           (() => {
                             const found = batches.find(b => String(b._id) === String(selectedBatchId));
-                            return found ? `${found.batchId || found.name} (${found.name})` : 'Selected Batch';
+                            return found ? (found.batchId || found.name) : 'Selected Batch';
                           })()
                         ) : (
                           `All Batches (${batches.length})`
@@ -1642,7 +1642,7 @@ const TrainerDashboard = () => {
                           <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
                           <input
                             type="text"
-                            placeholder="Search Batch ID or name..."
+                            placeholder="Search Batch ID..."
                             value={dashboardBatchSearch}
                             onChange={(e) => setDashboardBatchSearch(e.target.value)}
                             className="w-full pl-8 pr-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 dark:text-white"
@@ -1679,15 +1679,12 @@ const TrainerDashboard = () => {
                                   setCurrentPage(1);
                                   setDashboardBatchDropdownOpen(false);
                                 }}
-                                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex flex-col ${
+                                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-between ${
                                   selectedBatchId === b._id ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-extrabold' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300 font-semibold'
                                 }`}
                               >
-                                <span className="font-mono font-black text-indigo-700 dark:text-indigo-400">
+                                <span className="font-mono font-black text-xs text-indigo-700 dark:text-indigo-400">
                                   {b.batchId || b.name}
-                                </span>
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                                  {b.name} • {b.schedule || b.course}
                                 </span>
                               </button>
                             ))}
