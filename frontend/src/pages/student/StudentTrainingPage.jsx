@@ -142,8 +142,8 @@ const StudentTrainingPage = () => {
   const resolveSchedule = (b) => {
     if (!b) return 'Not Assigned';
     if (b.schedule && b.schedule !== 'Schedule Not Set') return b.schedule;
-    if (b.startTime && b.endTime) return `${b.startTime} - ${b.endTime}`;
-    if (b.startTime) return b.startTime;
+    if (b.startTime && b.endTime) return `Mon - Fri • ${b.startTime} - ${b.endTime}`;
+    if (b.startTime) return `Mon - Fri • ${b.startTime}`;
     
     if (b.name) {
       const explicitMatch = b.name.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);

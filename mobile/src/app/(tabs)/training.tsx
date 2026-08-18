@@ -80,11 +80,11 @@ export default function TrainingScreen() {
     if (!batch) return 'Not Assigned';
     
     if (batch?.startTime && batch?.endTime) {
-      const daysPrefix = batch.days ? `${batch.days} • ` : (batch.scheduleDays ? `${batch.scheduleDays} • ` : '');
+      const daysPrefix = batch.days ? `${batch.days} • ` : (batch.scheduleDays ? `${batch.scheduleDays} • ` : 'Mon - Fri • ');
       return `${daysPrefix}${batch.startTime} – ${batch.endTime}`;
     }
     if (batch?.startTime) {
-      const daysPrefix = batch.days ? `${batch.days} • ` : '';
+      const daysPrefix = batch.days ? `${batch.days} • ` : 'Mon - Fri • ';
       return `${daysPrefix}${batch.startTime}`;
     }
     if (batch?.schedule && typeof batch.schedule === 'string' && batch.schedule.trim() !== '' && batch.schedule !== 'Schedule Not Set') {

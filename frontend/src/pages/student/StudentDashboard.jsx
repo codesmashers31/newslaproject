@@ -78,8 +78,8 @@ const StudentDashboard = () => {
   const resolveDomainSchedule = (b, key) => {
     if (!b) return 'Not Assigned';
     if (b?.schedule && b.schedule !== 'Schedule Not Set') return b.schedule;
-    if (b?.startTime && b?.endTime) return `${b.startTime} – ${b.endTime}`;
-    if (b?.startTime) return b.startTime;
+    if (b?.startTime && b?.endTime) return `Mon - Fri • ${b.startTime} – ${b.endTime}`;
+    if (b?.startTime) return `Mon - Fri • ${b.startTime}`;
     
     if (b?.name) {
       // First try to match explicit times like "10:00 AM-11:00 AM" or "10:00 AM - 11:00 AM"
