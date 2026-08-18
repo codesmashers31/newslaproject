@@ -292,39 +292,103 @@ export default function QRScannerScreen() {
               </View>
             </View>
 
-            {/* 3. Today's Check-in Pills */}
-            {hasCheckedInToday ? (
-              <View className="gap-2.5">
-                <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-0.5">Today's Check-ins</Text>
-                <View className="flex-row flex-wrap gap-2.5">
-                  {todayRecords.map((rec: any, idx: number) => {
+            {/* 3. Today's Check-in Status Pills (Completed vs Pending per assigned batch) */}
+            {(() => {
+              const allBatches = dashData?.batches || [];
+              const batchStatuses: Array<{ key: any; subject: string; status: string; label: string }> = [];
+
+              if (allBatches.length > 0) {
+                allBatches.forEach((b: any) => {
+                  const dept = b.department || (b.course?.includes('Communication') ? 'Communication' : b.course?.includes('Aptitude') ? 'Aptitude' : 'Technical');
+                  const rec = todayRecords.find((r: any) => {
+                    const subj = (r.subject || '').toLowerCase();
+                    const d = dept.toLowerCase();
+                    return subj.includes(d) || d.includes(subj);
+                  });
+
+                  if (rec) {
                     const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return (
-                      <View 
-                        key={idx} 
-                        className="bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full flex-row items-center gap-2 self-start shadow-sm"
-                      >
-                        <View className="w-3.5 h-3.5 bg-[#22C55E] rounded-full items-center justify-center">
-                          <Text className="text-white text-[8px] font-black">✓</Text>
-                        </View>
-                        <Text className="text-[10px] font-black text-emerald-800">
-                          {rec.subject || 'Session'}: {timeStr}
-                        </Text>
+                    batchStatuses.push({
+                      key: b._id || dept,
+                      subject: dept,
+                      status: 'Completed',
+                      label: `${dept}: ${timeStr} (Check-in Completed)`
+                    });
+                  } else {
+                    batchStatuses.push({
+                      key: b._id || dept,
+                      subject: dept,
+                      status: 'Pending',
+                      label: `${dept}: Pending Check-in`
+                    });
+                  }
+                });
+
+                todayRecords.forEach((rec: any) => {
+                  const alreadyMapped = batchStatuses.some((bs) => {
+                    const subj = (rec.subject || '').toLowerCase();
+                    const d = bs.subject.toLowerCase();
+                    return subj.includes(d) || d.includes(subj);
+                  });
+                  if (!alreadyMapped) {
+                    const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    batchStatuses.push({
+                      key: rec._id || Math.random(),
+                      subject: rec.subject || 'Session',
+                      status: 'Completed',
+                      label: `${rec.subject || 'Session'}: ${timeStr} (Check-in Completed)`
+                    });
+                  }
+                });
+              } else if (todayRecords.length > 0) {
+                todayRecords.forEach((rec: any) => {
+                  const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  batchStatuses.push({
+                    key: rec._id,
+                    subject: rec.subject || 'Session',
+                    status: 'Completed',
+                    label: `${rec.subject || 'Session'}: ${timeStr} (Check-in Completed)`
+                  });
+                });
+              }
+
+              return (
+                <View className="gap-2.5">
+                  <Text className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mb-0.5">Today's Check-in Status</Text>
+                  {batchStatuses.length > 0 ? (
+                    <View className="flex-row flex-wrap gap-2.5">
+                      {batchStatuses.map((item: any, idx: number) => {
+                        const isDone = item.status === 'Completed';
+                        return (
+                          <View
+                            key={item.key || idx}
+                            className={`${
+                              isDone ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'
+                            } border px-3 py-1.5 rounded-full flex-row items-center gap-2 self-start shadow-sm`}
+                          >
+                            <View className={`w-3.5 h-3.5 ${isDone ? 'bg-[#22C55E]' : 'bg-amber-500'} rounded-full items-center justify-center`}>
+                              <Text className="text-white text-[8px] font-black">{isDone ? '✓' : '!'}</Text>
+                            </View>
+                            <Text className={`text-[10px] font-black ${isDone ? 'text-emerald-800' : 'text-amber-800'}`}>
+                              {item.label}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <View className="bg-amber-50 border border-amber-100 px-4.5 py-1.5 rounded-full flex-row items-center gap-2 self-start shadow-sm">
+                      <View className="w-3.5 h-3.5 bg-amber-500 rounded-full items-center justify-center">
+                        <Text className="text-white text-[8px] font-black">!</Text>
                       </View>
-                    );
-                  })}
+                      <Text className="text-[10px] font-black text-amber-700">
+                        No check-ins logged today
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              </View>
-            ) : (
-              <View className="bg-amber-50 border border-amber-100 px-4.5 py-1.5 rounded-full flex-row items-center gap-2 self-start shadow-sm">
-                <View className="w-3.5 h-3.5 bg-amber-500 rounded-full items-center justify-center">
-                  <Text className="text-white text-[8px] font-black">!</Text>
-                </View>
-                <Text className="text-[10px] font-black text-amber-700">
-                  No check-ins logged today
-                </Text>
-              </View>
-            )}
+              );
+            })()}
           </View>
 
         </View>

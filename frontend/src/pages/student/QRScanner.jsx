@@ -180,16 +180,65 @@ const QRScanner = () => {
     ? activeBatch.trainers[0].name
     : 'Auto-Assigned';
 
-  const todayRecords = dashboardData?.attendance?.todayRecords || [];
-  const hasCheckedInToday = todayRecords.length > 0;
+  // 3. Per-batch today check-in statuses (Completed vs Pending)
+  const allBatches = dashboardData?.batches || [];
+  const batchStatuses = [];
 
-  const statusText = loading
-    ? 'Verifying QR code...'
-    : scanResult
-      ? 'Ready for next scan'
-      : cameraActive
-        ? 'Scanning for QR code...'
-        : 'Camera idle';
+  if (allBatches.length > 0) {
+    allBatches.forEach((b) => {
+      const dept = b.department || (b.course?.includes('Communication') ? 'Communication' : b.course?.includes('Aptitude') ? 'Aptitude' : 'Technical');
+      const rec = todayRecords.find((r) => {
+        const subj = (r.subject || '').toLowerCase();
+        const d = dept.toLowerCase();
+        return subj.includes(d) || d.includes(subj);
+      });
+
+      if (rec) {
+        const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        batchStatuses.push({
+          key: b._id || dept,
+          subject: dept,
+          status: 'Completed',
+          label: `${dept}: ${timeStr} (Check-in Completed)`
+        });
+      } else {
+        batchStatuses.push({
+          key: b._id || dept,
+          subject: dept,
+          status: 'Pending',
+          label: `${dept}: Pending Check-in`
+        });
+      }
+    });
+
+    // Append any extra today check-ins not mapped to assigned batches
+    todayRecords.forEach((rec) => {
+      const alreadyMapped = batchStatuses.some((bs) => {
+        const subj = (rec.subject || '').toLowerCase();
+        const d = bs.subject.toLowerCase();
+        return subj.includes(d) || d.includes(subj);
+      });
+      if (!alreadyMapped) {
+        const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        batchStatuses.push({
+          key: rec._id || Math.random(),
+          subject: rec.subject || 'Session',
+          status: 'Completed',
+          label: `${rec.subject || 'Session'}: ${timeStr} (Check-in Completed)`
+        });
+      }
+    });
+  } else if (todayRecords.length > 0) {
+    todayRecords.forEach((rec) => {
+      const timeStr = new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      batchStatuses.push({
+        key: rec._id,
+        subject: rec.subject || 'Session',
+        status: 'Completed',
+        label: `${rec.subject || 'Session'}: ${timeStr} (Check-in Completed)`
+      });
+    });
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 select-none">
@@ -365,21 +414,25 @@ const QRScanner = () => {
         </div>
       </Card>
 
-      {/* 3. Today's check-in pills */}
-      {hasCheckedInToday ? (
-        <div className="space-y-2.5">
-          <SectionLabel>Today's Check-ins</SectionLabel>
+      {/* 3. Today's check-in status pills (Completed vs Pending per batch) */}
+      <div className="space-y-2.5">
+        <SectionLabel>Today's Check-in Status</SectionLabel>
+        {batchStatuses.length > 0 ? (
           <div className="flex flex-wrap gap-2.5">
-            {todayRecords.map((rec, idx) => (
-              <Pill key={idx} tone="success" icon={CheckCircle2}>
-                {rec.subject || 'Session'}: {new Date(rec.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {batchStatuses.map((item, idx) => (
+              <Pill
+                key={item.key || idx}
+                tone={item.status === 'Completed' ? 'success' : 'warning'}
+                icon={item.status === 'Completed' ? CheckCircle2 : AlertCircle}
+              >
+                {item.label}
               </Pill>
             ))}
           </div>
-        </div>
-      ) : (
-        <Pill tone="warning" icon={AlertCircle}>No check-ins logged today</Pill>
-      )}
+        ) : (
+          <Pill tone="warning" icon={AlertCircle}>No check-ins logged today</Pill>
+        )}
+      </div>
 
     </div>
   );
