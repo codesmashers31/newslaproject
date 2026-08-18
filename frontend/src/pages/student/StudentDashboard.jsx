@@ -95,7 +95,7 @@ const StudentDashboard = () => {
       }
     }
     
-    return 'TBD';
+    return 'Not Assigned';
   };
 
   const domains = [

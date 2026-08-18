@@ -140,7 +140,7 @@ const StudentTrainingPage = () => {
     .filter((b) => b.name?.toLowerCase().includes(aptiSearchQuery.toLowerCase()) || (b.trainers && b.trainers[0]?.name.toLowerCase().includes(aptiSearchQuery.toLowerCase())));
 
   const resolveSchedule = (b) => {
-    if (!b) return 'TBD';
+    if (!b) return 'Not Assigned';
     if (b.schedule && b.schedule !== 'Schedule Not Set') return b.schedule;
     if (b.startTime && b.endTime) return `${b.startTime} - ${b.endTime}`;
     if (b.startTime) return b.startTime;
@@ -158,7 +158,7 @@ const StudentTrainingPage = () => {
         return `Mon - Fri • ${formatTime(start)} – ${formatTime(end)}`;
       }
     }
-    return 'TBD';
+    return 'Not Assigned';
   };
 
   return (
@@ -214,7 +214,7 @@ const StudentTrainingPage = () => {
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
-                  {techBatches.length > 0 ? resolveSchedule(techBatches[0]) : 'TBD'}
+                  {techBatches.length > 0 ? resolveSchedule(techBatches[0]) : 'Not Assigned'}
                 </p>
               </div>
             </div>
@@ -293,7 +293,7 @@ const StudentTrainingPage = () => {
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
                 <p className="text-gray-900 dark:text-white font-black mt-0.5">
-                  {aptiBatch ? resolveSchedule(aptiBatch) : 'TBD'}
+                  {aptiBatch ? resolveSchedule(aptiBatch) : 'Not Assigned'}
                 </p>
               </div>
             </div>

@@ -105,7 +105,7 @@ export default function TrainingScreen() {
       }
     }
     
-    return 'TBD';
+    return 'Not Assigned';
   };
 
   useEffect(() => {
