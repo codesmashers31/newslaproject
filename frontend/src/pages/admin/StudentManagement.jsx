@@ -483,7 +483,7 @@ const StudentManagement = () => {
       </div>
 
       {/* Search & Filters Bar */}
-      <form onSubmit={handleSearchSubmit} className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-4 rounded-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-center shadow-sm">
+      <form onSubmit={handleSearchSubmit} className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-4 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-3.5 items-center shadow-sm">
         {/* Search */}
         <div className="relative">
           <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
@@ -584,21 +584,7 @@ const StudentManagement = () => {
           )}
         </div>
 
-        {/* Placement Filter */}
-        <div>
-          <select
-            value={selectedPlacement}
-            onChange={(e) => setSelectedPlacement(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400 cursor-pointer"
-          >
-            <option value="">All Placement Statuses</option>
-            <option value="Not Started">Not Started</option>
-            <option value="Pending">Pending / Interviewing</option>
-            <option value="Selected">Selected</option>
-            <option value="Offer Received">Offer Received</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-        </div>
+
 
         {/* Search Action */}
         <button 
