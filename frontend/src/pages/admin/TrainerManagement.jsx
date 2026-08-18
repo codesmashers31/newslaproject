@@ -333,23 +333,103 @@ const TrainerManagement = () => {
     return matchesSearch && matchesRole;
   });
 
+  const exportToExcel = () => {
+    if (trainers.length === 0) {
+      toast.error('No trainer data to export');
+      return;
+    }
+
+    const dataToExport = trainers.map((t, idx) => ({
+      'Trainer ID': t.trainerId || `TR-${(idx + 1).toString().padStart(3, '0')}`,
+      'Full Name': t.name,
+      'Email': t.email,
+      'Mobile': t.mobile,
+      'Domain Role': t.role,
+      'Status': t.status || 'Active',
+      'Assigned Stacks': Array.isArray(t.stacks) ? t.stacks.join(', ') : '',
+      'Skills Expertise': Array.isArray(t.skills) ? t.skills.join(', ') : ''
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Trainers');
+    XLSX.writeFile(workbook, 'Trainers_Directory_Report.xlsx');
+    toast.success('Excel file downloaded!');
+  };
+
+  const exportToPDF = () => {
+    if (trainers.length === 0) {
+      toast.error('No trainer data to export');
+      return;
+    }
+
+    const doc = new jsPDF();
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('SLA System - Trainers Directory Report', 14, 20);
+    doc.setFontSize(10);
+    doc.setFont('Helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 26);
+
+    let yPosition = 35;
+    doc.setFillColor(124, 58, 237);
+    doc.rect(14, yPosition, 182, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.text('Trainer ID', 16, yPosition + 6);
+    doc.text('Name', 45, yPosition + 6);
+    doc.text('Domain Role', 95, yPosition + 6);
+    doc.text('Mobile', 145, yPosition + 6);
+    doc.text('Status', 175, yPosition + 6);
+
+    yPosition += 8;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('Helvetica', 'normal');
+
+    trainers.forEach((t, index) => {
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      if (index % 2 === 0) {
+        doc.setFillColor(243, 244, 246);
+        doc.rect(14, yPosition, 182, 8, 'F');
+      }
+
+      doc.text((t.trainerId || `TR-${(index + 1).toString().padStart(3, '0')}`).substring(0, 12), 16, yPosition + 6);
+      doc.text(t.name.substring(0, 22), 45, yPosition + 6);
+      doc.text(t.role.substring(0, 22), 95, yPosition + 6);
+      doc.text(t.mobile, 145, yPosition + 6);
+      doc.text(t.status || 'Active', 175, yPosition + 6);
+      yPosition += 8;
+    });
+
+    doc.save('Trainers_Directory_Report.pdf');
+    toast.success('PDF report downloaded!');
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
-            Trainers Directory & Domain Mapping
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 font-sans">
-            Manage Technical, Communication, and Aptitude trainers with Trainer ID, Contact, Multi-select Stacks, and Skills.
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
+              Trainers Directory & Domain Mapping
+            </h1>
+            <span className="bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 px-3 py-1 rounded-full text-xs font-black">
+              {trainers.length} Trainers
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Manage Technical, Communication, and Aptitude trainers with Trainer ID, Contact, Multi-select Stacks, and Shift Times.
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2.5 items-center">
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-violet-800 hover:bg-violet-500 text-white text-xs font-extrabold shadow-md shadow-violet-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-[#7C3AED] hover:bg-[#6d28d9] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-violet-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <Plus size={16} />
             <span>Add New Trainer</span>
@@ -357,16 +437,32 @@ const TrainerManagement = () => {
 
           <button
             onClick={() => setImportModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-extrabold shadow-md shadow-purple-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <Upload size={16} />
             <span>Import Excel</span>
+          </button>
+
+          <button
+            onClick={exportToExcel}
+            className="flex items-center justify-center space-x-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            <FileSpreadsheet size={16} className="text-emerald-600" />
+            <span className="hidden sm:inline">Export Excel</span>
+          </button>
+
+          <button
+            onClick={exportToPDF}
+            className="flex items-center justify-center space-x-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+          >
+            <FileDown size={16} className="text-rose-600" />
+            <span className="hidden sm:inline">Export PDF</span>
           </button>
         </div>
       </div>
 
       {/* Role Filter Tabs */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap bg-white dark:bg-[#12131a] p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         {[
           { key: 'All', label: 'All Trainers' },
           { key: 'Technical Trainer', label: 'Technical Trainers' },
@@ -378,8 +474,8 @@ const TrainerManagement = () => {
             onClick={() => setRoleFilter(r.key)}
             className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
               roleFilter === r.key
-                ? 'bg-violet-800 text-white shadow-md shadow-violet-500/20'
-                : 'bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-violet-500'
+                ? 'bg-[#7C3AED] text-white shadow-md shadow-violet-500/20'
+                : 'bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-violet-500'
             }`}
           >
             <GraduationCap size={14} />
@@ -389,30 +485,30 @@ const TrainerManagement = () => {
       </div>
 
       {/* Main Card with Toolbar & Table */}
-      <div className="bg-white dark:bg-[#12131a] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#12131a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         {/* Toolbar */}
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by Trainer ID, Name, Email, Mobile..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
+              className="pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-900/40 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-slate-800 dark:text-white"
             />
           </div>
 
-          <div className="text-xs text-slate-500 font-semibold">
-            Showing <span className="font-bold text-violet-800 dark:text-violet-400">{filteredTrainers.length}</span> trainer(s)
+          <div className="text-xs text-slate-500 font-bold">
+            Showing <span className="text-[#7C3AED] dark:text-violet-400 font-black">{filteredTrainers.length}</span> trainer(s)
           </div>
         </div>
 
         {/* Trainers Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[850px]">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-bold uppercase tracking-wider">
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 text-slate-500 text-[11px] font-black uppercase tracking-wider">
                 <th className="px-6 py-4">Trainer ID</th>
                 <th className="px-6 py-4">Trainer Name & Domain</th>
                 <th className="px-6 py-4">Mobile & Email</th>
@@ -426,7 +522,8 @@ const TrainerManagement = () => {
               {loading ? (
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-semibold">
-                    Loading trainers directory...
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#7C3AED] border-t-transparent mx-auto"></div>
+                    <span className="text-xs font-bold mt-3 block">Loading trainers directory...</span>
                   </td>
                 </tr>
               ) : filteredTrainers.length === 0 ? (
@@ -443,7 +540,7 @@ const TrainerManagement = () => {
 
                   return (
                     <tr key={trainer._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-violet-800 dark:text-violet-400">
+                      <td className="px-6 py-4 font-mono font-black text-violet-700 dark:text-violet-400">
                         {displayId}
                       </td>
 
