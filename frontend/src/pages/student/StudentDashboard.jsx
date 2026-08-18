@@ -113,6 +113,7 @@ const StudentDashboard = () => {
       batch: user.technicalBatch || techBatch?.name,
       trainer: user.technicalTrainer || techBatch?.trainerName || (techBatch?.trainers && techBatch.trainers[0]?.name) || 'Balamugunthan S',
       schedule: resolveDomainSchedule(techBatch, 'technical'),
+      startDate: techStats?.startDate || (techBatch?.startDate ? new Date(techBatch.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'),
       stats: techStats
     },
     {
@@ -122,6 +123,7 @@ const StudentDashboard = () => {
       batch: user.communicationBatch || commBatch?.name,
       trainer: user.communicationTrainer || commBatch?.trainerName || (commBatch?.trainers && commBatch.trainers[0]?.name) || 'Maariya',
       schedule: resolveDomainSchedule(commBatch, 'communication'),
+      startDate: commStats?.startDate || (commBatch?.startDate ? new Date(commBatch.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'),
       stats: commStats
     },
     {
@@ -131,6 +133,7 @@ const StudentDashboard = () => {
       batch: user.aptitudeBatch || aptiBatch?.name,
       trainer: user.aptitudeTrainer || aptiBatch?.trainerName || (aptiBatch?.trainers && aptiBatch.trainers[0]?.name) || 'Mari Priyan',
       schedule: resolveDomainSchedule(aptiBatch, 'aptitude'),
+      startDate: aptiStats?.startDate || (aptiBatch?.startDate ? new Date(aptiBatch.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'),
       stats: aptiStats
     },
   ];
@@ -239,6 +242,7 @@ const StudentDashboard = () => {
                 />
                 <div className="space-y-2.5">
                   <InfoRow label="Assigned Batch:" value={domain.batch || 'Unassigned'} />
+                  <InfoRow label="Start Date:" value={domain.startDate || 'N/A'} />
                   <InfoRow label="Trainer:" value={domain.trainer || 'Unassigned'} accent />
                   <InfoRow label="Schedule:" value={domain.schedule || 'Mon - Fri • 09:00 AM – 01:00 PM'} />
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
