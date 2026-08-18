@@ -508,25 +508,31 @@ export default function TrainingScreen() {
             </View>
             
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-              {availTechBatches.map(b => {
-                const isSelected = selectedTechIds.some(id => String(id) === String(b._id));
-                return (
-                  <TouchableOpacity 
-                    key={String(b._id)} 
-                    onPress={() => toggleTechBatch(b._id)}
-                    className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
-                  >
-                    <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
-                      {isSelected && <CheckCircle2 size={14} color="#fff" />}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[#0F172A] font-bold">{b.name}</Text>
-                      <Text className="text-[#64748B] text-xs mt-1">Course: {b.course || 'Technical'}</Text>
-                      <Text className="text-[#64748B] text-xs mt-0.5">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )
-              })}
+              {availTechBatches.length === 0 ? (
+                <View className="py-8 items-center justify-center">
+                  <Text className="text-[#64748B] text-xs font-semibold">No technical batches available matching your search.</Text>
+                </View>
+              ) : (
+                availTechBatches.map(b => {
+                  const isSelected = selectedTechIds.some(id => String(id) === String(b._id));
+                  return (
+                    <TouchableOpacity 
+                      key={String(b._id)} 
+                      onPress={() => toggleTechBatch(b._id)}
+                      className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
+                    >
+                      <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
+                        {isSelected && <CheckCircle2 size={14} color="#fff" />}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[#0F172A] font-bold">{b.name}</Text>
+                        <Text className="text-[#64748B] text-xs mt-1">Course: {b.course || 'Technical'}</Text>
+                        <Text className="text-[#64748B] text-xs mt-0.5">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'Auto-Assigned'} • {resolveBatchSchedule(b)}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )
+                })
+              )}
             </ScrollView>
             <View className="mt-4">
               <TouchableOpacity onPress={handleSaveTech} disabled={savingTech} className="w-full bg-[#4F46E5] py-3.5 rounded-xl items-center disabled:opacity-50">
@@ -563,24 +569,30 @@ export default function TrainingScreen() {
             </View>
             
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-              {availAptiBatches.map(b => {
-                const isSelected = selectedAptiId ? String(selectedAptiId) === String(b._id) : false;
-                return (
-                  <TouchableOpacity 
-                    key={String(b._id)} 
-                    onPress={() => setSelectedAptiId(String(b._id))}
-                    className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
-                  >
-                    <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
-                      {isSelected && <CheckCircle2 size={14} color="#fff" />}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[#0F172A] font-bold">{b.name}</Text>
-                      <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )
-              })}
+              {availAptiBatches.length === 0 ? (
+                <View className="py-8 items-center justify-center">
+                  <Text className="text-[#64748B] text-xs font-semibold">No aptitude batches available matching your search.</Text>
+                </View>
+              ) : (
+                availAptiBatches.map(b => {
+                  const isSelected = selectedAptiId ? String(selectedAptiId) === String(b._id) : false;
+                  return (
+                    <TouchableOpacity 
+                      key={String(b._id)} 
+                      onPress={() => setSelectedAptiId(String(b._id))}
+                      className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
+                    >
+                      <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
+                        {isSelected && <CheckCircle2 size={14} color="#fff" />}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[#0F172A] font-bold">{b.name}</Text>
+                        <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'Auto-Assigned'} • {resolveBatchSchedule(b)}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )
+                })
+              )}
             </ScrollView>
             <View className="mt-4">
               <TouchableOpacity onPress={handleSaveApti} disabled={savingApti} className="w-full bg-[#4F46E5] py-3.5 rounded-xl items-center disabled:opacity-50">
@@ -617,24 +629,30 @@ export default function TrainingScreen() {
             </View>
             
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-              {availCommBatches.map(b => {
-                const isSelected = selectedCommId ? String(selectedCommId) === String(b._id) : false;
-                return (
-                  <TouchableOpacity 
-                    key={String(b._id)} 
-                    onPress={() => setSelectedCommId(String(b._id))}
-                    className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
-                  >
-                    <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
-                      {isSelected && <CheckCircle2 size={14} color="#fff" />}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-[#0F172A] font-bold">{b.name}</Text>
-                      <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'N/A'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )
-              })}
+              {availCommBatches.length === 0 ? (
+                <View className="py-8 items-center justify-center">
+                  <Text className="text-[#64748B] text-xs font-semibold">No communication batches available matching your search.</Text>
+                </View>
+              ) : (
+                availCommBatches.map(b => {
+                  const isSelected = selectedCommId ? String(selectedCommId) === String(b._id) : false;
+                  return (
+                    <TouchableOpacity 
+                      key={String(b._id)} 
+                      onPress={() => setSelectedCommId(String(b._id))}
+                      className={`flex-row items-center p-4 mb-3 rounded-2xl border ${isSelected ? 'bg-[#F3E8FF]/40 border-[#D8B4FE]' : 'bg-white border-[#E2E8F0]'}`}
+                    >
+                      <View className={`w-6 h-6 rounded-full border items-center justify-center mr-4 ${isSelected ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-[#64748B]/40'}`}>
+                        {isSelected && <CheckCircle2 size={14} color="#fff" />}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[#0F172A] font-bold">{b.name}</Text>
+                        <Text className="text-[#64748B] text-xs mt-1">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers[0].name : 'Auto-Assigned'} • {resolveBatchSchedule(b)}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )
+                })
+              )}
             </ScrollView>
             <View className="mt-4">
               <TouchableOpacity onPress={handleSaveComm} disabled={savingComm} className="w-full bg-[#4F46E5] py-3.5 rounded-xl items-center disabled:opacity-50">
