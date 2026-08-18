@@ -76,20 +76,19 @@ export default function TrainingScreen() {
     return 'Technical';
   };
 
-  const resolveBatchSchedule = (batch: any) => {
-    if (!batch) return 'Mon - Fri • 09:00 AM – 01:00 PM';
-    if (batch.startTime && batch.endTime) {
+  const resolveBatchSchedule = (batch: any, defaultDepartment?: string) => {
+    if (batch?.startTime && batch?.endTime) {
       const daysPrefix = batch.days ? `${batch.days} • ` : (batch.scheduleDays ? `${batch.scheduleDays} • ` : '');
       return `${daysPrefix}${batch.startTime} – ${batch.endTime}`;
     }
-    if (batch.startTime) {
+    if (batch?.startTime) {
       const daysPrefix = batch.days ? `${batch.days} • ` : '';
       return `${daysPrefix}${batch.startTime}`;
     }
-    if (batch.schedule && typeof batch.schedule === 'string' && batch.schedule.trim() !== '' && batch.schedule !== 'Schedule Not Set') {
+    if (batch?.schedule && typeof batch.schedule === 'string' && batch.schedule.trim() !== '' && batch.schedule !== 'Schedule Not Set') {
       return batch.schedule;
     }
-    const dept = (batch?.department || batch?.course || batch?.name || '').toLowerCase();
+    const dept = (defaultDepartment || batch?.department || batch?.course || batch?.name || '').toLowerCase();
     if (dept.includes('comm')) return 'Mon - Fri • 02:00 PM – 04:00 PM';
     if (dept.includes('apti')) return 'Mon - Fri • 11:00 AM – 01:00 PM';
     return 'Mon - Fri • 09:00 AM – 01:00 PM';
@@ -363,7 +362,7 @@ export default function TrainingScreen() {
                   <View className="items-center">
                     <Text className="text-[#64748B] text-[10px] font-bold uppercase">Schedule</Text>
                     <Text className="text-indigo-600 text-xs font-extrabold mt-0.5">
-                      {resolveBatchSchedule(commBatch)}
+                      {resolveBatchSchedule(commBatch, 'Communication')}
                     </Text>
                   </View>
                   <View className="items-end">
@@ -442,7 +441,7 @@ export default function TrainingScreen() {
                   <View className="items-center">
                     <Text className="text-[#64748B] text-[10px] font-bold uppercase">Schedule</Text>
                     <Text className="text-indigo-600 text-xs font-extrabold mt-0.5">
-                      {resolveBatchSchedule(aptiBatch)}
+                      {resolveBatchSchedule(aptiBatch, 'Aptitude')}
                     </Text>
                   </View>
                   <View className="items-end">
