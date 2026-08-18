@@ -1732,9 +1732,40 @@ const TrainerDashboard = () => {
                   >
                     <FileDown size={13} />
                     <span>CSV</span>
-                  </button>
-                </div>
               </div>
+
+              {/* Selected Batch Details Banner Card */}
+              {selectedBatchId && selectedBatchId !== 'all' && (() => {
+                const selectedBatchObj = batches.find(b => String(b._id) === String(selectedBatchId));
+                if (!selectedBatchObj) return null;
+
+                return (
+                  <div className="p-4 bg-gradient-to-r from-violet-900 via-indigo-900 to-purple-950 text-white rounded-2xl m-3.5 shadow-md space-y-2 border border-violet-700/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <span className="font-mono font-black text-sm px-3 py-1 bg-white/20 backdrop-blur-md rounded-xl text-yellow-300 border border-white/20">
+                          {selectedBatchObj.batchId || selectedBatchObj.name}
+                        </span>
+                        <div>
+                          <h3 className="font-black text-base tracking-tight">{selectedBatchObj.name}</h3>
+                          <p className="text-xs text-violet-200 font-medium">{selectedBatchObj.course || 'Domain Course'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+                        <div className="flex items-center space-x-1.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
+                          <Clock size={13} className="text-yellow-400" />
+                          <span>{selectedBatchObj.schedule || '09:00 AM - 11:00 AM'}</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
+                          <Users size={13} className="text-emerald-400" />
+                          <span>{batchStudents.length} Students</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Data Table */}
               <div className="overflow-x-auto relative">
