@@ -36,8 +36,10 @@ export const getStudentDashboard = async (req, res) => {
       techMaster,
       notifications,
       certificates,
-      readiness,
-      calculatedScores
+      studentBatch,
+      techAtt,
+      commAtt,
+      aptiAtt
     ] = await Promise.all([
       Student.findOne({ user: studentId })
         .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
@@ -63,8 +65,26 @@ export const getStudentDashboard = async (req, res) => {
         .limit(10)
         .lean(),
       Certificate.find({ student: studentId }).lean(),
-      calculateStudentScores(studentId)
+      Batch.findOne({ students: studentId }).lean(),
+      calculateDynamicAttendance(studentId, 'Technical'),
+      calculateDynamicAttendance(studentId, 'Communication'),
+      calculateDynamicAttendance(studentId, 'Aptitude')
     ]);
+
+    let assignments = [];
+    if (studentBatch) {
+      assignments = await Assignment.find({ batch: studentBatch._id }).lean();
+    }
+
+    const calculatedScores = await calculateStudentScores(studentId, {
+      scores,
+      placement: placementData,
+      studentBatch,
+      assignments,
+      techAtt,
+      commAtt,
+      aptiAtt
+    });
 
     let profile = profileDoc || { user: userDoc };
     const placement = placementData || {};

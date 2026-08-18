@@ -31,40 +31,68 @@ const getDomainProgress = async (studentId, category, totalCount) => {
 };
 
 // Calculate detailed scores and final grade for a student
-export const calculateStudentScores = async (studentId) => {
+export const calculateStudentScores = async (studentId, preFetchedData = null) => {
   // 1. Attendance Score (10% weight)
-  // Parallelize dynamic attendance percentages per module
-  const [techAtt, commAtt, aptiAtt] = await Promise.all([
-    calculateDynamicAttendance(studentId, 'Technical'),
-    calculateDynamicAttendance(studentId, 'Communication'),
-    calculateDynamicAttendance(studentId, 'Aptitude')
-  ]);
+  let techAtt, commAtt, aptiAtt;
+  if (preFetchedData && preFetchedData.techAtt && preFetchedData.commAtt && preFetchedData.aptiAtt) {
+    techAtt = preFetchedData.techAtt;
+    commAtt = preFetchedData.commAtt;
+    aptiAtt = preFetchedData.aptiAtt;
+  } else {
+    [techAtt, commAtt, aptiAtt] = await Promise.all([
+      calculateDynamicAttendance(studentId, 'Technical'),
+      calculateDynamicAttendance(studentId, 'Communication'),
+      calculateDynamicAttendance(studentId, 'Aptitude')
+    ]);
+  }
 
   // Average the attendance percentage across enrolled departments
-  const attendancePercent = Math.round((techAtt.attendancePercent + commAtt.attendancePercent + aptiAtt.attendancePercent) / 3);
+  const attendancePercent = Math.round(((techAtt?.attendancePercent || 0) + (commAtt?.attendancePercent || 0) + (aptiAtt?.attendancePercent || 0)) / 3);
   const attendanceScore = (attendancePercent / 100) * 10; // scaled out of 10
 
   // Helper for average module marks
   const getAverageModuleMarks = async (category) => {
-    const scores = await Score.find({ student: studentId, category }).lean();
+    let scores;
+    if (preFetchedData && preFetchedData.scores) {
+      scores = preFetchedData.scores.filter(s => s.category === category);
+    } else {
+      scores = await Score.find({ student: studentId, category }).lean();
+    }
     if (scores.length === 0) return 0;
     const sum = scores.reduce((acc, curr) => acc + curr.marks, 0);
     return sum / scores.length;
   };
 
   // 2. Parallelize assignment, domain scores, and placement mock score
-  const [aptitudeScore, communicationScore, technicalScore, placement, studentBatch] = await Promise.all([
-    getAverageModuleMarks('Aptitude'),
-    getAverageModuleMarks('Communication'),
-    getAverageModuleMarks('Technical'),
-    Placement.findOne({ student: studentId }).lean(),
-    Batch.findOne({ students: studentId }).lean()
-  ]);
+  let placement, studentBatch;
+  let aptitudeScore, communicationScore, technicalScore;
+
+  if (preFetchedData) {
+    aptitudeScore = await getAverageModuleMarks('Aptitude');
+    communicationScore = await getAverageModuleMarks('Communication');
+    technicalScore = await getAverageModuleMarks('Technical');
+    placement = preFetchedData.placement;
+    studentBatch = preFetchedData.studentBatch;
+  } else {
+    [aptitudeScore, communicationScore, technicalScore, placement, studentBatch] = await Promise.all([
+      getAverageModuleMarks('Aptitude'),
+      getAverageModuleMarks('Communication'),
+      getAverageModuleMarks('Technical'),
+      Placement.findOne({ student: studentId }).lean(),
+      Batch.findOne({ students: studentId }).lean()
+    ]);
+  }
 
   // 3. Assignment Score (15% weight)
   let assignmentScore = 10; // default if no assignments
   if (studentBatch) {
-    const assignments = await Assignment.find({ batch: studentBatch._id }).lean();
+    let assignments;
+    if (preFetchedData && preFetchedData.assignments) {
+      assignments = preFetchedData.assignments;
+    } else {
+      assignments = await Assignment.find({ batch: studentBatch._id }).lean();
+    }
+    
     if (assignments.length > 0) {
       let totalSubmissionMarks = 0;
       let count = 0;
