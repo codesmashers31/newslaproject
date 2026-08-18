@@ -433,16 +433,23 @@ const StudentManagement = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Students Directory</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enroll, edit, and audit student scores and portfolios</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Students Directory</h1>
+            <span className="bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 px-3 py-1 rounded-full text-xs font-black">
+              {totalServerStudents} Active Students
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+            Manage real-time course enrollments, batch assignments, and student scorecards
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5 items-center">
           <button 
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center space-x-2 bg-violet-800 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-violet-500/20"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-[#7C3AED] hover:bg-[#6d28d9] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-violet-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <Plus size={16} />
             <span>Add Student</span>
@@ -450,7 +457,7 @@ const StudentManagement = () => {
 
           <button 
             onClick={() => setImportModalOpen(true)}
-            className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-purple-500/20"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <Upload size={16} />
             <span>Import Excel</span>
@@ -458,35 +465,35 @@ const StudentManagement = () => {
 
           <button 
             onClick={exportToExcel}
-            className="flex items-center space-x-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-900"
+            className="flex items-center justify-center space-x-2 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
           >
             <FileSpreadsheet size={16} className="text-emerald-600" />
-            <span>Export Excel</span>
+            <span className="hidden sm:inline">Export Excel</span>
           </button>
 
           <button 
             onClick={exportToPDF}
-            className="flex items-center space-x-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-900"
+            className="flex items-center justify-center space-x-2 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
           >
             <FileDown size={16} className="text-rose-600" />
-            <span>Export PDF</span>
+            <span className="hidden sm:inline">Export PDF</span>
           </button>
         </div>
       </div>
 
-      {/* Search & Filters */}
-      <form onSubmit={handleSearchSubmit} className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+      {/* Search & Filters Bar */}
+      <form onSubmit={handleSearchSubmit} className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 p-4 rounded-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 items-center shadow-sm">
         {/* Search */}
         <div className="relative">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
             <Search size={16} />
           </span>
           <input
             type="text"
-            placeholder="Search by name, email..."
+            placeholder="Search student by name, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 dark:focus:ring-violet-400"
+            className="w-full pl-9 pr-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400"
           />
         </div>
 
@@ -495,7 +502,7 @@ const StudentManagement = () => {
           <select
             value={selectedBatch}
             onChange={(e) => setSelectedBatch(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 dark:focus:ring-violet-400"
+            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400 cursor-pointer"
           >
             <option value="">All Batches</option>
             {getFilteredFilterBatches().map(b => (
@@ -509,11 +516,11 @@ const StudentManagement = () => {
           <select
             value={selectedPlacement}
             onChange={(e) => setSelectedPlacement(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#12131a] text-sm focus:outline-none focus:ring-2 focus:ring-violet-800 dark:focus:ring-violet-400"
+            className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400 cursor-pointer"
           >
             <option value="">All Placement Statuses</option>
             <option value="Not Started">Not Started</option>
-            <option value="Pending">Pending/Interviewing</option>
+            <option value="Pending">Pending / Interviewing</option>
             <option value="Selected">Selected</option>
             <option value="Offer Received">Offer Received</option>
             <option value="Rejected">Rejected</option>
@@ -523,123 +530,158 @@ const StudentManagement = () => {
         {/* Search Action */}
         <button 
           type="submit"
-          className="w-full py-2.5 bg-violet-800 hover:bg-violet-500 text-white rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 shadow-lg shadow-violet-500/10"
+          className="w-full py-2.5 bg-[#7C3AED] hover:bg-[#6d28d9] text-white rounded-2xl text-xs sm:text-sm font-extrabold flex items-center justify-center space-x-2 shadow-md shadow-violet-500/10 cursor-pointer active:scale-95 transition-all"
         >
           <Filter size={16} />
           <span>Apply Filters</span>
         </button>
       </form>
 
-      {/* Students Table */}
+      {/* Students Directory Container */}
       <div className="bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 text-xs font-semibold uppercase tracking-wider bg-gray-50/50 dark:bg-gray-900/30">
-                <th className="px-6 py-4">Student</th>
+              <tr className="border-b border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400 text-[11px] font-black uppercase tracking-wider bg-slate-50/80 dark:bg-gray-900/40">
+                <th className="px-6 py-4">Student Info</th>
                 <th className="px-6 py-4">Mobile</th>
-                <th className="px-6 py-4">Technical Training</th>
-                <th className="px-6 py-4">Communication Skills</th>
-                <th className="px-6 py-4">Aptitude & Reasoning</th>
+                <th className="px-6 py-4">Technical Track</th>
+                <th className="px-6 py-4">Communication Track</th>
+                <th className="px-6 py-4">Aptitude Track</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-800 border-t-transparent mx-auto"></div>
-                    <span className="text-xs text-gray-400 mt-2 block">Loading students directory...</span>
+                  <td colSpan="7" className="text-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#7C3AED] border-t-transparent mx-auto"></div>
+                    <span className="text-xs font-bold text-gray-400 mt-3 block">Loading students directory...</span>
                   </td>
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-gray-500 dark:text-gray-400 text-sm">
-                    No students match the criteria.
+                  <td colSpan="7" className="text-center py-12 text-gray-500 dark:text-gray-400 text-sm font-bold">
+                    No students found matching your filters.
                   </td>
                 </tr>
               ) : (
                 paginatedStudents.map((student) => (
-                  <tr key={student._id} className="hover:bg-gray-50/30 dark:hover:bg-gray-900/10 transition-colors">
-                    <td className="px-6 py-4 flex items-center space-x-3">
-                      <div className="h-9 w-9 rounded-lg bg-violet-100 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 font-bold flex items-center justify-center">
-                        {student.name.charAt(0)}
+                  <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                    {/* Student Info */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-2xl bg-violet-100 dark:bg-violet-950/50 text-[#7C3AED] dark:text-violet-300 font-black text-sm flex items-center justify-center shrink-0 border border-violet-200/50 dark:border-violet-900/40">
+                          {student.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-extrabold text-gray-900 dark:text-white truncate">{student.name}</p>
+                          <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 truncate">{student.email}</p>
+                          {student.slaeId && (
+                            <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
+                              {student.slaeId}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold">{student.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{student.email}</p>
-                        {student.slaeId && (
-                          <span className="inline-flex mt-0.5 items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-indigo-455">
-                            EID: {student.slaeId}
+                    </td>
+
+                    {/* Mobile */}
+                    <td className="px-6 py-4 text-xs font-bold text-gray-600 dark:text-gray-300">
+                      {student.mobile || 'N/A'}
+                    </td>
+
+                    {/* Technical Track */}
+                    <td className="px-6 py-4">
+                      {student.technicalBatch ? (
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-extrabold bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-900/30">
+                            {student.technicalBatch}
                           </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {student.mobile}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">
-                        {student.technicalBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
-                      </div>
-                      {student.technicalBatch && student.technicalTrainer && (
-                        <div className="text-[10px] text-violet-800 dark:text-violet-400 font-bold mt-0.5 leading-none">
-                          Trainer: {student.technicalTrainer}
+                          <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 pl-1">
+                            Trainer: <span className="text-violet-600 dark:text-violet-400">{student.technicalTrainer || 'Balamugunthan S'}</span>
+                          </p>
                         </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+                          Unassigned
+                        </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">
-                        {student.communicationBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
-                      </div>
-                      {student.communicationBatch && student.communicationTrainer && (
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5 leading-none">
-                          Trainer: {student.communicationTrainer}
+
+                    {/* Communication Track */}
+                    <td className="px-6 py-4">
+                      {student.communicationBatch ? (
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30">
+                            {student.communicationBatch}
+                          </span>
+                          <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 pl-1">
+                            Trainer: <span className="text-emerald-600 dark:text-emerald-400">{student.communicationTrainer || 'Maariya'}</span>
+                          </p>
                         </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+                          Unassigned
+                        </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-semibold text-gray-800 dark:text-gray-300 leading-tight">
-                        {student.aptitudeBatch || <span className="text-xs text-gray-450 dark:text-gray-500 italic font-normal">Unassigned</span>}
-                      </div>
-                      {student.aptitudeBatch && student.aptitudeTrainer && (
-                        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold mt-0.5 leading-none">
-                          Trainer: {student.aptitudeTrainer}
+
+                    {/* Aptitude Track */}
+                    <td className="px-6 py-4">
+                      {student.aptitudeBatch ? (
+                        <div className="space-y-0.5">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30">
+                            {student.aptitudeBatch}
+                          </span>
+                          <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 pl-1">
+                            Trainer: <span className="text-amber-600 dark:text-amber-400">{student.aptitudeTrainer || 'Mari Priyan'}</span>
+                          </p>
                         </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400">
+                          Unassigned
+                        </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-extrabold ${
                         student.status === 'Active' 
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400'
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                       }`}>
-                        {student.status}
+                        {student.status || 'Active'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button 
-                        onClick={() => openDetailsModal(student)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-violet-800 transition-colors"
-                        title="View Scorecards"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button 
-                        onClick={() => openEditModal(student)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 hover:text-violet-800 transition-colors"
-                        title="Edit Profile"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(student._id)}
-                        className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-gray-500 hover:text-red-600 transition-colors"
-                        title="Delete Student"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-1.5">
+                        <button 
+                          onClick={() => openDetailsModal(student)}
+                          className="p-2 hover:bg-violet-50 dark:hover:bg-violet-950/30 rounded-xl text-gray-500 hover:text-violet-600 transition-colors cursor-pointer"
+                          title="View Scorecards"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button 
+                          onClick={() => openEditModal(student)}
+                          className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                          title="Edit Profile"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(student._id)}
+                          className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-gray-500 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Delete Student"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
