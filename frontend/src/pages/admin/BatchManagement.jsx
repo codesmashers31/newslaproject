@@ -145,12 +145,57 @@ const BatchManagement = () => {
     setModalOpen(true);
   };
 
+  // Helper: Converts 12-hour "10:00 AM" or "02:00 PM" to 24-hour "10:00" or "14:00" for HTML <input type="time" />
+  const convertTo24HourTime = (timeStr) => {
+    if (!timeStr) return '';
+    const str = timeStr.trim();
+    if (/^\d{2}:\d{2}$/.test(str)) return str;
+    if (/^\d{1}:\d{2}$/.test(str)) return `0${str}`;
+
+    const match = str.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return '';
+
+    let [_, hours, minutes, modifier] = match;
+    let h = parseInt(hours, 10);
+    if (modifier.toUpperCase() === 'PM' && h < 12) h += 12;
+    if (modifier.toUpperCase() === 'AM' && h === 12) h = 0;
+
+    const hStr = h < 10 ? `0${h}` : `${h}`;
+    return `${hStr}:${minutes}`;
+  };
+
+  // Helper: Converts 24-hour "14:00" to 12-hour "02:00 PM"
+  const convertTo12HourTime = (time24) => {
+    if (!time24) return '';
+    const str = time24.trim();
+    if (/AM|PM/i.test(str)) return str;
+
+    const match = str.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return str;
+
+    let [_, hours, minutes] = match;
+    let h = parseInt(hours, 10);
+    const modifier = h >= 12 ? 'PM' : 'AM';
+    if (h === 0) h = 12;
+    if (h > 12) h -= 12;
+
+    const hStr = h < 10 ? `0${h}` : `${h}`;
+    return `${hStr}:${minutes} ${modifier}`;
+  };
+
   const openEditModal = (batch) => {
     setEditingBatch(batch);
     const trainerList = batch.trainers || [];
-    const techT = trainerList.find(t => t.role === 'Technical Trainer')?._id || '';
-    const commT = trainerList.find(t => t.role === 'Communication Trainer')?._id || '';
-    const aptiT = trainerList.find(t => t.role === 'Aptitude Trainer')?._id || '';
+
+    const findTrainerId = (roleName) => {
+      const found = trainerList.find(t => typeof t === 'object' && t.role === roleName);
+      if (found) return found._id;
+      return '';
+    };
+
+    const techT = batch.technicalTrainer || findTrainerId('Technical Trainer') || (trainerList[0]?._id || '');
+    const commT = batch.communicationTrainer || findTrainerId('Communication Trainer') || '';
+    const aptiT = batch.aptitudeTrainer || findTrainerId('Aptitude Trainer') || '';
 
     const formatDate = (dateVal) => {
       if (!dateVal) return '';
@@ -166,8 +211,8 @@ const BatchManagement = () => {
       aptitudeTrainer: aptiT,
       startDate: formatDate(batch.startDate),
       endDate: formatDate(batch.endDate),
-      startTime: batch.startTime || '',
-      endTime: batch.endTime || '',
+      startTime: convertTo24HourTime(batch.startTime),
+      endTime: convertTo24HourTime(batch.endTime),
     });
     setModalOpen(true);
   };
@@ -191,16 +236,29 @@ const BatchManagement = () => {
         courseValue = 'Aptitude & Reasoning';
       }
 
+      const formattedStartTime = convertTo12HourTime(formData.startTime);
+      const formattedEndTime = convertTo12HourTime(formData.endTime);
+      let scheduleString = '';
+      if (formattedStartTime && formattedEndTime) {
+        scheduleString = `Mon - Fri • ${formattedStartTime} – ${formattedEndTime}`;
+      } else if (formattedStartTime) {
+        scheduleString = `Mon - Fri • ${formattedStartTime}`;
+      }
+
       const submitData = {
         name: formData.name,
         batchId: formData.batchId,
         course: courseValue,
         status: formData.status,
         trainers: selectedTrainers,
+        technicalTrainer: formData.technicalTrainer || null,
+        communicationTrainer: formData.communicationTrainer || null,
+        aptitudeTrainer: formData.aptitudeTrainer || null,
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
-        startTime: formData.startTime || '',
-        endTime: formData.endTime || '',
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
+        schedule: scheduleString
       };
 
       if (editingBatch) {
