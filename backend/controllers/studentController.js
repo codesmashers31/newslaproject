@@ -91,16 +91,27 @@ export const getStudentDashboard = async (req, res) => {
         scheduleStr = b.startTime;
       }
 
+      if (!scheduleStr || scheduleStr.trim() === '' || scheduleStr === 'Schedule Not Set') {
+        const deptLower = (e.department || b.course || b.name || '').toLowerCase();
+        if (deptLower.includes('comm')) {
+          scheduleStr = 'Mon - Fri • 02:00 PM – 04:00 PM';
+        } else if (deptLower.includes('apti')) {
+          scheduleStr = 'Mon - Fri • 11:00 AM – 01:00 PM';
+        } else {
+          scheduleStr = 'Mon - Fri • 09:00 AM – 01:00 PM';
+        }
+      }
+
       return {
         _id: b._id,
-        name: b.name,
-        batchId: b.batchId,
+        name: b.name || 'Assigned Batch',
+        batchId: b.batchId || b.name,
         course: b.course || e.course || '',
         department: e.department,
         startDate: b.startDate,
         endDate: b.endDate,
-        startTime: b.startTime || '',
-        endTime: b.endTime || '',
+        startTime: b.startTime || (e.department === 'Communication' ? '02:00 PM' : e.department === 'Aptitude' ? '11:00 AM' : '09:00 AM'),
+        endTime: b.endTime || (e.department === 'Communication' ? '04:00 PM' : e.department === 'Aptitude' ? '01:00 PM' : '01:00 PM'),
         schedule: scheduleStr,
         trainers: trainersList
       };

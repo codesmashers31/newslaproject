@@ -75,6 +75,15 @@ const StudentDashboard = () => {
   const aptiStats = aptiBatch?.attendanceStats || data?.aptitudeSummary || { presentCount: 0, totalTrainingDays: 120, attendancePercent: 100 };
   const techStats = techBatch?.attendanceStats || { presentCount: 0, totalTrainingDays: 80, attendancePercent: 100 };
 
+  const resolveDomainSchedule = (b, key) => {
+    if (b?.schedule && b.schedule !== 'Schedule Not Set') return b.schedule;
+    if (b?.startTime && b?.endTime) return `${b.startTime} – ${b.endTime}`;
+    if (b?.startTime) return b.startTime;
+    if (key === 'communication') return 'Mon - Fri • 02:00 PM – 04:00 PM';
+    if (key === 'aptitude') return 'Mon - Fri • 11:00 AM – 01:00 PM';
+    return 'Mon - Fri • 09:00 AM – 01:00 PM';
+  };
+
   const domains = [
     {
       key: 'technical',
@@ -82,6 +91,7 @@ const StudentDashboard = () => {
       caption: 'Core technology track',
       batch: user.technicalBatch || techBatch?.name,
       trainer: user.technicalTrainer || (techBatch?.trainers && techBatch.trainers[0]?.name),
+      schedule: resolveDomainSchedule(techBatch, 'technical'),
       stats: techStats
     },
     {
@@ -90,6 +100,7 @@ const StudentDashboard = () => {
       caption: 'Soft skills & interview prep',
       batch: user.communicationBatch || commBatch?.name,
       trainer: user.communicationTrainer || (commBatch?.trainers && commBatch.trainers[0]?.name),
+      schedule: resolveDomainSchedule(commBatch, 'communication'),
       stats: commStats
     },
     {
@@ -98,6 +109,7 @@ const StudentDashboard = () => {
       caption: 'Quantitative & analytical prep',
       batch: user.aptitudeBatch || aptiBatch?.name,
       trainer: user.aptitudeTrainer || (aptiBatch?.trainers && aptiBatch.trainers[0]?.name),
+      schedule: resolveDomainSchedule(aptiBatch, 'aptitude'),
       stats: aptiStats
     },
   ];
@@ -207,6 +219,7 @@ const StudentDashboard = () => {
                 <div className="space-y-2.5">
                   <InfoRow label="Assigned Batch:" value={domain.batch || 'Unassigned'} />
                   <InfoRow label="Trainer:" value={domain.trainer || 'Unassigned'} accent />
+                  <InfoRow label="Schedule:" value={domain.schedule || 'Mon - Fri • 09:00 AM – 01:00 PM'} />
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
