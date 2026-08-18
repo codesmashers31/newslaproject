@@ -33,18 +33,35 @@ const getDomainProgress = async (studentId, category, totalCount) => {
 // Calculate detailed scores and final grade for a student
 export const calculateStudentScores = async (studentId) => {
   // 1. Attendance Score (10% weight)
-  // Get dynamic attendance percentages per module
-  const techAtt = await calculateDynamicAttendance(studentId, 'Technical');
-  const commAtt = await calculateDynamicAttendance(studentId, 'Communication');
-  const aptiAtt = await calculateDynamicAttendance(studentId, 'Aptitude');
+  // Parallelize dynamic attendance percentages per module
+  const [techAtt, commAtt, aptiAtt] = await Promise.all([
+    calculateDynamicAttendance(studentId, 'Technical'),
+    calculateDynamicAttendance(studentId, 'Communication'),
+    calculateDynamicAttendance(studentId, 'Aptitude')
+  ]);
 
   // Average the attendance percentage across enrolled departments
   const attendancePercent = Math.round((techAtt.attendancePercent + commAtt.attendancePercent + aptiAtt.attendancePercent) / 3);
   const attendanceScore = (attendancePercent / 100) * 10; // scaled out of 10
 
-  // 2. Assignment Score (15% weight)
-  // Fetch assignments where this student is enrolled (based on their batch)
-  const studentBatch = await Batch.findOne({ students: studentId }).lean();
+  // Helper for average module marks
+  const getAverageModuleMarks = async (category) => {
+    const scores = await Score.find({ student: studentId, category }).lean();
+    if (scores.length === 0) return 0;
+    const sum = scores.reduce((acc, curr) => acc + curr.marks, 0);
+    return sum / scores.length;
+  };
+
+  // 2. Parallelize assignment, domain scores, and placement mock score
+  const [aptitudeScore, communicationScore, technicalScore, placement, studentBatch] = await Promise.all([
+    getAverageModuleMarks('Aptitude'),
+    getAverageModuleMarks('Communication'),
+    getAverageModuleMarks('Technical'),
+    Placement.findOne({ student: studentId }).lean(),
+    Batch.findOne({ students: studentId }).lean()
+  ]);
+
+  // 3. Assignment Score (15% weight)
   let assignmentScore = 10; // default if no assignments
   if (studentBatch) {
     const assignments = await Assignment.find({ batch: studentBatch._id }).lean();
@@ -64,21 +81,7 @@ export const calculateStudentScores = async (studentId) => {
     }
   }
 
-  // 3. Domain Scores: Aptitude (20%), Communication (15%), Technical (30%)
-  // Fetch averages of module scores (marks out of 10)
-  const getAverageModuleMarks = async (category) => {
-    const scores = await Score.find({ student: studentId, category }).lean();
-    if (scores.length === 0) return 0; // true dynamic value if not started
-    const sum = scores.reduce((acc, curr) => acc + curr.marks, 0);
-    return sum / scores.length;
-  };
-
-  const aptitudeScore = await getAverageModuleMarks('Aptitude');
-  const communicationScore = await getAverageModuleMarks('Communication');
-  const technicalScore = await getAverageModuleMarks('Technical');
-
   // 4. Mock Interview Score (10% weight)
-  const placement = await Placement.findOne({ student: studentId }).lean();
   const mockInterviewScore = placement && placement.mockInterviewCompleted ? 10 : 0;
 
   // Final weighted formula (weights: Att 10%, Assign 15%, Comm 15%, Apt 20%, Tech 30%, Mock 10%)

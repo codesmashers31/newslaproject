@@ -195,7 +195,7 @@ export function ScreenSkeleton({ variant = 'dashboard' }: { variant?: 'dashboard
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 py-4" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-6 py-4" contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
           {/* Announcement Mock */}
           <View className="bg-slate-350 border border-slate-400 rounded-3xl p-5 mb-6" style={{ gap: 12 }}>
             <Skeleton height={8} width="25%" />
@@ -254,7 +254,7 @@ export function ScreenSkeleton({ variant = 'dashboard' }: { variant?: 'dashboard
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 py-4" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-6 py-4" contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
           {/* Progress Ring Circular Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-6 items-center mb-6 shadow-sm" style={{ gap: 16 }}>
             <Skeleton width={132} height={132} radius={66} />
@@ -298,7 +298,7 @@ export function ScreenSkeleton({ variant = 'dashboard' }: { variant?: 'dashboard
           <Skeleton width={76} height={36} radius={10} />
         </View>
 
-        <ScrollView className="flex-1 px-6 py-4" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-6 py-4" contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
           {/* Avatar Picture Card */}
           <View className="bg-white border border-[#E2E8F0] rounded-3xl p-6 items-center mb-6 shadow-sm" style={{ gap: 12 }}>
             <Skeleton width={112} height={112} radius={56} />
@@ -333,7 +333,7 @@ export function ScreenSkeleton({ variant = 'dashboard' }: { variant?: 'dashboard
           </View>
         </View>
 
-        <ScrollView className="flex-1 px-6 py-4" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-6 py-4" contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
           <Skeleton height={10} width="50%" style={{ marginBottom: 16, marginTop: 8 }} />
 
           {/* 3 Training Cards (Tech, Comm, Apti) */}

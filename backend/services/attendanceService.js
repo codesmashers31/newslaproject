@@ -30,56 +30,50 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
 
   const fixedTotalDays = isComm ? 80 : (isApti ? 120 : 100);
 
-  // 1. Bulk pre-fetch all active enrollments for these students
-  const enrollments = await Enrollment.find({
-    studentId: { $in: objectStudentIds },
-    department: dept,
-    status: 'Active'
-  }).populate('batchId', 'name startDate').lean();
+  // Parallelize all independent database pre-fetches for instant response
+  const domainSubjectRegex = isComm ? /comm/i : isApti ? /apti/i : /tech/i;
+
+  const [enrollments, holidays, sessions, subjectAttendances, attendanceLogs] = await Promise.all([
+    Enrollment.find({
+      studentId: { $in: objectStudentIds },
+      department: dept,
+      status: 'Active'
+    }).populate('batchId', 'name startDate').lean(),
+    Holiday.find().lean(),
+    AttendanceSession.find({
+      status: 'Active',
+      $or: [{ subject: domainSubjectRegex }, { category: domainSubjectRegex }]
+    }).lean(),
+    Attendance.find({ subject: domainSubjectRegex }).select('date').lean(),
+    Attendance.find({
+      student: { $in: objectStudentIds },
+      subject: domainSubjectRegex
+    }).lean()
+  ]);
 
   const enrollmentMap = new Map();
-  enrollments.forEach(e => {
+  (enrollments || []).forEach(e => {
     enrollmentMap.set(e.studentId.toString(), e);
   });
 
-  // 2. Pre-fetch holidays
-  const holidays = await Holiday.find().lean();
   const holidaySet = new Set();
-  holidays.forEach(h => {
+  (holidays || []).forEach(h => {
     if (h.date) holidaySet.add(formatDateISO(h.date));
   });
 
-  // 3. Pre-fetch scanned attendance dates for department
-  const domainSubjectRegex = isComm ? /comm/i : isApti ? /apti/i : /tech/i;
-  const sessions = await AttendanceSession.find({
-    status: 'Active',
-    $or: [{ subject: domainSubjectRegex }, { category: domainSubjectRegex }]
-  }).lean();
-
   const domainScannedDates = new Set();
-  sessions.forEach(s => {
+  (sessions || []).forEach(s => {
     const dStr = formatDateISO(s.createdAt);
     if (dStr) domainScannedDates.add(dStr);
   });
 
-  // Also include dates with actual attendance records for this subject
-  const subjectAttendances = await Attendance.find({
-    subject: domainSubjectRegex
-  }).select('date').lean();
-
-  subjectAttendances.forEach(a => {
+  (subjectAttendances || []).forEach(a => {
     const dStr = formatDateISO(a.date);
     if (dStr) domainScannedDates.add(dStr);
   });
 
-  // 4. Pre-fetch all attendance records for these students in this subject
-  const attendanceLogs = await Attendance.find({
-    student: { $in: objectStudentIds },
-    subject: domainSubjectRegex
-  }).lean();
-
   const studentLogsMap = new Map();
-  attendanceLogs.forEach(log => {
+  (attendanceLogs || []).forEach(log => {
     const sId = log.student.toString();
     if (!studentLogsMap.has(sId)) {
       studentLogsMap.set(sId, []);
