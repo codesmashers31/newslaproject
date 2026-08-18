@@ -938,170 +938,199 @@ const TrainerBatchesPage = () => {
         ))}
       </div>
 
-      {/* Enterprise Batches Table */}
-      <EnterpriseTable
-            title={
-              user?.role === 'Communication Trainer'
-                ? 'My Communication Batches'
-                : user?.role === 'Aptitude Trainer'
-                ? 'My Aptitude Batches'
-                : user?.role === 'Technical Trainer'
-                ? 'My Technical Batches'
-                : 'Assigned Batches Directory'
-            }
-            data={batches}
-            loading={loading}
-            searchableFields={['name', 'batchId', 'schedule', 'trainerName']}
-            filterDefinitions={[
-              {
-                key: 'status',
-                label: 'Batch Status',
-                type: 'select',
-                options: ['Active', 'Upcoming', 'Completed'],
-              },
-            ]}
-            sortOptions={[
-              { label: 'Default', key: null, direction: 'asc' },
-              { label: 'Name: A → Z', key: 'name', direction: 'asc' },
-              { label: 'Name: Z → A', key: 'name', direction: 'desc' },
-              { label: 'Student Count: Highest', key: (row) => row.students?.length || 0, direction: 'desc' },
-              { label: 'Student Count: Lowest', key: (row) => row.students?.length || 0, direction: 'asc' },
-            ]}
-            columns={[
-              {
-                key: 'batchId',
-                header: 'Batch ID',
-                width: '130px',
-                render: (row, val, idx) => (
-                  <span className="font-mono font-bold text-indigo-600">
-                    {row.batchId || `BATCH-${(idx + 1).toString().padStart(3, '0')}`}
-                  </span>
-                ),
-              },
-              {
-                key: 'name',
-                header: 'Batch Name & Course',
-                width: '220px',
-                render: (row) => {
-                  const domainBadge = row.course || 'Technical Training';
+      {/* Search & Category Filter Bar */}
+      <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 p-4 rounded-3xl space-y-3.5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Live Search Box */}
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search batch by Batch ID (e.g. SLAKKN_FE_200826), name, course..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 text-slate-900 dark:text-white"
+            />
+          </div>
+
+          {/* Active Batch Count Badge */}
+          <div className="flex items-center space-x-2 shrink-0">
+            <span className="bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 px-3.5 py-1.5 rounded-full text-xs font-black">
+              {filteredBatches.length} Active Batches
+            </span>
+          </div>
+        </div>
+
+        {/* Category Filter Tabs */}
+        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-800/80">
+          {(user?.role === 'Communication Trainer'
+            ? [{ key: 'Communication', label: 'Communication Skills' }]
+            : user?.role === 'Aptitude Trainer'
+            ? [{ key: 'Aptitude', label: 'Aptitude & Reasoning' }]
+            : user?.role === 'Technical Trainer'
+            ? [{ key: 'Technical', label: 'Technical Training' }]
+            : [
+                { key: 'All', label: 'All Domains' },
+                { key: 'Technical', label: 'Technical Training' },
+                { key: 'Communication', label: 'Communication Skills' },
+                { key: 'Aptitude', label: 'Aptitude & Reasoning' },
+              ]
+          ).map(dom => (
+            <button
+              key={dom.key}
+              onClick={() => setDomainFilter(dom.key)}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+                domainFilter === dom.key
+                  ? 'bg-violet-800 text-white shadow-md shadow-violet-500/20'
+                  : 'bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-violet-500'
+              }`}
+            >
+              <BookOpen size={13} />
+              <span>{dom.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Batches Roster Table */}
+      <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[900px]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[11px] font-black uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/40">
+                <th className="px-6 py-4">Batch ID</th>
+                <th className="px-6 py-4">Batch Name & Course</th>
+                <th className="px-6 py-4">Assigned Trainer</th>
+                <th className="px-6 py-4">Schedule</th>
+                <th className="px-6 py-4 text-center">Students</th>
+                <th className="px-6 py-4 text-center">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#7C3AED] border-t-transparent mx-auto"></div>
+                    <span className="text-xs font-bold text-slate-400 mt-3 block">Loading batches directory...</span>
+                  </td>
+                </tr>
+              ) : filteredBatches.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-12 text-slate-500 dark:text-slate-400 text-sm font-bold">
+                    No batches found matching your filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredBatches.map((batch, idx) => {
+                  const domainBadge = batch.course || 'Technical Training';
                   return (
-                    <div>
-                      <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
-                      <div className="mt-1">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
-                          domainBadge.includes('Communication')
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : domainBadge.includes('Aptitude')
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-indigo-100 text-indigo-800'
-                        }`}>
-                          {domainBadge}
+                    <tr key={batch._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                      {/* Batch ID */}
+                      <td className="px-6 py-4">
+                        <span className="font-mono font-black text-xs text-[#7C3AED] dark:text-violet-400 bg-violet-50 dark:bg-violet-950/50 px-2.5 py-1 rounded-lg border border-violet-200/50 dark:border-violet-900/40">
+                          {batch.batchId || `BATCH-${(idx + 1).toString().padStart(3, '0')}`}
                         </span>
-                      </div>
-                    </div>
-                  );
-                },
-              },
-              {
-                key: 'trainers',
-                header: 'Assigned Trainer',
-                width: '180px',
-                render: (row) => (
-                  <div className="flex flex-col gap-1 font-bold text-slate-700">
-                    {row.trainers && row.trainers.length > 0 ? (
-                      row.trainers.map((t, idx) => (
-                        <div key={t._id || idx} className="flex items-center gap-1.5">
-                          <UserCheck size={14} className="text-indigo-500" />
-                          <span>{t.name} <span className="text-[10px] text-slate-400 font-normal">({t.role})</span></span>
+                      </td>
+
+                      {/* Name & Course */}
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="text-sm font-extrabold text-slate-900 dark:text-white">{batch.name}</p>
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
+                            domainBadge.includes('Communication')
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : domainBadge.includes('Aptitude')
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                              : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300'
+                          }`}>
+                            {domainBadge}
+                          </span>
                         </div>
-                      ))
-                    ) : row.trainerName ? (
-                      <div className="flex items-center gap-1.5">
-                        <UserCheck size={14} className="text-indigo-500" />
-                        <span>{row.trainerName}</span>
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 font-normal italic">No trainers assigned</span>
-                    )}
-                  </div>
-                ),
-              },
-              {
-                key: 'schedule',
-                header: 'Schedule',
-                width: '190px',
-                render: (row) => (
-                  <div className="flex items-center gap-1.5 font-medium text-slate-600">
-                    <Clock size={13} className="text-slate-400" />
-                    <span>{row.schedule || '09:00 AM - 11:00 AM'}</span>
-                  </div>
-                ),
-              },
-              {
-                key: 'students',
-                header: 'Students',
-                align: 'center',
-                width: '90px',
-                render: (row) => (
-                  <span className="font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-full text-xs">
-                    {row.students?.length || 0}
-                  </span>
-                ),
-              },
-              {
-                key: 'status',
-                header: 'Status',
-                align: 'center',
-                width: '110px',
-                render: (row) => {
-                  const displayStatus = row.status || 'Active';
-                  return (
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
-                      displayStatus === 'Active'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : displayStatus === 'Completed'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}>
-                      <CheckCircle2 size={11} />
-                      {displayStatus}
-                    </span>
+                      </td>
+
+                      {/* Trainers */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+                          {batch.trainers && batch.trainers.length > 0 ? (
+                            batch.trainers.map((t, tIdx) => (
+                              <div key={t._id || tIdx} className="flex items-center gap-1.5">
+                                <UserCheck size={14} className="text-violet-500 shrink-0" />
+                                <span>{t.name}</span>
+                              </div>
+                            ))
+                          ) : batch.trainerName ? (
+                            <div className="flex items-center gap-1.5">
+                              <UserCheck size={14} className="text-violet-500 shrink-0" />
+                              <span>{batch.trainerName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 font-normal italic">No trainer assigned</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Schedule */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <Clock size={13} className="text-slate-400 shrink-0" />
+                          <span>{batch.schedule || '09:00 AM - 11:00 AM'}</span>
+                        </div>
+                      </td>
+
+                      {/* Students Count */}
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center justify-center font-black text-xs text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+                          {batch.students?.length || 0}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-extrabold ${
+                          batch.status === 'Active'
+                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                            : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400'
+                        }`}>
+                          {batch.status || 'Active'}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end space-x-1.5">
+                          <button
+                            onClick={() => handleViewStudents(batch)}
+                            className="p-2 hover:bg-violet-50 dark:hover:bg-violet-950/30 rounded-xl text-slate-500 hover:text-violet-600 transition-colors cursor-pointer"
+                            title="Manage Students"
+                          >
+                            <Users size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleOpenEdit(batch)}
+                            className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                            title="Edit Batch"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteBatch(batch._id, batch.name)}
+                            className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                            title="Delete Batch"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   );
-                },
-              },
-              {
-                key: 'actions',
-                header: 'Actions',
-                align: 'right',
-                width: '120px',
-                render: (row) => (
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      onClick={() => handleViewStudents(row)}
-                      title="Manage Students"
-                      className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                    >
-                      <Users size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleOpenEdit(row)}
-                      title="Edit Batch"
-                      className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteBatch(row._id, row.name)}
-                      title="Delete Batch"
-                      className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ),
-              },
-            ]}
-          />
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
 
       {/* Add Batch Modal */}
       <AnimatePresence>

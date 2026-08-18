@@ -7,21 +7,28 @@ import AttendanceDrillDown from './AttendanceDrillDown';
 
 const AttendanceManagement = () => {
   const [logs, setLogs] = useState([]);
+  const [batchesList, setBatchesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterBatch, setFilterBatch] = useState('All');
   const [filterDate, setFilterDate] = useState('');
+  const [batchSearchableDropdownOpen, setBatchSearchableDropdownOpen] = useState(false);
+  const [filterBatchSearch, setFilterBatchSearch] = useState('');
 
   const [totalStudents, setTotalStudents] = useState(0);
 
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const { data } = await API.get('/admin/attendance');
-      setLogs(data.logs || []);
-      setTotalStudents(data.totalStudents || 0);
+      const [logsRes, batchesRes] = await Promise.all([
+        API.get('/admin/attendance'),
+        API.get('/admin/batches').catch(() => ({ data: [] }))
+      ]);
+      setLogs(logsRes.data?.logs || []);
+      setTotalStudents(logsRes.data?.totalStudents || 0);
+      setBatchesList(batchesRes.data || []);
     } catch (error) {
       toast.error('Failed to load attendance logs');
     } finally {
@@ -31,6 +38,9 @@ const AttendanceManagement = () => {
 
   useEffect(() => {
     loadLogs();
+    const handleClose = () => setBatchSearchableDropdownOpen(false);
+    window.addEventListener('click', handleClose);
+    return () => window.removeEventListener('click', handleClose);
   }, []);
 
   const availableBatches = [...new Set(logs.map(l => l.batch?.name).filter(Boolean))];
@@ -280,16 +290,80 @@ const AttendanceManagement = () => {
               className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
             />
             
-            <select
-              value={filterBatch}
-              onChange={(e) => setFilterBatch(e.target.value)}
-              className="px-3 py-2.5 border border-gray-200 dark:border-gray-800 rounded-xl bg-transparent text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-800"
-            >
-              <option value="All">All Batches</option>
-              {availableBatches.map((bName, i) => (
-                <option key={i} value={bName}>{bName}</option>
-              ))}
-            </select>
+            {/* Custom Searchable Batch ID Filter Dropdown */}
+            <div className="relative min-w-[200px]">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBatchSearchableDropdownOpen(!batchSearchableDropdownOpen);
+                }}
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-bold flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-violet-800 text-gray-900 dark:text-white cursor-pointer"
+              >
+                <span className="truncate">
+                  {filterBatch !== 'All' ? filterBatch : 'All Batches (Batch ID)'}
+                </span>
+              </button>
+
+              {batchSearchableDropdownOpen && (
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-50 p-2.5 space-y-2 max-h-72 overflow-y-auto"
+                >
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search Batch ID or name..."
+                      value={filterBatchSearch}
+                      onChange={(e) => setFilterBatchSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 text-xs font-semibold rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 focus:outline-none focus:ring-2 focus:ring-violet-600 text-gray-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilterBatch('All');
+                        setBatchSearchableDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                        filterBatch === 'All' ? 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      All Batches
+                    </button>
+
+                    {batchesList
+                      .filter(b => 
+                        (b.batchId || '').toLowerCase().includes(filterBatchSearch.toLowerCase()) ||
+                        (b.name || '').toLowerCase().includes(filterBatchSearch.toLowerCase())
+                      )
+                      .map(b => (
+                        <button
+                          key={b._id}
+                          type="button"
+                          onClick={() => {
+                            setFilterBatch(b.name);
+                            setBatchSearchableDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex flex-col ${
+                            filterBatch === b.name ? 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 font-extrabold' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-gray-700 dark:text-gray-300 font-semibold'
+                          }`}
+                        >
+                          <span className="font-mono font-black text-violet-700 dark:text-violet-400">
+                            {b.batchId || b.name}
+                          </span>
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                            {b.name}
+                          </span>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <select
               value={filterCourse}

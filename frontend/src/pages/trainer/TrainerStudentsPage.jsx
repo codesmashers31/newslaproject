@@ -443,26 +443,34 @@ const TrainerStudentsPage = () => {
     return matchesSearch && matchesStatus && matchesBatch;
   });
 
+  const [filterBatchSearch, setFilterBatchSearch] = useState('');
+  const [batchSearchableDropdownOpen, setBatchSearchableDropdownOpen] = useState(false);
+
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
-            Students & Multi-Batch Mapping
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 font-sans">
-            Map students to separate Technical, Communication, and Aptitude batches across different time slots.
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-sans">
+              Students Roster
+            </h1>
+            <span className="bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 px-3 py-1 rounded-full text-xs font-black">
+              {filteredStudents.length} Students
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Manage students across Technical, Communication, and Aptitude batches
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5 items-center">
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-extrabold shadow-md shadow-purple-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-[#7C3AED] hover:bg-[#6d28d9] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-violet-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <UserPlus size={16} />
             <span>Add Student Mapping</span>
@@ -470,7 +478,7 @@ const TrainerStudentsPage = () => {
 
           <button
             onClick={() => setImportModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow-md shadow-emerald-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+            className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
           >
             <Upload size={16} />
             <span>Import Excel</span>
@@ -478,132 +486,309 @@ const TrainerStudentsPage = () => {
 
           <button
             onClick={exportToExcel}
-            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold shadow-md shadow-blue-500/25 transition flex items-center gap-2 cursor-pointer w-fit"
+            className="flex items-center justify-center space-x-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
           >
-            <FileSpreadsheet size={16} />
-            <span>Export Excel</span>
+            <FileSpreadsheet size={16} className="text-emerald-600" />
+            <span className="hidden sm:inline">Export Excel</span>
           </button>
         </div>
       </div>
 
-      {/* Students Enterprise Table */}
-      <EnterpriseTable
-            title={
-              user?.role === 'Communication Trainer'
-                ? 'My Communication Students'
-                : user?.role === 'Aptitude Trainer'
-                ? 'My Aptitude Students'
-                : user?.role === 'Technical Trainer'
-                ? 'My Technical Students'
-                : 'Enrolled Students Roster'
-            }
-            data={students}
-            loading={loading}
-            searchableFields={['name', 'email', 'mobile', 'slaeId']}
-            filterDefinitions={[
-              {
-                key: 'status',
-                label: 'Status',
-                type: 'select',
-                options: ['Active', 'Enrolled', 'Completed', 'Inactive'],
-              },
-              {
-                key: 'batches',
-                label: 'Batch',
-                type: 'select',
-                options: batches.map(b => ({ label: b.name, value: b._id })),
-              },
-            ]}
-            sortOptions={[
-              { label: 'Default', key: null, direction: 'asc' },
-              { label: 'Name: A → Z', key: 'name', direction: 'asc' },
-              { label: 'Name: Z → A', key: 'name', direction: 'desc' },
-              { label: 'SLAE ID', key: 'slaeId', direction: 'asc' },
-            ]}
-            columns={[
-              {
-                key: 'slaeId',
-                header: 'SLAE ID',
-                width: '120px',
-                render: (row) => (
-                  <span className="font-mono font-bold text-indigo-600">
-                    {row.slaeId || `SLA-${row._id?.toString().slice(-5).toUpperCase()}`}
-                  </span>
-                ),
-              },
-              {
-                key: 'name',
-                header: 'Student Name',
-                width: '200px',
-                render: (row) => (
-                  <div>
-                    <div className="font-extrabold text-slate-900 text-sm">{row.name}</div>
-                    <div className="text-[11px] text-slate-400 font-normal">{row.mobile || row.email}</div>
-                  </div>
-                ),
-              },
-              {
-                key: 'technicalBatch',
-                header: 'Technical Batch',
-                width: '180px',
-                render: (row) => renderStudentBatchStatus(row, row.technicalBatch, 'technicalTrainer'),
-              },
-              {
-                key: 'communicationBatch',
-                header: 'Communication Batch',
-                width: '180px',
-                render: (row) => renderStudentBatchStatus(row, row.communicationBatch, 'communicationTrainer'),
-              },
-              {
-                key: 'aptitudeBatch',
-                header: 'Aptitude Batch',
-                width: '180px',
-                render: (row) => renderStudentBatchStatus(row, row.aptitudeBatch, 'aptitudeTrainer'),
-              },
-              {
-                key: 'status',
-                header: 'Status',
-                align: 'center',
-                width: '110px',
-                render: (row) => (
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1 ${
-                    row.status === 'Active' || row.status === 'Enrolled'
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : row.status === 'Completed'
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'bg-slate-100 text-slate-600 border border-slate-200'
-                  }`}>
-                    <CheckCircle2 size={11} />
-                    {row.status || 'Active'}
-                  </span>
-                ),
-              },
-              {
-                key: 'actions',
-                header: 'Actions',
-                align: 'right',
-                width: '100px',
-                render: (row) => (
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      onClick={() => handleOpenEdit(row)}
-                      title="Edit Student"
-                      className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteStudent(row._id, row.name)}
-                      title="Delete Student"
-                      className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ),
-              },
-            ]}
+      {/* Search & Filters Bar */}
+      <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 p-4 rounded-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 items-center shadow-sm">
+        {/* Live Search */}
+        <div className="relative">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <Search size={16} />
+          </span>
+          <input
+            type="text"
+            placeholder="Search student by name, email, EID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 text-slate-900 dark:text-white"
           />
+        </div>
+
+        {/* Custom Searchable Batch ID Filter Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setBatchSearchableDropdownOpen(!batchSearchableDropdownOpen);
+            }}
+            className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-xs sm:text-sm font-semibold flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-violet-600 text-slate-900 dark:text-white cursor-pointer"
+          >
+            <span className="truncate font-bold">
+              {selectedBatchFilter !== 'All' ? (
+                (() => {
+                  const found = batches.find(b => String(b._id) === String(selectedBatchFilter) || b.name === selectedBatchFilter);
+                  return found ? `${found.batchId || found.name} (${found.name})` : selectedBatchFilter;
+                })()
+              ) : (
+                'All Batches (Select Batch ID)'
+              )}
+            </span>
+            <ChevronDown size={16} className="text-slate-400 shrink-0 ml-1" />
+          </button>
+
+          {batchSearchableDropdownOpen && (
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-2.5 space-y-2 max-h-72 overflow-y-auto"
+            >
+              {/* Search input inside dropdown */}
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search Batch ID or name..."
+                  value={filterBatchSearch}
+                  onChange={(e) => setFilterBatchSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-violet-600 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              {/* Options list */}
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBatchFilter('All');
+                    setBatchSearchableDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                    selectedBatchFilter === 'All' ? 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  All Batches
+                </button>
+
+                {batches
+                  .filter(b => 
+                    (b.batchId || '').toLowerCase().includes(filterBatchSearch.toLowerCase()) ||
+                    (b.name || '').toLowerCase().includes(filterBatchSearch.toLowerCase()) ||
+                    (b.course || '').toLowerCase().includes(filterBatchSearch.toLowerCase())
+                  )
+                  .map(b => (
+                    <button
+                      key={b._id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBatchFilter(b._id);
+                        setBatchSearchableDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex flex-col ${
+                        selectedBatchFilter === b._id ? 'bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 font-extrabold' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300 font-semibold'
+                      }`}
+                    >
+                      <span className="font-mono font-black text-violet-700 dark:text-violet-400">
+                        {b.batchId || b.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {b.name} • {b.schedule || b.course}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Status Filter */}
+        <div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-600 dark:focus:ring-violet-400 text-slate-900 dark:text-white cursor-pointer"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Enrolled">Enrolled</option>
+            <option value="Completed">Completed</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Roster Table */}
+      <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[900px]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[11px] font-black uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/40">
+                <th className="px-6 py-4">Student Info</th>
+                <th className="px-6 py-4">Mobile</th>
+                <th className="px-6 py-4">Technical Track</th>
+                <th className="px-6 py-4">Communication Track</th>
+                <th className="px-6 py-4">Aptitude Track</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#7C3AED] border-t-transparent mx-auto"></div>
+                    <span className="text-xs font-bold text-slate-400 mt-3 block">Loading student directory...</span>
+                  </td>
+                </tr>
+              ) : filteredStudents.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-12 text-slate-500 dark:text-slate-400 text-sm font-bold">
+                    No students found matching your criteria.
+                  </td>
+                </tr>
+              ) : (
+                paginatedStudents.map((student) => (
+                  <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                    {/* Student Info */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-2xl bg-violet-100 dark:bg-violet-950/50 text-[#7C3AED] dark:text-violet-300 font-black text-sm flex items-center justify-center shrink-0 border border-violet-200/50 dark:border-violet-900/40">
+                          {student.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate">{student.name}</p>
+                          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">{student.email}</p>
+                          <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
+                            {student.slaeId || student.profile?.studentId || student.email?.split('@')[0]?.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Mobile */}
+                    <td className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300">
+                      {student.mobile || 'N/A'}
+                    </td>
+
+                    {/* Technical Track */}
+                    <td className="px-6 py-4">
+                      {renderStudentBatchStatus(student, student.technicalBatch, 'technicalTrainer')}
+                    </td>
+
+                    {/* Communication Track */}
+                    <td className="px-6 py-4">
+                      {renderStudentBatchStatus(student, student.communicationBatch, 'communicationTrainer')}
+                    </td>
+
+                    {/* Aptitude Track */}
+                    <td className="px-6 py-4">
+                      {renderStudentBatchStatus(student, student.aptitudeBatch, 'aptitudeTrainer')}
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-extrabold ${
+                        student.status === 'Active' || student.status === 'Enrolled'
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400'
+                      }`}>
+                        {student.status || 'Active'}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-1.5">
+                        <button 
+                          onClick={() => handleOpenEdit(student)}
+                          className="p-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                          title="Edit Profile"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteStudent(student._id, student.name)}
+                          className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="Delete Student"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Controls */}
+        {filteredStudents.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 text-xs">
+            <div className="text-slate-500 font-semibold">
+              Showing {Math.min(filteredStudents.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(filteredStudents.length, currentPage * itemsPerPage)} of {filteredStudents.length} entries
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-semibold">Show:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] font-bold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pageNum = idx + 1;
+                  if (pageNum === 1 || pageNum === totalPages || Math.abs(pageNum - currentPage) <= 1) {
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
+                          currentPage === pageNum
+                            ? 'bg-[#7C3AED] text-white shadow-md shadow-violet-500/10'
+                            : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                  if (pageNum === 2 || pageNum === totalPages - 1) {
+                    return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                  }
+                  return null;
+                })}
+
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12131a] text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50 disabled:pointer-events-none cursor-pointer transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Add Student Modal */}
         {showAddModal && (
