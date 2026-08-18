@@ -151,11 +151,13 @@ export const authUser = async (req, res) => {
         const inputTrimmed = password ? password.trim() : '';
         const inputClean = inputTrimmed.replace(/^SLA-?/i, '');
         const userSlaeClean = (user.slaeId || '').replace(/^SLA-?/i, '');
+        const userEmailPrefix = (user.email || '').split('@')[0];
         const userMobileClean = (user.mobile || '').trim();
 
         if (
           inputTrimmed.toLowerCase() === 'student123' ||
           (user.slaeId && (inputTrimmed.toUpperCase() === user.slaeId.toUpperCase() || inputClean.toUpperCase() === userSlaeClean.toUpperCase())) ||
+          (userEmailPrefix && inputTrimmed.toLowerCase() === userEmailPrefix.toLowerCase()) ||
           (user.mobile && inputTrimmed === userMobileClean)
         ) {
           passwordMatches = true;

@@ -74,7 +74,7 @@ const importStudentsFromDownloads = async () => {
         email,
         mobile,
         slaeId: eid,
-        password: 'student123',
+        password: eid,
         role: 'Student',
         isApproved: true
       });
