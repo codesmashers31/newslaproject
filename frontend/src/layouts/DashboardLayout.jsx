@@ -136,7 +136,6 @@ const DashboardLayout = ({ children }) => {
         makeLink('/admin/batches', <FolderGit size={17} />, 'Batches Directory'),
         makeLink('/admin/students', <Users size={17} />, 'Students Directory'),
         makeLink('/admin/attendance', <CalendarCheck size={17} />, 'Attendance'),
-        makeLink('/admin/placement', <Briefcase size={17} />, 'Placement'),
       ];
 
       if (isSuper) {
