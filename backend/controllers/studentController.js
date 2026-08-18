@@ -63,7 +63,6 @@ export const getStudentDashboard = async (req, res) => {
         .limit(10)
         .lean(),
       Certificate.find({ student: studentId }).lean(),
-      calculatePlacementReadiness(studentId),
       calculateStudentScores(studentId)
     ]);
 
@@ -215,12 +214,13 @@ export const getStudentDashboard = async (req, res) => {
 
     const myRank = { instituteRank: 0, batchRank: 0 };
 
-    const commSummary = await calculateDynamicAttendance(studentId, 'Communication');
-    const aptiSummary = await calculateDynamicAttendance(studentId, 'Aptitude');
+    // Reuse pre-calculated dynamic attendance from calculatedScores to prevent N+1 DB queries
+    const commSummary = calculatedScores.commAtt || { attendancePercent: 0 };
+    const aptiSummary = calculatedScores.aptiAtt || { attendancePercent: 0 };
 
-    const batchesWithAttendance = await Promise.all(batches.map(async b => {
-      let dept = b.department || 'Technical';
-      const attStats = await calculateDynamicAttendance(studentId, dept);
+    const batchesWithAttendance = batches.map(b => {
+      let dept = (b.department || 'Technical').toLowerCase();
+      const attStats = dept.includes('comm') ? (calculatedScores.commAtt || {}) : dept.includes('apti') ? (calculatedScores.aptiAtt || {}) : (calculatedScores.techAtt || {});
       return {
         _id: b._id,
         name: b.name,
@@ -231,7 +231,46 @@ export const getStudentDashboard = async (req, res) => {
         trainers: b.trainers,
         attendanceStats: attStats
       };
-    }));
+    });
+
+    // Synchronous Placement Readiness calculation using in-memory data (saves 8 DB queries)
+    let readiness = { percentage: 0, status: 'Critical', breakdown: {}, recommendations: ['Complete account setup'] };
+    if (placement && Object.keys(placement).length > 0) {
+      const breakdown = {
+        resume: (placement.resumeUploaded || (profile?.user?.resumeUrl)) ? 15 : 0,
+        linkedin: (profile?.user?.linkedin) ? 10 : 0,
+        github: (profile?.user?.github) ? 10 : 0,
+        mockInterview: placement.mockInterviewCompleted ? 15 : 0,
+        technicalInterview: placement.technicalInterviewCompleted ? 15 : 0,
+        hrInterview: placement.hrInterviewCompleted ? 10 : 0,
+        aptitudeScore: Math.round(aptProgress * 0.10),
+        communicationScore: Math.round(commProgress * 0.10),
+        technicalScore: Math.round(techProgress * 0.05)
+      };
+
+      const percentage = Object.values(breakdown).reduce((acc, curr) => acc + curr, 0);
+
+      let status = 'Critical';
+      if (percentage >= 85) status = 'Ready';
+      else if (percentage >= 70) status = 'Almost Ready';
+      else if (percentage >= 50) status = 'Needs Improvement';
+
+      const recommendations = [];
+      if (!breakdown.resume) recommendations.push('Resume Uploaded: Upload your latest professional resume PDF in the profile section.');
+      if (!breakdown.linkedin) recommendations.push('LinkedIn Updated: Add your LinkedIn profile URL to enable corporate matching.');
+      if (!breakdown.github) recommendations.push('GitHub Updated: Showcase your coding repository by adding your GitHub URL.');
+      if (!breakdown.mockInterview) recommendations.push('Mock Interview Practice: Schedule a practice session with your trainer to evaluate interview skills.');
+      if (!breakdown.technicalInterview) recommendations.push('Technical Interview: Complete mock technical panels covering data structures & web frameworks.');
+      if (aptProgress < 75) recommendations.push(`Aptitude Improvement: Practice Vedic Math and quantitative topics (Current: ${aptProgress}% progress).`);
+      if (commProgress < 75) recommendations.push(`Communication Improvement: Focus on Soft Skills and Public Speaking modules (Current: ${commProgress}% progress).`);
+      if (techProgress < 75) recommendations.push(`Technical Improvement: Devote more time to React, Node.js, and API assessments (Current: ${techProgress}% progress).`);
+
+      if (recommendations.length === 0) {
+        recommendations.push('Excellent profile! You are fully equipped for placements. Prepare for scheduled corporate interviews.');
+      }
+      
+      readiness = { percentage, status, breakdown, recommendations };
+    }
 
     res.json({
       profile,

@@ -111,7 +111,10 @@ export const calculateStudentScores = async (studentId) => {
     technicalScore,
     mockInterviewScore,
     finalScorePercent,
-    grade
+    grade,
+    techAtt,
+    commAtt,
+    aptiAtt
   };
 };
 
