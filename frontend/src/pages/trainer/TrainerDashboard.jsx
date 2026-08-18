@@ -1732,6 +1732,8 @@ const TrainerDashboard = () => {
                   >
                     <FileDown size={13} />
                     <span>CSV</span>
+                  </button>
+                </div>
               </div>
 
               {/* Selected Batch Details Banner Card */}
