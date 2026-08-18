@@ -91,6 +91,20 @@ export default function TrainingScreen() {
       return batch.schedule;
     }
     
+    if (batch?.name) {
+      const match = batch.name.match(/(\d{1,2})-(\d{1,2})/);
+      if (match) {
+        const start = parseInt(match[1]);
+        const end = parseInt(match[2]);
+        const formatTime = (h: number) => {
+          if (h === 12) return '12:00 PM';
+          if (h < 8) return `0${h}:00 PM`; // 1, 2, 3, etc. are PM
+          return `${h < 10 ? '0' : ''}${h}:00 AM`;
+        };
+        return `Mon - Fri • ${formatTime(start)} – ${formatTime(end)}`;
+      }
+    }
+    
     return 'TBD';
   };
 
