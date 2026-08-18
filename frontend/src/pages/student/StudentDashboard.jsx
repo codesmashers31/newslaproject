@@ -82,6 +82,13 @@ const StudentDashboard = () => {
     if (b?.startTime) return b.startTime;
     
     if (b?.name) {
+      // First try to match explicit times like "10:00 AM-11:00 AM" or "10:00 AM - 11:00 AM"
+      const explicitMatch = b.name.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+      if (explicitMatch) {
+        return `Mon - Fri • ${explicitMatch[1]} – ${explicitMatch[2]}`;
+      }
+      
+      // Then try to match short format like "12-02"
       const match = b.name.match(/(\d{1,2})-(\d{1,2})/);
       if (match) {
         const start = parseInt(match[1]);

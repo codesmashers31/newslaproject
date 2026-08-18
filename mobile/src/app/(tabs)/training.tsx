@@ -92,6 +92,11 @@ export default function TrainingScreen() {
     }
     
     if (batch?.name) {
+      const explicitMatch = batch.name.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+      if (explicitMatch) {
+        return `Mon - Fri • ${explicitMatch[1]} – ${explicitMatch[2]}`;
+      }
+
       const match = batch.name.match(/(\d{1,2})-(\d{1,2})/);
       if (match) {
         const start = parseInt(match[1]);
