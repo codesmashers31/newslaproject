@@ -269,10 +269,18 @@ const TrainerManagement = () => {
   };
 
   // OPEN EDIT MODAL
-  const handleOpenEdit = (trainer) => {
+  const handleOpenEdit = (trainer, idx = 0) => {
     setEditingTrainer(trainer);
+    const fallbackId = trainer.role?.includes('Technical') 
+      ? 'TR-101' 
+      : trainer.role?.includes('Aptitude') 
+      ? 'TR-102' 
+      : trainer.role?.includes('Communication') 
+      ? 'TR-103' 
+      : `TR-${(idx + 1).toString().padStart(3, '0')}`;
+
     setEditFormData({
-      trainerId: trainer.trainerId || '',
+      trainerId: trainer.trainerId || trainer.empid || fallbackId,
       name: trainer.name || '',
       email: trainer.email || '',
       mobile: trainer.mobile || '',
@@ -621,7 +629,7 @@ const TrainerManagement = () => {
                             </button>
                           )}
                           <button
-                            onClick={() => handleOpenEdit(trainer)}
+                            onClick={() => handleOpenEdit(trainer, idx)}
                             title="Edit Trainer"
                             className="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-800 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/60 transition cursor-pointer"
                           >
