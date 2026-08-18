@@ -351,57 +351,66 @@ export default function TrainingScreen() {
                 </TouchableOpacity>
               </View>
               
-              <View className="space-y-3">
-                <View className="flex-col gap-3">
-                  <View className="flex-row justify-between items-center">
-                    <View>
-                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
-                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                        {commBatch ? commBatch.name : 'Unassigned'}
+              {!commBatch ? (
+                <View className="py-4 items-center justify-center border border-dashed border-[#CBD5E1] rounded-2xl bg-[#F8FAFC]">
+                  <Text className="text-[#64748B] text-xs font-semibold">No communication course selected</Text>
+                  <TouchableOpacity onPress={() => setCommModalVisible(true)} className="mt-2 bg-[#4F46E5] px-4 py-1.5 rounded-xl">
+                    <Text className="text-white text-xs font-bold">Select Course</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View className="space-y-3">
+                  <View className="flex-col gap-3">
+                    <View className="flex-row justify-between items-center">
+                      <View>
+                        <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
+                        <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                          {commBatch.name}
+                        </Text>
+                      </View>
+                      <View className="items-end">
+                        <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
+                        <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                          {stats.startDate || '14-Aug-2026'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
+                      <Text className="text-[#64748B] text-[10px] font-bold uppercase flex-row items-center">Schedule</Text>
+                      <Text className="text-[#4F46E5] text-[11px] font-extrabold mt-0.5">
+                        {resolveBatchSchedule(commBatch, 'Communication')}
                       </Text>
                     </View>
-                    <View className="items-end">
-                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
-                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                        {stats.startDate || '14-Aug-2026'}
+                  </View>
+
+                  {/* Metrics Grid */}
+                  <View className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2 mt-2">
+                    <View className="flex-row justify-between items-center border-b border-slate-200/60 pb-2">
+                      <Text className="text-slate-600 text-xs font-extrabold">Training Day</Text>
+                      <Text className="text-slate-900 text-xs font-black">
+                        Day {stats.trainingDay || 0} / {stats.totalTrainingDays || 80}
                       </Text>
                     </View>
-                  </View>
-                  <View className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase flex-row items-center">Schedule</Text>
-                    <Text className="text-[#4F46E5] text-[11px] font-extrabold mt-0.5">
-                      {resolveBatchSchedule(commBatch, 'Communication')}
-                    </Text>
-                  </View>
-                </View>
 
-                {/* Metrics Grid */}
-                <View className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2 mt-2">
-                  <View className="flex-row justify-between items-center border-b border-slate-200/60 pb-2">
-                    <Text className="text-slate-600 text-xs font-extrabold">Training Day</Text>
-                    <Text className="text-slate-900 text-xs font-black">
-                      Day {stats.trainingDay || 0} / {stats.totalTrainingDays || 80}
-                    </Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center pt-1">
-                    <Text className="text-slate-500 text-[11px]">Present: <Text className="font-extrabold text-emerald-600">{stats.presentCount || 0}</Text></Text>
-                    <Text className="text-slate-500 text-[11px]">Absent: <Text className="font-extrabold text-rose-500">{stats.absentCount || 0}</Text></Text>
-                    <Text className="text-slate-500 text-[11px]">Remaining: <Text className="font-extrabold text-slate-800">{stats.remainingDays ?? 80}</Text></Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center border-t border-slate-200/60 pt-2 mt-1">
-                    <View>
-                      <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</Text>
-                      <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</Text>
+                    <View className="flex-row justify-between items-center pt-1">
+                      <Text className="text-slate-500 text-[11px]">Present: <Text className="font-extrabold text-emerald-600">{stats.presentCount || 0}</Text></Text>
+                      <Text className="text-slate-500 text-[11px]">Absent: <Text className="font-extrabold text-rose-500">{stats.absentCount || 0}</Text></Text>
+                      <Text className="text-slate-500 text-[11px]">Remaining: <Text className="font-extrabold text-slate-800">{stats.remainingDays ?? 80}</Text></Text>
                     </View>
-                    <View className="items-end">
-                      <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Progress %</Text>
-                      <Text className="text-xs font-black text-indigo-600 mt-0.5">{stats.progressPercent || 0}%</Text>
+
+                    <View className="flex-row justify-between items-center border-t border-slate-200/60 pt-2 mt-1">
+                      <View>
+                        <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</Text>
+                        <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</Text>
+                      </View>
+                      <View className="items-end">
+                        <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Progress %</Text>
+                        <Text className="text-xs font-black text-indigo-600 mt-0.5">{stats.progressPercent || 0}%</Text>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
+              )}
             </View>
           );
         })()}
@@ -432,57 +441,66 @@ export default function TrainingScreen() {
                 </TouchableOpacity>
               </View>
               
-              <View className="space-y-3">
-                <View className="flex-col gap-3">
-                  <View className="flex-row justify-between items-center">
-                    <View>
-                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
-                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                        {aptiBatch ? aptiBatch.name : 'Unassigned'}
+              {!aptiBatch ? (
+                <View className="py-4 items-center justify-center border border-dashed border-[#CBD5E1] rounded-2xl bg-[#F8FAFC]">
+                  <Text className="text-[#64748B] text-xs font-semibold">No aptitude course selected</Text>
+                  <TouchableOpacity onPress={() => setAptiModalVisible(true)} className="mt-2 bg-[#4F46E5] px-4 py-1.5 rounded-xl">
+                    <Text className="text-white text-xs font-bold">Select Course</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View className="space-y-3">
+                  <View className="flex-col gap-3">
+                    <View className="flex-row justify-between items-center">
+                      <View>
+                        <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
+                        <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                          {aptiBatch.name}
+                        </Text>
+                      </View>
+                      <View className="items-end">
+                        <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
+                        <Text className="text-[#0F172A] text-xs font-black mt-0.5">
+                          {stats.startDate || '14-Aug-2026'}
+                        </Text>
+                      </View>
+                    </View>
+                    <View className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
+                      <Text className="text-[#64748B] text-[10px] font-bold uppercase flex-row items-center">Schedule</Text>
+                      <Text className="text-[#4F46E5] text-[11px] font-extrabold mt-0.5">
+                        {resolveBatchSchedule(aptiBatch, 'Aptitude')}
                       </Text>
                     </View>
-                    <View className="items-end">
-                      <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
-                      <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                        {stats.startDate || '14-Aug-2026'}
+                  </View>
+
+                  {/* Metrics Grid */}
+                  <View className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2 mt-2">
+                    <View className="flex-row justify-between items-center border-b border-slate-200/60 pb-2">
+                      <Text className="text-slate-600 text-xs font-extrabold">Training Day</Text>
+                      <Text className="text-slate-900 text-xs font-black">
+                        Day {stats.trainingDay || 0} / {stats.totalTrainingDays || 120}
                       </Text>
                     </View>
-                  </View>
-                  <View className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
-                    <Text className="text-[#64748B] text-[10px] font-bold uppercase flex-row items-center">Schedule</Text>
-                    <Text className="text-[#4F46E5] text-[11px] font-extrabold mt-0.5">
-                      {resolveBatchSchedule(aptiBatch, 'Aptitude')}
-                    </Text>
-                  </View>
-                </View>
 
-                {/* Metrics Grid */}
-                <View className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2 mt-2">
-                  <View className="flex-row justify-between items-center border-b border-slate-200/60 pb-2">
-                    <Text className="text-slate-600 text-xs font-extrabold">Training Day</Text>
-                    <Text className="text-slate-900 text-xs font-black">
-                      Day {stats.trainingDay || 0} / {stats.totalTrainingDays || 120}
-                    </Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center pt-1">
-                    <Text className="text-slate-500 text-[11px]">Present: <Text className="font-extrabold text-emerald-600">{stats.presentCount || 0}</Text></Text>
-                    <Text className="text-slate-500 text-[11px]">Absent: <Text className="font-extrabold text-rose-500">{stats.absentCount || 0}</Text></Text>
-                    <Text className="text-slate-500 text-[11px]">Remaining: <Text className="font-extrabold text-slate-800">{stats.remainingDays ?? 120}</Text></Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center border-t border-slate-200/60 pt-2 mt-1">
-                    <View>
-                      <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</Text>
-                      <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</Text>
+                    <View className="flex-row justify-between items-center pt-1">
+                      <Text className="text-slate-500 text-[11px]">Present: <Text className="font-extrabold text-emerald-600">{stats.presentCount || 0}</Text></Text>
+                      <Text className="text-slate-500 text-[11px]">Absent: <Text className="font-extrabold text-rose-500">{stats.absentCount || 0}</Text></Text>
+                      <Text className="text-slate-500 text-[11px]">Remaining: <Text className="font-extrabold text-slate-800">{stats.remainingDays ?? 120}</Text></Text>
                     </View>
-                    <View className="items-end">
-                      <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Progress %</Text>
-                      <Text className="text-xs font-black text-indigo-600 mt-0.5">{stats.progressPercent || 0}%</Text>
+
+                    <View className="flex-row justify-between items-center border-t border-slate-200/60 pt-2 mt-1">
+                      <View>
+                        <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</Text>
+                        <Text className="text-xs font-black text-emerald-600 mt-0.5">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</Text>
+                      </View>
+                      <View className="items-end">
+                        <Text className="text-[10px] font-extrabold text-slate-400 uppercase">Progress %</Text>
+                        <Text className="text-xs font-black text-indigo-600 mt-0.5">{stats.progressPercent || 0}%</Text>
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
+              )}
             </View>
           );
         })()}
