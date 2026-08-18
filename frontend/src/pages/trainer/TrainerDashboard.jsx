@@ -53,7 +53,15 @@ const TrainerDashboard = () => {
   const [batches, setBatches] = useState([]);
   const [allBatches, setAllBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState('all');
+  const [dashboardBatchDropdownOpen, setDashboardBatchDropdownOpen] = useState(false);
+  const [dashboardBatchSearch, setDashboardBatchSearch] = useState('');
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleClose = () => setDashboardBatchDropdownOpen(false);
+    window.addEventListener('click', handleClose);
+    return () => window.removeEventListener('click', handleClose);
+  }, []);
 
   // Add Batch & Add Student Modal States
   const [showAddBatchModal, setShowAddBatchModal] = useState(false);
@@ -1601,20 +1609,91 @@ const TrainerDashboard = () => {
                     )}
                   </div>
 
-                  {/* Batch Select Dropdown */}
-                  <select
-                    value={selectedBatchId || (batches[0]?._id || 'all')}
-                    onChange={(e) => {
-                      setSelectedBatchId(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer shadow-2xs"
-                  >
-                    <option value="all">All Batches ({batches.length})</option>
-                    {batches.map(b => (
-                      <option key={b._id} value={b._id}>{b.name}</option>
-                    ))}
-                  </select>
+                  {/* Searchable Batch ID Filter Dropdown */}
+                  <div className="relative min-w-[210px]">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDashboardBatchDropdownOpen(!dashboardBatchDropdownOpen);
+                      }}
+                      className="w-full px-3.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-between text-slate-800 dark:text-white cursor-pointer shadow-2xs"
+                    >
+                      <span className="truncate">
+                        {selectedBatchId && selectedBatchId !== 'all' ? (
+                          (() => {
+                            const found = batches.find(b => String(b._id) === String(selectedBatchId));
+                            return found ? `${found.batchId || found.name} (${found.name})` : 'Selected Batch';
+                          })()
+                        ) : (
+                          `All Batches (${batches.length})`
+                        )}
+                      </span>
+                      <ChevronDown size={14} className="text-slate-400 shrink-0 ml-1" />
+                    </button>
+
+                    {dashboardBatchDropdownOpen && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-2.5 space-y-2 max-h-72 overflow-y-auto"
+                      >
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="Search Batch ID or name..."
+                            value={dashboardBatchSearch}
+                            onChange={(e) => setDashboardBatchSearch(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-slate-900 dark:text-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedBatchId('all');
+                              setCurrentPage(1);
+                              setDashboardBatchDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                              selectedBatchId === 'all' ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            All Batches ({batches.length})
+                          </button>
+
+                          {batches
+                            .filter(b => 
+                              (b.batchId || '').toLowerCase().includes(dashboardBatchSearch.toLowerCase()) ||
+                              (b.name || '').toLowerCase().includes(dashboardBatchSearch.toLowerCase()) ||
+                              (b.course || '').toLowerCase().includes(dashboardBatchSearch.toLowerCase())
+                            )
+                            .map(b => (
+                              <button
+                                key={b._id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBatchId(b._id);
+                                  setCurrentPage(1);
+                                  setDashboardBatchDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer flex flex-col ${
+                                  selectedBatchId === b._id ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 font-extrabold' : 'hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-300 font-semibold'
+                                }`}
+                              >
+                                <span className="font-mono font-black text-indigo-700 dark:text-indigo-400">
+                                  {b.batchId || b.name}
+                                </span>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                  {b.name} • {b.schedule || b.course}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Status Segmented Pill */}
                   <div className="flex items-center bg-slate-200/60 p-0.5 rounded-xl">
