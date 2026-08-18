@@ -45,7 +45,7 @@ const StudentManagement = () => {
   const [excelFile, setExcelFile] = useState(null);
   const [importingExcel, setImportingExcel] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(100);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [openDropdownAdd, setOpenDropdownAdd] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
   const [openDropdownEdit, setOpenDropdownEdit] = useState(null); // 'batches', 'techTrainers', 'commTrainers', 'aptiTrainers'
