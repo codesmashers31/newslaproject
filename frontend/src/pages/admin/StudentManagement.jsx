@@ -575,9 +575,9 @@ const StudentManagement = () => {
                         <div className="min-w-0">
                           <p className="text-sm font-extrabold text-gray-900 dark:text-white truncate">{student.name}</p>
                           <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 truncate">{student.email}</p>
-                          {student.slaeId && (
+                          {(student.slaeId || student.profile?.studentId || student.email) && (
                             <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
-                              {student.slaeId}
+                              {student.slaeId || student.profile?.studentId || student.email?.split('@')[0]?.toUpperCase()}
                             </span>
                           )}
                         </div>
