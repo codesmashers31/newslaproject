@@ -77,6 +77,8 @@ export default function TrainingScreen() {
   };
 
   const resolveBatchSchedule = (batch: any, defaultDepartment?: string) => {
+    if (!batch) return 'Not Assigned';
+    
     if (batch?.startTime && batch?.endTime) {
       const daysPrefix = batch.days ? `${batch.days} • ` : (batch.scheduleDays ? `${batch.scheduleDays} • ` : '');
       return `${daysPrefix}${batch.startTime} – ${batch.endTime}`;
@@ -88,10 +90,8 @@ export default function TrainingScreen() {
     if (batch?.schedule && typeof batch.schedule === 'string' && batch.schedule.trim() !== '' && batch.schedule !== 'Schedule Not Set') {
       return batch.schedule;
     }
-    const dept = (defaultDepartment || batch?.department || batch?.course || batch?.name || '').toLowerCase();
-    if (dept.includes('comm')) return 'Mon - Fri • 02:00 PM – 04:00 PM';
-    if (dept.includes('apti')) return 'Mon - Fri • 11:00 AM – 01:00 PM';
-    return 'Mon - Fri • 09:00 AM – 01:00 PM';
+    
+    return 'TBD';
   };
 
   useEffect(() => {

@@ -191,7 +191,9 @@ const StudentTrainingPage = () => {
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
-                <p className="text-gray-900 dark:text-white font-black mt-0.5">Mon-Fri • 9:00 AM</p>
+                <p className="text-gray-900 dark:text-white font-black mt-0.5">
+                  {techBatches.length > 0 && techBatches[0].schedule && techBatches[0].schedule !== 'Schedule Not Set' ? techBatches[0].schedule : (techBatches[0]?.startTime ? `${techBatches[0].startTime} - ${techBatches[0].endTime || ''}` : 'TBD')}
+                </p>
               </div>
             </div>
           </div>
@@ -266,7 +268,9 @@ const StudentTrainingPage = () => {
               </div>
               <div className="border-t border-gray-100 dark:border-gray-800/60 pt-3">
                 <span className="text-gray-500 dark:text-gray-400 text-[11px] font-semibold">Schedule</span>
-                <p className="text-gray-900 dark:text-white font-black mt-0.5">Mon-Fri • 11:00 AM</p>
+                <p className="text-gray-900 dark:text-white font-black mt-0.5">
+                  {aptiBatch ? (aptiBatch.schedule && aptiBatch.schedule !== 'Schedule Not Set' ? aptiBatch.schedule : (aptiBatch.startTime ? `${aptiBatch.startTime} - ${aptiBatch.endTime || ''}` : 'TBD')) : 'TBD'}
+                </p>
               </div>
             </div>
           </div>

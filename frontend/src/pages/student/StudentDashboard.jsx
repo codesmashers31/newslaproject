@@ -76,12 +76,11 @@ const StudentDashboard = () => {
   const techStats = techBatch?.attendanceStats || { presentCount: 0, totalTrainingDays: 80, attendancePercent: 100 };
 
   const resolveDomainSchedule = (b, key) => {
+    if (!b) return 'Not Assigned';
     if (b?.schedule && b.schedule !== 'Schedule Not Set') return b.schedule;
     if (b?.startTime && b?.endTime) return `${b.startTime} – ${b.endTime}`;
     if (b?.startTime) return b.startTime;
-    if (key === 'communication') return 'Mon - Fri • 02:00 PM – 04:00 PM';
-    if (key === 'aptitude') return 'Mon - Fri • 11:00 AM – 01:00 PM';
-    return 'Mon - Fri • 09:00 AM – 01:00 PM';
+    return 'TBD';
   };
 
   const domains = [
