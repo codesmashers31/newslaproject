@@ -1736,39 +1736,6 @@ const TrainerDashboard = () => {
                 </div>
               </div>
 
-              {/* Selected Batch Details Banner Card */}
-              {selectedBatchId && selectedBatchId !== 'all' && (() => {
-                const selectedBatchObj = batches.find(b => String(b._id) === String(selectedBatchId));
-                if (!selectedBatchObj) return null;
-
-                return (
-                  <div className="p-4 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 !text-white rounded-2xl m-3.5 shadow-lg space-y-2 border border-purple-500/30">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center space-x-3">
-                        <span className="font-mono font-black text-xs px-3 py-1.5 bg-yellow-400 text-slate-950 rounded-xl shadow-sm">
-                          {selectedBatchObj.batchId || selectedBatchObj.name}
-                        </span>
-                        <div>
-                          <h3 className="font-black text-lg text-white tracking-tight leading-tight">{selectedBatchObj.name}</h3>
-                          <p className="text-xs text-purple-200 font-semibold">{selectedBatchObj.course || 'Domain Course'}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
-                        <div className="flex items-center space-x-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 text-amber-300">
-                          <Clock size={14} className="text-amber-300" />
-                          <span>{selectedBatchObj.schedule || '09:00 AM - 11:00 AM'}</span>
-                        </div>
-                        <div className="flex items-center space-x-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 text-emerald-300">
-                          <Users size={14} className="text-emerald-300" />
-                          <span>{batchStudents.length} Enrolled Students</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
               {/* Data Table */}
               <div className="overflow-x-auto relative">
                 <table className="w-full text-left border-collapse">
