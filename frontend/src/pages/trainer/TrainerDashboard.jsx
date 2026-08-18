@@ -1475,6 +1475,19 @@ const TrainerDashboard = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            {isAttendance && (
+              <div className="flex items-center gap-2 bg-[#7C3AED]/10 dark:bg-violet-950/40 border border-[#7C3AED]/30 dark:border-violet-800/50 rounded-xl px-3 py-2 text-xs font-extrabold text-[#7C3AED] dark:text-violet-300 shadow-xs">
+                <Calendar size={15} className="text-[#7C3AED] dark:text-violet-300 shrink-0" />
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Attendance Date:</span>
+                <input
+                  type="date"
+                  value={attendanceDate}
+                  onChange={(e) => setAttendanceDate(e.target.value)}
+                  className="bg-transparent text-xs font-black text-slate-900 dark:text-white focus:outline-none cursor-pointer"
+                />
+              </div>
+            )}
+
             {isDashboard && (
               <>
                 <select
@@ -1565,32 +1578,13 @@ const TrainerDashboard = () => {
         {/* 2. ADVANCED CLASS ATTENDANCE MARKING PORTAL */}
         {isAttendance && (
           <div className="w-full space-y-4 font-sans text-slate-800">
-            {/* Single Clean Top Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">Mark Class Attendance</h1>
-                <p className="text-xs text-slate-500 mt-0.5">Record and update daily roll call sheets for your assigned training batches.</p>
-              </div>
-
-              {/* Sleek Date Selector Pill */}
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs self-start sm:self-auto">
-                <Calendar size={14} className="text-indigo-600 shrink-0" />
-                <span className="text-xs font-bold text-slate-600">Date:</span>
-                <input
-                  type="date"
-                  value={attendanceDate}
-                  onChange={(e) => setAttendanceDate(e.target.value)}
-                  className="bg-transparent text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer"
-                />
-              </div>
-            </div>
 
             {/* Single Enterprise Table Container */}
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
               {/* Responsive Single Control Toolbar */}
-              <div className="p-3.5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
+              <div className="p-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  {/* Compact Search Input (w-56 to w-64) */}
+                  {/* Compact Search Input */}
                   <div className="relative w-56 max-w-full">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -1601,7 +1595,7 @@ const TrainerDashboard = () => {
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="w-full pl-8.5 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
+                      className="w-full pl-8.5 pr-7 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs"
                     />
                     {searchQuery && (
                       <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5">
@@ -1620,7 +1614,7 @@ const TrainerDashboard = () => {
                       }}
                       className="w-full px-3.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-extrabold flex items-center justify-between text-slate-800 dark:text-white cursor-pointer shadow-2xs"
                     >
-                      <span className="truncate">
+                      <span className="truncate font-bold">
                         {selectedBatchId && selectedBatchId !== 'all' ? (
                           (() => {
                             const found = batches.find(b => String(b._id) === String(selectedBatchId));
@@ -1697,7 +1691,7 @@ const TrainerDashboard = () => {
                   </div>
 
                   {/* Status Segmented Pill */}
-                  <div className="flex items-center bg-slate-200/60 p-0.5 rounded-xl">
+                  <div className="flex items-center bg-slate-200/60 dark:bg-slate-800/60 p-0.5 rounded-xl">
                     {['All', 'Present', 'Absent', 'Late'].map(st => (
                       <button
                         key={st}
@@ -1707,8 +1701,8 @@ const TrainerDashboard = () => {
                         }}
                         className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                           attendanceStatusFilter === st
-                            ? 'bg-white text-indigo-700 shadow-2xs'
-                            : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                         }`}
                       >
                         {st}
@@ -1742,26 +1736,26 @@ const TrainerDashboard = () => {
                 if (!selectedBatchObj) return null;
 
                 return (
-                  <div className="p-4 bg-gradient-to-r from-violet-900 via-indigo-900 to-purple-950 text-white rounded-2xl m-3.5 shadow-md space-y-2 border border-violet-700/50">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="p-4 bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 !text-white rounded-2xl m-3.5 shadow-lg space-y-2 border border-purple-500/30">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center space-x-3">
-                        <span className="font-mono font-black text-sm px-3 py-1 bg-white/20 backdrop-blur-md rounded-xl text-yellow-300 border border-white/20">
+                        <span className="font-mono font-black text-xs px-3 py-1.5 bg-yellow-400 text-slate-950 rounded-xl shadow-sm">
                           {selectedBatchObj.batchId || selectedBatchObj.name}
                         </span>
                         <div>
-                          <h3 className="font-black text-base tracking-tight">{selectedBatchObj.name}</h3>
-                          <p className="text-xs text-violet-200 font-medium">{selectedBatchObj.course || 'Domain Course'}</p>
+                          <h3 className="font-black text-lg text-white tracking-tight leading-tight">{selectedBatchObj.name}</h3>
+                          <p className="text-xs text-purple-200 font-semibold">{selectedBatchObj.course || 'Domain Course'}</p>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
-                        <div className="flex items-center space-x-1.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
-                          <Clock size={13} className="text-yellow-400" />
+                        <div className="flex items-center space-x-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 text-amber-300">
+                          <Clock size={14} className="text-amber-300" />
                           <span>{selectedBatchObj.schedule || '09:00 AM - 11:00 AM'}</span>
                         </div>
-                        <div className="flex items-center space-x-1.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
-                          <Users size={13} className="text-emerald-400" />
-                          <span>{batchStudents.length} Students</span>
+                        <div className="flex items-center space-x-1.5 bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 text-emerald-300">
+                          <Users size={14} className="text-emerald-300" />
+                          <span>{batchStudents.length} Enrolled Students</span>
                         </div>
                       </div>
                     </div>
