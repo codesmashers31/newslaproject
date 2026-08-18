@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { toast } from 'react-hot-toast';
-import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet, GraduationCap, Calendar, Clock } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, BookOpen, Users, Upload, FileSpreadsheet, FileDown, GraduationCap, Calendar, Clock, Search, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
 import { useAuth } from '../../context/AuthContext';
 
 const BatchManagement = () => {
@@ -16,6 +17,10 @@ const BatchManagement = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
+
+  // Category Filter & Search States
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Prevent background scrolling when modal is open
   useEffect(() => {
@@ -109,24 +114,131 @@ const BatchManagement = () => {
   };
 
   const getFilteredBatchesForDisplay = () => {
-    if (!user) return batches;
-    if (user.role === 'Super Admin' || user.role === 'Admin') {
-      return batches;
-    }
-    
-    return batches.filter(batch => {
-      const isAssigned = batch.trainers?.some(t => {
-        const tId = typeof t === 'object' ? t?._id : t;
-        return String(tId) === String(user?._id);
-      }) || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+    let result = batches;
 
-      return isAssigned;
-    });
+    // Filter by User Role if Trainer
+    if (user && user.role !== 'Super Admin' && user.role !== 'Admin') {
+      result = result.filter(batch => {
+        const isAssigned = batch.trainers?.some(t => {
+          const tId = typeof t === 'object' ? t?._id : t;
+          return String(tId) === String(user?._id);
+        }) || batch.trainerName?.toLowerCase().includes(user?.name?.toLowerCase());
+        return isAssigned;
+      });
+    }
+
+    // Category Filter Tab
+    if (categoryFilter === 'Technical') {
+      result = result.filter(b => 
+        b.department === 'Technical' || 
+        !(b.course || '').toLowerCase().includes('communication') && !(b.course || '').toLowerCase().includes('aptitude')
+      );
+    } else if (categoryFilter === 'Communication') {
+      result = result.filter(b => 
+        b.department === 'Communication' || 
+        (b.course || '').toLowerCase().includes('communication') ||
+        (b.batchId || '').toLowerCase().includes('comm')
+      );
+    } else if (categoryFilter === 'Aptitude') {
+      result = result.filter(b => 
+        b.department === 'Aptitude' || 
+        (b.course || '').toLowerCase().includes('aptitude') ||
+        (b.batchId || '').toLowerCase().includes('apti')
+      );
+    }
+
+    // Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(b =>
+        b.name?.toLowerCase().includes(q) ||
+        b.batchId?.toLowerCase().includes(q) ||
+        b.course?.toLowerCase().includes(q) ||
+        b.trainerName?.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
   };
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const exportToExcel = () => {
+    if (batches.length === 0) {
+      toast.error('No batch data to export');
+      return;
+    }
+
+    const dataToExport = batches.map(b => ({
+      'Batch ID': b.batchId || 'N/A',
+      'Batch Name': b.name,
+      'Department / Course': b.course || b.department || 'Technical',
+      'Schedule': b.schedule || 'Mon - Fri',
+      'Trainer Name': b.trainerName || 'Unassigned',
+      'Start Date': b.startDate ? new Date(b.startDate).toLocaleDateString() : '',
+      'End Date': b.endDate ? new Date(b.endDate).toLocaleDateString() : '',
+      'Status': b.status || 'Active'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Batches');
+    XLSX.writeFile(workbook, 'Batches_Directory_Report.xlsx');
+    toast.success('Excel file downloaded!');
+  };
+
+  const exportToPDF = () => {
+    if (batches.length === 0) {
+      toast.error('No batch data to export');
+      return;
+    }
+
+    const doc = new jsPDF();
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('SLA System - Batches Directory Report', 14, 20);
+    doc.setFontSize(10);
+    doc.setFont('Helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 26);
+
+    let yPosition = 35;
+    doc.setFillColor(124, 58, 237);
+    doc.rect(14, yPosition, 182, 8, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.text('Batch ID', 16, yPosition + 6);
+    doc.text('Batch Name', 45, yPosition + 6);
+    doc.text('Course', 105, yPosition + 6);
+    doc.text('Schedule', 145, yPosition + 6);
+    doc.text('Status', 175, yPosition + 6);
+
+    yPosition += 8;
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('Helvetica', 'normal');
+
+    batches.forEach((b, index) => {
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      if (index % 2 === 0) {
+        doc.setFillColor(243, 244, 246);
+        doc.rect(14, yPosition, 182, 8, 'F');
+      }
+
+      doc.text((b.batchId || 'N/A').substring(0, 12), 16, yPosition + 6);
+      doc.text(b.name.substring(0, 24), 45, yPosition + 6);
+      doc.text((b.course || 'Technical').substring(0, 18), 105, yPosition + 6);
+      doc.text((b.startTime ? `${b.startTime}-${b.endTime}` : 'TBD').substring(0, 14), 145, yPosition + 6);
+      doc.text(b.status || 'Active', 175, yPosition + 6);
+      yPosition += 8;
+    });
+
+    doc.save('Batches_Directory_Report.pdf');
+    toast.success('PDF report downloaded!');
+  };
 
   const openAddModal = () => {
     setEditingBatch(null);
@@ -289,19 +401,31 @@ const BatchManagement = () => {
     }
   };
 
+  const displayedBatches = getFilteredBatchesForDisplay();
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header Container */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white dark:bg-[#12131a] p-6 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Batch Management</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">Configure active training groups and status trackers</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white font-sans">
+              Batch Management
+            </h1>
+            <span className="bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 px-3 py-1 rounded-full text-xs font-black">
+              {batches.length} Batches
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
+            Configure active domain training groups, schedules, and trainer assignments
+          </p>
         </div>
+
         {(user?.role === 'Super Admin' || user?.role === 'Admin') && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2.5 items-center">
             <button
               onClick={openAddModal}
-              className="flex items-center space-x-2 bg-violet-800 hover:bg-violet-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-violet-500/20 duration-200 cursor-pointer"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-[#7C3AED] hover:bg-[#6d28d9] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-violet-500/20 transition-all active:scale-95 cursor-pointer"
             >
               <Plus size={16} />
               <span>Create Batch</span>
@@ -309,13 +433,66 @@ const BatchManagement = () => {
 
             <button
               onClick={() => setImportModalOpen(true)}
-              className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-purple-500/20 duration-200 cursor-pointer"
+              className="flex-1 sm:flex-none flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-indigo-500/20 transition-all active:scale-95 cursor-pointer"
             >
               <Upload size={16} />
               <span>Import Excel</span>
             </button>
+
+            <button
+              onClick={exportToExcel}
+              className="flex items-center justify-center space-x-2 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <FileSpreadsheet size={16} className="text-emerald-600" />
+              <span className="hidden sm:inline">Export Excel</span>
+            </button>
+
+            <button
+              onClick={exportToPDF}
+              className="flex items-center justify-center space-x-2 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-700 dark:text-gray-200 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              <FileDown size={16} className="text-rose-600" />
+              <span className="hidden sm:inline">Export PDF</span>
+            </button>
           </div>
         )}
+      </div>
+
+      {/* Category Filter Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#12131a] p-3.5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { key: 'All', label: 'All Batches' },
+            { key: 'Technical', label: 'Technical Batches' },
+            { key: 'Communication', label: 'Communication Batches' },
+            { key: 'Aptitude', label: 'Aptitude Batches' },
+          ].map(c => (
+            <button
+              key={c.key}
+              onClick={() => setCategoryFilter(c.key)}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+                categoryFilter === c.key
+                  ? 'bg-[#7C3AED] text-white shadow-md shadow-violet-500/20'
+                  : 'bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-violet-500'
+              }`}
+            >
+              <BookOpen size={14} />
+              <span>{c.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search Input */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search batch by name, ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900/40 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500 w-full text-gray-800 dark:text-white"
+          />
+        </div>
       </div>
 
       {/* Grid of Batches */}
@@ -325,13 +502,13 @@ const BatchManagement = () => {
             <div key={i} className="h-44 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
           ))}
         </div>
-      ) : batches.length === 0 ? (
-        <div className="text-center py-10 bg-white/70 dark:bg-[#12131a]/80 border border-gray-200 dark:border-gray-800 rounded-3xl p-6 text-gray-500">
-          No batches defined. Click Create Batch to get started.
+      ) : displayedBatches.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 text-gray-500 font-bold text-sm">
+          No batches found matching your filter criteria.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {getFilteredBatchesForDisplay().map((batch) => (
+          {displayedBatches.map((batch) => (
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
