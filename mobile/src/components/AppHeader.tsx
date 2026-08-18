@@ -5,7 +5,8 @@ import {
   TouchableOpacity, 
   Modal, 
   ScrollView, 
-  Linking 
+  Linking,
+  DeviceEventEmitter
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -53,6 +54,11 @@ export default function AppHeader({
   useEffect(() => {
     getStoredLanguage().then(setCurrentLang);
     loadNotifications();
+
+    const sub = DeviceEventEmitter.addListener('onLanguageChanged', (code: LanguageCode) => {
+      setCurrentLang(code);
+    });
+    return () => sub.remove();
   }, []);
 
   const loadNotifications = async () => {

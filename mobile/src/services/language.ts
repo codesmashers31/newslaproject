@@ -154,9 +154,12 @@ export const getStoredLanguage = async (): Promise<LanguageCode> => {
   return 'en';
 };
 
+import { DeviceEventEmitter } from 'react-native';
+
 export const setStoredLanguage = async (code: LanguageCode): Promise<void> => {
   try {
     await AsyncStorage.setItem(LANG_KEY, code);
+    DeviceEventEmitter.emit('onLanguageChanged', code);
   } catch (e) {}
 };
 

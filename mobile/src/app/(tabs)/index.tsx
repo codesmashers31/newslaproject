@@ -9,7 +9,8 @@ import {
   TextInput,
   Dimensions,
   Modal,
-  Linking
+  Linking,
+  DeviceEventEmitter
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -84,6 +85,10 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     getStoredLanguage().then(setCurrentLang);
+    const sub = DeviceEventEmitter.addListener('onLanguageChanged', (code: LanguageCode) => {
+      setCurrentLang(code);
+    });
+    return () => sub.remove();
   }, []);
 
   const changeLanguage = async (code: LanguageCode) => {
