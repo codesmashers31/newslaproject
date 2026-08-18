@@ -294,7 +294,7 @@ export default function QRScannerScreen() {
 
             {/* 3. Today's Check-in Status Pills (Completed vs Pending per assigned batch) */}
             {(() => {
-              const allBatches = dashData?.batches || [];
+              const allBatches = dashboardData?.batches || [];
               const batchStatuses: Array<{ key: any; subject: string; status: string; label: string }> = [];
 
               if (allBatches.length > 0) {
