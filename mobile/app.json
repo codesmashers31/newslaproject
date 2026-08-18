@@ -8,7 +8,17 @@
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/logo.png"
+      "icon": "./assets/images/logo.png",
+      "bundleIdentifier": "com.buildx.sla",
+      "supportsTablet": true,
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "SLA BuildX requires camera access to scan classroom session QR codes for attendance registration.",
+        "NSPhotoLibraryUsageDescription": "SLA BuildX requires access to your photo library to select and upload your profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "SLA BuildX requires permission to save photos to your photo library.",
+        "NSMicrophoneUsageDescription": "SLA BuildX requires microphone access when capturing session media.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,12 +46,21 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "SLA BuildX requires camera access to scan classroom session QR codes for attendance registration."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
             "enableMinifyInReleaseBuilds": true
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
           }
         }
       ],
