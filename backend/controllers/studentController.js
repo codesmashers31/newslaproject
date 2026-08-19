@@ -804,6 +804,26 @@ export const scanQR = async (req, res) => {
 
     const formattedTimeIn = scanTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    // Check if they already scanned successfully today
+    const existingRecord = await Attendance.findOne({
+      student: studentId,
+      date: normalizedDate,
+      subject: normSubject,
+      status: { $in: ['Present', 'Late'] }
+    });
+
+    if (existingRecord) {
+      await AttendanceLog.create({
+        student: studentId,
+        session: session._id,
+        scannedToken: token,
+        status: 'Failed',
+        reason: 'Already scanned today',
+        ipAddress: req.ip || ''
+      });
+      return res.status(400).json({ message: 'You have already scanned for this subject today! Try again tomorrow.' });
+    }
+
     // Upsert attendance record so duplicate/auto-close records are updated seamlessly
     const attendance = await Attendance.findOneAndUpdate(
       { 
