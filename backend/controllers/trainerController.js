@@ -509,10 +509,10 @@ export const getQRToken = async (req, res) => {
         generatedAt: Date.now()
       },
       process.env.JWT_SECRET || 'lcp_secret_key_123456',
-      { expiresIn: '15s' }
+      { expiresIn: '2m' }
     );
 
-    res.json({ token, expiresAt: Date.now() + 15 * 1000 });
+    res.json({ token, expiresAt: Date.now() + 120 * 1000 });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

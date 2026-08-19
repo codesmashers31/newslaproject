@@ -7,7 +7,10 @@ const getBaseURL = () => {
     return process.env.EXPO_PUBLIC_API_URL;
   }
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    return 'http://localhost:5000/api';
+    // Dynamically resolve the laptop's IP address for physical devices on Wi-Fi
+    const debuggerHost = Constants.expoConfig?.hostUri;
+    const localhost = debuggerHost ? debuggerHost.split(':')[0] : '10.0.2.2';
+    return `http://${localhost}:5000/api`;
   }
   return 'https://newslaproject.onrender.com/api';
 };

@@ -52,7 +52,7 @@ const QRClassSession = () => {
     try {
       const { data } = await API.get(`/trainer/session/${sessionId}/qr`);
       setQrToken(data.token);
-      setCountdown(6); // Reset 6 seconds countdown
+      setCountdown(15); // Reset 15 seconds countdown
     } catch (error) {
       console.error('Error loading QR code', error);
       toast.error('Failed to rotate QR token');
@@ -69,7 +69,7 @@ const QRClassSession = () => {
           if (prev <= 1) {
             // Trigger token refresh
             fetchQRToken(activeSession._id);
-            return 6;
+            return 15;
           }
           return prev - 1;
         });

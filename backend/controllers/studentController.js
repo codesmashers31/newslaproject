@@ -112,13 +112,30 @@ export const getStudentDashboard = async (req, res) => {
       }
 
       if (!scheduleStr || scheduleStr.trim() === '' || scheduleStr === 'Schedule Not Set') {
-        const deptLower = (e.department || b.course || b.name || '').toLowerCase();
-        if (deptLower.includes('comm')) {
-          scheduleStr = 'Mon - Fri • 02:00 PM – 04:00 PM';
-        } else if (deptLower.includes('apti')) {
-          scheduleStr = 'Mon - Fri • 11:00 AM – 01:00 PM';
+        const name = b.name || '';
+        const explicitMatch = name.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+        const shortMatch = name.match(/(\d{1,2})-(\d{1,2})/);
+
+        if (explicitMatch) {
+          scheduleStr = `Mon - Fri • ${explicitMatch[1]} – ${explicitMatch[2]}`;
+        } else if (shortMatch) {
+          const start = parseInt(shortMatch[1]);
+          const end = parseInt(shortMatch[2]);
+          const formatTime = (h) => {
+            if (h === 12) return '12:00 PM';
+            if (h < 8) return `0${h}:00 PM`;
+            return `${h < 10 ? '0' : ''}${h}:00 AM`;
+          };
+          scheduleStr = `Mon - Fri • ${formatTime(start)} – ${formatTime(end)}`;
         } else {
-          scheduleStr = 'Mon - Fri • 09:00 AM – 01:00 PM';
+          const deptLower = (e.department || b.course || b.name || '').toLowerCase();
+          if (deptLower.includes('comm')) {
+            scheduleStr = 'Mon - Fri • 02:00 PM – 04:00 PM';
+          } else if (deptLower.includes('apti')) {
+            scheduleStr = 'Mon - Fri • 11:00 AM – 01:00 PM';
+          } else {
+            scheduleStr = 'Mon - Fri • 09:00 AM – 01:00 PM';
+          }
         }
       }
 
@@ -777,7 +794,7 @@ export const scanQR = async (req, res) => {
     }
 
     // 7. Normalize date and subject for reliable web dashboard matching & auto-close updates
-    const normalizedDate = parseNormalizedDate(session.startTime || scanTime);
+    const normalizedDate = new Date(session.startTime || scanTime);
     normalizedDate.setHours(0, 0, 0, 0);
 
     let normSubject = 'Technical';

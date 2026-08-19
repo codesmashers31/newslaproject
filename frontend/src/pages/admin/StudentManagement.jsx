@@ -655,7 +655,10 @@ const StudentManagement = () => {
                     <td className="px-6 py-4">
                       {student.technicalBatch ? (
                         <div className="space-y-0.5">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-extrabold bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-900/30">
+                          <span 
+                            className="inline-block truncate max-w-[160px] align-middle px-2.5 py-1 rounded-xl text-xs font-extrabold bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-900/30"
+                            title={student.technicalBatch}
+                          >
                             {student.technicalBatch}
                           </span>
                           <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 pl-1">
@@ -673,7 +676,10 @@ const StudentManagement = () => {
                     <td className="px-6 py-4">
                       {student.communicationBatch ? (
                         <div className="space-y-0.5">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30">
+                          <span 
+                            className="inline-block truncate max-w-[160px] align-middle px-2.5 py-1 rounded-xl text-xs font-extrabold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/30"
+                            title={student.communicationBatch}
+                          >
                             {student.communicationBatch}
                           </span>
                           <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 pl-1">
@@ -691,7 +697,10 @@ const StudentManagement = () => {
                     <td className="px-6 py-4">
                       {student.aptitudeBatch ? (
                         <div className="space-y-0.5">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30">
+                          <span 
+                            className="inline-block truncate max-w-[160px] align-middle px-2.5 py-1 rounded-xl text-xs font-extrabold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/30"
+                            title={student.aptitudeBatch}
+                          >
                             {student.aptitudeBatch}
                           </span>
                           <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 pl-1">

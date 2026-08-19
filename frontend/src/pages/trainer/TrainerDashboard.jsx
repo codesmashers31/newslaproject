@@ -653,9 +653,13 @@ const TrainerDashboard = () => {
             <span>
               {new Date(record.createdAt || record.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
             </span>
-            {record.scannedBatch && (
-              <span className="ml-1 text-[8px] font-black text-violet-800 bg-violet-50/50 dark:bg-violet-950/20 px-1 py-0.5 rounded border border-violet-500/10 uppercase tracking-wide">
-                Scanned: {record.scannedBatch.name || record.scannedBatch}
+            {record.scannedBatch ? (
+              <span className="ml-1 text-[8px] font-black text-violet-800 bg-violet-50/50 dark:bg-violet-950/20 px-1.5 py-0.5 rounded border border-violet-500/10 uppercase tracking-wide">
+                SCANNED
+              </span>
+            ) : (
+              <span className="ml-1 text-[8px] font-black text-blue-800 bg-blue-50/50 dark:bg-blue-950/20 px-1.5 py-0.5 rounded border border-blue-500/10 uppercase tracking-wide">
+                MANUAL
               </span>
             )}
           </div>
@@ -1618,7 +1622,7 @@ const TrainerDashboard = () => {
                         {selectedBatchId && selectedBatchId !== 'all' ? (
                           (() => {
                             const found = batches.find(b => String(b._id) === String(selectedBatchId));
-                            return found ? (found.batchId || found.name) : 'Selected Batch';
+                            return found ? (found.name || found.batchId) : 'Selected Batch';
                           })()
                         ) : (
                           `All Batches (${batches.length})`
@@ -1684,7 +1688,7 @@ const TrainerDashboard = () => {
                                 }`}
                               >
                                 <span className="truncate">
-                                  {b.batchId || b.name}
+                                  {b.name ? `${b.name} (${b.batchId})` : b.batchId}
                                 </span>
                               </button>
                             ))}

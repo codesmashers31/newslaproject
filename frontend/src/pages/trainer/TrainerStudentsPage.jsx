@@ -203,11 +203,15 @@ const TrainerStudentsPage = () => {
                 {formattedTime}
               </span>
             ) : null}
-            {record?.scannedBatch && (
+            {record?.scannedBatch ? (
               <span className="text-[8px] font-black text-indigo-750 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20 px-1 py-0.5 rounded border border-violet-500/10 uppercase">
-                Scanned: {record.scannedBatch.name || record.scannedBatch}
+                SCANNED
               </span>
-            )}
+            ) : record ? (
+              <span className="text-[8px] font-black text-blue-800 bg-blue-50/50 dark:bg-blue-950/20 px-1 py-0.5 rounded border border-blue-500/10 uppercase">
+                MANUAL
+              </span>
+            ) : null}
           </div>
         )}
       </div>
@@ -524,7 +528,7 @@ const TrainerStudentsPage = () => {
               {selectedBatchFilter !== 'All' ? (
                 (() => {
                   const found = batches.find(b => String(b._id) === String(selectedBatchFilter) || b.name === selectedBatchFilter);
-                  return found ? `${found.batchId || found.name} (${found.name})` : selectedBatchFilter;
+                  return found ? (found.name ? `${found.name} (${found.batchId})` : found.batchId) : selectedBatchFilter;
                 })()
               ) : (
                 'All Batches (Select Batch ID)'

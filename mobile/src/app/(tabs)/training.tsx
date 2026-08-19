@@ -325,8 +325,10 @@ export default function TrainingScreen() {
               {techBatches.map((item, index) => (
                 <View key={String(item._id || index)} className="p-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
                   <View className="flex-row justify-between items-center flex-wrap gap-2 mb-2">
-                    <Text className="text-[#0F172A] text-xs font-black flex-1 min-w-[120px]">{item.name}</Text>
-                    <View className="bg-[#E0E7FF] px-2 py-0.5 rounded-md">
+                    <Text numberOfLines={1} ellipsizeMode="tail" className="text-[#0F172A] text-xs font-black flex-1 min-w-[120px]">
+                      {item.name ? item.name.replace(/\s*\(?\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM)\)?/ig, '').trim() : 'Unassigned'}
+                    </Text>
+                    <View className="bg-[#E0E7FF] px-2 py-0.5 rounded-md flex-shrink-0">
                       <Text className="text-[#4338CA] text-[9px] font-bold uppercase">{item.course || 'Technical'}</Text>
                     </View>
                   </View>
@@ -380,14 +382,14 @@ export default function TrainingScreen() {
               ) : (
                 <View className="space-y-3">
                   <View className="flex-col gap-3">
-                    <View className="flex-row justify-between items-center">
-                      <View>
+                    <View className="flex-row justify-between items-center gap-2">
+                      <View className="flex-1">
                         <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
-                        <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                          {commBatch.name}
+                        <Text numberOfLines={1} ellipsizeMode="tail" className="text-[#0F172A] text-xs font-black mt-0.5">
+                          {commBatch.name ? commBatch.name.replace(/\s*\(?\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM)\)?/ig, '').trim() : 'Unassigned'}
                         </Text>
                       </View>
-                      <View className="items-end">
+                      <View className="items-end flex-shrink max-w-[40%]">
                         <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
                         <Text className="text-[#0F172A] text-xs font-black mt-0.5">
                           {stats.startDate || '14-Aug-2026'}
@@ -470,14 +472,14 @@ export default function TrainingScreen() {
               ) : (
                 <View className="space-y-3">
                   <View className="flex-col gap-3">
-                    <View className="flex-row justify-between items-center">
-                      <View>
+                    <View className="flex-row justify-between items-center gap-2">
+                      <View className="flex-1">
                         <Text className="text-[#64748B] text-[10px] font-bold uppercase">Assigned Batch</Text>
-                        <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                          {aptiBatch.name}
+                        <Text numberOfLines={1} ellipsizeMode="tail" className="text-[#0F172A] text-xs font-black mt-0.5">
+                          {aptiBatch.name ? aptiBatch.name.replace(/\s*\(?\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM)\)?/ig, '').trim() : 'Unassigned'}
                         </Text>
                       </View>
-                      <View className="items-end">
+                      <View className="items-end flex-shrink max-w-[40%]">
                         <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
                         <Text className="text-[#0F172A] text-xs font-black mt-0.5">
                           {stats.startDate || '14-Aug-2026'}

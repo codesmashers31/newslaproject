@@ -461,15 +461,17 @@ export default function DashboardScreen() {
               {(data?.batches || []).length > 0 ? (
                 (data?.batches || []).map((b: any) => (
                   <View key={b._id} className="py-2 border-b border-[#F1F5F9]/50">
-                    <View className="flex-row justify-between items-center mb-1.5">
-                      <View>
+                    <View className="flex-row justify-between items-center mb-1.5 gap-2">
+                      <View className="flex-1">
                         <Text className="font-extrabold text-[11px] text-slate-800">{b.department ? `${b.department} Training` : 'Training Module'}</Text>
                         <Text className="text-[10px] text-slate-400 mt-0.5">Trainer: {b.trainers && b.trainers.length > 0 ? b.trainers.map((t:any) => t.name).join(', ') : 'Unassigned'}</Text>
                         <Text className="text-[10px] text-indigo-600 font-extrabold mt-0.5">Schedule: {resolveBatchSchedule(b)}</Text>
                       </View>
-                      <Text className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
-                        {b.name}
-                      </Text>
+                      <View className="flex-shrink flex-row justify-end items-center max-w-[45%]">
+                        <Text numberOfLines={1} ellipsizeMode="tail" className="font-bold text-[10px] text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-xl">
+                          {b.name ? b.name.replace(/\s*\(?\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM)\)?/ig, '').trim() : 'Unassigned'}
+                        </Text>
+                      </View>
                     </View>
                     
                     {b.attendanceStats && (
