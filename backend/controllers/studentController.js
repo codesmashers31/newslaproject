@@ -329,7 +329,7 @@ export const getStudentDashboard = async (req, res) => {
         totalClasses: totalDays,
         presentCount: presentDays,
         todayRecords: todayRecords.map(r => ({
-          time: r.date,
+          time: r.createdAt || r.date,
           status: r.status,
           subject: r.subject
         })),
