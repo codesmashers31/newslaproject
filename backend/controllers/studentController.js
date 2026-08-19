@@ -147,8 +147,8 @@ export const getStudentDashboard = async (req, res) => {
         department: e.department,
         startDate: b.startDate,
         endDate: b.endDate,
-        startTime: b.startTime || (e.department === 'Communication' ? '02:00 PM' : e.department === 'Aptitude' ? '11:00 AM' : '09:00 AM'),
-        endTime: b.endTime || (e.department === 'Communication' ? '04:00 PM' : e.department === 'Aptitude' ? '01:00 PM' : '01:00 PM'),
+        startTime: b.startTime,
+        endTime: b.endTime,
         schedule: scheduleStr,
         trainers: trainersList
       };
