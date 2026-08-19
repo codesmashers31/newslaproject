@@ -112,7 +112,12 @@ export const getStudentDashboard = async (req, res) => {
       }
 
       if (!scheduleStr || scheduleStr.trim() === '' || scheduleStr === 'Schedule Not Set') {
-        const name = b.name || '';
+        let fallbackName = '';
+        if (e.department === 'Technical') fallbackName = req.user.technicalBatch || '';
+        else if (e.department === 'Communication') fallbackName = req.user.communicationBatch || '';
+        else if (e.department === 'Aptitude') fallbackName = req.user.aptitudeBatch || '';
+        
+        const name = b.name || fallbackName || '';
         const explicitMatch = name.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
         const shortMatch = name.match(/(\d{1,2})-(\d{1,2})/);
 
