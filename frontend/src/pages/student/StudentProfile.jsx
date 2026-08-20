@@ -1,61 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import API, { BACKEND_URL } from '../../services/api';
-import { toast } from 'react-hot-toast';
-import {
-  User,
-  Upload,
-  Linkedin,
-  Github,
-  FileText,
-  Save,
-  Camera
-} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { Card, SectionLabel, PRIMARY,
-  PageSkeleton
-} from '../../components/ui/primitives';
+import API from '../../services/api';
+import toast from 'react-hot-toast';
+import { 
+  User, Phone, BookOpen, MapPin, Calendar, Sparkles, 
+  Camera, Save, GraduationCap, Shield, ExternalLink, Briefcase, Code2
+} from 'lucide-react';
 
-/**
- * Web counterpart of mobile/src/app/(tabs)/profile.tsx.
- * Same section order — identity card, Short Bio, Personal Info, Academic
- * Details, Professional Handles — with a sticky Save action in the header.
- *
- * The avatar doubles as the photo picker; it falls back to a monogram derived
- * from the student's name when no photo is set.
- */
 const StudentProfile = () => {
-  const { user: authUser, updateUser } = useAuth();
+  const { user: authUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
   const [profileData, setProfileData] = useState({
-    name: '',
-    email: '',
-    collegeName: '',
-    degree: '',
-    department: '',
-    yearOfPassing: '',
-    dob: '',
-    gender: '',
-    address: '',
-    skills: '',
-    linkedin: '',
-    github: '',
-    bio: '',
+    collegeName: '', degree: '', department: '', yearOfPassing: '', dob: '', 
+    gender: '', address: '', skills: '', linkedin: '', github: '', bio: '', 
+    name: '', mobile: '', email: ''
   });
 
-  const [resumeFile, setResumeFile] = useState(null);
-  const [currentResume, setCurrentResume] = useState('');
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState('');
-  const [currentPhoto, setCurrentPhoto] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [currentPhotoPath, setCurrentPhotoPath] = useState('');
+  const [photoPreview, setPhotoPreview] = useState(null);
 
-  const loadProfile = async () => {
+  const loadProfileData = async () => {
     try {
       const { data } = await API.get('/student/dashboard');
-      const p = data.profile || {};
+      const student = data?.profile?.user || {};
+      const p = data?.profile || {};
+      const photo = p.photo || student.photo || '';
+      
       setProfileData({
-        name: p.user?.name || '',
-        email: p.user?.email || '',
         collegeName: p.collegeName || '',
         degree: p.degree || '',
         department: p.department || '',
@@ -67,311 +41,393 @@ const StudentProfile = () => {
         linkedin: p.linkedin || '',
         github: p.github || '',
         bio: p.bio || '',
+        name: student.name || authUser?.name || '',
+        mobile: student.mobile || authUser?.mobile || '',
+        email: student.email || authUser?.email || '',
       });
-      setCurrentResume(p.resumeUrl || '');
-      setCurrentPhoto(p.photo || '');
+      setCurrentPhotoPath(photo);
+      setSelectedPhoto(null);
+      setPhotoPreview(null);
     } catch (error) {
-      toast.error('Failed to load profile details');
+      console.error('Failed to load profile details', error);
+      toast.error('Could not load profile details.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProfile();
+    loadProfileData();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedPhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profileData.name.trim() || !profileData.mobile.trim()) {
+      toast.error('Name and Mobile Number are required.');
+      return;
+    }
+
     setSaving(true);
-
-    const updateData = new FormData();
-    Object.keys(profileData).forEach(key => {
-      updateData.append(key, profileData[key]);
-    });
-
-    if (photoFile) updateData.append('photo', photoFile);
-    if (resumeFile) updateData.append('resume', resumeFile);
-
     try {
-      const { data } = await API.put('/student/profile', updateData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      toast.success('Profile updated successfully!');
-      setCurrentResume(data.profile?.resumeUrl || '');
-      setCurrentPhoto(data.profile?.photo || '');
-      setPhotoFile(null);
-      setPhotoPreview('');
+      const payload = {
+        name: profileData.name || '',
+        mobile: profileData.mobile || '',
+        collegeName: profileData.collegeName || '',
+        degree: profileData.degree || '',
+        department: profileData.department || '',
+        yearOfPassing: profileData.yearOfPassing || '',
+        dob: profileData.dob || '',
+        gender: profileData.gender || '',
+        address: profileData.address || '',
+        linkedin: profileData.linkedin || '',
+        github: profileData.github || '',
+        bio: profileData.bio || '',
+        skills: Array.isArray(profileData.skills) ? profileData.skills.join(', ') : (profileData.skills || '')
+      };
 
-      // Update active user state in AuthContext so navbar immediately reflects new name and photo
-      if (data.user && updateUser) {
-        updateUser({ ...authUser, ...data.user });
-      } else if (updateUser) {
-        try {
-          const meRes = await API.get('/auth/me');
-          if (meRes.data) updateUser({ ...authUser, ...meRes.data });
-        } catch (e) {}
+      if (photoPreview) {
+        payload.photoBase64 = photoPreview;
       }
 
-      loadProfile();
+      const { data: resData } = await API.put('/student/profile', payload);
+
+      const newPhoto = resData?.profile?.photo || resData?.user?.photo;
+      if (newPhoto) {
+        setCurrentPhotoPath(newPhoto);
+      }
+      setSelectedPhoto(null);
+      setPhotoPreview(null);
+
+      // Sync user basic details to auth model
+      try {
+        await API.put('/auth/me', {
+          name: profileData.name,
+          mobile: profileData.mobile,
+        });
+      } catch (e) {}
+
+      toast.success('Your profile details have been saved successfully.');
+      loadProfileData();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error saving profile details');
+      console.error('Failed to update student profile', error);
+      toast.error(error?.response?.data?.message || 'Error updating profile details.');
     } finally {
       setSaving(false);
     }
   };
 
-  const field = (key) => ({
-    value: profileData[key],
-    onChange: (e) => setProfileData({ ...profileData, [key]: e.target.value }),
-  });
-
-  // Keep the server's 15MB ceiling in sync here so an oversized file is
-  // rejected before it is uploaded rather than after.
-  const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file.');
-      return;
-    }
-    if (file.size > MAX_PHOTO_BYTES) {
-      toast.error('Image is too large. Maximum size is 15MB.');
-      return;
-    }
-
-    setPhotoFile(file);
-    setPhotoPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(file);
-    });
-  };
-
-  // Release the preview object URL when the page goes away.
-  useEffect(() => {
-    return () => {
-      if (photoPreview) URL.revokeObjectURL(photoPreview);
-    };
-  }, [photoPreview]);
-
   if (loading) {
-    return (
-      <PageSkeleton variant="form" />
-    );
+    return <div className="p-5 text-center text-sm text-slate-500 animate-pulse">Loading Profile...</div>;
   }
 
-  const monogram = profileData.name?.charAt(0).toUpperCase() || 'S';
-  // Local preview wins over the stored photo until the save completes.
-  const avatarSrc = photoPreview || (currentPhoto ? (currentPhoto.startsWith('http') ? currentPhoto : `${BACKEND_URL}${currentPhoto}`) : '');
+  const getServerRoot = () => {
+    const base = API.defaults.baseURL || 'http://localhost:5000/api';
+    const root = base.replace('/api', '');
+    return root.endsWith('/') ? root.slice(0, -1) : root;
+  };
+
+  let avatarSrc = null;
+  if (photoPreview) {
+    avatarSrc = photoPreview;
+  } else if (currentPhotoPath) {
+    avatarSrc = currentPhotoPath.startsWith('http') 
+      ? currentPhotoPath 
+      : `${getServerRoot()}${currentPhotoPath.startsWith('/') ? '' : '/'}${currentPhotoPath}`;
+  }
+
+  const initialLetter = profileData.name ? profileData.name.charAt(0).toUpperCase() : 'S';
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6">
-      {/* Header — icon tile, title, Save action */}
-      <Card className="p-5 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="p-2.5 bg-slate-50 dark:bg-[#181922] border border-slate-200/60 dark:border-[#1e2330] rounded-2xl shrink-0">
-            <User size={20} className="text-[#64748B]" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-black text-[#0F172A] dark:text-white truncate">Edit Profile</h1>
-            <p className="text-xs text-[#64748B] dark:text-slate-400 mt-0.5">Update academic info &amp; details</p>
-          </div>
+    <div className="bg-[#F8FAFC] min-h-screen pb-10">
+      
+      {/* Header */}
+      <div className="px-5 pt-6 pb-4 bg-white border-b border-[#E2E8F0] shadow-sm sticky top-0 z-20 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-black text-[#0F172A]">My Profile</h1>
+          <p className="text-xs font-semibold text-slate-500 mt-1">Update academic info & details</p>
         </div>
         <button
-          type="submit"
+          onClick={handleSave}
           disabled={saving}
-          className="bg-[#4F46E5] hover:bg-[#4338ca] px-5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm text-white text-xs font-black shrink-0 disabled:opacity-50 cursor-pointer transition-colors"
+          className="bg-[#4F46E5] px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-sm disabled:opacity-50 hover:bg-[#4338CA] transition-colors"
         >
           {saving ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
           ) : (
             <>
-              <Save size={14} />
-              <span>Save</span>
+              <Save size={14} className="text-white" />
+              <span className="text-white text-xs font-black">Save</span>
             </>
           )}
         </button>
-      </Card>
+      </div>
 
-      {/* Identity card — click the avatar to choose a photo */}
-      <Card className="p-6 flex flex-col items-center text-center">
-        <label className="relative group cursor-pointer" title="Change photo">
-          <div className="h-28 w-28 rounded-full border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center shadow-md overflow-hidden">
-            {avatarSrc ? (
-              <img src={avatarSrc} alt="Profile" className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-4xl font-black text-indigo-700 dark:text-indigo-400">{monogram}</span>
-            )}
-          </div>
-          <span className="absolute bottom-0 right-0 bg-[#4F46E5] p-2 rounded-full border-2 border-white flex items-center justify-center">
-            <Camera size={14} className="text-white" />
-          </span>
-          <input
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/heic,image/heif"
-            onChange={handlePhotoChange}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-        </label>
-        {photoFile && (
-          <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold mt-2">
-            New photo selected — press Save to upload
-          </p>
-        )}
-        <p className="text-[#0F172A] dark:text-white font-extrabold text-base mt-4">
-          {profileData.name || 'Student'}
-        </p>
-        <p className="text-[#64748B] dark:text-slate-400 text-xs mt-0.5">{profileData.email}</p>
-      </Card>
+      <div className="p-5 md:p-8 max-w-3xl mx-auto flex flex-col gap-6">
 
-      {/* Short Bio */}
-      <Card className="space-y-2">
-        <SectionLabel>Short Bio</SectionLabel>
-        <textarea
-          {...field('bio')}
-          className="w-full text-sm h-20"
-          placeholder="Write a brief intro about your career aspirations..."
-        />
-      </Card>
-
-      {/* Personal Info */}
-      <Card className="space-y-4">
-        <SectionLabel>Personal Info</SectionLabel>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label>Full Name</label>
-            <input type="text" {...field('name')} className="w-full text-sm" placeholder="Your full name" />
-          </div>
-          <div>
-            <label>Date of Birth</label>
-            <input type="date" {...field('dob')} className="w-full text-sm" />
-          </div>
+        {/* Avatar Picture Card */}
+        <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 flex flex-col items-center shadow-sm">
+          <label className="relative cursor-pointer block">
+            <div className="h-28 w-28 rounded-full border-2 border-indigo-500 overflow-hidden bg-indigo-100 flex items-center justify-center shadow-md">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-4xl font-black text-indigo-700">{initialLetter}</span>
+              )}
+            </div>
+            <div className="absolute bottom-0 right-0 bg-[#4F46E5] p-2.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center">
+              <Camera size={16} className="text-white" />
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+          </label>
+          
+          <h2 className="text-[#0F172A] font-extrabold text-base mt-4">{profileData.name || 'Student'}</h2>
+          <p className="text-[#64748B] text-xs mt-0.5">{profileData.email}</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label>Gender</label>
-            <select {...field('gender')} className="w-full text-sm">
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
+        {/* Form Content */}
+        <div className="flex flex-col gap-5">
+          
+          {/* Bio */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Short Bio</label>
+            <textarea
+              rows="3"
+              value={profileData.bio}
+              onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+              placeholder="Tell us about yourself, career goals or specializations..."
+              className="w-full bg-white border border-[#E2E8F0] rounded-2xl p-4 text-[#0F172A] text-sm font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]"
+            />
           </div>
-          <div>
-            <label>Skills (comma-separated)</label>
-            <input type="text" {...field('skills')} className="w-full text-sm" placeholder="e.g. HTML, CSS, JavaScript, React" />
+
+          <p className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mt-2 border-b border-slate-200 pb-2">Personal Info</p>
+
+          {/* Name */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Full Name</label>
+            <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+              <User size={16} className="text-[#64748B] mr-3 shrink-0" />
+              <input
+                type="text"
+                value={profileData.name}
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                placeholder="Enter full name"
+                className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+              />
+            </div>
           </div>
+
+          {/* Mobile */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Mobile Number</label>
+            <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+              <Phone size={16} className="text-[#64748B] mr-3 shrink-0" />
+              <input
+                type="tel"
+                value={profileData.mobile}
+                onChange={(e) => setProfileData({ ...profileData, mobile: e.target.value })}
+                placeholder="Enter mobile number"
+                className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+              />
+            </div>
+          </div>
+
+          <p className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mt-2 border-b border-slate-200 pb-2">Academic Details</p>
+
+          {/* College Name */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">College Name</label>
+            <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+              <GraduationCap size={16} className="text-[#64748B] mr-3 shrink-0" />
+              <input
+                type="text"
+                value={profileData.collegeName}
+                onChange={(e) => setProfileData({ ...profileData, collegeName: e.target.value })}
+                placeholder="Enter college name"
+                className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Degree */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Degree</label>
+              <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+                <BookOpen size={16} className="text-[#64748B] mr-3 shrink-0" />
+                <input
+                  type="text"
+                  value={profileData.degree}
+                  onChange={(e) => setProfileData({ ...profileData, degree: e.target.value })}
+                  placeholder="e.g. B.E, B.Tech, MCA"
+                  className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+                />
+              </div>
+            </div>
+
+            {/* Department */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Department</label>
+              <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+                <BookOpen size={16} className="text-[#64748B] mr-3 shrink-0" />
+                <input
+                  type="text"
+                  value={profileData.department}
+                  onChange={(e) => setProfileData({ ...profileData, department: e.target.value })}
+                  placeholder="e.g. Computer Science"
+                  className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Year of Passing */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Year of Passing</label>
+              <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+                <Calendar size={16} className="text-[#64748B] mr-3 shrink-0" />
+                <input
+                  type="number"
+                  value={profileData.yearOfPassing}
+                  onChange={(e) => setProfileData({ ...profileData, yearOfPassing: e.target.value })}
+                  placeholder="e.g. 2024, 2025"
+                  className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+                />
+              </div>
+            </div>
+
+            {/* Date of Birth */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Date of Birth</label>
+              <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+                <Calendar size={16} className="text-[#64748B] mr-3 shrink-0" />
+                <input
+                  type="date"
+                  value={profileData.dob}
+                  onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
+                  className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Gender */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Gender</label>
+            <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+              <User size={16} className="text-[#64748B] mr-3 shrink-0" />
+              <select
+                value={profileData.gender}
+                onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
+                className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full appearance-none"
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Skills */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Skills (comma-separated)</label>
+            <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+              <Sparkles size={16} className="text-[#64748B] mr-3 shrink-0" />
+              <input
+                type="text"
+                value={profileData.skills}
+                onChange={(e) => setProfileData({ ...profileData, skills: e.target.value })}
+                placeholder="e.g. React, Node.js, Python, SQL"
+                className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+              />
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">Home Address</label>
+            <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+              <MapPin size={16} className="text-[#64748B] mr-3 shrink-0" />
+              <input
+                type="text"
+                value={profileData.address}
+                onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
+                placeholder="Enter full address"
+                className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+              />
+            </div>
+          </div>
+
+          <p className="text-[10px] font-black text-[#64748B] uppercase tracking-wider mt-2 border-b border-slate-200 pb-2">Professional Handles</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* LinkedIn */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">LinkedIn Profile</label>
+              <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+                <Briefcase size={16} className="text-[#64748B] mr-3 shrink-0" />
+                <input
+                  type="url"
+                  value={profileData.linkedin}
+                  onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
+                  placeholder="https://linkedin.com/in/username"
+                  className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+                />
+              </div>
+            </div>
+
+            {/* GitHub */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-[#64748B] uppercase tracking-wider">GitHub Profile</label>
+              <div className="flex items-center bg-white border border-[#E2E8F0] rounded-2xl px-4 h-12 shadow-sm focus-within:ring-2 focus-within:ring-[#8B5CF6]">
+                <Code2 size={16} className="text-[#64748B] mr-3 shrink-0" />
+                <input
+                  type="url"
+                  value={profileData.github}
+                  onChange={(e) => setProfileData({ ...profileData, github: e.target.value })}
+                  placeholder="https://github.com/username"
+                  className="flex-1 bg-transparent border-none outline-none text-[#0F172A] text-sm font-semibold w-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy Policy Link */}
+          <div className="mt-4">
+            <a
+              href="https://newslaproject.vercel.app/privacy-policy"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between bg-white border border-[#E2E8F0] rounded-2xl px-4 h-14 shadow-sm py-3 hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center">
+                <Shield size={16} className="text-[#6366F1] mr-3 shrink-0" />
+                <span className="text-sm font-bold text-[#0F172A]">Privacy Policy & Data Security</span>
+              </div>
+              <ExternalLink size={16} className="text-[#94A3B8]" />
+            </a>
+          </div>
+
         </div>
-
-        <div>
-          <label>Home Address</label>
-          <input type="text" {...field('address')} className="w-full text-sm" placeholder="City, State, Country" />
-        </div>
-      </Card>
-
-      {/* Academic Details */}
-      <Card className="space-y-4">
-        <SectionLabel>Academic Details</SectionLabel>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label>College Name</label>
-            <input type="text" {...field('collegeName')} className="w-full text-sm" placeholder="e.g. Stanford University" />
-          </div>
-          <div>
-            <label>Degree</label>
-            <input type="text" {...field('degree')} className="w-full text-sm" placeholder="e.g. B.Tech / B.Sc" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label>Department</label>
-            <input type="text" {...field('department')} className="w-full text-sm" placeholder="e.g. Computer Science" />
-          </div>
-          <div>
-            <label>Year of Passing</label>
-            <input type="text" {...field('yearOfPassing')} className="w-full text-sm" placeholder="e.g. 2026" />
-          </div>
-        </div>
-      </Card>
-
-      {/* Professional Handles */}
-      <Card className="space-y-4">
-        <SectionLabel>Professional Handles</SectionLabel>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="flex items-center gap-1">
-              <Linkedin size={13} className="text-indigo-500" />
-              <span>LinkedIn Profile Link</span>
-            </label>
-            <input type="url" {...field('linkedin')} className="w-full text-sm" placeholder="https://linkedin.com/in/username" />
-          </div>
-          <div>
-            <label className="flex items-center gap-1">
-              <Github size={13} className="text-indigo-500" />
-              <span>GitHub Profile Link</span>
-            </label>
-            <input type="url" {...field('github')} className="w-full text-sm" placeholder="https://github.com/username" />
-          </div>
-        </div>
-      </Card>
-
-      {/* Resume */}
-      <Card className="space-y-4">
-        <SectionLabel>Academic Resume (PDF)</SectionLabel>
-
-        <div className="border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 relative hover:bg-indigo-50/20 dark:hover:bg-indigo-950/10 cursor-pointer transition-colors">
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                setResumeFile(file);
-                toast.success(`Selected resume: ${file.name}`);
-              }
-            }}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-          <div className="space-y-2 text-center text-xs text-[#64748B]">
-            <Upload size={18} className="mx-auto text-indigo-500" />
-            <span className="font-semibold block truncate">
-              {resumeFile ? resumeFile.name : 'Upload PDF Resume'}
-            </span>
-          </div>
-        </div>
-
-        {currentResume && (
-          <a
-            href={currentResume.startsWith('http') ? currentResume : `${BACKEND_URL}${currentResume}`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs text-indigo-700 dark:text-indigo-400 hover:underline flex items-center gap-1 font-semibold justify-center"
-          >
-            <FileText size={12} />
-            <span>View current uploaded resume document</span>
-          </a>
-        )}
-      </Card>
-
-      <button type="submit" disabled={saving} className="m-btn-primary">
-        {saving ? (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-        ) : (
-          <>
-            <Save size={16} />
-            <span>Save Profile</span>
-          </>
-        )}
-      </button>
-    </form>
+      </div>
+    </div>
   );
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
+import StudentLayout from '../layouts/StudentLayout';
 
 // Pages
 import Login from '../pages/Login';
@@ -36,6 +37,7 @@ import QRScanner from '../pages/student/QRScanner';
 import PlacementReadiness from '../pages/student/PlacementReadiness';
 import StudentScorecards from '../pages/student/StudentScorecards';
 import StudentTrainingPage from '../pages/student/StudentTrainingPage';
+import StudentHistory from '../pages/student/StudentHistory';
 import UserProfile from '../pages/common/UserProfile';
 
 const AppRoutes = () => {
@@ -231,54 +233,14 @@ const AppRoutes = () => {
 
       {/* STUDENT DASHBOARDS */}
       <Route element={<ProtectedRoute allowedRoles={['Student']} />}>
-        <Route 
-          path="/student" 
-          element={
-            <DashboardLayout>
-              <StudentDashboard />
-            </DashboardLayout>
-          } 
-        />
-        <Route
-          path="/student/training"
-          element={
-            <DashboardLayout>
-              <StudentTrainingPage />
-            </DashboardLayout>
-          }
-        />
-        <Route
-          path="/student/profile"
-          element={
-            <DashboardLayout>
-              <StudentProfile />
-            </DashboardLayout>
-          }
-        />
-        <Route 
-          path="/student/scanner" 
-          element={
-            <DashboardLayout>
-              <QRScanner />
-            </DashboardLayout>
-          } 
-        />
-        <Route 
-          path="/student/placement" 
-          element={
-            <DashboardLayout>
-              <PlacementReadiness />
-            </DashboardLayout>
-          } 
-        />
-        <Route
-          path="/student/scorecards"
-          element={
-            <DashboardLayout>
-              <StudentScorecards />
-            </DashboardLayout>
-          }
-        />
+        <Route path="/student" element={<StudentLayout><StudentDashboard /></StudentLayout>} />
+        <Route path="/student/training" element={<StudentLayout><StudentTrainingPage /></StudentLayout>} />
+        <Route path="/student/profile" element={<StudentLayout><StudentProfile /></StudentLayout>} />
+        <Route path="/student/scanner" element={<StudentLayout><QRScanner /></StudentLayout>} />
+        <Route path="/student/placement" element={<StudentLayout><PlacementReadiness /></StudentLayout>} />
+        <Route path="/student/scorecards" element={<StudentLayout><StudentScorecards /></StudentLayout>} />
+        <Route path="/student/career" element={<StudentLayout><PlacementReadiness /></StudentLayout>} />
+        <Route path="/student/history" element={<StudentLayout><StudentHistory /></StudentLayout>} />
       </Route>
 
       {/* Catch-all 404 Route */}
@@ -288,3 +250,4 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
