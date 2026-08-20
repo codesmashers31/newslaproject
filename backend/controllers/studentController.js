@@ -271,6 +271,9 @@ export const getStudentDashboard = async (req, res) => {
         course: b.course,
         startDate: b.startDate,
         endDate: b.endDate,
+        startTime: b.startTime,
+        endTime: b.endTime,
+        schedule: b.schedule,
         trainers: b.trainers,
         attendanceStats: attStats
       };
