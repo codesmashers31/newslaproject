@@ -186,11 +186,23 @@ export const authUser = async (req, res) => {
           user.deviceLastUsed = new Date();
           await user.save();
         } else if (user.deviceId !== deviceId) {
-          // Allow web login sync if deviceId changed
-          user.deviceId = deviceId;
-          user.deviceInfo = deviceInfo || 'Web Browser';
-          user.deviceLastUsed = new Date();
-          await user.save();
+          // Check if a pending reset request already exists to prevent spam
+          const existingReq = await DeviceResetRequest.findOne({ user: user._id, status: 'Pending' });
+          if (!existingReq) {
+            await DeviceResetRequest.create({
+              user: user._id,
+              reason: 'Unauthorized Login Attempt (Auto-Logged)',
+              requestedDevice: deviceInfo || 'Unknown Device',
+              status: 'Pending'
+            });
+          }
+
+          return res.status(403).json({
+            code: 'UNAUTHORIZED_DEVICE',
+            message: 'Login attempt from an unrecognized device. For security reasons, your account is bound to your previously registered device.',
+            registeredDevice: user.deviceInfo || 'Unrecognized computer / laptop',
+            lastUsed: user.deviceLastUsed || new Date()
+          });
         } else {
           user.deviceLastUsed = new Date();
           await user.save();
