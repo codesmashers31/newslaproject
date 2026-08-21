@@ -246,9 +246,10 @@ const QRScanner = () => {
         
         {/* 1. Camera Viewport Panel */}
         <div className="flex flex-col items-center justify-center my-4">
-          <div className="w-80 h-80 relative rounded-[32px] overflow-hidden shadow-lg border border-slate-200">
-            {/* The actual HTML5 Qrcode container */}
-            <div id="reader" className={`w-full h-full bg-[#0F0C20] ${cameraActive && !scanResult && !loading ? 'block' : 'hidden'}`}></div>
+          <div className="w-80 h-80 relative rounded-[32px] overflow-hidden shadow-lg border border-slate-200 bg-white">
+            
+            {/* The actual HTML5 Qrcode container - Always in DOM to prevent dimension errors */}
+            <div id="reader" className="w-full h-full bg-[#0F0C20]"></div>
             
             {cameraActive && !scanResult && !loading && (
               <>
@@ -261,16 +262,17 @@ const QRScanner = () => {
                   {torch ? <Zap size={16} /> : <ZapOff size={16} />}
                 </button>
                 
-                <div className="absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg pointer-events-none" />
-                <div className="absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg pointer-events-none" />
-                <div className="absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg pointer-events-none" />
-                <div className="absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#7C3AED] rounded-br-lg pointer-events-none" />
-                <div className="absolute top-1/2 left-4 right-4 h-1 bg-[#7C3AED] opacity-80 shadow-md shadow-purple-500 pointer-events-none" />
+                <div className="absolute top-5 left-5 w-6 h-6 border-t-[3px] border-l-[3px] border-[#7C3AED] rounded-tl-lg pointer-events-none z-10" />
+                <div className="absolute top-5 right-5 w-6 h-6 border-t-[3px] border-r-[3px] border-[#7C3AED] rounded-tr-lg pointer-events-none z-10" />
+                <div className="absolute bottom-5 left-5 w-6 h-6 border-b-[3px] border-l-[3px] border-[#7C3AED] rounded-bl-lg pointer-events-none z-10" />
+                <div className="absolute bottom-5 right-5 w-6 h-6 border-b-[3px] border-r-[3px] border-[#7C3AED] rounded-br-lg pointer-events-none z-10" />
+                <div className="absolute top-1/2 left-4 right-4 h-1 bg-[#7C3AED] opacity-80 shadow-md shadow-purple-500 pointer-events-none z-10" />
               </>
             )}
 
+            {/* Overlay for Idle / Loading / Result states */}
             {(!cameraActive || scanResult || loading) && (
-              <div className="absolute inset-0 bg-white items-center justify-center flex flex-col p-6">
+              <div className="absolute inset-0 bg-white flex flex-col items-center justify-center p-6 z-30">
                 {loading ? (
                   <div className="flex flex-col items-center">
                     <div className="w-8 h-8 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin mb-3"></div>
