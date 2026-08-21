@@ -228,9 +228,15 @@ const QRScanner = () => {
     <div className="bg-[#F8FAFC] min-h-screen pb-10">
       
       {/* Header */}
-      <div className="px-5 pt-6 pb-4 bg-white border-b border-[#E2E8F0] shadow-sm sticky top-0 z-20">
-        <h1 className="text-xl font-black text-[#0F172A]">QR Scanner</h1>
-        <p className="text-xs font-semibold text-slate-500 mt-1">Point camera at session QR code</p>
+      <div className="px-5 pt-6 pb-4 bg-white border-b border-[#E2E8F0] shadow-sm sticky top-0 z-20 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-black text-[#0F172A]">QR Scanner</h1>
+          <p className="text-xs font-semibold text-slate-500 mt-1">Point camera at session QR code</p>
+        </div>
+        <div className="bg-[#F3E8FF] border border-[#E9D5FF] px-3 py-1.5 rounded-xl flex flex-col items-center justify-center">
+          <span className="text-[9px] font-black text-[#8B5CF6] uppercase tracking-wider leading-none mb-0.5">Location</span>
+          <span className="text-sm font-black text-[#6B21A8] leading-none">SLA</span>
+        </div>
       </div>
 
       <div className="p-5 md:p-8 flex flex-col justify-between max-w-lg mx-auto">
