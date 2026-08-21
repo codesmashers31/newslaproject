@@ -11,6 +11,11 @@ const attendanceSchema = new mongoose.Schema({
     ref: 'Batch',
     required: true,
   },
+  course: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   date: {
     type: Date,
     required: true,
@@ -18,15 +23,26 @@ const attendanceSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['Present', 'Absent', 'Late', 'Excused'],
+    enum: ['Present', 'Absent', 'Leave', 'Late', 'Excused', 'PRESENT', 'ABSENT', 'LEAVE'],
+    default: 'Present',
+  },
+  attendanceMode: {
+    type: String,
+    enum: ['MANUAL', 'SCAN', 'Manual', 'Scan'],
+    default: 'MANUAL',
   },
   remarks: {
     type: String,
     default: '',
   },
+  timeIn: {
+    type: String,
+    default: '',
+  },
   subject: {
     type: String,
-    required: true,
+    required: false,
+    default: 'General',
   },
   session: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,15 +59,22 @@ const attendanceSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 }, {
   timestamps: true,
 });
 
-// Compound index to ensure a student only gets one attendance record per day per batch per subject
-attendanceSchema.index({ student: 1, batch: 1, date: 1, subject: 1 }, { unique: true });
-attendanceSchema.index({ student: 1, subject: 1, date: 1 });
-attendanceSchema.index({ batch: 1, date: 1, subject: 1 });
-attendanceSchema.index({ date: 1, subject: 1, status: 1 });
+// Compound indexes for high-speed queries and duplicate prevention
+attendanceSchema.index({ student: 1, batch: 1, date: 1 }, { unique: true });
+attendanceSchema.index({ student: 1, batch: 1, date: 1, subject: 1 });
+attendanceSchema.index({ student: 1, date: 1 });
+attendanceSchema.index({ batch: 1, date: 1 });
+attendanceSchema.index({ student: 1, status: 1, date: 1 });
+attendanceSchema.index({ date: 1, status: 1 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 export default Attendance;

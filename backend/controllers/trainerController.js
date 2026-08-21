@@ -380,12 +380,19 @@ export const markAttendance = async (req, res) => {
 
       // Upsert attendance
       const record = await Attendance.findOneAndUpdate(
-        { student: rec.studentId, batch: saveBatchId, date: formattedDate, subject: dept },
+        { student: rec.studentId, batch: saveBatchId, date: formattedDate },
         { 
+          student: rec.studentId,
+          batch: saveBatchId,
+          course: dept,
+          subject: dept,
+          date: formattedDate,
           status: rec.status || 'Present', 
           remarks: rec.remarks || '',
+          attendanceMode: 'MANUAL',
           scannedBatch: effectiveBatchId,
-          markedBy: req.user._id 
+          markedBy: req.user._id,
+          updatedBy: req.user._id
         },
         { new: true, upsert: true }
       );

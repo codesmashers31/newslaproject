@@ -607,7 +607,7 @@ const TrainerDashboard = () => {
         {effectiveBatchId || batchName || record ? (
           isInteractive && effectiveBatchId ? (
             <div className="flex items-center gap-1">
-              {['Present', 'Absent', 'Late'].map(st => {
+              {['Present', 'Absent', 'Leave'].map(st => {
                 const isSelected = currentStatus === st;
                 const baseStyle = st === 'Present'
                   ? isSelected ? 'bg-emerald-600 text-white shadow-sm font-black' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/70'
@@ -631,7 +631,7 @@ const TrainerDashboard = () => {
               <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
                 currentStatus === 'Present'
                   ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15'
-                  : currentStatus === 'Late'
+                  : currentStatus === 'Leave'
                   ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-500/15'
                   : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-500/15'
               }`}>
