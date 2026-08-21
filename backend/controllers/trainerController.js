@@ -497,6 +497,21 @@ export const getQRToken = async (req, res) => {
       return res.status(404).json({ message: 'Active class session not found or closed' });
     }
 
+    // Fetch attendees who have scanned for this session
+    const attendeesData = await Attendance.find({ session: session._id })
+      .populate('student', 'name email slaeId')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const attendees = attendeesData.map(a => ({
+      _id: a.student?._id || a._id,
+      name: a.student?.name || 'Unknown',
+      email: a.student?.email || 'Unknown',
+      slaeId: a.student?.slaeId || '-',
+      status: a.status,
+      timeIn: a.timeIn || a.createdAt
+    }));
+
     // Generate signed JWT for the QR code, valid for 2 minutes
     const token = jwt.sign(
       {
@@ -512,7 +527,7 @@ export const getQRToken = async (req, res) => {
       { expiresIn: '2m' }
     );
 
-    res.json({ token, expiresAt: Date.now() + 120 * 1000 });
+    res.json({ token, expiresAt: Date.now() + 120 * 1000, attendees });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

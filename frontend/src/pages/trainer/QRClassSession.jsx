@@ -53,6 +53,9 @@ const QRClassSession = () => {
       const { data } = await API.get(`/trainer/session/${sessionId}/qr`);
       setQrToken(data.token);
       setCountdown(15); // Reset 15 seconds countdown
+      if (data.attendees) {
+        setActiveSession(prev => prev ? { ...prev, attendees: data.attendees } : prev);
+      }
     } catch (error) {
       console.error('Error loading QR code', error);
       toast.error('Failed to rotate QR token');
@@ -96,8 +99,8 @@ const QRClassSession = () => {
       const { data } = await API.post('/trainer/session/start', {
         batchId: selectedBatch,
         subject: inferredSubject,
-        floorNumber: 'N/A',
-        roomNumber: 'N/A'
+        floorNumber: 'SLA',
+        roomNumber: 'SLA'
       });
       setActiveSession(data);
       toast.success('Attendance session started successfully!');
@@ -335,7 +338,7 @@ const QRClassSession = () => {
                     <div>
                       <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Location</p>
                       <p className="text-sm font-black text-gray-900 dark:text-white mt-0.5">
-                        Room {activeSession.roomNumber}, Floor {activeSession.floorNumber}
+                        {activeSession.roomNumber === 'SLA' ? 'SLA' : `Room ${activeSession.roomNumber}, Floor ${activeSession.floorNumber}`}
                       </p>
                     </div>
                   </div>
