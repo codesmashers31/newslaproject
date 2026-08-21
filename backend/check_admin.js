@@ -5,10 +5,14 @@ import User from './models/User.js';
 dotenv.config();
 
 const check = async () => {
-  await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/placement_portal');
-  const allUsers = await User.find({}).lean();
-  console.log('All Users in DB:', allUsers.map(u => ({ name: u.name, email: u.email, role: u.role })));
-  mongoose.disconnect();
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    const allAdmins = await User.find({ role: { $in: ['Super Admin', 'Admin'] } }).lean();
+    console.log('Admins in DB:', allAdmins.map(u => ({ email: u.email, role: u.role, name: u.name, pwd: u.password })));
+    mongoose.disconnect();
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 check();

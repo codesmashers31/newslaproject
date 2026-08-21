@@ -31,6 +31,8 @@ const QRScanner = () => {
 
   useEffect(() => {
     loadDashboardData();
+    // Auto-start scanning on mount
+    startScanning();
     return () => stopScanning(); // Cleanup on unmount
   }, []);
 
@@ -38,25 +40,24 @@ const QRScanner = () => {
     if (!tokenString) return;
     setLoading(true);
     setScanResult(null);
-    stopScanning(); 
-
+    setStatusText('Processing QR code...');
+    
     try {
-      const { data } = await API.post('/student/attendance/scan', { token: tokenString });
-      setScanResult({
-        success: true,
-        message: data.message || 'Attendance marked successfully!',
-        details: data.attendance
-      });
-      loadDashboardData(); // Refresh history
-      toast.success('Attendance marked successfully!');
+      const response = await API.post('/student/attendance/scan', { token: tokenString });
+      toast.success(response.data.message || 'Attendance marked successfully');
+      setScanResult({ success: true, message: response.data.message });
+      await loadDashboardData(); // Refresh UI check-ins
+      
+      // Auto-restart scanning after 3 seconds on success
+      setTimeout(() => {
+        if (!cameraActive) startScanning();
+      }, 3000);
+
     } catch (error) {
-      console.error(error);
-      const message = error.response?.data?.message || 'Failed to mark attendance. Expired or invalid code.';
-      setScanResult({
-        success: false,
-        message
-      });
-      toast.error(message);
+      const msg = error.response?.data?.message || 'Failed to mark attendance';
+      toast.error(msg);
+      setScanResult({ success: false, message: msg });
+      setStatusText('Scan failed');
     } finally {
       setLoading(false);
     }
@@ -86,15 +87,18 @@ const QRScanner = () => {
     }
 
     try {
+      const config = {
+        fps: 10,
+        // Remove fixed qrbox and aspectRatio to let iPhone adapt naturally
+        // to the container's responsive size
+        disableFlip: false, 
+      };
+
       // First try environment (rear) camera
       try {
         await html5QrCode.current.start(
           { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
-          },
+          config,
           (decodedText) => handleMarkAttendance(decodedText),
           (errorMessage) => {}
         );
@@ -102,11 +106,7 @@ const QRScanner = () => {
         // Fallback to any available camera (usually front/webcam)
         await html5QrCode.current.start(
           { facingMode: "user" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
-          },
+          config,
           (decodedText) => handleMarkAttendance(decodedText),
           (errorMessage) => {}
         );
@@ -115,15 +115,20 @@ const QRScanner = () => {
       setCameraActive(true);
       setStatusText('Scanning for QR code...');
 
-      const stream = html5QrCode.current.getRunningTrackCameraCapabilities();
-      if (html5QrCode.current._localMediaStream) {
-         const track = html5QrCode.current._localMediaStream.getVideoTracks()[0];
-         videoTrackRef.current = track;
-         if (track.getCapabilities) {
-           setCapabilities(track.getCapabilities());
-         }
+      // Extract capabilities for Zoom/Torch
+      try {
+        const stream = html5QrCode.current.getRunningTrackCameraCapabilities();
+        videoTrackRef.current = html5QrCode.current.getRunningTrackCameraCapabilities(); // fallback ref
+        // html5-qrcode exposes `applyVideoConstraints` directly on the instance
+        const track = html5QrCode.current.getRunningTrackCameraCapabilities();
+        if (track) {
+          // getRunningTrackCameraCapabilities returns MediaTrackCapabilities in newer versions, 
+          // but we can just use the internal stream to get the actual track if needed.
+          setCapabilities(track);
+        }
+      } catch (e) {
+        console.warn('Capabilities error', e);
       }
-
     } catch (err) {
       console.error('Camera Start Error:', err);
       setCameraPermissionError('Could not start camera. Please ensure permissions are granted and no other app is using it.');
@@ -132,31 +137,20 @@ const QRScanner = () => {
     }
   };
 
-  // Apply Hardware Zoom (using ImageCapture capabilities)
+  // Apply Hardware Zoom 
   useEffect(() => {
-    if (cameraActive && videoTrackRef.current && capabilities) {
-      if (capabilities.zoom) {
-        // Map 1.0 - 30.0 UI range to actual hardware zoom range
-        const minZoom = capabilities.zoom.min || 1;
-        const maxZoom = capabilities.zoom.max || 1;
-        const hardwareZoomRange = maxZoom - minZoom;
-
-        // If hardware doesn't support zoom, do nothing
-        if (hardwareZoomRange <= 0) return;
-
-        // Translate our 1.0 -> 30.0 slider to the hardware min -> max
-        const scale = (displayZoom - 1) / (30 - 1); 
-        let targetZoom = minZoom + (scale * hardwareZoomRange);
-        
-        // Ensure within bounds
-        targetZoom = Math.max(minZoom, Math.min(targetZoom, maxZoom));
-
-        videoTrackRef.current.applyConstraints({
-          advanced: [{ zoom: targetZoom }]
-        }).catch(err => console.warn('Zoom not supported or failed to apply', err));
+    if (cameraActive && html5QrCode.current) {
+      try {
+        // We apply constraints via the library's official method
+        // iOS Safari may ignore this, but Android Chrome handles it well.
+        html5QrCode.current.applyVideoConstraints({
+          advanced: [{ zoom: displayZoom }]
+        }).catch(err => console.warn('Zoom not supported', err));
+      } catch (err) {
+        console.warn('Zoom API error', err);
       }
     }
-  }, [displayZoom, cameraActive, capabilities]);
+  }, [displayZoom, cameraActive]);
 
   // Apply Torch
   useEffect(() => {

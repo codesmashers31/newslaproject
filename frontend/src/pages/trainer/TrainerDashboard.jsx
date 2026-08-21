@@ -471,9 +471,9 @@ const TrainerDashboard = () => {
         const sLegacy = (s.batch || '').toLowerCase();
 
         const matchesDomainBatch = Boolean(
-          (selName && (sComm.includes(selName) || sTech.includes(selName) || sApti.includes(selName) || sLegacy.includes(selName))) ||
-          (selBatchId && (sComm.includes(selBatchId) || sTech.includes(selBatchId) || sApti.includes(selBatchId) || sLegacy.includes(selBatchId))) ||
-          (selName && (selName.includes(sComm) || selName.includes(sTech) || selName.includes(sApti)))
+          (selName && ((sComm && sComm.includes(selName)) || (sTech && sTech.includes(selName)) || (sApti && sApti.includes(selName)) || (sLegacy && sLegacy.includes(selName)))) ||
+          (selBatchId && ((sComm && sComm.includes(selBatchId)) || (sTech && sTech.includes(selBatchId)) || (sApti && sApti.includes(selBatchId)) || (sLegacy && sLegacy.includes(selBatchId)))) ||
+          (selName && ((sComm && selName.includes(sComm)) || (sTech && selName.includes(sTech)) || (sApti && selName.includes(sApti))))
         );
 
         return inBatchesArray || matchesDomainBatch;
