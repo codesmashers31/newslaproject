@@ -81,23 +81,36 @@ const QRScanner = () => {
     setLoading(false);
     setStatusText('Starting camera...');
 
-    html5QrCode.current = new Html5Qrcode("reader");
+    if (!html5QrCode.current) {
+      html5QrCode.current = new Html5Qrcode("reader");
+    }
 
     try {
-      await html5QrCode.current.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        },
-        (decodedText) => {
-          handleMarkAttendance(decodedText);
-        },
-        (errorMessage) => {
-          // Parse errors are expected while searching for a QR code
-        }
-      );
+      // First try environment (rear) camera
+      try {
+        await html5QrCode.current.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          (decodedText) => handleMarkAttendance(decodedText),
+          (errorMessage) => {}
+        );
+      } catch (envError) {
+        // Fallback to any available camera (usually front/webcam)
+        await html5QrCode.current.start(
+          { facingMode: "user" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          (decodedText) => handleMarkAttendance(decodedText),
+          (errorMessage) => {}
+        );
+      }
       
       setCameraActive(true);
       setStatusText('Scanning for QR code...');
@@ -112,8 +125,8 @@ const QRScanner = () => {
       }
 
     } catch (err) {
-      console.error(err);
-      setCameraPermissionError('Please grant camera permission in your browser settings to scan.');
+      console.error('Camera Start Error:', err);
+      setCameraPermissionError('Could not start camera. Please ensure permissions are granted and no other app is using it.');
       setCameraActive(false);
       setStatusText('Camera Error');
     }
