@@ -504,11 +504,11 @@ const TrainerDashboard = () => {
       });
       toast.success(`Marked ${status} successfully`);
       
-      // Refresh todayRecords to update UI check-in timestamps & reload updated attendance calculations
+      // Refresh todayRecords to update UI check-in timestamps seamlessly without a spinner
       const { data: existingRecords } = await API.get(`/trainer/attendance?date=${attendanceDate}`);
       setTodayRecords(existingRecords);
       
-      await loadData();
+      // Removed await loadData() to prevent full UI reload / spinner
       
       if (isCommunicationTrainer) {
         loadStats(selectedBatchId);
@@ -690,6 +690,11 @@ const TrainerDashboard = () => {
         records
       });
       toast.success(data?.message || 'Attendance submitted successfully!');
+      
+      // Refresh todayRecords to update UI check-in timestamps seamlessly without a spinner
+      const { data: existingRecords } = await API.get(`/trainer/attendance?date=${attendanceDate}`);
+      setTodayRecords(existingRecords);
+
       if (isCommunicationTrainer) {
         loadStats(selectedBatchId);
       }
@@ -2258,7 +2263,7 @@ const TrainerDashboard = () => {
                             {['Present', 'Absent', 'Late'].map(status => (
                               <button
                                 key={status}
-                                onClick={() => handleAttendanceChange(student._id, status)}
+                                onClick={() => setAttendanceState(prev => ({ ...prev, [student._id]: status }))}
                                 className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
                                   attendanceState[student._id] === status
                                     ? status === 'Present'
