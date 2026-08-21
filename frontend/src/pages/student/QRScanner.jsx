@@ -89,12 +89,11 @@ const QRScanner = () => {
     try {
       const config = {
         fps: 10,
-        // Remove fixed qrbox and aspectRatio to let iPhone adapt naturally
-        // to the container's responsive size
+        qrbox: 250, // Use a standard 250x250 box for scanning (fixes iOS crop/stretch issues)
         disableFlip: false, 
       };
 
-      // First try environment (rear) camera
+      // Try environment camera first
       try {
         await html5QrCode.current.start(
           { facingMode: "environment" },
@@ -103,7 +102,7 @@ const QRScanner = () => {
           (errorMessage) => {}
         );
       } catch (envError) {
-        // Fallback to any available camera (usually front/webcam)
+        // Fallback to front camera
         await html5QrCode.current.start(
           { facingMode: "user" },
           config,
@@ -117,14 +116,9 @@ const QRScanner = () => {
 
       // Extract capabilities for Zoom/Torch
       try {
-        const stream = html5QrCode.current.getRunningTrackCameraCapabilities();
-        videoTrackRef.current = html5QrCode.current.getRunningTrackCameraCapabilities(); // fallback ref
-        // html5-qrcode exposes `applyVideoConstraints` directly on the instance
-        const track = html5QrCode.current.getRunningTrackCameraCapabilities();
-        if (track) {
-          // getRunningTrackCameraCapabilities returns MediaTrackCapabilities in newer versions, 
-          // but we can just use the internal stream to get the actual track if needed.
-          setCapabilities(track);
+        if (html5QrCode.current.getRunningTrackCapabilities) {
+          const track = html5QrCode.current.getRunningTrackCapabilities();
+          if (track) setCapabilities(track);
         }
       } catch (e) {
         console.warn('Capabilities error', e);
@@ -139,13 +133,12 @@ const QRScanner = () => {
 
   // Apply Hardware Zoom 
   useEffect(() => {
-    if (cameraActive && html5QrCode.current) {
+    if (cameraActive && html5QrCode.current && html5QrCode.current.applyVideoConstraints) {
       try {
         // We apply constraints via the library's official method
-        // iOS Safari may ignore this, but Android Chrome handles it well.
         html5QrCode.current.applyVideoConstraints({
           advanced: [{ zoom: displayZoom }]
-        }).catch(err => console.warn('Zoom not supported', err));
+        }).catch(err => console.warn('Zoom not supported by this device', err));
       } catch (err) {
         console.warn('Zoom API error', err);
       }
@@ -154,13 +147,17 @@ const QRScanner = () => {
 
   // Apply Torch
   useEffect(() => {
-    if (cameraActive && videoTrackRef.current && capabilities) {
-      if (capabilities.torch) {
-        videoTrackRef.current.applyConstraints({
-          advanced: [{ torch: torch }]
-        }).catch(err => console.warn('Torch not supported', err));
-      } else {
-        if (torch) toast('Flashlight (Torch) is not supported on this device.');
+    if (cameraActive && html5QrCode.current && html5QrCode.current.applyVideoConstraints) {
+      if (capabilities && capabilities.torch) {
+        try {
+          html5QrCode.current.applyVideoConstraints({
+            advanced: [{ torch: torch }]
+          }).catch(err => console.warn('Torch not supported', err));
+        } catch (err) {
+          console.warn('Torch API error', err);
+        }
+      } else if (torch && capabilities && !capabilities.torch) {
+        toast('Flashlight (Torch) is not supported on this device.');
       }
     }
   }, [torch, cameraActive, capabilities]);
@@ -239,8 +236,8 @@ const QRScanner = () => {
       <div className="p-5 md:p-8 flex flex-col justify-between max-w-lg mx-auto">
         
         {/* 1. Camera Viewport Panel */}
-        <div className="flex flex-col items-center justify-center my-4">
-          <div className="w-80 h-80 relative rounded-[32px] overflow-hidden shadow-lg border border-slate-200 bg-white">
+        <div className="flex flex-col items-center justify-center my-4 w-full">
+          <div className="w-full max-w-[320px] min-h-[320px] relative rounded-[32px] overflow-hidden shadow-lg border border-slate-200 bg-white">
             
             {/* The actual HTML5 Qrcode container - Always in DOM to prevent dimension errors */}
             <div id="reader" className="w-full h-full bg-[#0F0C20]"></div>
