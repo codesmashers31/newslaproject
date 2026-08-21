@@ -186,7 +186,9 @@ export const authUser = async (req, res) => {
           user.deviceLastUsed = new Date();
           await user.save();
         } else if (user.deviceId !== deviceId) {
+          // STRICT DEVICE BINDING TEMPORARILY DISABLED PER USER REQUEST
           // Check if a pending reset request already exists to prevent spam
+          /*
           const existingReq = await DeviceResetRequest.findOne({ user: user._id, status: 'Pending' });
           if (!existingReq) {
             await DeviceResetRequest.create({
@@ -203,6 +205,13 @@ export const authUser = async (req, res) => {
             registeredDevice: user.deviceInfo || 'Unrecognized computer / laptop',
             lastUsed: user.deviceLastUsed || new Date()
           });
+          */
+          
+          // Fallback: Just update the device info for now since strict check is disabled
+          user.deviceId = deviceId;
+          user.deviceInfo = deviceInfo || 'Web Browser';
+          user.deviceLastUsed = new Date();
+          await user.save();
         } else {
           user.deviceLastUsed = new Date();
           await user.save();
