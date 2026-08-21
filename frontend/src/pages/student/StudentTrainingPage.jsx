@@ -240,24 +240,59 @@ const StudentTrainingPage = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {techBatches.map((item, index) => (
-                <div key={item._id || index} className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="bg-[#E0E7FF] text-[#4338CA] text-[9px] font-bold uppercase px-2 py-0.5 rounded-md shrink-0">
-                        {item.course || 'Technical'}
-                      </span>
-                      <span className="text-[#0F172A] text-sm font-black truncate">
-                        {item.name ? item.name.replace(/\s*\(\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM)\)/ig, '').trim() : 'Unassigned'}
-                      </span>
+              {techBatches.map((item, index) => {
+                const stats = item.attendanceStats || dashData?.technicalSummary || {
+                  startDate: '14-Aug-2026', trainingDay: 0, totalTrainingDays: 80, presentCount: 0, absentCount: 0, remainingDays: 80, attendancePercent: 100, progressPercent: 0
+                };
+                return (
+                  <div key={item._id || index} className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-3">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="bg-[#E0E7FF] text-[#4338CA] text-[9px] font-bold uppercase px-2 py-0.5 rounded-md shrink-0">
+                            {item.course || 'Technical'}
+                          </span>
+                          <span className="text-[#0F172A] text-sm font-black truncate">
+                            {item.name ? item.name.replace(/\s*\(\d{1,2}:\d{2}\s*(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s*(?:AM|PM)\)/ig, '').trim() : 'Unassigned'}
+                          </span>
+                        </div>
+                        <span className="text-[#64748B] text-[11px] block mt-1">Trainer: <strong className="text-[#0F172A]">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</strong></span>
+                      </div>
+                      <div className="shrink-0 md:text-right">
+                        <span className="text-[#64748B] text-[10px] font-bold uppercase block">Start Date</span>
+                        <span className="text-[#0F172A] text-sm font-black block mt-1">{stats.startDate || '14-Aug-2026'}</span>
+                      </div>
                     </div>
-                    <span className="text-[#64748B] text-[11px] block mt-1">Trainer: <strong className="text-[#0F172A]">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</strong></span>
+
+                    <div className="bg-white p-3 rounded-xl border border-[#E2E8F0] flex justify-between items-center">
+                      <span className="text-[#64748B] text-[10px] font-bold uppercase flex items-center">Schedule</span>
+                      <span className="text-[#4F46E5] text-[11px] font-extrabold block whitespace-nowrap">{resolveBatchSchedule(item, 'Technical')}</span>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-2 flex flex-col gap-3">
+                      <div className="flex justify-between items-center border-b border-slate-200/60 pb-3">
+                        <span className="text-slate-600 text-xs font-extrabold">Training Day</span>
+                        <span className="text-slate-900 text-sm font-black">Day {stats.trainingDay || 0} / {stats.totalTrainingDays || 80}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-1">
+                        <span className="text-slate-500 text-[11px]">Present: <strong className="font-extrabold text-emerald-600 text-xs">{stats.presentCount || 0}</strong></span>
+                        <span className="text-slate-500 text-[11px]">Absent: <strong className="font-extrabold text-rose-500 text-xs">{stats.absentCount || 0}</strong></span>
+                        <span className="text-slate-500 text-[11px]">Remaining: <strong className="font-extrabold text-slate-800 text-xs">{stats.remainingDays ?? 80}</strong></span>
+                      </div>
+                      <div className="flex justify-between items-center border-t border-slate-200/60 pt-3 mt-1">
+                        <div>
+                          <span className="block text-[10px] font-extrabold text-slate-400 uppercase">Attendance %</span>
+                          <span className="block text-sm font-black text-emerald-600 mt-1">{stats.attendancePercent !== undefined ? stats.attendancePercent : 100}%</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="block text-[10px] font-extrabold text-slate-400 uppercase">Progress %</span>
+                          <span className="block text-sm font-black text-indigo-600 mt-1">{stats.progressPercent || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="md:border-l md:border-slate-200 md:pl-4 pt-2 md:pt-0 border-t border-slate-200 mt-1 md:mt-0">
-                    <span className="text-[#4F46E5] text-[11px] font-extrabold whitespace-nowrap">{resolveBatchSchedule(item)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

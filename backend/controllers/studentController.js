@@ -262,8 +262,18 @@ export const getStudentDashboard = async (req, res) => {
     const aptiSummary = calculatedScores.aptiAtt || { attendancePercent: 0 };
 
     const batchesWithAttendance = batches.map(b => {
-      let dept = (b.department || 'Technical').toLowerCase();
-      const attStats = dept.includes('comm') ? (calculatedScores.commAtt || {}) : dept.includes('apti') ? (calculatedScores.aptiAtt || {}) : (calculatedScores.techAtt || {});
+      let dept = (b.course || b.department || 'Technical').toLowerCase();
+      
+      let attStats = null;
+      if (dept.includes('comm')) attStats = calculatedScores.commAtt;
+      else if (dept.includes('apti')) attStats = calculatedScores.aptiAtt;
+      else attStats = calculatedScores.techAtt;
+
+      // Ensure we don't return an empty object that bypasses the && check
+      if (attStats && Object.keys(attStats).length === 0) {
+        attStats = null;
+      }
+
       return {
         _id: b._id,
         name: b.name,
@@ -332,6 +342,7 @@ export const getStudentDashboard = async (req, res) => {
       batches: batchesWithAttendance,
       communicationSummary: commSummary,
       aptitudeSummary: aptiSummary,
+      technicalSummary: calculatedScores.techAtt || { attendancePercent: 0 },
       attendance: {
         percentage: attendancePercent,
         totalClasses: totalDays,
