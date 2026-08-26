@@ -19,6 +19,9 @@ const QRScanner = () => {
 
   const html5QrCode = useRef(null);
   const videoTrackRef = useRef(null);
+  const isScanningLocked = useRef(false);
+  const [manualCode, setManualCode] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
 
   const loadDashboardData = async () => {
     try {
@@ -31,46 +34,83 @@ const QRScanner = () => {
 
   useEffect(() => {
     loadDashboardData();
-    // Auto-start scanning on mount
-    startScanning();
-    return () => stopScanning(); // Cleanup on unmount
+    // Slight delay to ensure DOM element #reader is mounted
+    const timer = setTimeout(() => {
+      startScanning();
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      stopScanning();
+    };
   }, []);
 
   const handleMarkAttendance = async (tokenString) => {
-    if (!tokenString) return;
+    if (!tokenString || isScanningLocked.current) return;
+    isScanningLocked.current = true;
+
+    // Clean / parse token if JSON string
+    let cleanToken = String(tokenString).trim();
+    if (cleanToken.startsWith('{') && cleanToken.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(cleanToken);
+        cleanToken = parsed.token || parsed.jwt || parsed.code || cleanToken;
+      } catch (e) {}
+    }
+
     setLoading(true);
     setScanResult(null);
     setStatusText('Processing QR code...');
     
     try {
-      const response = await API.post('/student/attendance/scan', { token: tokenString });
-      toast.success(response.data.message || 'Attendance marked successfully');
-      setScanResult({ success: true, message: response.data.message });
+      // Pause scanner while verifying with server
+      if (html5QrCode.current && html5QrCode.current.isScanning) {
+        try {
+          await html5QrCode.current.pause(true);
+        } catch (e) {}
+      }
+
+      const response = await API.post('/student/attendance/scan', { token: cleanToken });
+      const msg = response.data?.message || 'Attendance marked successfully!';
+      toast.success(msg);
+      setScanResult({ success: true, message: msg });
       await loadDashboardData(); // Refresh UI check-ins
       
-      // Auto-restart scanning after 3 seconds on success
-      setTimeout(() => {
-        if (!cameraActive) startScanning();
-      }, 3000);
-
     } catch (error) {
-      const msg = error.response?.data?.message || 'Failed to mark attendance';
+      console.error('Scan Attendance Error:', error);
+      const msg = error.response?.data?.message || error.message || 'Failed to mark attendance. Expired or invalid code.';
       toast.error(msg);
       setScanResult({ success: false, message: msg });
       setStatusText('Scan failed');
     } finally {
       setLoading(false);
+      // Allow re-scanning after 3 seconds
+      setTimeout(() => {
+        isScanningLocked.current = false;
+        if (html5QrCode.current && html5QrCode.current.isScanning) {
+          try {
+            html5QrCode.current.resume();
+            setStatusText('Scanning for QR code...');
+          } catch (e) {}
+        }
+      }, 3000);
     }
   };
 
-  const stopScanning = () => {
+  const stopScanning = async () => {
     if (html5QrCode.current) {
-      html5QrCode.current.stop().then(() => {
+      try {
+        if (html5QrCode.current.isScanning) {
+          await html5QrCode.current.stop();
+        }
         html5QrCode.current.clear();
+      } catch (err) {
+        console.warn('Failed to stop scanner cleanly.', err);
+      } finally {
         setCameraActive(false);
         videoTrackRef.current = null;
         setCapabilities(null);
-      }).catch(err => console.error('Failed to stop scanner.', err));
+      }
     } else {
       setCameraActive(false);
     }
@@ -81,17 +121,30 @@ const QRScanner = () => {
     setScanResult(null);
     setLoading(false);
     setStatusText('Starting camera...');
+    isScanningLocked.current = false;
 
-    if (!html5QrCode.current) {
-      html5QrCode.current = new Html5Qrcode("reader");
+    const readerElem = document.getElementById('reader');
+    if (!readerElem) {
+      console.warn('Reader element not yet available in DOM.');
+      return;
     }
 
     try {
+      if (html5QrCode.current && html5QrCode.current.isScanning) {
+        try {
+          await html5QrCode.current.stop();
+        } catch (e) {}
+      }
+
+      if (!html5QrCode.current) {
+        html5QrCode.current = new Html5Qrcode("reader");
+      }
+
       const config = {
-        fps: 25, // High frame rate for instant detection
+        fps: 25, // High frame rate for rapid detection
         qrbox: (viewfinderWidth, viewfinderHeight) => {
           const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const edge = Math.max(200, Math.floor(minEdge * 0.85));
+          const edge = Math.max(180, Math.floor(minEdge * 0.85));
           return { width: edge, height: edge };
         },
         aspectRatio: 1.0,
@@ -101,21 +154,31 @@ const QRScanner = () => {
         }
       };
 
-      const videoConstraints = {
-        facingMode: "environment",
-        focusMode: "continuous"
-      };
-
-      // Try environment camera first
+      // 1. First try enumerating devices to pick the best camera
       try {
-        await html5QrCode.current.start(
-          videoConstraints,
-          config,
-          (decodedText) => handleMarkAttendance(decodedText),
-          (errorMessage) => {}
-        );
-      } catch (envError) {
-        // Fallback to front camera
+        const cameras = await Html5Qrcode.getCameras();
+        if (cameras && cameras.length > 0) {
+          // Prefer back/environment camera if available
+          const backCam = cameras.find(c => /back|rear|environment/i.test(c.label));
+          const selectedCamId = backCam ? backCam.id : cameras[0].id;
+          
+          await html5QrCode.current.start(
+            selectedCamId,
+            config,
+            (decodedText) => handleMarkAttendance(decodedText),
+            (errorMessage) => {}
+          );
+        } else {
+          // Fallback to constraints
+          await html5QrCode.current.start(
+            { facingMode: "environment" },
+            config,
+            (decodedText) => handleMarkAttendance(decodedText),
+            (errorMessage) => {}
+          );
+        }
+      } catch (camEnumErr) {
+        // Fallback to user facing camera or default constraints
         await html5QrCode.current.start(
           { facingMode: "user" },
           config,
@@ -138,7 +201,7 @@ const QRScanner = () => {
       }
     } catch (err) {
       console.error('Camera Start Error:', err);
-      setCameraPermissionError('Could not start camera. Please ensure permissions are granted and no other app is using it.');
+      setCameraPermissionError('Could not start camera. Please ensure camera permissions are allowed in your browser settings.');
       setCameraActive(false);
       setStatusText('Camera Error');
     }
@@ -427,12 +490,51 @@ const QRScanner = () => {
           {cameraActive && !scanResult && !loading && (
              <button
                onClick={stopScanning}
-               className="mt-6 flex items-center gap-1.5 px-4 py-2 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs font-bold"
+               className="mt-4 flex items-center gap-1.5 px-4 py-2 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-100 transition-colors"
              >
                <VideoOff size={14} />
                Stop Camera
              </button>
           )}
+
+          {/* Manual Code Fallback */}
+          <div className="w-full max-w-[320px] mt-3">
+            <button
+              onClick={() => setShowManualInput(!showManualInput)}
+              className="text-[11px] font-bold text-[#7C3AED] hover:underline flex items-center justify-center w-full gap-1 py-1 cursor-pointer"
+            >
+              <HelpCircle size={13} />
+              <span>{showManualInput ? 'Hide Token Input' : 'Trouble scanning? Enter QR Token'}</span>
+            </button>
+
+            {showManualInput && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (manualCode.trim()) {
+                    handleMarkAttendance(manualCode.trim());
+                    setManualCode('');
+                  }
+                }}
+                className="mt-2 flex gap-2 animate-in fade-in"
+              >
+                <input
+                  type="text"
+                  placeholder="Paste QR token / JWT..."
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#7C3AED]"
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !manualCode.trim()}
+                  className="px-3.5 py-2 bg-[#7C3AED] text-white rounded-xl text-xs font-bold disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  Submit
+                </button>
+              </form>
+            )}
+          </div>
 
         </div>
 
