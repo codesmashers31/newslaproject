@@ -15,13 +15,13 @@ const StudentLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="w-full bg-[#f8fafc] min-h-screen relative flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto pb-[90px] relative no-scrollbar md:pb-6">
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-28 relative no-scrollbar">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>
         </main>
 
-        <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 flex justify-between items-center px-4 py-3 pb-6 z-50 md:px-12 lg:px-24">
+        <nav className="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg flex justify-between items-center px-4 py-3 pb-5 z-40 md:px-12 lg:px-24">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (

@@ -199,7 +199,7 @@ const StudentTrainingPage = () => {
   const isCommLocked = dashData?.profile?.isCommunicationLocked; // Fallback, not strictly defined in model but logic matches
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen">
+    <div className="bg-[#F8FAFC] min-h-screen pb-32">
       {/* Header */}
       <div className="px-5 pt-6 pb-4 bg-white border-b border-[#E2E8F0] shadow-sm relative z-10 sticky top-0">
         <h1 className="text-xl font-black text-[#0F172A]">My Training</h1>
@@ -452,16 +452,16 @@ const StudentTrainingPage = () => {
 
       {/* Tech Batches Modal */}
       {techModalVisible && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl p-6 shadow-2xl flex flex-col h-[85vh] sm:h-[80vh] slide-in-from-bottom-full sm:slide-in-from-bottom-0">
-            <div className="flex items-center gap-4 mb-6">
-              <button onClick={() => setTechModalVisible(false)} className="text-gray-400 hover:text-gray-600">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl p-5 sm:p-6 shadow-2xl flex flex-col h-[85dvh] sm:h-[80vh] max-h-[88dvh] slide-in-from-bottom-full sm:slide-in-from-bottom-0">
+            <div className="flex items-center gap-4 mb-4 shrink-0">
+              <button onClick={() => setTechModalVisible(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <ArrowLeft size={24} />
               </button>
               <h2 className="text-lg font-black text-gray-900 flex-1">Manage Technical ({selectedTechIds.length})</h2>
             </div>
             
-            <div className="relative mb-4">
+            <div className="relative mb-3 shrink-0">
               <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
               <input
                 type="text"
@@ -472,7 +472,7 @@ const StudentTrainingPage = () => {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3">
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-1">
               {availTechBatches.length === 0 ? (
                 <div className="py-8 text-center text-gray-500 text-xs">No batches match your search.</div>
               ) : (
@@ -502,18 +502,18 @@ const StudentTrainingPage = () => {
               )}
             </div>
 
-            <div className="pt-4 flex gap-3 mt-auto">
+            <div className="pt-4 pb-1 border-t border-slate-100 flex gap-3 shrink-0 bg-white">
               <button
                 onClick={() => handleSaveTech(false)}
                 disabled={savingTech || isTechLocked}
-                className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 flex items-center justify-center cursor-pointer shadow-xs active:scale-[0.98] transition-all"
               >
-                {savingTech ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Save Temporary'}
+                {savingTech ? <RefreshCw className="w-5 h-5 animate-spin text-indigo-600" /> : 'Save Selection'}
               </button>
               <button
                 onClick={() => handleSaveTech(true)}
                 disabled={savingTech || isTechLocked}
-                className="flex-1 py-3.5 rounded-xl text-sm font-black bg-[#4F46E5] text-white hover:bg-[#4338ca] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
+                className="flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-black bg-[#4F46E5] text-white hover:bg-[#4338ca] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all"
               >
                 {savingTech ? <RefreshCw className="w-5 h-5 animate-spin" /> : (
                   <>
@@ -529,16 +529,16 @@ const StudentTrainingPage = () => {
 
       {/* Apti Modal */}
       {aptiModalVisible && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl p-6 shadow-2xl flex flex-col h-[85vh] sm:h-[80vh] slide-in-from-bottom-full sm:slide-in-from-bottom-0">
-            <div className="flex items-center gap-4 mb-6">
-              <button onClick={() => setAptiModalVisible(false)} className="text-gray-400 hover:text-gray-600">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl p-5 sm:p-6 shadow-2xl flex flex-col h-[85dvh] sm:h-[80vh] max-h-[88dvh] slide-in-from-bottom-full sm:slide-in-from-bottom-0">
+            <div className="flex items-center gap-4 mb-4 shrink-0">
+              <button onClick={() => setAptiModalVisible(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <ArrowLeft size={24} />
               </button>
               <h2 className="text-lg font-black text-gray-900 flex-1">Select Aptitude Batch</h2>
             </div>
             
-            <div className="relative mb-4">
+            <div className="relative mb-3 shrink-0">
               <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
               <input
                 type="text"
@@ -549,7 +549,7 @@ const StudentTrainingPage = () => {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3">
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-1">
               {availAptiBatches.length === 0 ? (
                 <div className="py-8 text-center text-gray-500 text-xs">No batches match your search.</div>
               ) : (
@@ -578,18 +578,18 @@ const StudentTrainingPage = () => {
               )}
             </div>
 
-            <div className="pt-4 flex gap-3 mt-auto">
+            <div className="pt-4 pb-1 border-t border-slate-100 flex gap-3 shrink-0 bg-white">
               <button
                 onClick={() => handleSaveApti(false)}
                 disabled={savingApti || isAptiLocked}
-                className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 flex items-center justify-center cursor-pointer shadow-xs active:scale-[0.98] transition-all"
               >
-                {savingApti ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Save Temporary'}
+                {savingApti ? <RefreshCw className="w-5 h-5 animate-spin text-indigo-600" /> : 'Save Selection'}
               </button>
               <button
                 onClick={() => handleSaveApti(true)}
                 disabled={savingApti || isAptiLocked}
-                className="flex-1 py-3.5 rounded-xl text-sm font-black bg-[#4F46E5] text-white hover:bg-[#4338ca] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
+                className="flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-black bg-[#4F46E5] text-white hover:bg-[#4338ca] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all"
               >
                 {savingApti ? <RefreshCw className="w-5 h-5 animate-spin" /> : (
                   <>
@@ -605,16 +605,16 @@ const StudentTrainingPage = () => {
 
       {/* Comm Modal */}
       {commModalVisible && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl p-6 shadow-2xl flex flex-col h-[85vh] sm:h-[80vh] slide-in-from-bottom-full sm:slide-in-from-bottom-0">
-            <div className="flex items-center gap-4 mb-6">
-              <button onClick={() => setCommModalVisible(false)} className="text-gray-400 hover:text-gray-600">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl p-5 sm:p-6 shadow-2xl flex flex-col h-[85dvh] sm:h-[80vh] max-h-[88dvh] slide-in-from-bottom-full sm:slide-in-from-bottom-0">
+            <div className="flex items-center gap-4 mb-4 shrink-0">
+              <button onClick={() => setCommModalVisible(false)} className="text-gray-400 hover:text-gray-600 p-1">
                 <ArrowLeft size={24} />
               </button>
               <h2 className="text-lg font-black text-gray-900 flex-1">Select Communication Batch</h2>
             </div>
             
-            <div className="relative mb-4">
+            <div className="relative mb-3 shrink-0">
               <Search size={16} className="absolute left-3.5 top-3 text-gray-400" />
               <input
                 type="text"
@@ -625,7 +625,7 @@ const StudentTrainingPage = () => {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3">
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-1">
               {availCommBatches.length === 0 ? (
                 <div className="py-8 text-center text-gray-500 text-xs">No batches match your search.</div>
               ) : (
@@ -654,18 +654,18 @@ const StudentTrainingPage = () => {
               )}
             </div>
 
-            <div className="pt-4 flex gap-3 mt-auto">
+            <div className="pt-4 pb-1 border-t border-slate-100 flex gap-3 shrink-0 bg-white">
               <button
                 onClick={() => handleSaveComm(false)}
                 disabled={savingComm || isCommLocked}
-                className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center"
+                className="flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 text-slate-800 hover:bg-slate-200 disabled:opacity-50 flex items-center justify-center cursor-pointer shadow-xs active:scale-[0.98] transition-all"
               >
-                {savingComm ? <RefreshCw className="w-5 h-5 animate-spin" /> : 'Save Temporary'}
+                {savingComm ? <RefreshCw className="w-5 h-5 animate-spin text-indigo-600" /> : 'Save Selection'}
               </button>
               <button
                 onClick={() => handleSaveComm(true)}
                 disabled={savingComm || isCommLocked}
-                className="flex-1 py-3.5 rounded-xl text-sm font-black bg-[#4F46E5] text-white hover:bg-[#4338ca] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
+                className="flex-1 py-3.5 rounded-xl text-xs sm:text-sm font-black bg-[#4F46E5] text-white hover:bg-[#4338ca] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 cursor-pointer active:scale-[0.98] transition-all"
               >
                 {savingComm ? <RefreshCw className="w-5 h-5 animate-spin" /> : (
                   <>
