@@ -4,13 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
 import { 
   Clock, CheckCircle2, Camera, Sparkles, User, Compass, 
-  BookOpen, Phone, ChevronRight 
+  BookOpen, Phone, ChevronRight, LogOut 
 } from 'lucide-react';
 import ProgressRing from '../../components/ProgressRing';
 import toast from 'react-hot-toast';
 
 const StudentDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const primaryColor = '#4F46E5';
@@ -111,12 +111,27 @@ const StudentDashboard = () => {
           <p className="text-slate-500 text-[10px] font-black uppercase tracking-wider">Welcome Back</p>
           <h1 className="text-xl font-black text-slate-800 mt-0.5">👋 Hey, {profile.name || 'Student'}</h1>
         </div>
-        <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center border border-white/80 overflow-hidden relative shadow-md shadow-indigo-600/5">
-          {profile.photo ? (
-            <img src={profile.photo} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-base font-black text-indigo-700">{(profile.name || 'S').charAt(0).toUpperCase()}</span>
-          )}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => {
+              logout();
+              toast.success('Logged out successfully');
+            }}
+            className="p-2.5 rounded-full bg-white/90 hover:bg-rose-50 border border-slate-200 text-slate-400 hover:text-rose-600 transition-colors shadow-xs cursor-pointer flex items-center justify-center"
+            title="Log Out"
+          >
+            <LogOut size={16} />
+          </button>
+
+          <Link to="/student/profile" className="w-11 h-11 bg-white rounded-full flex items-center justify-center border border-white/80 overflow-hidden relative shadow-md shadow-indigo-600/5 block">
+            {profile.photo ? (
+              <img src={profile.photo} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-base font-black text-indigo-700">
+                {(profile.name || 'S').charAt(0).toUpperCase()}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
 
