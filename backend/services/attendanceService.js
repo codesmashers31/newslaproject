@@ -14,7 +14,11 @@ const formatDateISO = (d) => {
 };
 
 /**
- * Calculates dynamic attendance for multiple students in bulk (Pre-fetches holidays and session dates ONCE)
+ * Calculates dynamic attendance for multiple students in bulk based on batch-conducted class dates.
+ * Business Rule:
+ * If on a particular day NO ONE scanned or attended for the batch, that day is a Batch Leave / Off-day.
+ * Only dates with actual conducted class activity (sessions or student check-ins) are counted as training days.
+ * 
  * @param {Array<string|ObjectId>} studentIds 
  * @param {string} department 'Communication' | 'Aptitude' | 'Technical'
  * @returns {Promise<Map<string, Object>>} Map of studentId.toString() -> attendanceStats
@@ -24,55 +28,94 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
   if (!studentIds || studentIds.length === 0) return statsMap;
 
   const objectStudentIds = studentIds.map(id => new mongoose.Types.ObjectId(id));
-  const dept = department || 'Communication';
+  const dept = department || 'Technical';
   const isComm = dept.toLowerCase().includes('comm');
   const isApti = dept.toLowerCase().includes('apti');
 
-  const fixedTotalDays = isComm ? 80 : (isApti ? 120 : 100);
-
-  // Parallelize all independent database pre-fetches for instant response
+  const fixedTotalDays = isComm ? 80 : (isApti ? 120 : 80);
   const domainSubjectRegex = isComm ? /comm/i : isApti ? /apti/i : /tech/i;
 
-  const [enrollments, holidays, sessions, attendanceLogs] = await Promise.all([
-    Enrollment.find({
-      studentId: { $in: objectStudentIds },
-      department: dept,
-      status: 'Active'
-    }).populate('batchId', 'name startDate').lean(),
-    Holiday.find().lean(),
-    AttendanceSession.find({
-      status: 'Active',
-      $or: [{ subject: domainSubjectRegex }, { category: domainSubjectRegex }]
-    }).select('createdAt').limit(100).lean(),
-    Attendance.find({
-      student: { $in: objectStudentIds },
-      subject: domainSubjectRegex
-    }).lean()
-  ]);
+  // 1. Fetch active enrollments for target students in this department
+  const enrollments = await Enrollment.find({
+    studentId: { $in: objectStudentIds },
+    department: dept,
+    status: 'Active'
+  }).populate('batchId', 'name startDate endDate startTime endTime schedule').lean();
 
   const enrollmentMap = new Map();
+  const batchIdList = [];
   (enrollments || []).forEach(e => {
     enrollmentMap.set(e.studentId.toString(), e);
+    if (e.batchId?._id) {
+      batchIdList.push(e.batchId._id);
+    }
   });
+
+  // 2. Fetch holidays, sessions, and attendance logs concurrently
+  const [holidays, sessions, allBatchAttendance, studentAttendanceLogs] = await Promise.all([
+    Holiday.find().lean(),
+    AttendanceSession.find({
+      $or: [
+        { batch: { $in: batchIdList } },
+        { subject: domainSubjectRegex },
+        { category: domainSubjectRegex }
+      ]
+    }).select('batch createdAt').lean(),
+    Attendance.find({
+      $or: [
+        { batch: { $in: batchIdList } },
+        { subject: domainSubjectRegex },
+        { course: domainSubjectRegex }
+      ],
+      status: { $in: ['Present', 'Late'] }
+    }).select('batch subject date status student').lean(),
+    Attendance.find({
+      student: { $in: objectStudentIds },
+      $or: [
+        { subject: domainSubjectRegex },
+        { course: domainSubjectRegex },
+        { batch: { $in: batchIdList } }
+      ]
+    }).lean()
+  ]);
 
   const holidaySet = new Set();
   (holidays || []).forEach(h => {
     if (h.date) holidaySet.add(formatDateISO(h.date));
   });
 
-  const domainScannedDates = new Set();
+  // 3. Build conducted class dates per batch and domain
+  // A date is conducted for a batch if at least one QR session was started OR at least one student checked in
+  const batchConductedDatesMap = new Map();
+  const domainConductedDates = new Set();
+
   (sessions || []).forEach(s => {
     const dStr = formatDateISO(s.createdAt);
-    if (dStr) domainScannedDates.add(dStr);
+    if (dStr) {
+      domainConductedDates.add(dStr);
+      if (s.batch) {
+        const bId = s.batch.toString();
+        if (!batchConductedDatesMap.has(bId)) batchConductedDatesMap.set(bId, new Set());
+        batchConductedDatesMap.get(bId).add(dStr);
+      }
+    }
   });
 
-  (attendanceLogs || []).forEach(a => {
+  (allBatchAttendance || []).forEach(a => {
     const dStr = formatDateISO(a.date);
-    if (dStr) domainScannedDates.add(dStr);
+    if (dStr) {
+      domainConductedDates.add(dStr);
+      if (a.batch) {
+        const bId = a.batch.toString();
+        if (!batchConductedDatesMap.has(bId)) batchConductedDatesMap.set(bId, new Set());
+        batchConductedDatesMap.get(bId).add(dStr);
+      }
+    }
   });
 
+  // 4. Group student attendance by studentId
   const studentLogsMap = new Map();
-  (attendanceLogs || []).forEach(log => {
+  (studentAttendanceLogs || []).forEach(log => {
     const sId = log.student.toString();
     if (!studentLogsMap.has(sId)) {
       studentLogsMap.set(sId, []);
@@ -87,38 +130,68 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
     const sId = rawId.toString();
     const enrollment = enrollmentMap.get(sId);
     
-    let rawStartDate = enrollment?.startDate || enrollment?.createdAt || new Date();
+    let rawStartDate = enrollment?.startDate || enrollment?.batchId?.startDate || enrollment?.createdAt || new Date();
+    const rawEndDate = enrollment?.endDate || enrollment?.batchId?.endDate || null;
     const startDateISO = formatDateISO(rawStartDate);
+    const endDateISO = rawEndDate ? formatDateISO(rawEndDate) : todayStr;
 
     // Fallback batch name
     const batchName = enrollment?.batchId?.name || 'Unassigned';
+    const batchIdStr = enrollment?.batchId?._id ? enrollment.batchId._id.toString() : null;
+
+    // Determine conducted dates for this student's batch (or fallback to domain conducted dates)
+    const batchDatesSet = (batchIdStr && batchConductedDatesMap.has(batchIdStr))
+      ? batchConductedDatesMap.get(batchIdStr)
+      : domainConductedDates;
+
+    // Filter conducted dates that fall between student's startDate and today (and <= batch endDate)
+    const relevantConductedDates = Array.from(batchDatesSet).filter(dStr => {
+      if (dStr < startDateISO) return false;
+      if (dStr > todayStr) return false;
+      if (rawEndDate && dStr > endDateISO) return false;
+      if (holidaySet.has(dStr)) return false;
+      
+      const dObj = new Date(dStr);
+      const dayOfWeek = dObj.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Exclude weekends
+      return true;
+    });
 
     const logs = studentLogsMap.get(sId) || [];
     
-    // Count actual Present and Absent logs
-    let absentCount = 0;
-    let presentCount = 0;
+    // Set of dates this student was logged Present / Late
+    const studentPresentDates = new Set();
+    const studentAbsentDates = new Set();
 
     logs.forEach(log => {
       const dStr = formatDateISO(log.date);
-      if (dStr && dStr >= startDateISO) {
-        const dObj = new Date(log.date);
-        const dayOfWeek = dObj.getDay();
-        // Exclude Saturday (6) and Sunday (0) and holidays
-        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr)) {
-          if (log.status === 'Present' || log.status === 'Late') {
-            presentCount++;
-          } else if (log.status === 'Absent') {
-            absentCount++;
-          }
+      if (dStr && dStr >= startDateISO && dStr <= todayStr) {
+        if (log.status === 'Present' || log.status === 'Late') {
+          studentPresentDates.add(dStr);
+        } else if (log.status === 'Absent') {
+          studentAbsentDates.add(dStr);
         }
       }
     });
 
-    // B. Calculate training day progress count from startDate up to today
+    // If conducted class days were recorded, trainingDay = number of conducted dates
+    // If no specific class conducted logs yet in DB, default to working days between start date and today
     let trainingDayCount = 0;
-    if (startDateISO) {
-      const cur = new Date(rawStartDate);
+    let presentCount = 0;
+    let absentCount = 0;
+
+    if (relevantConductedDates.length > 0) {
+      trainingDayCount = relevantConductedDates.length;
+      relevantConductedDates.forEach(dStr => {
+        if (studentPresentDates.has(dStr)) {
+          presentCount++;
+        } else {
+          absentCount++;
+        }
+      });
+    } else {
+      // Fallback if no batch scans logged yet: count elapsed calendar weekdays
+      let cur = new Date(rawStartDate);
       cur.setHours(0, 0, 0, 0);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -129,15 +202,18 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
         const isValidDay = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
         if (isValidDay) {
           trainingDayCount++;
+          if (studentPresentDates.has(dStr)) {
+            presentCount++;
+          } else if (studentAbsentDates.has(dStr)) {
+            absentCount++;
+          }
         }
         cur.setDate(cur.getDate() + 1);
       }
-    }
-
-    // Account for conducting days where student was not logged present or on leave
-    const totalLogged = presentCount + absentCount;
-    if (trainingDayCount > totalLogged) {
-      absentCount += (trainingDayCount - totalLogged);
+      const totalLogged = presentCount + absentCount;
+      if (trainingDayCount > totalLogged) {
+        absentCount += (trainingDayCount - totalLogged);
+      }
     }
 
     const remainingDays = Math.max(0, fixedTotalDays - trainingDayCount);
@@ -176,7 +252,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
 export const calculateSingleStudentAttendance = async (studentId, department) => {
   const statsMap = await calculateBulkStudentsAttendance([studentId], department);
   return statsMap.get(studentId.toString()) || {
-    department: department || 'Communication',
+    department: department || 'Technical',
     batchName: 'N/A',
     startDate: 'N/A',
     rawStartDate: new Date(),

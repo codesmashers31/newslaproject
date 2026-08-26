@@ -153,9 +153,49 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
   });
 
   const rawStartDate = startDate || targetBatch?.startDate || enrollments[0]?.startDate || studentUser?.createdAt;
-  let trainingDaysElapsed = 0;
-  if (rawStartDate) {
-    const cur = new Date(rawStartDate);
+  const rawEndDate = endDate || targetBatch?.endDate || null;
+  const startDateISO = formatDateISO(rawStartDate);
+  const endDateISO = rawEndDate ? formatDateISO(rawEndDate) : formatDateISO(new Date());
+
+  // Find all dates where ANY student in this batch/course scanned or attended, or a session was held
+  const batchQuery = targetBatch?._id ? { batch: targetBatch._id } : (course ? { $or: [{ course }, { subject: course }] } : {});
+  const [batchSessions, batchCheckins] = await Promise.all([
+    AttendanceSession.find(batchQuery).select('createdAt').lean(),
+    Attendance.find({ ...batchQuery, status: { $in: ['Present', 'Late'] } }).select('date').lean()
+  ]);
+
+  const batchConductedDates = new Set();
+  (batchSessions || []).forEach(s => {
+    const dStr = formatDateISO(s.createdAt);
+    if (dStr) batchConductedDates.add(dStr);
+  });
+  (batchCheckins || []).forEach(a => {
+    const dStr = formatDateISO(a.date);
+    if (dStr) batchConductedDates.add(dStr);
+  });
+
+  const todayStr = formatDateISO(new Date());
+  const relevantConductedDates = Array.from(batchConductedDates).filter(dStr => {
+    if (dStr < startDateISO) return false;
+    if (dStr > todayStr) return false;
+    if (rawEndDate && dStr > endDateISO) return false;
+    if (holidaySet.has(dStr)) return false;
+    const dObj = new Date(dStr);
+    const dayOfWeek = dObj.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) return false;
+    return true;
+  });
+
+  const totalClassesRecorded = presentCount + absentCount + leaveCount;
+  let effectiveTotalClasses = 0;
+  let effectiveAbsentCount = 0;
+
+  if (relevantConductedDates.length > 0) {
+    effectiveTotalClasses = relevantConductedDates.length;
+    effectiveAbsentCount = Math.max(0, effectiveTotalClasses - presentCount - leaveCount);
+  } else {
+    // Fallback if no specific batch session logs in DB: count calendar weekdays
+    let cur = new Date(rawStartDate);
     cur.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -164,15 +204,12 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
       const dayOfWeek = cur.getDay();
       const isValid = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
       if (isValid) {
-        trainingDaysElapsed++;
+        effectiveTotalClasses++;
       }
       cur.setDate(cur.getDate() + 1);
     }
+    effectiveAbsentCount = Math.max(absentCount, effectiveTotalClasses - presentCount - leaveCount);
   }
-
-  const totalClassesRecorded = presentCount + absentCount + leaveCount;
-  const effectiveTotalClasses = Math.max(trainingDaysElapsed, totalClassesRecorded);
-  const effectiveAbsentCount = Math.max(absentCount, effectiveTotalClasses - presentCount - leaveCount);
   
   const isApti = (course || targetBatch?.course || '').toLowerCase().includes('apti');
   const totalTargetDays = isApti ? 120 : 80;
