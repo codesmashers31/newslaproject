@@ -88,15 +88,28 @@ const QRScanner = () => {
 
     try {
       const config = {
-        fps: 10,
-        qrbox: 250, // Use a standard 250x250 box for scanning (fixes iOS crop/stretch issues)
-        disableFlip: false, 
+        fps: 25, // High frame rate for instant detection
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+          const edge = Math.max(200, Math.floor(minEdge * 0.85));
+          return { width: edge, height: edge };
+        },
+        aspectRatio: 1.0,
+        disableFlip: false,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning
+        }
+      };
+
+      const videoConstraints = {
+        facingMode: "environment",
+        focusMode: "continuous"
       };
 
       // Try environment camera first
       try {
         await html5QrCode.current.start(
-          { facingMode: "environment" },
+          videoConstraints,
           config,
           (decodedText) => handleMarkAttendance(decodedText),
           (errorMessage) => {}
@@ -131,19 +144,36 @@ const QRScanner = () => {
     }
   };
 
-  // Apply Hardware Zoom 
+  // Apply Hybrid Zoom (Hardware sensor zoom + Digital CSS transform for full 1x - 30x zoom)
   useEffect(() => {
-    if (cameraActive && html5QrCode.current && html5QrCode.current.applyVideoConstraints) {
-      try {
-        // We apply constraints via the library's official method
-        html5QrCode.current.applyVideoConstraints({
-          advanced: [{ zoom: displayZoom }]
-        }).catch(err => console.warn('Zoom not supported by this device', err));
-      } catch (err) {
-        console.warn('Zoom API error', err);
-      }
+    if (!cameraActive) return;
+
+    const hwZoomSupported = capabilities && capabilities.zoom;
+    const hwMin = (hwZoomSupported && typeof capabilities.zoom.min === 'number') ? capabilities.zoom.min : 1;
+    const hwMax = (hwZoomSupported && typeof capabilities.zoom.max === 'number') ? capabilities.zoom.max : 1;
+
+    // 1. Hardware zoom portion (clamped to device's maximum hardware limit, e.g. 5x)
+    const hwZoomTarget = Math.min(hwMax, Math.max(hwMin, displayZoom));
+
+    if (hwZoomSupported && html5QrCode.current && html5QrCode.current.applyVideoConstraints) {
+      html5QrCode.current.applyVideoConstraints({
+        advanced: [{ zoom: hwZoomTarget }]
+      }).catch(err => console.warn('Hardware zoom error', err));
     }
-  }, [displayZoom, cameraActive]);
+
+    // 2. Digital zoom scaling for full 1.0x to 30.0x magnification
+    const digitalScale = (hwZoomSupported && hwMax > 1)
+      ? Math.max(1, displayZoom / hwZoomTarget)
+      : displayZoom;
+
+    // 3. Apply smooth transform directly to the HTML5 video element
+    const videoEl = document.querySelector('#reader video');
+    if (videoEl) {
+      videoEl.style.transform = `scale(${digitalScale})`;
+      videoEl.style.transformOrigin = 'center center';
+      videoEl.style.transition = 'transform 0.12s ease-out';
+    }
+  }, [displayZoom, cameraActive, capabilities]);
 
   // Apply Torch
   useEffect(() => {
@@ -243,10 +273,30 @@ const QRScanner = () => {
         
         {/* 1. Camera Viewport Panel */}
         <div className="flex flex-col items-center justify-center my-4 w-full">
-          <div className="w-full max-w-[320px] min-h-[320px] relative rounded-[32px] overflow-hidden shadow-lg border border-slate-200 bg-white">
+          <div className="w-full max-w-[320px] min-h-[320px] h-[320px] relative rounded-[32px] overflow-hidden shadow-lg border border-slate-200 bg-white">
             
             {/* The actual HTML5 Qrcode container - Always in DOM to prevent dimension errors */}
-            <div id="reader" className="w-full h-full bg-[#0F0C20]"></div>
+            <div id="reader" className="w-full h-full bg-[#0F0C20] overflow-hidden relative flex items-center justify-center"></div>
+            
+            <style>{`
+              #reader {
+                overflow: hidden !important;
+                border-radius: 32px !important;
+                border: none !important;
+              }
+              #reader video {
+                object-fit: cover !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 32px !important;
+              }
+              #reader img {
+                display: none !important;
+              }
+              #reader__scan_region {
+                min-height: 100% !important;
+              }
+            `}</style>
             
             {cameraActive && !scanResult && !loading && (
               <>
