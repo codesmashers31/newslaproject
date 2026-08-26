@@ -43,9 +43,9 @@ export const getStudentDashboard = async (req, res) => {
       aptiAtt
     ] = await Promise.all([
       Student.findOne({ user: studentId })
-        .populate('user', 'name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
+        .populate('user', 'name email mobile role slaeId isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
         .lean(),
-      User.findById(studentId).select('name email mobile role isBatchesLocked isTechnicalLocked isAptitudeLocked photo').lean(),
+      User.findById(studentId).select('name email mobile role slaeId isBatchesLocked isTechnicalLocked isAptitudeLocked photo').lean(),
       Placement.findOne({ student: studentId }).lean(),
       Enrollment.find({ studentId, status: 'Active' })
         .populate({
@@ -514,19 +514,26 @@ export const updateStudentProfile = async (req, res) => {
 
     await syncEnrollmentField('Technical', req.body.technicalBatch, req.body.technicalTrainer);
     await syncEnrollmentField('Communication', req.body.communicationBatch, req.body.communicationTrainer);
-    await syncEnrollmentField('Aptitude', req.body.aptitudeBatch, req.body.aptitudeTrainer);
-
-    // Check if profile is complete to clear "profile is incomplete" alert
-    if (profile.collegeName && profile.degree && profile.photo && profile.resumeUrl) {
+      if (profile.collegeName && profile.degree && profile.photo && profile.resumeUrl) {
       // Check if alert notification exists and delete it, or mark notifications
       await Notification.deleteMany({ recipient: studentId, title: 'Profile Incomplete' });
     }
 
-    // Sync name and photo to User document for navbar/header display
+    // Sync name, mobile, photo, and password to User document for navbar/header display
     const userDoc = await User.findById(studentId);
     if (userDoc) {
       if (req.body.name) userDoc.name = req.body.name;
+      if (req.body.mobile) userDoc.mobile = req.body.mobile;
       if (profile.photo) userDoc.photo = profile.photo;
+      if (req.body.newPassword) {
+        if (req.body.currentPassword) {
+          const isMatch = await userDoc.matchPassword(req.body.currentPassword);
+          if (!isMatch) {
+            return res.status(400).json({ message: 'Current password does not match.' });
+          }
+        }
+        userDoc.password = req.body.newPassword;
+      }
       await userDoc.save();
     }
 
@@ -540,6 +547,56 @@ export const updateStudentProfile = async (req, res) => {
 
     res.json({ message: 'Profile updated successfully', profile, user: userDoc });
   } catch (error) {
+    console.error('Update student profile error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Change student password
+// @route   PUT /api/student/password
+// @access  Private (Student)
+export const changeStudentPassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  try {
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
+    }
+
+    if (confirmPassword && newPassword !== confirmPassword) {
+      return res.status(400).json({ message: 'New passwords do not match.' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect current password.' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    await Notification.create({
+      recipient: user._id,
+      title: 'Password Changed',
+      message: 'Your account password has been updated successfully.',
+      isRead: false
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully!'
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
     res.status(500).json({ message: error.message });
   }
 };

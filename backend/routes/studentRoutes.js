@@ -12,7 +12,8 @@ import {
   toggleAIRoadmapTopic,
   getAvailableBatches,
   getAvailableTrainers,
-  updateStudentEnrollments
+  updateStudentEnrollments,
+  changeStudentPassword
 } from '../controllers/studentController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import upload from '../middleware/upload.js';
@@ -31,6 +32,8 @@ router.put('/profile', upload.fields([
   { name: 'photo', maxCount: 1 },
   { name: 'resume', maxCount: 1 }
 ]), updateStudentProfile);
+
+router.put('/password', changeStudentPassword);
 
 router.post('/certificate', claimCertificate);
 

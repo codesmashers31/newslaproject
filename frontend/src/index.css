@@ -86,17 +86,25 @@
 }
 
 /* Field that fills its wrapper completely: no border, background, rounding or
-   horizontal padding of its own. Used by the login inputs, where the rounded
+   horizontal padding of its own. Used across forms and profile inputs where the rounded
    border lives on the wrapper. */
 .field-bare,
 .field-bare:-webkit-autofill {
-  @apply border-0 bg-transparent rounded-none py-0 shadow-none;
-  -webkit-box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
   box-shadow: none !important;
+  outline: none !important;
+  -webkit-box-shadow: none !important;
 }
 
 .field-bare:focus {
-  @apply outline-none ring-0 border-0;
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
 }
 
 /* ---------------------------------------------------------------
