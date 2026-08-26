@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
 import toast from 'react-hot-toast';
@@ -627,18 +628,16 @@ const StudentProfile = () => {
 
           {/* Privacy Policy Link */}
           <div>
-            <a
-              href="https://newslaproject.vercel.app/privacy-policy"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-between bg-white border border-[#E2E8F0] rounded-2xl px-4 h-14 shadow-sm py-3 hover:bg-slate-50 transition-colors"
+            <Link
+              to="/privacy-policy"
+              className="flex items-center justify-between bg-white border border-[#E2E8F0] rounded-2xl px-4 h-14 shadow-sm py-3 hover:bg-slate-50 transition-colors cursor-pointer"
             >
               <div className="flex items-center">
                 <Shield size={16} className="text-[#6366F1] mr-3 shrink-0" />
                 <span className="text-sm font-bold text-[#0F172A]">Privacy Policy & Data Security</span>
               </div>
               <ExternalLink size={16} className="text-[#94A3B8]" />
-            </a>
+            </Link>
           </div>
 
         </div>

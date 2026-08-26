@@ -1,8 +1,9 @@
 import React from 'react';
 import { Shield, ArrowLeft, Mail, Lock, FileText, CheckCircle2, UserCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const PrivacyPolicyPage = () => {
+  const navigate = useNavigate();
   const effectiveDate = 'August 18, 2026';
   const supportEmail = 'support@softlogicsla.in';
 
@@ -21,13 +22,13 @@ const PrivacyPolicyPage = () => {
             </div>
           </div>
 
-          <Link
-            to="/login"
-            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs font-semibold transition-all border border-gray-700/50"
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white text-xs font-semibold transition-all border border-gray-700/50 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Application</span>
-          </Link>
+            <span>Back</span>
+          </button>
         </div>
       </header>
 
