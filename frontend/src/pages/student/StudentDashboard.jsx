@@ -299,7 +299,7 @@ const StudentDashboard = () => {
 
         {/* Helpline */}
         <div 
-          onClick={() => window.open('https://wa.me/919876543210?text=Hello%20SLA%20Portal%20Support', '_blank')}
+          onClick={() => window.open('https://wa.me/916379607758?text=Hello%20SLA%20Portal%20Support', '_blank')}
           className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform mb-6"
         >
           <div className="flex items-center gap-3">

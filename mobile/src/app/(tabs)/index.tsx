@@ -174,7 +174,7 @@ export default function DashboardScreen() {
   };
 
   const openWhatsAppSupport = () => {
-    Linking.openURL('https://wa.me/919876543210?text=Hello%20SLA%20Portal%20Support').catch(() => {});
+    Linking.openURL('https://wa.me/916379607758?text=Hello%20SLA%20Portal%20Support').catch(() => {});
   };
 
   const profile = data?.profile?.user || {};
