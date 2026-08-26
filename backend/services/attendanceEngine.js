@@ -152,8 +152,8 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     }
   });
 
-  const rawStartDate = startDate || targetBatch?.startDate || enrollments[0]?.startDate || studentUser?.createdAt;
-  const rawEndDate = endDate || targetBatch?.endDate || null;
+  const rawStartDate = startDate || enrollments[0]?.startDate || enrollments[0]?.enrolledAt || enrollments[0]?.createdAt || studentUser?.createdAt || new Date();
+  const rawEndDate = endDate || enrollments[0]?.completedAt || enrollments[0]?.endDate || null;
   const startDateISO = formatDateISO(rawStartDate);
   const endDateISO = rawEndDate ? formatDateISO(rawEndDate) : formatDateISO(new Date());
 

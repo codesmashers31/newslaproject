@@ -130,8 +130,8 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
     const sId = rawId.toString();
     const enrollment = enrollmentMap.get(sId);
     
-    let rawStartDate = enrollment?.startDate || enrollment?.batchId?.startDate || enrollment?.createdAt || new Date();
-    const rawEndDate = enrollment?.endDate || enrollment?.batchId?.endDate || null;
+    let rawStartDate = enrollment?.startDate || enrollment?.enrolledAt || enrollment?.createdAt || new Date();
+    const rawEndDate = enrollment?.completedAt || enrollment?.endDate || null;
     const startDateISO = formatDateISO(rawStartDate);
     const endDateISO = rawEndDate ? formatDateISO(rawEndDate) : todayStr;
 
