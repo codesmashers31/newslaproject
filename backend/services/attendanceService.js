@@ -115,7 +115,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       }
     });
 
-    // B. Calculate training day progress count
+    // B. Calculate training day progress count from startDate up to today
     let trainingDayCount = 0;
     if (startDateISO) {
       const cur = new Date(rawStartDate);
@@ -127,14 +127,14 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
         const dStr = formatDateISO(cur);
         const dayOfWeek = cur.getDay();
         const isValidDay = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
-        if (isValidDay && domainScannedDates.has(dStr)) {
+        if (isValidDay) {
           trainingDayCount++;
         }
         cur.setDate(cur.getDate() + 1);
       }
     }
 
-    // Account for conducting days where student was not logged present
+    // Account for conducting days where student was not logged present or on leave
     const totalLogged = presentCount + absentCount;
     if (trainingDayCount > totalLogged) {
       absentCount += (trainingDayCount - totalLogged);

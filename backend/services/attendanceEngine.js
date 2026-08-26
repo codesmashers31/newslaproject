@@ -152,18 +152,42 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     }
   });
 
+  const rawStartDate = startDate || targetBatch?.startDate || enrollments[0]?.startDate || studentUser?.createdAt;
+  let trainingDaysElapsed = 0;
+  if (rawStartDate) {
+    const cur = new Date(rawStartDate);
+    cur.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    while (cur <= today) {
+      const dStr = formatDateISO(cur);
+      const dayOfWeek = cur.getDay();
+      const isValid = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
+      if (isValid) {
+        trainingDaysElapsed++;
+      }
+      cur.setDate(cur.getDate() + 1);
+    }
+  }
+
   const totalClassesRecorded = presentCount + absentCount + leaveCount;
-  const applicableClasses = totalClassesRecorded;
+  const effectiveTotalClasses = Math.max(trainingDaysElapsed, totalClassesRecorded);
+  const effectiveAbsentCount = Math.max(absentCount, effectiveTotalClasses - presentCount - leaveCount);
+  
+  const isApti = (course || targetBatch?.course || '').toLowerCase().includes('apti');
+  const totalTargetDays = isApti ? 120 : 80;
+  const remainingDays = Math.max(0, totalTargetDays - effectiveTotalClasses);
+  const progressPercent = parseFloat(Math.min(100, (effectiveTotalClasses / totalTargetDays) * 100).toFixed(2));
 
   // 4. Calculate Percentage based on configured policy
-  let effectiveDenominator = applicableClasses;
+  let effectiveDenominator = effectiveTotalClasses;
   if (ATTENDANCE_POLICY.EXCLUDE_LEAVE_FROM_PERCENTAGE) {
-    effectiveDenominator = Math.max(0, applicableClasses - leaveCount);
+    effectiveDenominator = Math.max(0, effectiveTotalClasses - leaveCount);
   }
 
   const attendancePercentage = effectiveDenominator > 0
     ? parseFloat(((presentCount / effectiveDenominator) * 100).toFixed(2))
-    : (applicableClasses === 0 ? 100 : 0);
+    : (effectiveTotalClasses === 0 ? 100 : 0);
 
   const lastRecord = attendanceRecords[0] || null;
 
@@ -183,12 +207,19 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
       startDate: targetBatch.startDate,
       endDate: targetBatch.endDate
     } : null,
-    totalApplicableClasses: applicableClasses,
-    totalClasses: applicableClasses,
+    startDate: rawStartDate ? formatDateDisplay(rawStartDate) : 'N/A',
+    rawStartDate,
+    trainingDay: effectiveTotalClasses,
+    totalTrainingDays: totalTargetDays,
+    totalApplicableClasses: effectiveTotalClasses,
+    totalClasses: effectiveTotalClasses,
     presentCount,
-    absentCount,
+    absentCount: effectiveAbsentCount,
     leaveCount,
+    remainingDays,
+    progressPercent,
     attendancePercentage,
+    attendancePercent: attendancePercentage,
     lastAttendanceDate: lastRecord ? formatDateDisplay(lastRecord.date) : 'N/A',
     currentAttendanceStatus: lastRecord ? standardizeStatus(lastRecord.status) : 'Unrecorded',
     presentDates,

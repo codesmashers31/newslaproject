@@ -214,6 +214,16 @@ const TrainerStudentsPage = () => {
             ) : null}
           </div>
         )}
+
+        {student.attendanceStats && (
+          <div className="flex items-center gap-1.5 text-[9px] font-bold mt-1 bg-slate-50 dark:bg-slate-900/40 px-2 py-1 rounded-lg border border-slate-200/50 dark:border-slate-800/50">
+            <span className="text-emerald-600 font-extrabold">{student.presentCount ?? student.attendanceStats.presentCount ?? 0}P</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-rose-500 font-extrabold">{student.absentCount ?? student.attendanceStats.absentCount ?? 0}A</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-indigo-600 dark:text-violet-400 font-black">{student.attendancePct ?? student.attendanceStats.attendancePercent ?? 100}%</span>
+          </div>
+        )}
       </div>
     );
   };

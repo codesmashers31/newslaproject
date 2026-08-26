@@ -267,16 +267,24 @@ const StudentDashboard = () => {
                   </div>
                   
                   {b.attendanceStats && (
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                          {b.attendanceStats.presentCount} / {b.attendanceStats.totalTrainingDays || b.attendanceStats.eligibleSessionsCount || 80} Days Attended
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-slate-400 font-semibold">Start: <strong className="text-slate-700">{b.attendanceStats.startDate || 'N/A'}</strong></span>
+                        <span className="text-slate-400 font-semibold">Day <strong className="text-indigo-600">{b.attendanceStats.trainingDay || 0} / {b.attendanceStats.totalTrainingDays || 80}</strong></span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                            {b.attendanceStats.presentCount || 0} Present
+                          </span>
+                          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                            {b.attendanceStats.absentCount || 0} Absent
+                          </span>
+                        </div>
+                        <span className={`text-xs font-black ${(b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage) >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage}%
                         </span>
                       </div>
-                      <span className={`text-[10px] font-black ${(b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage) >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                        {b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage}%
-                      </span>
                     </div>
                   )}
                 </div>

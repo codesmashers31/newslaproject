@@ -475,16 +475,28 @@ export default function DashboardScreen() {
                     </View>
                     
                     {b.attendanceStats && (
-                      <View className="flex-row items-center justify-between mt-1">
-                        <View className="flex-row items-center">
-                          <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
-                          <Text className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                            {b.attendanceStats.presentCount} / {b.attendanceStats.totalTrainingDays || b.attendanceStats.eligibleSessionsCount || 80} {getText(currentLang, 'daysAttended')}
+                      <View className="mt-2.5 pt-2 border-t border-slate-100 flex-col gap-1">
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-[9px] text-slate-400 font-semibold">
+                            Start: <Text className="text-slate-700 font-bold">{b.attendanceStats.startDate || 'N/A'}</Text>
+                          </Text>
+                          <Text className="text-[9px] text-slate-400 font-semibold">
+                            Day <Text className="text-indigo-600 font-bold">{b.attendanceStats.trainingDay || 0} / {b.attendanceStats.totalTrainingDays || 80}</Text>
                           </Text>
                         </View>
-                        <Text className={`text-[10px] font-black ${(b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage) >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage}%
-                        </Text>
+                        <View className="flex-row items-center justify-between mt-0.5">
+                          <View className="flex-row items-center gap-1.5">
+                            <View className="bg-emerald-50 px-2 py-0.5 rounded-md">
+                              <Text className="text-[9px] font-bold text-emerald-700">{b.attendanceStats.presentCount || 0} Present</Text>
+                            </View>
+                            <View className="bg-rose-50 px-2 py-0.5 rounded-md">
+                              <Text className="text-[9px] font-bold text-rose-600">{b.attendanceStats.absentCount || 0} Absent</Text>
+                            </View>
+                          </View>
+                          <Text className={`text-[11px] font-black ${(b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage) >= 70 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                            {b.attendanceStats.attendancePercent ?? b.attendanceStats.percentage}%
+                          </Text>
+                        </View>
                       </View>
                     )}
                   </View>
