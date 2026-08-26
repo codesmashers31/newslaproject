@@ -259,14 +259,28 @@ const StudentTrainingPage = () => {
                         <span className="text-[#64748B] text-[11px] block mt-1">Trainer: <strong className="text-[#0F172A]">{item.trainers && item.trainers.length > 0 ? item.trainers[0].name : 'Auto-Assigned'}</strong></span>
                       </div>
                       <div className="shrink-0 md:text-right">
-                        <span className="text-[#64748B] text-[10px] font-bold uppercase block">Start Date</span>
-                        <span className="text-[#0F172A] text-sm font-black block mt-1">{stats.startDate || '14-Aug-2026'}</span>
+                        <span className="text-[#64748B] text-[10px] font-bold uppercase block">Student Joined</span>
+                        <span className="text-[#0F172A] text-sm font-black block mt-0.5">{stats.startDate || 'N/A'}</span>
                       </div>
                     </div>
 
-                    <div className="bg-white p-3 rounded-xl border border-[#E2E8F0] flex justify-between items-center">
-                      <span className="text-[#64748B] text-[10px] font-bold uppercase flex items-center">Schedule</span>
-                      <span className="text-[#4F46E5] text-[11px] font-extrabold block whitespace-nowrap">{resolveBatchSchedule(item, 'Technical')}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                      {/* Batch Duration Dates */}
+                      {item.startDate && (
+                        <div className="bg-white p-3 rounded-xl border border-[#E2E8F0] flex justify-between items-center">
+                          <span className="text-[#64748B] text-[10px] font-bold uppercase">Batch Duration</span>
+                          <span className="text-slate-800 text-[11px] font-extrabold block">
+                            {new Date(item.startDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {item.endDate ? ` – ${new Date(item.endDate).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Daily Shift Hours */}
+                      <div className="bg-white p-3 rounded-xl border border-[#E2E8F0] flex justify-between items-center">
+                        <span className="text-[#64748B] text-[10px] font-bold uppercase">Daily Shift Hours</span>
+                        <span className="text-[#4F46E5] text-[11px] font-extrabold block whitespace-nowrap">{resolveBatchSchedule(item, 'Technical')}</span>
+                      </div>
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-2 flex flex-col gap-3">
