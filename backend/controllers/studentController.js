@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import Student from '../models/Student.js';
 import User from '../models/User.js';
 import Batch from '../models/Batch.js';
@@ -691,20 +692,57 @@ export const scanQR = async (req, res) => {
       return res.status(400).json({ message: 'QR Token is required' });
     }
 
-    // 1. Verify token signature and expiry
+    // 1. Verify token signature and expiry (Supports both ultra-compact SLA: tokens and standard JWT)
     let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'lcp_secret_key_123456');
-    } catch (err) {
-      // Log failure in immutable logs
-      await AttendanceLog.create({
-        student: studentId,
-        scannedToken: token,
-        status: 'Failed',
-        reason: 'Expired or Invalid QR Code',
-        ipAddress: req.ip || ''
-      });
-      return res.status(400).json({ message: 'QR Code is expired or invalid' });
+    const cleanToken = String(token).trim();
+    const secret = process.env.JWT_SECRET || 'lcp_secret_key_123456';
+
+    if (cleanToken.startsWith('SLA:')) {
+      try {
+        const parts = cleanToken.split(':');
+        if (parts.length === 3) {
+          const rawPayload = parts[1];
+          const signature = parts[2];
+          const expectedHmac = crypto.createHmac('sha256', secret).update(rawPayload).digest('base64url').slice(0, 10);
+          
+          if (signature === expectedHmac) {
+            const [sessId, bId, tsStr] = rawPayload.split('_');
+            const ts = parseInt(tsStr, 10) * 1000;
+            // 2.5 minutes validity window (150 seconds)
+            if (Date.now() - ts <= 150000) {
+              const sessionDoc = await AttendanceSession.findById(sessId).lean();
+              if (sessionDoc && sessionDoc.isActive) {
+                decoded = {
+                  sessionId: sessId,
+                  batchId: sessionDoc.batch,
+                  trainerId: sessionDoc.trainer,
+                  subject: sessionDoc.subject,
+                  floorNumber: sessionDoc.floorNumber,
+                  roomNumber: sessionDoc.roomNumber
+                };
+              }
+            }
+          }
+        }
+      } catch (compactErr) {
+        console.error('Compact token decode error:', compactErr);
+      }
+    }
+
+    if (!decoded) {
+      try {
+        decoded = jwt.verify(cleanToken, secret);
+      } catch (err) {
+        // Log failure in immutable logs
+        await AttendanceLog.create({
+          student: studentId,
+          scannedToken: cleanToken,
+          status: 'Failed',
+          reason: 'Expired or Invalid QR Code',
+          ipAddress: req.ip || ''
+        });
+        return res.status(400).json({ message: 'QR Code is expired or invalid' });
+      }
     }
 
     // 2. Check if student is active

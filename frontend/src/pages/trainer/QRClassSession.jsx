@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import API from '../../services/api';
-import { Camera, MapPin, Users, BookOpen, Clock, AlertCircle, RefreshCw, XCircle, School, ChevronDown, Sparkles } from 'lucide-react';
+import { 
+  Camera, MapPin, Users, BookOpen, Clock, AlertCircle, RefreshCw, 
+  XCircle, School, ChevronDown, Sparkles, Maximize2, Minimize2, Copy, Check 
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import EnterpriseTable from '../../components/common/EnterpriseTable';
 
 const QRClassSession = () => {
@@ -14,6 +18,8 @@ const QRClassSession = () => {
   const [countdown, setCountdown] = useState(6);
   const [loading, setLoading] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Search & custom dropdown states for Batch Select
   const [batchSearchQuery, setBatchSearchQuery] = useState('');
@@ -256,28 +262,41 @@ const QRClassSession = () => {
           >
             {/* QR Code Container (7 cols) */}
             <div className="lg:col-span-7 bg-white dark:bg-[#12131a] border border-gray-200 dark:border-gray-800 rounded-3xl p-6 shadow-xl flex flex-col items-center justify-center text-center">
-              <div className="mb-4">
+              <div className="mb-4 flex items-center justify-between w-full max-w-[420px]">
                 <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-500/20 shadow-sm">
                   <Clock className="w-3.5 h-3.5 animate-pulse" />
                   ACTIVE CLASS ATTENDANCE QR
                 </span>
+
+                <button
+                  onClick={() => setIsFullscreen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-xs font-bold transition-colors cursor-pointer border border-indigo-200"
+                  title="Projector / Classroom Fullscreen Mode"
+                >
+                  <Maximize2 size={13} />
+                  <span>Projector Mode</span>
+                </button>
               </div>
 
-              {/* Compact, Neat QR Container */}
-              <div className="relative p-5 bg-white dark:bg-[#0c0d12] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-inner w-full max-w-[420px] mx-auto flex items-center justify-center">
+              {/* Crisp Local Vector SVG QR Container (Instant 15x-30x Detection) */}
+              <div className="relative p-6 bg-white border-2 border-slate-200 rounded-3xl shadow-md w-full max-w-[420px] aspect-square mx-auto flex items-center justify-center">
                 {qrLoading && (
-                  <div className="absolute inset-0 bg-white/85 dark:bg-[#0c0d12]/92 flex items-center justify-center rounded-3xl z-10">
-                    <RefreshCw className="h-8 w-8 text-violet-800 dark:text-violet-400 animate-spin" />
+                  <div className="absolute inset-0 bg-white/90 flex items-center justify-center rounded-3xl z-10">
+                    <RefreshCw className="h-8 w-8 text-indigo-600 animate-spin" />
                   </div>
                 )}
-                {qrImageUrl ? (
-                  <img 
-                    src={qrImageUrl} 
-                    alt="Rotating Class QR Code" 
-                    className="w-72 h-72 sm:w-[360px] sm:h-[360px] select-none rounded-xl object-contain"
+                {qrToken ? (
+                  <QRCodeSVG 
+                    value={qrToken}
+                    size={360}
+                    level="M"
+                    marginSize={4}
+                    fgColor="#000000"
+                    bgColor="#FFFFFF"
+                    className="w-full h-full object-contain rounded-xl select-none"
                   />
                 ) : (
-                  <div className="w-72 h-72 sm:w-[360px] sm:h-[360px] bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold">
+                  <div className="w-full h-full bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 font-bold">
                     Initializing token...
                   </div>
                 )}
@@ -286,20 +305,41 @@ const QRClassSession = () => {
               {/* Rotating Timer Bar */}
               <div className="mt-5 w-full max-w-[420px] mx-auto">
                 <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-300 mb-1.5">
-                  <span>Rotating Security Token</span>
-                  <span className="font-extrabold text-violet-600 dark:text-violet-400">{countdown}s remaining</span>
+                  <span>Dynamic Anti-Spoofing Code</span>
+                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{countdown}s remaining</span>
                 </div>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-[#4648d4] h-full transition-all duration-1000 ease-linear rounded-full"
-                    style={{ width: `${(countdown / 6) * 100}%` }}
+                    className="bg-indigo-600 h-full transition-all duration-1000 ease-linear rounded-full"
+                    style={{ width: `${(countdown / 15) * 100}%` }}
                   ></div>
                 </div>
               </div>
 
-              <div className="mt-5 flex items-center gap-2 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-3.5 py-2.5 rounded-xl border border-rose-200/60 dark:border-rose-900/30 w-full max-w-[420px] mx-auto justify-center">
+              {/* Manual Backup Code */}
+              {qrToken && (
+                <div className="mt-4 flex items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-xl w-full max-w-[420px] mx-auto">
+                  <span className="font-mono text-[10px] text-slate-500 truncate max-w-[280px]">
+                    Token: {qrToken}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(qrToken);
+                      setCopied(true);
+                      toast.success('Token copied to clipboard');
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="text-indigo-600 hover:text-indigo-700 text-xs font-bold flex items-center gap-1 cursor-pointer shrink-0 ml-2"
+                  >
+                    {copied ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center gap-2 text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 px-3.5 py-2.5 rounded-xl border border-rose-200/60 dark:border-rose-900/30 w-full max-w-[420px] mx-auto justify-center">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
-                <span>Shared screenshots expire in 15s.</span>
+                <span>Ultra-fast long-distance scanning enabled (15x - 30x range).</span>
               </div>
             </div>
 
@@ -431,6 +471,66 @@ const QRClassSession = () => {
           </div>
         </div>
       )}
+
+      {/* Projector / Classroom Giant Fullscreen Modal */}
+      <AnimatePresence>
+        {isFullscreen && activeSession && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+          >
+            <div className="absolute top-6 right-6 flex items-center gap-4 z-10">
+              <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 text-white font-mono text-sm font-bold flex items-center gap-2">
+                <Clock size={16} className="text-emerald-400 animate-pulse" />
+                <span>Next rotation in <strong className="text-emerald-400">{countdown}s</strong></span>
+              </div>
+              <button
+                onClick={() => setIsFullscreen(false)}
+                className="w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-2xl flex items-center justify-center transition-colors cursor-pointer border border-white/20"
+                title="Exit Fullscreen"
+              >
+                <Minimize2 size={22} />
+              </button>
+            </div>
+
+            <div className="text-center mb-6 max-w-2xl">
+              <span className="px-4 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black uppercase tracking-widest">
+                CLASSROOM PROJECTOR DISPLAY
+              </span>
+              <h2 className="text-2xl sm:text-4xl font-black text-white mt-3">
+                {batches.find(b => b._id === activeSession.batch)?.name || 'Class Session'}
+              </h2>
+              <p className="text-slate-400 text-sm font-medium mt-1">
+                Scan from anywhere in the classroom (supports up to 30x zoom)
+              </p>
+            </div>
+
+            {/* Giant QR Canvas for Long-Range Scanning */}
+            <div className="p-8 sm:p-12 bg-white rounded-[40px] shadow-2xl border-4 border-white/80 max-w-[90vw] max-h-[70vh] aspect-square flex items-center justify-center">
+              {qrToken ? (
+                <QRCodeSVG
+                  value={qrToken}
+                  size={520}
+                  level="M"
+                  marginSize={4}
+                  fgColor="#000000"
+                  bgColor="#FFFFFF"
+                  className="w-full h-full object-contain select-none"
+                />
+              ) : (
+                <div className="text-slate-400 font-bold">Initializing...</div>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center gap-3 text-xs text-slate-400 font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <span>Live Attendance Active • {activeSession?.attendees?.length || 0} students checked in</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

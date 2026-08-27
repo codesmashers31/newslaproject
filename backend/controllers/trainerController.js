@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import Batch from '../models/Batch.js';
 import { calculateStudentScores, calculateDynamicAttendance } from '../utils/calculations.js';
@@ -519,20 +520,13 @@ export const getQRToken = async (req, res) => {
       timeIn: a.timeIn || a.createdAt
     }));
 
-    // Generate signed JWT for the QR code, valid for 2 minutes
-    const token = jwt.sign(
-      {
-        sessionId: session._id,
-        batchId: session.batch,
-        trainerId: session.trainer,
-        subject: session.subject,
-        floorNumber: session.floorNumber,
-        roomNumber: session.roomNumber,
-        generatedAt: Date.now()
-      },
-      process.env.JWT_SECRET || 'lcp_secret_key_123456',
-      { expiresIn: '2m' }
-    );
+    // Generate ultra-compact signed token for minimal QR code density (Version 2/3 matrix)
+    // This allows instant scanning from long distances and high zoom (15x - 30x)
+    const secret = process.env.JWT_SECRET || 'lcp_secret_key_123456';
+    const ts = Math.floor(Date.now() / 1000);
+    const rawPayload = `${session._id}_${session.batch || 'all'}_${ts}`;
+    const hmac = crypto.createHmac('sha256', secret).update(rawPayload).digest('base64url').slice(0, 10);
+    const token = `SLA:${rawPayload}:${hmac}`;
 
     res.json({ token, expiresAt: Date.now() + 120 * 1000, attendees });
   } catch (error) {

@@ -141,24 +141,29 @@ const QRScanner = () => {
       }
 
       const config = {
-        fps: 25, // High frame rate for rapid detection
+        fps: 30, // 30 FPS for ultra-rapid instant capture
         qrbox: (viewfinderWidth, viewfinderHeight) => {
           const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const edge = Math.max(180, Math.floor(minEdge * 0.85));
+          const edge = Math.max(220, Math.floor(minEdge * 0.92));
           return { width: edge, height: edge };
         },
         aspectRatio: 1.0,
         disableFlip: false,
+        videoConstraints: {
+          facingMode: "environment",
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          advanced: [{ focusMode: "continuous" }]
+        },
         experimentalFeatures: {
           useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning
         }
       };
 
-      // 1. First try enumerating devices to pick the best camera
+      // 1. First try back/environment camera with HD constraints
       try {
         const cameras = await Html5Qrcode.getCameras();
         if (cameras && cameras.length > 0) {
-          // Prefer back/environment camera if available
           const backCam = cameras.find(c => /back|rear|environment/i.test(c.label));
           const selectedCamId = backCam ? backCam.id : cameras[0].id;
           
@@ -169,7 +174,6 @@ const QRScanner = () => {
             (errorMessage) => {}
           );
         } else {
-          // Fallback to constraints
           await html5QrCode.current.start(
             { facingMode: "environment" },
             config,
@@ -178,7 +182,7 @@ const QRScanner = () => {
           );
         }
       } catch (camEnumErr) {
-        // Fallback to user facing camera or default constraints
+        // Fallback to default user-facing camera if environment fails
         await html5QrCode.current.start(
           { facingMode: "user" },
           config,
