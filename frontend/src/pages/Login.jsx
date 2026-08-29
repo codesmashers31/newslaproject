@@ -153,35 +153,35 @@ const Login = () => {
             <form onSubmit={handleLoginSubmit}>
               {/* Email Address */}
               <div className="mb-4">
-                <div className="flex items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14 focus-within:border-[#5B21B6] transition-colors">
-                  <Mail size={18} className="text-[#94A3B8] shrink-0" />
+                <div className="flex items-center border border-slate-200 rounded-2xl bg-white px-4 h-14 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-600/10 shadow-xs transition-all">
+                  <Mail size={19} className="text-slate-400 shrink-0 mr-3.5" />
                   <input
                     type="text"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="student@lcp.edu"
-                    className="field-bare flex-1 h-full px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8]"
+                    className="w-full bg-transparent border-0 outline-none text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] placeholder:font-normal focus:ring-0 focus:outline-none p-0"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div className="mb-2">
-                <div className="flex items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14 focus-within:border-[#5B21B6] transition-colors">
-                  <Lock size={18} className="text-[#94A3B8] shrink-0" />
+                <div className="flex items-center border border-slate-200 rounded-2xl bg-white px-4 h-14 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-600/10 shadow-xs transition-all">
+                  <Lock size={19} className="text-slate-400 shrink-0 mr-3.5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••"
-                    className="field-bare flex-1 h-full px-3 text-base font-semibold text-[#0F172A] placeholder-[#94A3B8]"
+                    className="w-full bg-transparent border-0 outline-none text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] placeholder:font-normal focus:ring-0 focus:outline-none p-0 tracking-wider"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="p-1 text-[#94A3B8] hover:text-[#64748B] cursor-pointer"
+                    className="p-1.5 ml-2 text-[#94A3B8] hover:text-[#64748B] rounded-lg hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -190,7 +190,11 @@ const Login = () => {
 
               {/* Forgot password */}
               <div className="flex justify-end mb-6">
-                <button type="button" className="text-[#5B21B6] text-xs font-black cursor-pointer">
+                <button 
+                  type="button" 
+                  onClick={() => toast('Please contact your SLA Administrator to reset your password.')}
+                  className="text-indigo-600 hover:text-indigo-700 text-xs font-black cursor-pointer"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -199,21 +203,21 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#5B21B6] hover:bg-[#4c1d95] rounded-2xl h-14 flex items-center justify-center mb-6 shadow-sm disabled:opacity-50 transition-colors cursor-pointer"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl h-14 flex items-center justify-center gap-2 mb-6 shadow-md shadow-indigo-600/20 disabled:opacity-50 transition-all cursor-pointer active:scale-[0.99]"
               >
                 {loading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
-                  <span className="flex items-center justify-center text-white text-base font-black">
-                    <span className="mr-2.5">Login to Portal</span>
+                  <>
+                    <span className="text-white text-base font-black">Login to Portal</span>
                     <ArrowRight size={18} />
-                  </span>
+                  </>
                 )}
               </button>
             </form>
 
             {/* Single-device notice */}
-            <div className="bg-white border border-[#E2E8F0] rounded-3xl p-4">
+            <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-xs">
               <p className="text-xs font-black text-[#0F172A]">Before you continue</p>
               <p className="text-[10.5px] text-[#64748B] mt-1.5 leading-4 font-semibold">
                 Protected by BuildX Single Device Authentication. Each student profile is restricted to
