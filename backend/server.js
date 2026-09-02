@@ -18,6 +18,10 @@ import roomRoutes from './routes/roomRoutes.js';
 import allocationRoutes from './routes/allocationRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
+import timetableRoutes from './routes/timetableRoutes.js';
+import communicationRoutes from './routes/communicationRoutes.js';
+import aptitudeRoutes from './routes/aptitudeRoutes.js';
+import aiMentorshipRoutes from './routes/aiMentorshipRoutes.js';
 
 dotenv.config();
 
@@ -59,6 +63,10 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/allocations', allocationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/timetable', timetableRoutes);
+app.use('/api/communication', communicationRoutes);
+app.use('/api/aptitude', aptitudeRoutes);
+app.use('/api/ai', aiMentorshipRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

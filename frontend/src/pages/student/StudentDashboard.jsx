@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import API from '../../services/api';
 import { 
   Clock, CheckCircle2, Camera, Sparkles, User, Compass, 
-  BookOpen, Phone, ChevronRight, LogOut 
+  BookOpen, Phone, ChevronRight, LogOut, Calendar, MessageSquare, Brain, Zap 
 } from 'lucide-react';
 import ProgressRing from '../../components/ProgressRing';
 import toast from 'react-hot-toast';
@@ -67,29 +67,49 @@ const StudentDashboard = () => {
   const banners = [
     {
       id: 1,
-      title: 'Complete Profile',
-      desc: 'Unlock placement opportunities by keeping your profile updated.',
+      title: 'Study Timetable',
+      desc: 'Smart routines, daily streak rewards & 1-click check-in.',
       bgClass: 'bg-indigo-600',
-      btnText: 'Edit Profile',
-      tag: 'Placement Ready',
-      icon: <User size={24} color="#ffffff" />,
-      link: '/student/profile'
+      btnText: 'Open Timetable',
+      tag: 'GAMIFIED ROUTINE',
+      icon: <Calendar size={24} color="#ffffff" />,
+      link: '/student/timetable'
     },
     {
       id: 2,
+      title: 'AI Speech Coach',
+      desc: 'Linguistic evaluation & live interview speech grading.',
+      bgClass: 'bg-amber-600',
+      btnText: 'Practice Speech',
+      tag: 'AI COMMUNICATION',
+      icon: <MessageSquare size={24} color="#ffffff" />,
+      link: '/student/communication'
+    },
+    {
+      id: 3,
+      title: 'AI Aptitude Suite',
+      desc: '16 topics, 90s test studio & root-cause math solver.',
+      bgClass: 'bg-emerald-600',
+      btnText: 'Start Test',
+      tag: 'QUANT MASTERY',
+      icon: <Brain size={24} color="#ffffff" />,
+      link: '/student/aptitude'
+    },
+    {
+      id: 4,
       title: 'AI Career Coach',
-      desc: 'Get your custom training roadmaps and career benchmarks.',
+      desc: 'Custom placement roadmaps & 6-dimension readiness radar.',
       bgClass: 'bg-violet-700',
       btnText: 'View Roadmap',
-      tag: 'NEW FEATURE',
+      tag: 'PLACEMENT ACCELERATOR',
       icon: <Compass size={24} color="#ffffff" />,
       link: '/student/career'
     },
     {
-      id: 3,
+      id: 5,
       title: 'Digital Attendance',
       desc: 'Check in to training lectures by scanning room QR codes.',
-      bgClass: 'bg-emerald-600',
+      bgClass: 'bg-slate-800',
       btnText: 'Scan Attendance',
       tag: 'DAILY ROLL CALL',
       icon: <Camera size={24} color="#ffffff" />,

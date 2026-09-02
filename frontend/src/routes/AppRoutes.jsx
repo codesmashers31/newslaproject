@@ -38,6 +38,10 @@ import PlacementReadiness from '../pages/student/PlacementReadiness';
 import StudentScorecards from '../pages/student/StudentScorecards';
 import StudentTrainingPage from '../pages/student/StudentTrainingPage';
 import StudentHistory from '../pages/student/StudentHistory';
+import StudyTimetable from '../pages/student/StudyTimetable';
+import AICommunicationCoach from '../pages/student/AICommunicationCoach';
+import AIAptitudeSuite from '../pages/student/AIAptitudeSuite';
+import AIMockInterview from '../pages/student/AIMockInterview';
 import UserProfile from '../pages/common/UserProfile';
 
 const AppRoutes = () => {
@@ -241,6 +245,10 @@ const AppRoutes = () => {
         <Route path="/student/scorecards" element={<StudentLayout><StudentScorecards /></StudentLayout>} />
         <Route path="/student/career" element={<StudentLayout><PlacementReadiness /></StudentLayout>} />
         <Route path="/student/history" element={<StudentLayout><StudentHistory /></StudentLayout>} />
+        <Route path="/student/timetable" element={<StudentLayout><StudyTimetable /></StudentLayout>} />
+        <Route path="/student/communication" element={<StudentLayout><AICommunicationCoach /></StudentLayout>} />
+        <Route path="/student/aptitude" element={<StudentLayout><AIAptitudeSuite /></StudentLayout>} />
+        <Route path="/student/mock-interview" element={<StudentLayout><AIMockInterview /></StudentLayout>} />
       </Route>
 
       {/* Catch-all 404 Route */}
