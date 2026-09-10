@@ -30,7 +30,9 @@ import {
   CheckCircle2,
   X,
   Clock,
-  RotateCcw
+  RotateCcw,
+  Bot,
+  Send
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
@@ -50,13 +52,27 @@ export default function CareerScreen() {
   // Active Interactive Modal
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
-  // Aptitude Solver State
+  // Module 1: Timetable State
+  const [timetable, setTimetable] = useState<any>(null);
+
+  // Module 2: Communication Coach State
+  const [speechTranscript, setSpeechTranscript] = useState('');
+  const [speechTopic, setSpeechTopic] = useState('Professional Self Introduction');
+  const [evaluatingSpeech, setEvaluatingSpeech] = useState(false);
+  const [speechResult, setSpeechResult] = useState<any>(null);
+
+  // Module 3: Aptitude Solver State
   const [solverQuestion, setSolverQuestion] = useState('');
   const [solving, setSolving] = useState(false);
   const [solverResult, setSolverResult] = useState<any>(null);
 
-  // Timetable State
-  const [timetable, setTimetable] = useState<any>(null);
+  // Module 4: Mock Interview Simulator State
+  const [mockRole, setMockRole] = useState('Full Stack Developer');
+  const [generatingMock, setGeneratingMock] = useState(false);
+  const [activeMock, setActiveMock] = useState<any>(null);
+  const [mockAnswers, setMockAnswers] = useState<string[]>(['', '', '']);
+  const [evaluatingMock, setEvaluatingMock] = useState(false);
+  const [mockResult, setMockResult] = useState<any>(null);
 
   React.useEffect(() => {
     const loadCache = async () => {
@@ -107,6 +123,46 @@ export default function CareerScreen() {
     loadData();
   };
 
+  // Module 1: 1-Click Check Routine
+  const handleMarkAllSlots = async () => {
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { data } = await API.post('/timetable/my/check-all', { date: todayStr });
+      if (data?.data) {
+        setTimetable(data.data);
+        Toast.show({ type: 'success', text1: 'Routine Completed!', text2: '+25 Bonus XP Earned!' });
+      }
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update slots.' });
+    }
+  };
+
+  // Module 2: Evaluate Speech
+  const handleEvaluateSpeech = async () => {
+    if (!speechTranscript.trim()) {
+      Toast.show({ type: 'error', text1: 'Missing Input', text2: 'Please type or speak your response.' });
+      return;
+    }
+    setEvaluatingSpeech(true);
+    try {
+      const { data } = await API.post('/communication/submit-speech', {
+        topic: speechTopic,
+        category: 'Interview Practice',
+        transcriptText: speechTranscript,
+        durationSeconds: 60
+      });
+      if (data?.data) {
+        setSpeechResult(data.data);
+        Toast.show({ type: 'success', text1: 'Speech Graded!', text2: `Overall Score: ${data.data.overallScore}%` });
+      }
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Speech evaluation failed.' });
+    } finally {
+      setEvaluatingSpeech(false);
+    }
+  };
+
+  // Module 3: Solve Aptitude Question
   const handleSolveAptitude = async () => {
     if (!solverQuestion.trim()) {
       Toast.show({ type: 'error', text1: 'Missing Input', text2: 'Please enter a math question.' });
@@ -126,16 +182,45 @@ export default function CareerScreen() {
     }
   };
 
-  const handleMarkAllSlots = async () => {
+  // Module 4: Generate Mock Interview
+  const handleGenerateMock = async () => {
+    setGeneratingMock(true);
+    setMockResult(null);
     try {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const { data } = await API.post('/timetable/my/check-all', { date: todayStr });
+      const { data } = await API.post('/ai/mock/generate', {
+        role: mockRole,
+        topic: 'React, Node.js & Core Algorithms',
+        difficulty: 'Medium'
+      });
       if (data?.data) {
-        setTimetable(data.data);
-        Toast.show({ type: 'success', text1: 'Routine Completed!', text2: '+25 Bonus XP Earned!' });
+        setActiveMock(data.data);
+        setMockAnswers(data.data.questions?.map(() => '') || ['', '', '']);
+        Toast.show({ type: 'success', text1: 'Mock Questions Ready!', text2: `${mockRole} simulation started.` });
       }
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update slots.' });
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to generate mock.' });
+    } finally {
+      setGeneratingMock(false);
+    }
+  };
+
+  // Module 4: Submit Mock Answers
+  const handleSubmitMock = async () => {
+    if (!activeMock) return;
+    setEvaluatingMock(true);
+    try {
+      const { data } = await API.post('/ai/mock/evaluate', {
+        mockId: activeMock._id,
+        answers: mockAnswers
+      });
+      if (data?.data) {
+        setMockResult(data.data);
+        Toast.show({ type: 'success', text1: 'Mock Evaluated!', text2: `Score: ${data.data.mock?.overallScore}%` });
+      }
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to submit mock.' });
+    } finally {
+      setEvaluatingMock(false);
     }
   };
 
@@ -182,10 +267,10 @@ export default function CareerScreen() {
   ];
 
   const aiTools = [
-    { id: 'ai-timetable', name: 'Study Timetable', desc: 'Routines & streak rewards', color: '#4F46E5', bgColor: '#EEF2F6', icon: Calendar, tag: 'LIVE' },
-    { id: 'ai-apt', name: 'AI Aptitude', desc: 'Root-cause math solver', color: '#059669', bgColor: '#ECFDF5', icon: Brain, tag: 'LIVE' },
-    { id: 'ai-comm', name: 'AI Communication', desc: 'Speech & tone analysis', color: '#D97706', bgColor: '#FEF3C7', icon: MessageSquare, tag: 'LIVE' },
-    { id: 'ai-mock', name: 'Mock Simulator', desc: 'Role-based interview drills', color: '#7C3AED', bgColor: '#F5F3FF', icon: Cpu, tag: 'LIVE' },
+    { id: 'ai-timetable', name: 'Study Timetable', desc: 'Routines & streak rewards', color: '#4F46E5', bgColor: '#EEF2F6', icon: Calendar, tag: 'MODULE 1' },
+    { id: 'ai-comm', name: 'AI Speech Coach', desc: '6-dimension speech scoring', color: '#D97706', bgColor: '#FEF3C7', icon: MessageSquare, tag: 'MODULE 2' },
+    { id: 'ai-apt', name: 'AI Aptitude Suite', desc: 'Root-cause math solver & 16 topics', color: '#059669', bgColor: '#ECFDF5', icon: Brain, tag: 'MODULE 3' },
+    { id: 'ai-mock', name: 'Mock Simulator', desc: 'Role-based interview drills', color: '#7C3AED', bgColor: '#F5F3FF', icon: Bot, tag: 'MODULE 4' },
     { id: 'ai-ats', name: 'Resume ATS Checker', desc: 'Match resume keywords', color: '#0D9488', bgColor: '#F0FDFA', icon: FileCheck, tag: 'V2' },
     { id: 'ai-code', name: 'Code Challenging', desc: 'Interactive coding battles', color: '#E11D48', bgColor: '#FFF1F2', icon: Code2, tag: 'V2' }
   ];
@@ -211,33 +296,40 @@ export default function CareerScreen() {
         showsVerticalScrollIndicator={false}
       >
         
-        {/* 1. Announcements Ads Card */}
+        {/* 1. Announcements Ads Card & Weighted Readiness */}
         <View className="bg-[#4F46E5] rounded-3xl p-5 mb-6 shadow-md shadow-indigo-600/10 relative overflow-hidden">
           <View className="flex-row items-center gap-2">
             <Bell size={14} color="#C7D2FE" />
-            <Text className="text-[10px] font-black text-[#C7D2FE] uppercase tracking-widest">PLACEMENT AD & NEWS</Text>
+            <Text className="text-[10px] font-black text-[#C7D2FE] uppercase tracking-widest">WEIGHTED READINESS RADAR</Text>
           </View>
           <Text className="text-lg font-black text-white mt-1.5 leading-snug">
-            Campus Hiring Drive starts this week!
+            {readinessPercent}% Placement Ready
           </Text>
-          <Text className="text-xs text-[#E0E7FF] mt-2 font-semibold leading-relaxed">
-            Over 12 companies are recruiting for Frontend, QA, and backend developer tracks. Set up your resume now!
+          <Text className="text-xs text-[#E0E7FF] mt-1 font-semibold leading-relaxed">
+            {readiness?.tierEligibility || 'Product (Zoho/Freshworks) Tier Candidate'}
           </Text>
           
-          <View className="flex-row items-center justify-between mt-4 border-t border-indigo-400/30 pt-3">
-            <View>
-              <Text className="text-[10px] text-[#C7D2FE] font-bold">Your Readiness Score</Text>
-              <Text className="text-base font-black text-white mt-0.5">{readinessPercent}% Ready</Text>
-            </View>
-            <View className="bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
-              <Text className="text-white text-xs font-black">{readiness?.tierEligibility || 'Placement Sprint'}</Text>
-            </View>
+          {/* 6 Dimension Competencies Pills */}
+          <View className="flex-row flex-wrap justify-between gap-1.5 mt-4 border-t border-indigo-400/30 pt-3">
+            {[
+              { label: 'Tech 30%', val: readiness?.technicalScore || 50 },
+              { label: 'Code 20%', val: readiness?.codingScore || 50 },
+              { label: 'Comm 15%', val: readiness?.communicationScore || 50 },
+              { label: 'Assign 15%', val: readiness?.assignmentScore || 50 },
+              { label: 'Attend 10%', val: readiness?.attendanceScore || 50 },
+              { label: 'Mock 10%', val: readiness?.mockScore || 50 },
+            ].map((d, i) => (
+              <View key={i} className="bg-white/10 rounded-xl px-2 py-1 items-center" style={{ width: '31%' }}>
+                <Text className="text-[8px] text-indigo-200 font-bold">{d.label}</Text>
+                <Text className="text-[11px] font-black text-white mt-0.5">{d.val}%</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         {/* 2. 6 AI & Learning Tools Cards */}
         <View className="mb-6">
-          <Text className="text-base font-black text-[#0F172A] mb-4">AI & Learning Tools</Text>
+          <Text className="text-base font-black text-[#0F172A] mb-4">Core AI Modules</Text>
           
           <View className="flex-row flex-wrap justify-between gap-y-4">
             {aiTools.map((tool) => {
@@ -355,53 +447,13 @@ export default function CareerScreen() {
 
       </ScrollView>
 
-      {/* AI APTITUDE MODAL */}
-      <Modal visible={activeModal === 'ai-apt'} animationType="slide" transparent>
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-[32px] p-6 max-h-[85%]">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-lg font-black text-slate-900">AI Root-Cause Aptitude Solver</Text>
-              <TouchableOpacity onPress={() => setActiveModal(null)} className="p-2">
-                <X size={20} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              multiline
-              numberOfLines={3}
-              value={solverQuestion}
-              onChangeText={setSolverQuestion}
-              placeholder="Paste any aptitude problem (e.g. A takes 10 days, B takes 15 days...)"
-              className="border border-slate-200 rounded-2xl p-4 text-xs font-medium text-slate-800 mb-3"
-            />
-
-            <TouchableOpacity
-              onPress={handleSolveAptitude}
-              disabled={solving}
-              className="bg-indigo-600 rounded-2xl py-3.5 items-center justify-center mb-4"
-            >
-              {solving ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-xs font-black">Deconstruct Math with AI</Text>}
-            </TouchableOpacity>
-
-            {solverResult && (
-              <ScrollView className="max-h-64 border-t border-slate-100 pt-3">
-                <Text className="text-xs font-black text-indigo-700 uppercase">{solverResult.topicIdentified}</Text>
-                <Text className="text-xs font-bold text-slate-800 mt-1">Formula: {solverResult.formulaUsed}</Text>
-                <Text className="text-xs text-amber-900 font-bold mt-2 bg-amber-50 p-2.5 rounded-xl">⚡ Shortcut: {solverResult.shortcutTrick}</Text>
-                <Text className="text-xs text-emerald-800 font-black mt-2">Final Answer: {solverResult.finalAnswer}</Text>
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </Modal>
-
-      {/* STUDY TIMETABLE MODAL */}
+      {/* MODULE 1: STUDY TIMETABLE MODAL */}
       <Modal visible={activeModal === 'ai-timetable'} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-[32px] p-6 max-h-[85%]">
             <View className="flex-row justify-between items-center mb-4">
               <View>
-                <Text className="text-lg font-black text-slate-900">Daily Study Timetable</Text>
+                <Text className="text-lg font-black text-slate-900">Study Timetable & Routines</Text>
                 <Text className="text-xs text-indigo-600 font-bold">{timetable?.xpPoints || 0} XP • {timetable?.streak || 0} Day Streak</Text>
               </View>
               <TouchableOpacity onPress={() => setActiveModal(null)} className="p-2">
@@ -428,6 +480,153 @@ export default function CareerScreen() {
                 </View>
               ))}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODULE 2: AI COMMUNICATION COACH MODAL */}
+      <Modal visible={activeModal === 'ai-comm'} animationType="slide" transparent>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-[32px] p-6 max-h-[85%]">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-black text-slate-900">AI Spoken Communication Coach</Text>
+              <TouchableOpacity onPress={() => setActiveModal(null)} className="p-2">
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-xs font-bold text-slate-700 mb-1.5">Topic: {speechTopic}</Text>
+            <TextInput
+              multiline
+              numberOfLines={3}
+              value={speechTranscript}
+              onChangeText={setSpeechTranscript}
+              placeholder="Type or dictate your verbal response (e.g. Good morning, I am a developer proficient in React and Node...)"
+              className="border border-slate-200 rounded-2xl p-4 text-xs font-medium text-slate-800 mb-3"
+            />
+
+            <TouchableOpacity
+              onPress={handleEvaluateSpeech}
+              disabled={evaluatingSpeech}
+              className="bg-amber-600 rounded-2xl py-3.5 items-center justify-center mb-4"
+            >
+              {evaluatingSpeech ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-xs font-black">Grade Speech with AI</Text>}
+            </TouchableOpacity>
+
+            {speechResult && (
+              <ScrollView className="max-h-64 border-t border-slate-100 pt-3">
+                <Text className="text-sm font-black text-slate-900 mb-2">{speechResult.overallScore}% Overall Articulation</Text>
+                <Text className="text-xs text-slate-600 mb-2">Fillers: {speechResult.fillerWordCount || 0} count</Text>
+                {speechResult.idealAnswerOrExample && (
+                  <View className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                    <Text className="text-[10px] font-bold text-emerald-800 uppercase">🌟 Recruiter Model Answer:</Text>
+                    <Text className="text-xs text-slate-800 mt-1 italic">"{speechResult.idealAnswerOrExample}"</Text>
+                  </View>
+                )}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODULE 3: AI APTITUDE ROOT SOLVER MODAL */}
+      <Modal visible={activeModal === 'ai-apt'} animationType="slide" transparent>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-[32px] p-6 max-h-[85%]">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-black text-slate-900">AI Root-Cause Aptitude Solver</Text>
+              <TouchableOpacity onPress={() => setActiveModal(null)} className="p-2">
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              multiline
+              numberOfLines={3}
+              value={solverQuestion}
+              onChangeText={setSolverQuestion}
+              placeholder="Paste any aptitude problem (e.g. A takes 10 days, B takes 15 days...)"
+              className="border border-slate-200 rounded-2xl p-4 text-xs font-medium text-slate-800 mb-3"
+            />
+
+            <TouchableOpacity
+              onPress={handleSolveAptitude}
+              disabled={solving}
+              className="bg-emerald-600 rounded-2xl py-3.5 items-center justify-center mb-4"
+            >
+              {solving ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-xs font-black">Deconstruct Math with AI</Text>}
+            </TouchableOpacity>
+
+            {solverResult && (
+              <ScrollView className="max-h-64 border-t border-slate-100 pt-3">
+                <Text className="text-xs font-black text-emerald-700 uppercase">{solverResult.topicIdentified}</Text>
+                <Text className="text-xs font-bold text-slate-800 mt-1">Formula: {solverResult.formulaUsed}</Text>
+                <Text className="text-xs text-amber-900 font-bold mt-2 bg-amber-50 p-2.5 rounded-xl">⚡ Shortcut: {solverResult.shortcutTrick}</Text>
+                <Text className="text-xs text-emerald-800 font-black mt-2">Final Answer: {solverResult.finalAnswer}</Text>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODULE 4: MOCK INTERVIEW SIMULATOR MODAL */}
+      <Modal visible={activeModal === 'ai-mock'} animationType="slide" transparent>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-[32px] p-6 max-h-[85%]">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-black text-slate-900">AI Mock Interview Simulator</Text>
+              <TouchableOpacity onPress={() => setActiveModal(null)} className="p-2">
+                <X size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            {!activeMock ? (
+              <View>
+                <Text className="text-xs font-bold text-slate-700 mb-1.5">Target Role: {mockRole}</Text>
+                <TouchableOpacity
+                  onPress={handleGenerateMock}
+                  disabled={generatingMock}
+                  className="bg-violet-600 rounded-2xl py-3.5 items-center justify-center mb-4"
+                >
+                  {generatingMock ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-xs font-black">Generate Mock Session</Text>}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView className="max-h-80">
+                {activeMock.questions?.map((q: any, idx: number) => (
+                  <View key={idx} className="mb-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                    <Text className="text-xs font-bold text-slate-900 mb-1.5">Q{idx + 1}: {q.questionText}</Text>
+                    <TextInput
+                      multiline
+                      numberOfLines={2}
+                      value={mockAnswers[idx] || ''}
+                      onChangeText={(txt) => {
+                        const next = [...mockAnswers];
+                        next[idx] = txt;
+                        setMockAnswers(next);
+                      }}
+                      placeholder="Type your explanation..."
+                      className="border border-slate-200 rounded-xl p-2.5 text-xs bg-white"
+                    />
+                  </View>
+                ))}
+
+                <TouchableOpacity
+                  onPress={handleSubmitMock}
+                  disabled={evaluatingMock}
+                  className="bg-violet-600 rounded-2xl py-3.5 items-center justify-center mb-4"
+                >
+                  {evaluatingMock ? <ActivityIndicator color="#fff" /> : <Text className="text-white text-xs font-black">Submit Mock for Grading</Text>}
+                </TouchableOpacity>
+
+                {mockResult && (
+                  <View className="bg-violet-50 p-4 rounded-2xl border border-violet-100 mt-2">
+                    <Text className="text-sm font-black text-violet-900">Score: {mockResult.mock?.overallScore}%</Text>
+                    <Text className="text-xs text-slate-600 mt-1">{mockResult.mock?.feedbackSummary}</Text>
+                  </View>
+                )}
+              </ScrollView>
+            )}
           </View>
         </View>
       </Modal>
