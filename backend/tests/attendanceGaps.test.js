@@ -13,7 +13,7 @@ import { scanQR } from '../controllers/studentController.js';
 import { submitScanAttendance } from '../controllers/attendanceController.js';
 import { closeSession, getQRToken, getTrainerDashboardStats } from '../controllers/trainerController.js';
 import { calculateBulkStudentsAttendance } from '../services/attendanceService.js';
-import { recordBulkAttendance } from '../services/attendanceEngine.js';
+import { calculateStudentAttendanceEngine, recordBulkAttendance } from '../services/attendanceEngine.js';
 import { autoCloseAttendanceForToday, createAttendanceSchedulerTick } from '../services/cronService.js';
 import { attendanceDateKey, attendanceDayRange, attendanceDayStart } from '../utils/attendanceDate.js';
 import { authorizeStudentAttendance } from '../middleware/attendanceAccess.js';
@@ -237,7 +237,8 @@ test('student reset baseline remains stable without an active department enrollm
   jest.setSystemTime(new Date('2026-09-11T09:00:00+05:30'));
   const result = (await calculateBulkStudentsAttendance([studentId], 'Technical')).get(String(studentId));
   expect(result.startDate).toBe('10 Sept 2026');
-  expect(result.trainingDay).toBe(2);
+  expect(result.trainingDay).toBe(0);
+  expect(result.absentCount).toBe(0);
 });
 
 test('bulk result does not count modified records twice', async () => {
@@ -245,4 +246,41 @@ test('bulk result does not count modified records twice', async () => {
   jest.spyOn(Attendance, 'bulkWrite').mockResolvedValue({ upsertedCount: 0, matchedCount: 1, modifiedCount: 1 });
   const result = await recordBulkAttendance({ batchId, classDate: '2026-09-10', records: [{ studentId, status: 'Present' }], user: { _id: trainerId } });
   expect(result.successfulCount).toBe(1);
+});
+
+
+test.each(['2026-09-10T09:00:00+05:30', '2026-09-10T17:59:59+05:30', '2026-09-10T18:00:00+05:30'])('cutoff controls inferred absence at %s', async (now) => {
+  setupStats();
+  jest.setSystemTime(new Date(now));
+  Enrollment.find.mockReturnValue(chain([{ studentId, batchId: { _id: batchId }, startDate: '2026-09-10' }]));
+  const expected = now.includes('T18:') ? 1 : 0;
+  const result = (await calculateBulkStudentsAttendance([studentId], 'Communication')).get(String(studentId));
+  expect(result).toMatchObject({ trainingDay: expected, absentCount: expected });
+  jest.spyOn(User, 'findById').mockReturnValue(chain({ _id: studentId, attendanceStartDate: '2026-09-10' }));
+  expect(await calculateStudentAttendanceEngine(studentId)).toMatchObject({ totalClasses: expected, absentCount: expected });
+});
+
+test('today check-in counts immediately without an early absence', async () => {
+  setupStats();
+  jest.setSystemTime(new Date('2026-09-10T17:00:00+05:30'));
+  Enrollment.find.mockReturnValue(chain([{ studentId, batchId: { _id: batchId }, startDate: '2026-09-10' }]));
+  Attendance.find.mockReturnValue(chain([{ student: studentId, batch: batchId, date: new Date(), status: 'Present' }]));
+  const result = (await calculateBulkStudentsAttendance([studentId], 'Communication')).get(String(studentId));
+  expect(result).toMatchObject({ trainingDay: 1, presentCount: 1, absentCount: 0, attendancePercent: 100 });
+});
+
+test('no training means no absence even after cutoff', async () => {
+  setupStats();
+  AttendanceSession.find.mockReturnValue(chain([]));
+  const result = (await calculateBulkStudentsAttendance([studentId], 'Communication')).get(String(studentId));
+  expect(result).toMatchObject({ trainingDay: 0, absentCount: 0 });
+  jest.spyOn(User, 'findById').mockReturnValue(chain({ _id: studentId }));
+  expect(await calculateStudentAttendanceEngine(studentId)).toMatchObject({ totalClasses: 0, absentCount: 0 });
+});
+
+test('direct auto-close before 6 PM cannot create absences', async () => {
+  jest.setSystemTime(new Date('2026-09-10T17:59:59+05:30'));
+  jest.spyOn(Attendance, 'bulkWrite').mockResolvedValue({});
+  expect(await autoCloseAttendanceForToday()).toMatchObject({ status: 'skipped', reason: 'before-cutoff' });
+  expect(Attendance.bulkWrite).not.toHaveBeenCalled();
 });

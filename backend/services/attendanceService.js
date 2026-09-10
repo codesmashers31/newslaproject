@@ -1,4 +1,4 @@
-import { attendanceDateKey as formatDateISO, attendanceDayStart, attendanceWeekday } from '../utils/attendanceDate.js';
+import { attendanceDateKey as formatDateISO, attendanceDayStart, attendanceWeekday, isAttendanceDayClosed } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Enrollment from '../models/Enrollment.js';
@@ -118,7 +118,8 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
     studentLogsMap.get(sId).push(log);
   });
 
-  const todayStr = formatDateISO(new Date());
+  const now = new Date();
+  const todayStr = formatDateISO(now);
 
   // 5. Compute stats per student
   for (const rawId of studentIds) {
@@ -169,44 +170,19 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       }
     });
 
-    // If conducted class days were recorded, trainingDay = number of conducted dates
-    // If no specific class conducted logs yet in DB, default to working days between start date and today
-    let trainingDayCount = 0;
+    // Only completed conducted days or explicit student records affect statistics.
+    // A session/check-in by another student must not create an early absence.
+    const applicableDates = new Set(relevantConductedDates.filter(d => isAttendanceDayClosed(d, now)));
+    const studentLeaveDates = new Set(logs.filter(log => log.status === 'Leave' || log.status === 'Excused').map(log => formatDateISO(log.date)));
+    for (const d of [...studentPresentDates, ...studentAbsentDates, ...studentLeaveDates]) {
+      if (d >= startDateISO && d <= endDateISO && d <= todayStr) applicableDates.add(d);
+    }
+    const trainingDayCount = applicableDates.size;
     let presentCount = 0;
     let absentCount = 0;
-
-    if (relevantConductedDates.length > 0) {
-      trainingDayCount = relevantConductedDates.length;
-      relevantConductedDates.forEach(dStr => {
-        if (studentPresentDates.has(dStr)) {
-          presentCount++;
-        } else {
-          absentCount++;
-        }
-      });
-    } else {
-      // Fallback if no batch scans logged yet: count elapsed calendar weekdays
-      let cur = attendanceDayStart(rawStartDate);
-      const today = attendanceDayStart(new Date());
-
-      while (cur <= today) {
-        const dStr = formatDateISO(cur);
-        const dayOfWeek = attendanceWeekday(cur);
-        const isValidDay = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
-        if (isValidDay) {
-          trainingDayCount++;
-          if (studentPresentDates.has(dStr)) {
-            presentCount++;
-          } else if (studentAbsentDates.has(dStr)) {
-            absentCount++;
-          }
-        }
-        cur.setTime(cur.getTime() + 86400000);
-      }
-      const totalLogged = presentCount + absentCount;
-      if (trainingDayCount > totalLogged) {
-        absentCount += (trainingDayCount - totalLogged);
-      }
+    for (const d of applicableDates) {
+      if (studentPresentDates.has(d)) presentCount++;
+      else if (!studentLeaveDates.has(d)) absentCount++;
     }
 
     const remainingDays = Math.max(0, fixedTotalDays - trainingDayCount);

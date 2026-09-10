@@ -272,7 +272,7 @@ export const getBatchDailyAttendance = async (req, res) => {
         email: stu.email,
         slaeId: stu.slaeId || `SLA-${String(stu._id).slice(-5).toUpperCase()}`,
         photo: stu.photo || '',
-        status: rec ? standardizeStatus(rec.status) : 'Absent',
+        status: rec ? standardizeStatus(rec.status) : 'Pending',
         attendanceMode: rec ? standardizeMode(rec.attendanceMode) : 'MANUAL',
         timeIn: rec?.timeIn || '',
         remarks: rec?.remarks || '',
@@ -298,6 +298,7 @@ export const getBatchDailyAttendance = async (req, res) => {
       presentCount,
       absentCount,
       leaveCount,
+      pendingCount: studentsRollCall.filter(s => s.status === 'Pending').length,
       students: studentsRollCall
     });
   } catch (error) {

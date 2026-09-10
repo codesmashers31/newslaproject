@@ -1,4 +1,4 @@
-import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey, attendanceWeekday } from '../utils/attendanceDate.js';
+import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey, attendanceWeekday, isAttendanceDayClosed } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
 import Attendance from '../models/Attendance.js';
 import Batch from '../models/Batch.js';
@@ -174,29 +174,15 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     return true;
   });
 
-  const totalClassesRecorded = presentCount + absentCount + leaveCount;
-  let effectiveTotalClasses = 0;
-  let effectiveAbsentCount = 0;
+  // No calendar fallback: an unrecorded day is not evidence of a missed class.
+  const applicableDates = new Set(relevantConductedDates.filter(d => isAttendanceDayClosed(d)));
+  attendanceRecords.forEach(rec => {
+    const d = formatDateISO(rec.date);
+    if (d >= startDateISO && d <= endDateISO && d <= todayStr) applicableDates.add(d);
+  });
+  const effectiveTotalClasses = Math.max(applicableDates.size, presentCount + absentCount + leaveCount);
+  const effectiveAbsentCount = Math.max(absentCount, effectiveTotalClasses - presentCount - leaveCount);
 
-  if (relevantConductedDates.length > 0) {
-    effectiveTotalClasses = relevantConductedDates.length;
-    effectiveAbsentCount = Math.max(0, effectiveTotalClasses - presentCount - leaveCount);
-  } else {
-    // Fallback if no specific batch session logs in DB: count calendar weekdays
-    let cur = attendanceDayStart(rawStartDate);
-    const today = attendanceDayStart(new Date());
-    while (cur <= today) {
-      const dStr = formatDateISO(cur);
-      const dayOfWeek = attendanceWeekday(cur);
-      const isValid = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
-      if (isValid) {
-        effectiveTotalClasses++;
-      }
-      cur.setTime(cur.getTime() + 86400000);
-    }
-    effectiveAbsentCount = Math.max(absentCount, effectiveTotalClasses - presentCount - leaveCount);
-  }
-  
   const isApti = (course || targetBatch?.course || '').toLowerCase().includes('apti');
   const totalTargetDays = isApti ? 120 : 80;
   const remainingDays = Math.max(0, totalTargetDays - effectiveTotalClasses);

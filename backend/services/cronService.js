@@ -1,4 +1,4 @@
-import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey } from '../utils/attendanceDate.js';
+import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey, isAttendanceDayClosed } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Enrollment from '../models/Enrollment.js';
@@ -29,6 +29,8 @@ export const getKolkataDateAndTime = (now = new Date()) => {
 export const autoCloseAttendanceForToday = async () => {
   try {
     const { dateISO, dayOfWeek } = getKolkataDateAndTime();
+
+    if (!isAttendanceDayClosed(dateISO)) return { status: 'skipped', reason: 'before-cutoff' };
 
     // Rule 1: Skip Weekends (Saturday & Sunday)
     if (dayOfWeek === 0 || dayOfWeek === 6) {

@@ -24,3 +24,9 @@ export const attendanceDayRange = (value) => ({
 });
 
 export const attendanceWeekday = (value) => new Date(attendanceDateKey(value)).getUTCDay();
+
+// Missing attendance stays pending until the daily 6 PM IST cutoff.
+export const isAttendanceDayClosed = (value, now = new Date()) => {
+  const key = attendanceDateKey(value);
+  return !!key && now >= new Date(`${key}T18:00:00+05:30`);
+};
