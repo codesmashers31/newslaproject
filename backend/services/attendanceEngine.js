@@ -1,3 +1,4 @@
+import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey, attendanceWeekday } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
 import Attendance from '../models/Attendance.js';
 import Batch from '../models/Batch.js';
@@ -13,29 +14,16 @@ export const ATTENDANCE_POLICY = {
   EXCELLENT_PERCENTAGE: 90,
 };
 
-// Normalize Date to Midnight UTC/Local (00:00:00.000)
-export const normalizeDate = (inputDate) => {
-  if (!inputDate) return null;
-  const d = new Date(inputDate);
-  if (isNaN(d.getTime())) return null;
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
-// Format Date as ISO String YYYY-MM-DD
-export const formatDateISO = (inputDate) => {
-  if (!inputDate) return '';
-  const d = new Date(inputDate);
-  if (isNaN(d.getTime())) return '';
-  return d.toISOString().split('T')[0];
-};
+// Shared IST day helpers also match legacy UTC-midnight records.
+export const normalizeDate = attendanceDayStart;
+export const formatDateISO = attendanceDateKey;
 
 // Format Date as user-friendly Display String (e.g., "21 Aug 2026")
 export const formatDateDisplay = (inputDate) => {
   if (!inputDate) return '';
   const d = new Date(inputDate);
   if (isNaN(d.getTime())) return '';
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 // Standardize Attendance Status
@@ -64,7 +52,7 @@ export const isScheduledClassDay = (dateObj, batchSchedule = null, holidaySet = 
   const dStr = formatDateISO(dateObj);
   if (holidaySet.has(dStr)) return false;
 
-  const dayOfWeek = dateObj.getDay(); // 0 = Sun, 6 = Sat
+  const dayOfWeek = attendanceWeekday(dateObj); // 0 = Sun, 6 = Sat
   if (dayOfWeek === 0) return false; // Sunday is non-class day
 
   if (batchSchedule && typeof batchSchedule === 'string') {
@@ -117,7 +105,7 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
 
   const dateFilter = {};
   if (startDate) dateFilter.$gte = normalizeDate(startDate);
-  if (endDate) dateFilter.$lte = normalizeDate(endDate);
+  if (endDate) dateFilter.$lte = attendanceDayEnd(endDate);
   if (Object.keys(dateFilter).length > 0) attQuery.date = dateFilter;
 
   const attendanceRecords = await Attendance.find(attQuery)
@@ -181,7 +169,7 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     if (rawEndDate && dStr > endDateISO) return false;
     if (holidaySet.has(dStr)) return false;
     const dObj = new Date(dStr);
-    const dayOfWeek = dObj.getDay();
+    const dayOfWeek = attendanceWeekday(dObj);
     if (dayOfWeek === 0 || dayOfWeek === 6) return false;
     return true;
   });
@@ -195,18 +183,16 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     effectiveAbsentCount = Math.max(0, effectiveTotalClasses - presentCount - leaveCount);
   } else {
     // Fallback if no specific batch session logs in DB: count calendar weekdays
-    let cur = new Date(rawStartDate);
-    cur.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    let cur = attendanceDayStart(rawStartDate);
+    const today = attendanceDayStart(new Date());
     while (cur <= today) {
       const dStr = formatDateISO(cur);
-      const dayOfWeek = cur.getDay();
+      const dayOfWeek = attendanceWeekday(cur);
       const isValid = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
       if (isValid) {
         effectiveTotalClasses++;
       }
-      cur.setDate(cur.getDate() + 1);
+      cur.setTime(cur.getTime() + 86400000);
     }
     effectiveAbsentCount = Math.max(absentCount, effectiveTotalClasses - presentCount - leaveCount);
   }
@@ -284,15 +270,15 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
  */
 export const calculateMonthlyAttendanceSummary = async (studentId, options = {}) => {
   const sObjectId = new mongoose.Types.ObjectId(studentId);
-  const now = new Date();
+  const now = new Date(`${attendanceDateKey(new Date())}T12:00:00Z`);
   
   // Current Month range
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const currentMonthStart = attendanceDayStart(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)));
+  const currentMonthEnd = attendanceDayEnd(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)));
 
   // Previous Month range
-  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  const prevMonthStart = attendanceDayStart(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)));
+  const prevMonthEnd = attendanceDayEnd(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0)));
 
   const [currentMonthRecords, prevMonthRecords] = await Promise.all([
     Attendance.find({
@@ -329,13 +315,13 @@ export const calculateMonthlyAttendanceSummary = async (studentId, options = {})
     };
   };
 
-  const currentMonthName = now.toLocaleString('en-US', { month: 'long' });
-  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'long' });
+  const currentMonthName = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', month: 'long' });
+  const prevMonthDate = attendanceDayStart(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)));
+  const prevMonthName = prevMonthDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', month: 'long' });
 
   return {
     currentMonth: compileMonthStats(currentMonthRecords, currentMonthName, now.getFullYear()),
-    previousMonth: compileMonthStats(prevMonthRecords, prevMonthName, prevMonthDate.getFullYear())
+    previousMonth: compileMonthStats(prevMonthRecords, prevMonthName, Number(attendanceDateKey(prevMonthDate).slice(0, 4)))
   };
 };
 
@@ -460,6 +446,7 @@ export const recordManualAttendance = async ({
   const sObjectId = new mongoose.Types.ObjectId(studentId);
   const bObjectId = new mongoose.Types.ObjectId(batchId);
   const normalizedClassDate = normalizeDate(classDate);
+  if (!normalizedClassDate) throw new Error('Invalid attendance date');
 
   const batch = await Batch.findById(bObjectId).lean();
   if (!batch) throw new Error('Batch not found');
@@ -471,7 +458,7 @@ export const recordManualAttendance = async ({
     {
       student: sObjectId,
       batch: bObjectId,
-      date: normalizedClassDate
+      date: attendanceDayRange(normalizedClassDate)
     },
     {
       student: sObjectId,
@@ -512,6 +499,7 @@ export const recordBulkAttendance = async ({
 
   const bObjectId = new mongoose.Types.ObjectId(batchId);
   const normalizedClassDate = normalizeDate(classDate);
+  if (!normalizedClassDate) throw new Error('Invalid attendance date');
 
   const batch = await Batch.findById(bObjectId).lean();
   if (!batch) throw new Error('Batch not found');
@@ -541,7 +529,7 @@ export const recordBulkAttendance = async ({
           filter: {
             student: sObjectId,
             batch: bObjectId,
-            date: normalizedClassDate
+            date: attendanceDayRange(normalizedClassDate)
           },
           update: {
             $set: {
@@ -575,7 +563,7 @@ export const recordBulkAttendance = async ({
   return {
     success: true,
     totalSubmitted: records.length,
-    successfulCount: (bulkResult?.upsertedCount || 0) + (bulkResult?.modifiedCount || 0) + (bulkResult?.matchedCount || 0),
+    successfulCount: (bulkResult?.upsertedCount || 0) + (bulkResult?.matchedCount || 0),
     upsertedCount: bulkResult?.upsertedCount || 0,
     modifiedCount: bulkResult?.modifiedCount || 0,
     matchedCount: bulkResult?.matchedCount || 0,

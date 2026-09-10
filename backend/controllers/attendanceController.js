@@ -1,12 +1,9 @@
+import { scanQR } from './studentController.js';
+import { attendanceDayRange, attendanceDayEnd } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
 import Attendance from '../models/Attendance.js';
-import AttendanceLog from '../models/AttendanceLog.js';
-import AttendanceSession from '../models/AttendanceSession.js';
 import Batch from '../models/Batch.js';
 import Enrollment from '../models/Enrollment.js';
-import User from '../models/User.js';
-import Notification from '../models/Notification.js';
 import {
   calculateStudentAttendanceEngine,
   calculateMonthlyAttendanceSummary,
@@ -115,7 +112,7 @@ export const getStudentAttendanceHistory = async (req, res) => {
 
     const dateFilter = {};
     if (startDate) dateFilter.$gte = normalizeDate(startDate);
-    if (endDate) dateFilter.$lte = normalizeDate(endDate);
+    if (endDate) dateFilter.$lte = attendanceDayEnd(endDate);
     if (Object.keys(dateFilter).length > 0) query.date = dateFilter;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -247,7 +244,7 @@ export const getBatchDailyAttendance = async (req, res) => {
       Enrollment.find({ batchId: bObjectId, status: 'Active' })
         .populate('studentId', 'name email slaeId photo')
         .lean(),
-      Attendance.find({ batch: bObjectId, date: normalizedDate })
+      Attendance.find({ batch: bObjectId, date: attendanceDayRange(normalizedDate) })
         .populate('student', 'name email slaeId')
         .populate('markedBy', 'name role')
         .lean()
@@ -401,134 +398,14 @@ export const updateAttendanceRecord = async (req, res) => {
  * @access  Private (Student only)
  */
 export const submitScanAttendance = async (req, res) => {
-  const { token } = req.body;
-  const studentId = req.user._id;
-
-  try {
-    if (!token) {
-      return sendResponse(res, 400, false, 'QR Token is required');
+  // Keep this endpoint's response envelope while using the same scan rules as web/mobile.
+  const response = {
+    statusCode: 200,
+    status(code) { this.statusCode = code; return this; },
+    json(payload) {
+      return sendResponse(res, this.statusCode, this.statusCode < 400,
+        payload.message, payload.attendance || null);
     }
-
-    // 1. Verify token signature and expiry
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'lcp_secret_key_123456');
-    } catch (err) {
-      await AttendanceLog.create({
-        student: studentId,
-        scannedToken: token,
-        status: 'Failed',
-        reason: 'Expired or Invalid QR Code',
-        ipAddress: req.ip || ''
-      });
-      return sendResponse(res, 400, false, 'QR Code is expired or invalid');
-    }
-
-    // 2. Check if student is active
-    if (req.user.status === 'Inactive') {
-      await AttendanceLog.create({
-        student: studentId,
-        scannedToken: token,
-        status: 'Failed',
-        reason: 'Student account is inactive',
-        ipAddress: req.ip || ''
-      });
-      return sendResponse(res, 403, false, 'Your account is deactivated');
-    }
-
-    // 3. Find Class Session
-    const session = await AttendanceSession.findById(decoded.sessionId);
-    if (!session || !session.isActive) {
-      await AttendanceLog.create({
-        student: studentId,
-        scannedToken: token,
-        status: 'Failed',
-        reason: 'Class session is closed or inactive',
-        ipAddress: req.ip || ''
-      });
-      return sendResponse(res, 400, false, 'Class session is no longer active');
-    }
-
-    const sessionBatch = await Batch.findById(session.batch);
-    if (!sessionBatch) {
-      return sendResponse(res, 400, false, 'Session batch not found');
-    }
-
-    // 4. Compute Late vs Present Logic
-    const scanTime = new Date();
-    const sessionStartTime = new Date(session.startTime);
-    const diffMs = scanTime - sessionStartTime;
-    const diffMinutes = Math.floor(diffMs / 60000);
-
-    let status = 'Present';
-    if (diffMinutes > 15) {
-      status = 'Present'; // Keep Present as standard roll call
-    }
-
-    const normalizedDate = normalizeDate(session.startTime || scanTime);
-    const formattedTimeIn = scanTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // 5. Check duplicate scan for same student, batch, date
-    const existing = await Attendance.findOne({
-      student: studentId,
-      batch: sessionBatch._id,
-      date: normalizedDate
-    });
-
-    if (existing) {
-      await AttendanceLog.create({
-        student: studentId,
-        session: session._id,
-        scannedToken: token,
-        status: 'Failed',
-        reason: 'Already scanned today',
-        ipAddress: req.ip || ''
-      });
-      return sendResponse(res, 200, true, 'Attendance already recorded.', {
-        studentId,
-        status: existing.status,
-        date: formatDateISO(existing.date),
-        timeIn: existing.timeIn
-      });
-    }
-
-    // 6. Record Attendance via Unified Model
-    const resolvedCourse = session.subject || sessionBatch.course || 'General';
-
-    const attendance = await Attendance.create({
-      student: studentId,
-      batch: sessionBatch._id,
-      scannedBatch: sessionBatch._id,
-      course: resolvedCourse,
-      subject: resolvedCourse,
-      date: normalizedDate,
-      session: session._id,
-      status: 'Present',
-      attendanceMode: 'SCAN',
-      timeIn: formattedTimeIn,
-      markedBy: session.trainer || studentId,
-      remarks: `QR Scanned at ${formattedTimeIn}`
-    });
-
-    // 7. Log success & notify
-    await AttendanceLog.create({
-      student: studentId,
-      session: session._id,
-      scannedToken: token,
-      status: 'Success',
-      reason: 'Marked successfully as Present',
-      ipAddress: req.ip || ''
-    });
-
-    await Notification.create({
-      recipient: studentId,
-      title: 'Attendance Marked Successfully',
-      message: `You were marked Present in ${session.subject} (Location: SLA)`
-    });
-
-    return sendResponse(res, 200, true, 'Attendance marked successfully via QR Scan', attendance);
-  } catch (error) {
-    console.error('submitScanAttendance error:', error);
-    return sendResponse(res, 500, false, error.message || 'Scan attendance failed');
-  }
+  };
+  return scanQR(req, response);
 };

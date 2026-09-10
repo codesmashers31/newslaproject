@@ -5,6 +5,7 @@ import {
   updateStudentScore,
   startSession,
   getQRToken,
+  closeSession,
   getTrainerDashboardStats,
   getTrainerBatches,
   getBatchAttendance,
@@ -64,5 +65,6 @@ router.post('/attendance', markAttendance);
 router.post('/score', updateStudentScore);
 router.post('/session/start', startSession);
 router.get('/session/:sessionId/qr', getQRToken);
+router.post('/session/:sessionId/close', closeSession);
 
 export default router;

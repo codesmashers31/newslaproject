@@ -1,17 +1,10 @@
+import { attendanceDateKey as formatDateISO, attendanceDayStart, attendanceWeekday } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Enrollment from '../models/Enrollment.js';
 import Attendance from '../models/Attendance.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import Holiday from '../models/Holiday.js';
-
-// Format YYYY-MM-DD
-const formatDateISO = (d) => {
-  if (!d) return '';
-  const dateObj = new Date(d);
-  if (isNaN(dateObj.getTime())) return '';
-  return dateObj.toISOString().split('T')[0];
-};
 
 /**
  * Calculates dynamic attendance for multiple students in bulk based on batch-conducted class dates.
@@ -152,7 +145,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       if (holidaySet.has(dStr)) return false;
       
       const dObj = new Date(dStr);
-      const dayOfWeek = dObj.getDay();
+      const dayOfWeek = attendanceWeekday(dObj);
       if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Exclude weekends
       return true;
     });
@@ -191,14 +184,12 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       });
     } else {
       // Fallback if no batch scans logged yet: count elapsed calendar weekdays
-      let cur = new Date(rawStartDate);
-      cur.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      let cur = attendanceDayStart(rawStartDate);
+      const today = attendanceDayStart(new Date());
 
       while (cur <= today) {
         const dStr = formatDateISO(cur);
-        const dayOfWeek = cur.getDay();
+        const dayOfWeek = attendanceWeekday(cur);
         const isValidDay = dayOfWeek !== 0 && dayOfWeek !== 6 && !holidaySet.has(dStr);
         if (isValidDay) {
           trainingDayCount++;
@@ -208,7 +199,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
             absentCount++;
           }
         }
-        cur.setDate(cur.getDate() + 1);
+        cur.setTime(cur.getTime() + 86400000);
       }
       const totalLogged = presentCount + absentCount;
       if (trainingDayCount > totalLogged) {
@@ -224,7 +215,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       : 100;
     const progressPercent = parseFloat(Math.min(100, (trainingDayCount / fixedTotalDays) * 100).toFixed(2));
 
-    const startDateFormatted = rawStartDate ? new Date(rawStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+    const startDateFormatted = rawStartDate ? new Date(rawStartDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
 
     statsMap.set(sId, {
       department: dept,

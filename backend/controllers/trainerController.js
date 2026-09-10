@@ -15,39 +15,15 @@ import Enrollment from '../models/Enrollment.js';
 import fs from 'fs';
 import * as xlsx from 'xlsx';
 import Placement from '../models/Placement.js';
+import { attendanceDayStart, attendanceDayRange, attendanceDayEnd, attendanceDateKey } from '../utils/attendanceDate.js';
 
 // Helper to parse dates robustly handling YYYY-MM-DD, DD-MM-YYYY, and Date instances
 const parseNormalizedDate = (dateInput) => {
-  if (!dateInput) return null;
-  if (dateInput instanceof Date) {
-    const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return null;
-    d.setHours(0, 0, 0, 0);
-    return d;
+  if (typeof dateInput === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(dateInput)) {
+    const [day, month, year] = dateInput.split('-');
+    return attendanceDayStart(`${year}-${month}-${day}`);
   }
-  const str = String(dateInput).trim();
-  if (str.includes('-')) {
-    const parts = str.split('-');
-    if (parts[0].length === 4) {
-      // YYYY-MM-DD
-      const d = new Date(str);
-      if (!isNaN(d.getTime())) {
-        d.setHours(0, 0, 0, 0);
-        return d;
-      }
-    } else if (parts[2].length === 4) {
-      // DD-MM-YYYY
-      const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-      if (!isNaN(d.getTime())) {
-        d.setHours(0, 0, 0, 0);
-        return d;
-      }
-    }
-  }
-  const d = new Date(str);
-  if (isNaN(d.getTime())) return null;
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return attendanceDayStart(dateInput);
 };
 
 // Helper to map trainer role to score category
@@ -147,7 +123,7 @@ export const getAssignedStudents = async (req, res) => {
         const isEnrolledOnDate = studentEnrolls.some(e => {
           const start = parseNormalizedDate(e.startDate || e.createdAt);
           const end = e.completedAt ? parseNormalizedDate(e.completedAt) : (e.endDate ? parseNormalizedDate(e.endDate) : null);
-          if (end) end.setHours(23, 59, 59, 999);
+          if (end) end.setTime(attendanceDayEnd(end).getTime());
           return selectedDateParam >= start && (!end || selectedDateParam <= end);
         });
 
@@ -191,10 +167,9 @@ export const getAssignedStudents = async (req, res) => {
         const studentEnrolls = enrollments.filter(e => e.studentId.toString() === std._id.toString());
         if (selectedDateParam && studentEnrolls.length > 0) {
           const isEnrolledOnDate = studentEnrolls.some(e => {
-            const start = new Date(e.startDate || e.createdAt);
-            start.setHours(0, 0, 0, 0);
+            const start = parseNormalizedDate(e.startDate || e.createdAt);
             const end = e.completedAt ? new Date(e.completedAt) : (e.endDate ? new Date(e.endDate) : null);
-            if (end) end.setHours(23, 59, 59, 999);
+            if (end) end.setTime(attendanceDayEnd(end).getTime());
             return selectedDateParam >= start && (!end || selectedDateParam <= end);
           });
 
@@ -277,10 +252,10 @@ export const getAssignedStudents = async (req, res) => {
         communicationTrainer: resolvedCommunicationTrainer,
         aptitudeTrainer: resolvedAptitudeTrainer,
         profile,
-        attendancePct: attStats.attendancePercent || 100,
-        communicationAttendancePct: dept === 'Communication' ? (attStats.attendancePercent || 100) : 100,
-        aptitudeAttendancePct: dept === 'Aptitude' ? (attStats.attendancePercent || 100) : 100,
-        technicalAttendancePct: dept === 'Technical' ? (attStats.attendancePercent || 100) : 100,
+        attendancePct: attStats.attendancePercent ?? 100,
+        communicationAttendancePct: dept === 'Communication' ? (attStats.attendancePercent ?? 100) : 100,
+        aptitudeAttendancePct: dept === 'Aptitude' ? (attStats.attendancePercent ?? 100) : 100,
+        technicalAttendancePct: dept === 'Technical' ? (attStats.attendancePercent ?? 100) : 100,
         progress: attStats.progressPercent || 0,
         trainingDay: attStats.trainingDay || 1,
         totalTrainingDays: attStats.totalTrainingDays || (dept === 'Aptitude' ? 120 : 80),
@@ -316,8 +291,8 @@ export const markAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Invalid attendance submit details' });
     }
 
-    const formattedDate = parseNormalizedDate(date) || new Date();
-    formattedDate.setHours(0, 0, 0, 0); // normalize date
+    const formattedDate = parseNormalizedDate(date);
+    if (!formattedDate) return res.status(400).json({ message: 'Invalid attendance date' });
 
     const savedRecords = [];
 
@@ -328,7 +303,7 @@ export const markAttendance = async (req, res) => {
         const isEligibleOnDate = studentEnrolls.some(e => {
           const start = parseNormalizedDate(e.startDate || e.createdAt);
           const end = e.completedAt ? parseNormalizedDate(e.completedAt) : (e.endDate ? parseNormalizedDate(e.endDate) : null);
-          if (end) end.setHours(23, 59, 59, 999);
+          if (end) end.setTime(attendanceDayEnd(end).getTime());
           return formattedDate >= start && (!end || formattedDate <= end);
         });
 
@@ -381,7 +356,7 @@ export const markAttendance = async (req, res) => {
 
       // Upsert attendance
       const record = await Attendance.findOneAndUpdate(
-        { student: rec.studentId, batch: saveBatchId, date: formattedDate },
+        { student: rec.studentId, batch: saveBatchId, date: attendanceDayRange(formattedDate) },
         { 
           student: rec.studentId,
           batch: saveBatchId,
@@ -504,6 +479,9 @@ export const getQRToken = async (req, res) => {
     if (!session || !session.isActive) {
       return res.status(404).json({ message: 'Active class session not found or closed' });
     }
+    if (!['Admin', 'Super Admin'].includes(req.user.role) && String(session.trainer) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'This session belongs to another trainer' });
+    }
 
     // Fetch attendees who have scanned for this session
     const attendeesData = await Attendance.find({ session: session._id })
@@ -531,6 +509,22 @@ export const getQRToken = async (req, res) => {
     res.json({ token, expiresAt: Date.now() + 120 * 1000, attendees });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Closing the display also invalidates every outstanding QR for the session.
+export const closeSession = async (req, res) => {
+  try {
+    const session = await AttendanceSession.findById(req.params.sessionId);
+    if (!session) return res.status(404).json({ message: 'Class session not found' });
+    if (!['Admin', 'Super Admin'].includes(req.user.role) && String(session.trainer) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'This session belongs to another trainer' });
+    }
+    session.isActive = false;
+    await session.save();
+    return res.json({ message: 'Class session closed', session });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -622,7 +616,7 @@ export const getTrainerDashboardStats = async (req, res) => {
 
       const bulkStats = await calculateBulkStudentsAttendance(studentIds, dept);
       for (const sid of studentIds) {
-        const p = bulkStats[sid]?.attendancePercent ?? 100;
+        const p = bulkStats.get(String(sid))?.attendancePercent ?? 100;
         totalAttendancePercent += p;
         validStudentsCount++;
       }
@@ -632,14 +626,13 @@ export const getTrainerDashboardStats = async (req, res) => {
       : 100;
 
     // Present / Absent Today
-    // Match today's records (normalized to midnight in local time context of database)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Match both IST and legacy UTC-midnight records for today's calendar day.
+    const today = attendanceDayStart(new Date());
 
     const todayRecords = await Attendance.find({
       batch: { $in: targetBatchIds },
       student: { $in: studentIds },
-      date: today
+      date: attendanceDayRange(today)
     })
     .populate('student', 'name email')
     .populate('batch', 'name')
@@ -654,14 +647,10 @@ export const getTrainerDashboardStats = async (req, res) => {
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weeklyData = [];
     for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
+      const d = new Date(today.getTime() - i * 86400000);
 
       const dayRecords = attendanceRecords.filter(rec => {
-        const recDate = new Date(rec.date);
-        recDate.setHours(0, 0, 0, 0);
-        return recDate.getTime() === d.getTime();
+        return attendanceDateKey(rec.date) === attendanceDateKey(d);
       });
 
       const dayPresent = dayRecords.filter(r => r.status === 'Present').length;
@@ -669,8 +658,8 @@ export const getTrainerDashboardStats = async (req, res) => {
       const dayAbsent = dayRecords.filter(r => r.status === 'Absent').length;
 
       weeklyData.push({
-        day: daysOfWeek[d.getDay()],
-        date: d.toISOString().split('T')[0],
+        day: daysOfWeek[new Date(attendanceDateKey(d)).getUTCDay()],
+        date: attendanceDateKey(d),
         Present: dayPresent,
         Late: dayLate,
         Absent: dayAbsent,
@@ -680,8 +669,8 @@ export const getTrainerDashboardStats = async (req, res) => {
     // Monthly Attendance (last 6 months counts)
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyData = [];
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const currentMonth = Number(attendanceDateKey(today).slice(5, 7)) - 1;
+    const currentYear = Number(attendanceDateKey(today).slice(0, 4));
 
     for (let i = 5; i >= 0; i--) {
       const m = (currentMonth - i + 12) % 12;
@@ -699,9 +688,9 @@ export const getTrainerDashboardStats = async (req, res) => {
 
     attendanceRecords.forEach(rec => {
       if (rec.date) {
-        const recDate = new Date(rec.date);
-        const recMonth = recDate.getMonth();
-        const recYear = recDate.getFullYear();
+        const recKey = attendanceDateKey(rec.date);
+        const recMonth = Number(recKey.slice(5, 7)) - 1;
+        const recYear = Number(recKey.slice(0, 4));
 
         const bucket = monthlyData.find(b => b.monthIndex === recMonth && b.year === recYear);
         if (bucket) {
@@ -781,11 +770,10 @@ export const getBatchAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Date is required' });
     }
 
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = parseNormalizedDate(date);
+    if (!startOfDay) return res.status(400).json({ message: 'Invalid attendance date' });
 
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    const endOfDay = attendanceDayEnd(startOfDay);
 
     const query = {
       date: { $gte: startOfDay, $lte: endOfDay }

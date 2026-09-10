@@ -1,3 +1,4 @@
+import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey } from '../utils/attendanceDate.js';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Enrollment from '../models/Enrollment.js';
@@ -6,8 +7,7 @@ import AttendanceSession from '../models/AttendanceSession.js';
 import Holiday from '../models/Holiday.js';
 
 // Get current date string (YYYY-MM-DD) and time in Asia/Kolkata timezone
-export const getKolkataDateAndTime = () => {
-  const now = new Date();
+export const getKolkataDateAndTime = (now = new Date()) => {
   const kolkataStr = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
   const kolkataDate = new Date(kolkataStr);
 
@@ -39,8 +39,8 @@ export const autoCloseAttendanceForToday = async () => {
     // Rule 2: Skip Institute Holidays
     const isHoliday = await Holiday.findOne({
       date: {
-        $gte: new Date(`${dateISO}T00:00:00.000Z`),
-        $lte: new Date(`${dateISO}T23:59:59.999Z`)
+        $gte: attendanceDayStart(dateISO),
+        $lte: attendanceDayEnd(dateISO)
       }
     });
 
@@ -49,7 +49,7 @@ export const autoCloseAttendanceForToday = async () => {
       return { status: 'skipped', reason: 'holiday' };
     }
 
-    const todayDate = new Date(`${dateISO}T00:00:00.000Z`);
+    const todayDate = attendanceDayStart(dateISO);
 
     // Find admin user to attribute auto-close records
     let systemUser = await User.findOne({ role: { $in: ['Admin', 'Super Admin'] } });
@@ -63,29 +63,32 @@ export const autoCloseAttendanceForToday = async () => {
 
       // Rule 3: No-Training-Day Protection
       // Check if at least 1 student scanned or 1 session was active for this department today
-      const hasScans = await Attendance.findOne({
+      const scans = await Attendance.find({
         subject: subjectRegex,
-        date: { $gte: todayDate, $lte: new Date(`${dateISO}T23:59:59.999Z`) },
+        date: { $gte: todayDate, $lte: attendanceDayEnd(dateISO) },
         status: { $in: ['Present', 'Late'] }
-      });
+      }).select('batch').lean();
 
-      const hasSession = await AttendanceSession.findOne({
+      const sessions = await AttendanceSession.find({
         $or: [{ subject: subjectRegex }, { category: subjectRegex }],
-        createdAt: { $gte: todayDate, $lte: new Date(`${dateISO}T23:59:59.999Z`) }
-      });
+        createdAt: { $gte: todayDate, $lte: attendanceDayEnd(dateISO) }
+      }).select('batch').lean();
 
-      if (!hasScans && !hasSession) {
+      if (scans.length === 0 && sessions.length === 0) {
         console.log(`[6PM Cron] No Training Day detected for ${dept} on ${dateISO} - No auto absences created.`);
         continue; // Skip department
       }
 
-      // Find all active enrollments for this department valid on today's date
+      const conductedBatches = [...new Set([...scans, ...sessions].filter(row => row.batch).map(row => String(row.batch)))];
+
+      // Only students in batches that actually held training are eligible.
       const enrollments = await Enrollment.find({
         department: dept,
+        batchId: { $in: conductedBatches },
         status: 'Active',
         $or: [
           { startDate: null },
-          { startDate: { $lte: new Date(`${dateISO}T23:59:59.999Z`) } }
+          { startDate: { $lte: attendanceDayEnd(dateISO) } }
         ],
         $and: [
           {
@@ -105,7 +108,7 @@ export const autoCloseAttendanceForToday = async () => {
       const existingLogs = await Attendance.find({
         student: { $in: studentIds },
         subject: subjectRegex,
-        date: { $gte: todayDate, $lte: new Date(`${dateISO}T23:59:59.999Z`) }
+        date: { $gte: todayDate, $lte: attendanceDayEnd(dateISO) }
       }).lean();
 
       const scannedStudentSet = new Set(existingLogs.map(l => l.student.toString()));
@@ -113,6 +116,8 @@ export const autoCloseAttendanceForToday = async () => {
       const absentBulkOps = [];
       enrollments.forEach(e => {
         const sId = e.studentId.toString();
+        const enrolledOn = attendanceDateKey(e.startDate || e.enrolledAt || e.createdAt);
+        if (enrolledOn && enrolledOn > dateISO) return;
         if (!scannedStudentSet.has(sId)) {
           scannedStudentSet.add(sId);
           absentBulkOps.push({
@@ -120,11 +125,14 @@ export const autoCloseAttendanceForToday = async () => {
               filter: {
                 student: e.studentId,
                 batch: e.batchId,
-                date: todayDate,
+                date: attendanceDayRange(todayDate),
                 subject: dept
               },
               update: {
                 $setOnInsert: {
+                  date: todayDate,
+                  course: dept,
+                  attendanceMode: 'MANUAL',
                   status: 'Absent',
                   remarks: 'Auto-closed at 6:00 PM IST',
                   markedBy: systemUserId
@@ -142,6 +150,11 @@ export const autoCloseAttendanceForToday = async () => {
       }
     }
 
+    await AttendanceSession.updateMany({
+      isActive: true,
+      startTime: { $lte: new Date(`${dateISO}T18:00:00+05:30`) }
+    }, { $set: { isActive: false } });
+
     console.log(`[6PM Cron] Successfully closed attendance for ${dateISO}. Auto-absent records logged: ${autoAbsentCount}`);
     return { status: 'success', dateISO, autoAbsentCount };
   } catch (error) {
@@ -153,24 +166,28 @@ export const autoCloseAttendanceForToday = async () => {
 /**
  * Initializes minute-based scheduler for 6:00 PM IST execution
  */
-let hasRunToday = false;
+// Same-day catch-up after restart; writes are insert-only and safe to retry.
+export const createAttendanceSchedulerTick = (run = autoCloseAttendanceForToday, clock = getKolkataDateAndTime) => {
+  let completedDate = null;
+  let running = false;
+  return async () => {
+    const { hours, dateISO } = clock();
+    if (running || hours < 18 || completedDate === dateISO) return;
+    running = true;
+    try {
+      const result = await run();
+      if (result?.status === 'success' || result?.status === 'skipped') completedDate = dateISO;
+    } catch (error) {
+      console.error('[6PM Cron Retry]:', error.message);
+    } finally {
+      running = false;
+    }
+  };
+};
 
 export const initAttendanceCronJob = () => {
-  console.log('⏰ Initialized 6:00 PM IST Attendance Auto-Close Scheduler.');
-
-  setInterval(async () => {
-    const { hours, minutes, dateISO } = getKolkataDateAndTime();
-
-    // Reset flag at midnight IST (00:00)
-    if (hours === 0 && minutes === 0) {
-      hasRunToday = false;
-    }
-
-    // Trigger auto-close at 6:00 PM IST (18:00)
-    if (hours === 18 && minutes === 0 && !hasRunToday) {
-      hasRunToday = true;
-      console.log(`⏰ Triggering 6:00 PM IST Attendance Auto-Close for ${dateISO}...`);
-      await autoCloseAttendanceForToday();
-    }
-  }, 60000); // Check every 60 seconds
+  console.log('Initialized 6:00 PM IST Attendance Auto-Close Scheduler.');
+  const tick = createAttendanceSchedulerTick();
+  void tick();
+  return setInterval(tick, 60000);
 };

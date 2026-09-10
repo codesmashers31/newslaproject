@@ -1,0 +1,42 @@
+# Attendance gap fixes — 10 September 2026
+
+This change fixes implementation defects without replacing the existing attendance policy. No database migration, deletion, seed, or historical attendance correction was performed. All existing routes remain available.
+
+## Fixed
+
+| Gap | Result |
+| --- | --- |
+| Closing the QR display left the database session active | A server close endpoint deactivates the session; the screen only confirms success after the server responds. |
+| Another trainer could request a session's QR | QR retrieval and closure require the session owner or an administrator. |
+| Trainer dashboard read a Map as an object | The dashboard now reads the actual computed percentage. Legitimate zero percentages are also preserved in student-list fields. |
+| Two QR endpoints applied different eligibility and timing rules | Both call the existing web/mobile scan implementation. The general attendance endpoint retains its response envelope and now accepts the same compact tokens. |
+| Student attendance lookup allowed access to another student's ID | Students can read their own records; existing trainer and administrator access remains available. |
+| Scan route had no role restriction in the general attendance router | It now permits the same Student/Admin/Super Admin roles as the existing student scan router. |
+| Date normalization depended on host timezone | Attendance writes, daily matching, date formatting, dashboard buckets, and date-filter endpoints use IST calendar days. Daily ranges include older UTC-midnight records without migration. |
+| 6 PM job used department-wide activity to select students | It now restricts eligible enrollment batches to those with a session or Present/Late activity. Existing cross-batch records still prevent automatic absence in the student's department. |
+| 6 PM job did not deactivate sessions | It deactivates active sessions started on or before that day's 6 PM cutoff after successful processing. Weekend and holiday exemptions remain. |
+| Scheduler missed the whole day after a late start or a failed run | It catches up after 6 PM on the current day and retries failures, with an in-process overlap guard. Automatic attendance writes remain insert-only. |
+| Bulk submission counted modified records twice | Successful count is inserted plus matched records. |
+| Only the older pure attendance formula had tests | Added regression tests exercising the active scan controllers, attendance service, dashboard, access middleware, and scheduler using mocked database operations. Original tests remain. |
+
+## Existing policy preserved
+
+- Scan timing: elapsed whole minutes 0–10 Present, 11–20 Late, 21+ Absent.
+- Technical requires exact-batch enrollment; Communication and Aptitude allow department-level cross-batch scanning.
+- QR refresh remains 15 seconds; compact-token validity remains 150 seconds. Invalid future-dated tokens are rejected.
+- Training targets remain Communication 80, Aptitude 120, Technical 80.
+- Current percentage formulas, Late handling, leave policy, three-department averaging, and elapsed-weekday/domain fallback remain in place.
+- Wi-Fi verification and strict device binding stay disabled, as explicitly documented by the existing code.
+- Manual attendance, history, notifications, and scan audit logs remain supported.
+
+These preserved policies can still produce different figures between the general attendance summary, department dashboards, and the older fixed-target formula. Consolidating those formulas or removing fallback days would require choosing a business rule and is outside this corrective change.
+
+## Validation and limitations
+
+- 70 backend tests passed in both UTC and Asia/Kolkata server timezones.
+- Frontend production build passed; Vite reported a large-bundle warning.
+- Tests use model mocks and do not connect to the database or write real student records.
+- Camera scanning on a real device and authenticated UI workflows were not exercised.
+- Scheduler catch-up is same-day only. It does not backfill historical days or provide a persistent multi-server job lock.
+- Historical duplicate or incorrect records are retained. This patch does not repair or remove them.
+- Three root ZIP files were already marked deleted in Git before this work; that pre-existing state was left untouched.

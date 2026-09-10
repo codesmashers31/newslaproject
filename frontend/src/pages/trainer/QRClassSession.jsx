@@ -118,11 +118,20 @@ const QRClassSession = () => {
     }
   };
 
-  const handleCloseSession = () => {
-    setActiveSession(null);
-    setQrToken('');
-    if (timerRef.current) clearInterval(timerRef.current);
-    toast.success('Class session closed');
+  const handleCloseSession = async () => {
+    if (!activeSession || loading) return;
+    setLoading(true);
+    try {
+      await API.post(`/trainer/session/${activeSession._id}/close`);
+      setActiveSession(null);
+      setQrToken('');
+      if (timerRef.current) clearInterval(timerRef.current);
+      toast.success('Class session closed');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to close class session');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const qrImageUrl = qrToken

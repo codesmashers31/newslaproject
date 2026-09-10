@@ -1,3 +1,4 @@
+import { attendanceDayStart, attendanceDayEnd, attendanceDayRange, attendanceDateKey } from '../utils/attendanceDate.js';
 import crypto from 'crypto';
 import Student from '../models/Student.js';
 import User from '../models/User.js';
@@ -191,8 +192,8 @@ export const getStudentDashboard = async (req, res) => {
     const presentDays = attendanceRecords.filter(a => a.status === 'Present' || a.status === 'Late').length;
 
     const today = new Date();
-    const startOfToday = new Date(today.setHours(0,0,0,0));
-    const endOfToday = new Date(today.setHours(23,59,59,999));
+    const startOfToday = attendanceDayStart(today);
+    const endOfToday = attendanceDayEnd(today);
     const todayRecords = attendanceRecords.filter(r => {
       const rDate = new Date(r.date);
       return rDate >= startOfToday && rDate <= endOfToday;
@@ -203,7 +204,7 @@ export const getStudentDashboard = async (req, res) => {
     const monthlyAttendance = Array(12).fill(0).map((_, i) => ({ month: months[i], Present: 0, Absent: 0, Late: 0 }));
     attendanceRecords.forEach(rec => {
       if (rec.date) {
-        const m = new Date(rec.date).getMonth();
+        const m = Number(attendanceDateKey(rec.date).slice(5, 7)) - 1;
         if (rec.status === 'Present') monthlyAttendance[m].Present += 1;
         if (rec.status === 'Absent') monthlyAttendance[m].Absent += 1;
         if (rec.status === 'Late') monthlyAttendance[m].Late += 1;
@@ -709,7 +710,7 @@ export const scanQR = async (req, res) => {
             const [sessId, bId, tsStr] = rawPayload.split('_');
             const ts = parseInt(tsStr, 10) * 1000;
             // 2.5 minutes validity window (150 seconds)
-            if (Date.now() - ts <= 150000) {
+            if (Number.isFinite(ts) && Date.now() >= ts && Date.now() - ts <= 150000) {
               const sessionDoc = await AttendanceSession.findById(sessId).lean();
               if (sessionDoc && sessionDoc.isActive) {
                 decoded = {
@@ -827,15 +828,15 @@ export const scanQR = async (req, res) => {
 
     // 5. Verify student has not marked attendance for this subject today
     // This ensures only ONE entry per day for Communication, ONE for Aptitude, etc.
-    const startOfDay = new Date(new Date(session.startTime).setHours(0,0,0,0));
-    const endOfDay = new Date(new Date(session.startTime).setHours(23,59,59,999));
+    const startOfDay = attendanceDayStart(session.startTime);
+    const endOfDay = attendanceDayEnd(session.startTime);
 
     const existingAttendance = await Attendance.findOne({
       student: studentId,
       subject: session.subject,
       date: {
         $gte: startOfDay,
-        $lt: endOfDay
+        $lte: endOfDay
       }
     });
 
@@ -908,8 +909,7 @@ export const scanQR = async (req, res) => {
     }
 
     // 7. Normalize date and subject for reliable web dashboard matching & auto-close updates
-    const normalizedDate = new Date(session.startTime || scanTime);
-    normalizedDate.setHours(0, 0, 0, 0);
+    const normalizedDate = attendanceDayStart(session.startTime || scanTime);
 
     let normSubject = 'Technical';
     if (session.subject?.includes('Communication')) normSubject = 'Communication';
@@ -921,7 +921,7 @@ export const scanQR = async (req, res) => {
     // Check if they already scanned successfully today
     const existingRecord = await Attendance.findOne({
       student: studentId,
-      date: normalizedDate,
+      date: attendanceDayRange(normalizedDate),
       subject: normSubject,
       status: { $in: ['Present', 'Late'] }
     });
@@ -942,7 +942,7 @@ export const scanQR = async (req, res) => {
     const attendance = await Attendance.findOneAndUpdate(
       { 
         student: studentId, 
-        date: normalizedDate, 
+        date: attendanceDayRange(normalizedDate),
         subject: normSubject 
       },
       {
