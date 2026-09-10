@@ -193,6 +193,7 @@ test('auto-close keeps the holiday exemption', async () => {
 });
 
 const setupStats = () => {
+  jest.spyOn(User, 'find').mockReturnValue(chain([]));
   const batch = { _id: batchId, name: 'Test', students: [{ _id: studentId, role: 'Student', name: 'Test Student' }] };
   jest.spyOn(Batch, 'find').mockReturnValue(chain([batch]));
   jest.spyOn(Enrollment, 'find').mockReturnValue(chain([{ studentId, batchId: batch, startDate: '2026-09-09' }]));
@@ -217,6 +218,26 @@ test('live calculation retains conducted-day percentage and 80-day progress targ
   Attendance.find.mockReturnValue(chain([{ student: studentId, batch: batchId, date: new Date('2026-09-09T00:00:00Z'), status: 'Late' }]));
   const result = (await calculateBulkStudentsAttendance([studentId], 'Communication')).get(String(studentId));
   expect(result).toMatchObject({ presentCount: 1, absentCount: 1, trainingDay: 2, attendancePercent: 50, totalTrainingDays: 80, progressPercent: 2.5 });
+});
+
+test('reset enrollment start date excludes old sessions and begins at day one', async () => {
+  setupStats();
+  Enrollment.find.mockReturnValue(chain([{ studentId, batchId: { _id: batchId }, startDate: attendanceDayStart(new Date()) }]));
+  const result = (await calculateBulkStudentsAttendance([studentId], 'Communication')).get(String(studentId));
+  expect(result.startDate).toBe('10 Sept 2026');
+  expect(result.trainingDay).toBe(1);
+  expect(result.presentCount).toBe(0);
+});
+
+test('student reset baseline remains stable without an active department enrollment', async () => {
+  setupStats();
+  Enrollment.find.mockReturnValue(chain([]));
+  AttendanceSession.find.mockReturnValue(chain([]));
+  User.find.mockReturnValue(chain([{ _id: studentId, attendanceStartDate: attendanceDayStart(new Date()) }]));
+  jest.setSystemTime(new Date('2026-09-11T09:00:00+05:30'));
+  const result = (await calculateBulkStudentsAttendance([studentId], 'Technical')).get(String(studentId));
+  expect(result.startDate).toBe('10 Sept 2026');
+  expect(result.trainingDay).toBe(2);
 });
 
 test('bulk result does not count modified records twice', async () => {

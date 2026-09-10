@@ -77,7 +77,7 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
 
   // 1. Fetch Student & Active Enrollments
   const [studentUser, enrollments, holidays] = await Promise.all([
-    User.findById(sObjectId).select('name email slaeId phone role status').lean(),
+    User.findById(sObjectId).select('name email slaeId phone role status createdAt attendanceStartDate').lean(),
     Enrollment.find({ studentId: sObjectId, status: 'Active' })
       .populate('batchId', 'name course schedule startDate endDate trainers')
       .lean(),
@@ -140,7 +140,7 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     }
   });
 
-  const rawStartDate = startDate || enrollments[0]?.startDate || enrollments[0]?.enrolledAt || enrollments[0]?.createdAt || studentUser?.createdAt || new Date();
+  const rawStartDate = startDate || enrollments[0]?.startDate || studentUser.attendanceStartDate || enrollments[0]?.enrolledAt || enrollments[0]?.createdAt || studentUser?.createdAt || new Date();
   const rawEndDate = endDate || enrollments[0]?.completedAt || enrollments[0]?.endDate || null;
   const startDateISO = formatDateISO(rawStartDate);
   const endDateISO = rawEndDate ? formatDateISO(rawEndDate) : formatDateISO(new Date());

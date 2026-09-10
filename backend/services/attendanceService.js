@@ -45,7 +45,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
   });
 
   // 2. Fetch holidays, sessions, and attendance logs concurrently
-  const [holidays, sessions, allBatchAttendance, studentAttendanceLogs] = await Promise.all([
+  const [holidays, sessions, allBatchAttendance, studentAttendanceLogs, studentBaselines] = await Promise.all([
     Holiday.find().lean(),
     AttendanceSession.find({
       $or: [
@@ -69,8 +69,10 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
         { course: domainSubjectRegex },
         { batch: { $in: batchIdList } }
       ]
-    }).lean()
+    }).lean(),
+    User.find({ _id: { $in: objectStudentIds } }).select('attendanceStartDate').lean()
   ]);
+  const baselineMap = new Map(studentBaselines.map(student => [String(student._id), student.attendanceStartDate]));
 
   const holidaySet = new Set();
   (holidays || []).forEach(h => {
@@ -123,7 +125,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
     const sId = rawId.toString();
     const enrollment = enrollmentMap.get(sId);
     
-    let rawStartDate = enrollment?.startDate || enrollment?.enrolledAt || enrollment?.createdAt || new Date();
+    let rawStartDate = enrollment?.startDate || baselineMap.get(sId) || enrollment?.enrolledAt || enrollment?.createdAt || new Date();
     const rawEndDate = enrollment?.completedAt || enrollment?.endDate || null;
     const startDateISO = formatDateISO(rawStartDate);
     const endDateISO = rawEndDate ? formatDateISO(rawEndDate) : todayStr;

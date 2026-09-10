@@ -47,7 +47,7 @@ export const getStudentDashboard = async (req, res) => {
       Student.findOne({ user: studentId })
         .populate('user', 'name email mobile role slaeId isBatchesLocked isTechnicalLocked isAptitudeLocked photo')
         .lean(),
-      User.findById(studentId).select('name email mobile role slaeId isBatchesLocked isTechnicalLocked isAptitudeLocked photo').lean(),
+      User.findById(studentId).select('name email mobile role slaeId isBatchesLocked isTechnicalLocked isAptitudeLocked photo attendanceStartDate').lean(),
       Placement.findOne({ student: studentId }).lean(),
       Enrollment.find({ studentId, status: 'Active' })
         .populate({
@@ -345,6 +345,7 @@ export const getStudentDashboard = async (req, res) => {
       communicationSummary: commSummary,
       aptitudeSummary: aptiSummary,
       technicalSummary: calculatedScores.techAtt || { attendancePercent: 0 },
+      attendanceStartDate: userDoc?.attendanceStartDate || enrollments[0]?.startDate || null,
       attendance: {
         percentage: attendancePercent,
         totalClasses: totalDays,

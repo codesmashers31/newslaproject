@@ -97,6 +97,11 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  // Attendance baseline can be reset without changing account creation history.
+  attendanceStartDate: {
+    type: Date,
+    default: null,
+  },
 });
 
 // Indexes for high-performance querying and bulk operations

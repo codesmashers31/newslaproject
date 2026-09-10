@@ -39,6 +39,12 @@ export default function TrainingScreen() {
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
   const [dashData, setDashData] = useState<any>(null);
   
+  const attendanceStartLabel = dashData?.attendanceStartDate
+    ? new Date(dashData.attendanceStartDate).toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric'
+      })
+    : 'N/A';
+
   // Modals
   const [techModalVisible, setTechModalVisible] = useState(false);
   const [aptiModalVisible, setAptiModalVisible] = useState(false);
@@ -349,7 +355,7 @@ export default function TrainingScreen() {
         {/* 2. COMMUNICATION SKILLS CARD */}
         {(() => {
           const stats = commBatch?.attendanceStats || dashData?.communicationSummary || {
-            startDate: '14-Aug-2026',
+            startDate: attendanceStartLabel,
             trainingDay: 0,
             totalTrainingDays: 80,
             presentCount: 0,
@@ -392,7 +398,7 @@ export default function TrainingScreen() {
                       <View className="items-end flex-shrink max-w-[40%]">
                         <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
                         <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                          {stats.startDate || '14-Aug-2026'}
+                          {stats.startDate || attendanceStartLabel}
                         </Text>
                       </View>
                     </View>
@@ -439,7 +445,7 @@ export default function TrainingScreen() {
         {/* 3. APTITUDE & REASONING CARD */}
         {(() => {
           const stats = aptiBatch?.attendanceStats || dashData?.aptitudeSummary || {
-            startDate: '14-Aug-2026',
+            startDate: attendanceStartLabel,
             trainingDay: 0,
             totalTrainingDays: 120,
             presentCount: 0,
@@ -482,7 +488,7 @@ export default function TrainingScreen() {
                       <View className="items-end flex-shrink max-w-[40%]">
                         <Text className="text-[#64748B] text-[10px] font-bold uppercase">Start Date</Text>
                         <Text className="text-[#0F172A] text-xs font-black mt-0.5">
-                          {stats.startDate || '14-Aug-2026'}
+                          {stats.startDate || attendanceStartLabel}
                         </Text>
                       </View>
                     </View>

@@ -9,6 +9,12 @@ const StudentTrainingPage = () => {
   const [availableBatches, setAvailableBatches] = useState([]);
   const [dashData, setDashData] = useState(null);
 
+  const attendanceStartLabel = dashData?.attendanceStartDate
+    ? new Date(dashData.attendanceStartDate).toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric'
+      })
+    : 'N/A';
+
   // Modals
   const [techModalVisible, setTechModalVisible] = useState(false);
   const [aptiModalVisible, setAptiModalVisible] = useState(false);
@@ -242,7 +248,7 @@ const StudentTrainingPage = () => {
             <div className="flex flex-col gap-3">
               {techBatches.map((item, index) => {
                 const stats = item.attendanceStats || dashData?.technicalSummary || {
-                  startDate: '14-Aug-2026', trainingDay: 0, totalTrainingDays: 80, presentCount: 0, absentCount: 0, remainingDays: 80, attendancePercent: 100, progressPercent: 0
+                  startDate: attendanceStartLabel, trainingDay: 0, totalTrainingDays: 80, presentCount: 0, absentCount: 0, remainingDays: 80, attendancePercent: 100, progressPercent: 0
                 };
                 return (
                   <div key={item._id || index} className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-3">
@@ -314,7 +320,7 @@ const StudentTrainingPage = () => {
         {/* 2. COMMUNICATION SKILLS CARD */}
         {(() => {
           const stats = commBatch?.attendanceStats || dashData?.communicationSummary || {
-            startDate: '14-Aug-2026', trainingDay: 0, totalTrainingDays: 80, presentCount: 0, absentCount: 0, remainingDays: 80, attendancePercent: 100, progressPercent: 0
+            startDate: attendanceStartLabel, trainingDay: 0, totalTrainingDays: 80, presentCount: 0, absentCount: 0, remainingDays: 80, attendancePercent: 100, progressPercent: 0
           };
           return (
             <div className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm transition-all hover:shadow-md">
@@ -351,7 +357,7 @@ const StudentTrainingPage = () => {
                     </div>
                     <div className="shrink-0 md:text-right">
                       <span className="text-[#64748B] text-[10px] font-bold uppercase block">Start Date</span>
-                      <span className="text-[#0F172A] text-sm font-black block mt-1">{stats.startDate || '14-Aug-2026'}</span>
+                      <span className="text-[#0F172A] text-sm font-black block mt-1">{stats.startDate || attendanceStartLabel}</span>
                     </div>
                   </div>
                   
@@ -390,7 +396,7 @@ const StudentTrainingPage = () => {
         {/* 3. APTITUDE & REASONING CARD */}
         {(() => {
           const stats = aptiBatch?.attendanceStats || dashData?.aptitudeSummary || {
-            startDate: '14-Aug-2026', trainingDay: 0, totalTrainingDays: 120, presentCount: 0, absentCount: 0, remainingDays: 120, attendancePercent: 100, progressPercent: 0
+            startDate: attendanceStartLabel, trainingDay: 0, totalTrainingDays: 120, presentCount: 0, absentCount: 0, remainingDays: 120, attendancePercent: 100, progressPercent: 0
           };
           return (
             <div className="bg-white border border-[#E2E8F0] rounded-3xl p-5 shadow-sm transition-all hover:shadow-md mb-4">
@@ -427,7 +433,7 @@ const StudentTrainingPage = () => {
                     </div>
                     <div className="shrink-0 md:text-right">
                       <span className="text-[#64748B] text-[10px] font-bold uppercase block">Start Date</span>
-                      <span className="text-[#0F172A] text-sm font-black block mt-1">{stats.startDate || '14-Aug-2026'}</span>
+                      <span className="text-[#0F172A] text-sm font-black block mt-1">{stats.startDate || attendanceStartLabel}</span>
                     </div>
                   </div>
                   

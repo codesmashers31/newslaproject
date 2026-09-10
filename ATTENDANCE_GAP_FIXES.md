@@ -40,3 +40,20 @@ These preserved policies can still produce different figures between the general
 - Scheduler catch-up is same-day only. It does not backfill historical days or provide a persistent multi-server job lock.
 - Historical duplicate or incorrect records are retained. This patch does not repair or remove them.
 - Three root ZIP files were already marked deleted in Git before this work; that pre-existing state was left untouched.
+
+## Subsequent user-authorized reset — 10 September 2026
+
+The user subsequently requested removal of attendance records and a new first day for all students. The reset was executed separately from the corrective patch above, in one MongoDB transaction:
+
+- Removed 680 attendance records and 1,285 scan audit records; verified zero remained immediately afterward.
+- Set the attendance baseline of all 93 students and the start date of all 246 active enrollments to 10 September 2026, midnight IST.
+- Updated the start date of the 13 batches referenced by active enrollments.
+- Closed two active QR sessions; retained all 36 session documents.
+- Preserved all four completed enrollments, account creation dates, other data, collections, and indexes.
+- Saved and validated an EJSON recovery snapshot outside the repository before writing.
+
+The web and mobile training screens now use backend-provided dates instead of hard-coded August fallbacks. A student-level baseline preserves the reset date even when a department has no active enrollment. Verified all 93 students report Day 1 in all three departments. Both local and live student dashboard APIs returned zero history records.
+
+The pre-existing weekday fallback still calculates an unmarked current day as Absent; that calculated value is not an old attendance record. Attendance policy was not changed by this reset.
+
+Validation: 72 backend tests, frontend build, and mobile TypeScript check passed. The reset script defaults to a read-only preview and is never invoked by application startup or deployment.
