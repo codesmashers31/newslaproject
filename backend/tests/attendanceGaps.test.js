@@ -163,7 +163,7 @@ test('auto-close scopes enrollment to conducted batches and preserves existing r
   jest.spyOn(Attendance, 'bulkWrite').mockResolvedValue({ upsertedCount: 1 });
   const result = await autoCloseAttendanceForToday();
   expect(result.status).toBe('success');
-  for (const [query] of Enrollment.find.mock.calls) expect(query.batchId.$in).toEqual([String(batchId)]);
+  for (const [query] of Enrollment.find.mock.calls.filter(([q]) => q.department !== 'Technical')) expect(query.batchId.$in).toEqual([String(batchId)]);
   for (const [ops] of Attendance.bulkWrite.mock.calls) {
     expect(ops).toHaveLength(1);
     expect(ops[0].updateOne.filter.student).toEqual(studentId);
@@ -174,6 +174,7 @@ test('auto-close scopes enrollment to conducted batches and preserves existing r
 });
 
 test('auto-close creates no absences when no batch held training', async () => {
+  jest.spyOn(Enrollment, 'find').mockReturnValue(chain([]));
   jest.spyOn(Holiday, 'findOne').mockResolvedValue(null);
   jest.spyOn(User, 'findOne').mockResolvedValue({ _id: trainerId });
   jest.spyOn(Attendance, 'find').mockReturnValue(chain([]));

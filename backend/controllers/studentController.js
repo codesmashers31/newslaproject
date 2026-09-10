@@ -269,7 +269,7 @@ export const getStudentDashboard = async (req, res) => {
       let attStats = null;
       if (dept.includes('comm')) attStats = calculatedScores.commAtt;
       else if (dept.includes('apti')) attStats = calculatedScores.aptiAtt;
-      else attStats = calculatedScores.techAtt;
+      else attStats = calculatedScores.techAtt?.batches?.find(stats => String(stats.batchId) === String(b._id)) || calculatedScores.techAtt;
 
       // Ensure we don't return an empty object that bypasses the && check
       if (attStats && Object.keys(attStats).length === 0) {
@@ -834,6 +834,7 @@ export const scanQR = async (req, res) => {
 
     const existingAttendance = await Attendance.findOne({
       student: studentId,
+      ...(targetDept === 'Technical' ? { batch: sessionBatch._id } : {}),
       subject: session.subject,
       date: {
         $gte: startOfDay,
@@ -922,6 +923,7 @@ export const scanQR = async (req, res) => {
     // Check if they already scanned successfully today
     const existingRecord = await Attendance.findOne({
       student: studentId,
+      ...(targetDept === 'Technical' ? { batch: sessionBatch._id } : {}),
       date: attendanceDayRange(normalizedDate),
       subject: normSubject,
       status: { $in: ['Present', 'Late'] }
@@ -943,6 +945,7 @@ export const scanQR = async (req, res) => {
     const attendance = await Attendance.findOneAndUpdate(
       { 
         student: studentId, 
+        ...(targetDept === 'Technical' ? { batch: sessionBatch._id } : {}),
         date: attendanceDayRange(normalizedDate),
         subject: normSubject 
       },

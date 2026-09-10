@@ -248,7 +248,7 @@ const StudentTrainingPage = () => {
             <div className="flex flex-col gap-3">
               {techBatches.map((item, index) => {
                 const stats = item.attendanceStats || dashData?.technicalSummary || {
-                  startDate: attendanceStartLabel, trainingDay: 0, totalTrainingDays: 80, presentCount: 0, absentCount: 0, remainingDays: 80, attendancePercent: 100, progressPercent: 0
+                  startDate: attendanceStartLabel, trainingDay: 0, totalTrainingDays: 0, presentCount: 0, absentCount: 0, remainingDays: 0, attendancePercent: 100, progressPercent: 0
                 };
                 return (
                   <div key={item._id || index} className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-3">
@@ -290,14 +290,15 @@ const StudentTrainingPage = () => {
                     </div>
 
                     <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-2 flex flex-col gap-3">
+                      {stats.configurationRequired && <p className="text-xs text-amber-700">Set this batch’s start and end dates to calculate attendance.</p>}
                       <div className="flex justify-between items-center border-b border-slate-200/60 pb-3">
                         <span className="text-slate-600 text-xs font-extrabold">Training Day</span>
-                        <span className="text-slate-900 text-sm font-black">Day {stats.trainingDay || 0} / {stats.totalTrainingDays || 80}</span>
+                        <span className="text-slate-900 text-sm font-black">Day {stats.trainingDay || 0} / {stats.totalTrainingDays ?? 0}</span>
                       </div>
                       <div className="flex justify-between items-center pt-1">
                         <span className="text-slate-500 text-[11px]">Present: <strong className="font-extrabold text-emerald-600 text-xs">{stats.presentCount || 0}</strong></span>
                         <span className="text-slate-500 text-[11px]">Absent: <strong className="font-extrabold text-rose-500 text-xs">{stats.absentCount || 0}</strong></span>
-                        <span className="text-slate-500 text-[11px]">Remaining: <strong className="font-extrabold text-slate-800 text-xs">{stats.remainingDays ?? 80}</strong></span>
+                        <span className="text-slate-500 text-[11px]">Remaining: <strong className="font-extrabold text-slate-800 text-xs">{stats.remainingDays ?? 0}</strong></span>
                       </div>
                       <div className="flex justify-between items-center border-t border-slate-200/60 pt-3 mt-1">
                         <div>

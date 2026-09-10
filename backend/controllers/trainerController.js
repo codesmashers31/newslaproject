@@ -257,11 +257,11 @@ export const getAssignedStudents = async (req, res) => {
         aptitudeAttendancePct: dept === 'Aptitude' ? (attStats.attendancePercent ?? 100) : 100,
         technicalAttendancePct: dept === 'Technical' ? (attStats.attendancePercent ?? 100) : 100,
         progress: attStats.progressPercent || 0,
-        trainingDay: attStats.trainingDay || 1,
-        totalTrainingDays: attStats.totalTrainingDays || (dept === 'Aptitude' ? 120 : 80),
+        trainingDay: dept === 'Technical' ? (attStats.trainingDay ?? 0) : attStats.trainingDay || 1,
+        totalTrainingDays: dept === 'Technical' ? (attStats.totalTrainingDays ?? 0) : attStats.totalTrainingDays || (dept === 'Aptitude' ? 120 : 80),
         presentCount: attStats.presentCount || 0,
         absentCount: attStats.absentCount || 0,
-        remainingDays: attStats.remainingDays || (dept === 'Aptitude' ? 120 : 80),
+        remainingDays: dept === 'Technical' ? (attStats.remainingDays ?? 0) : attStats.remainingDays || (dept === 'Aptitude' ? 120 : 80),
         attendanceStats: attStats,
         scores: studentScores,
       };
@@ -544,8 +544,11 @@ export const getTrainerDashboardStats = async (req, res) => {
       batchQuery.course = 'Technical Training';
     }
 
-    // Find batches where this trainer is assigned
-    const batches = await Batch.find(batchQuery).lean();
+    // Single populated query for batches & students
+    const batches = await Batch.find(batchQuery)
+      .populate('students', 'name email mobile status role')
+      .lean();
+
     const batchIds = batches.map(b => b._id);
 
     if (batches.length === 0) {
@@ -570,14 +573,16 @@ export const getTrainerDashboardStats = async (req, res) => {
       ? [selectedBatchId]
       : batchIds;
 
-    // Fetch batches populated with students
-    const activeBatches = await Batch.find({ _id: { $in: targetBatchIds } })
-      .populate('students', 'name email mobile status role')
-      .lean();
+    const targetBatches = batches.filter(b => targetBatchIds.some(tId => String(tId) === String(b._id)));
 
-    // Collect all students (unique)
+    // Collect all students (unique) and build name maps
     const studentMap = {};
-    activeBatches.forEach(b => {
+    const batchNameMap = new Map();
+    batches.forEach(b => {
+      batchNameMap.set(String(b._id), b.name);
+    });
+
+    targetBatches.forEach(b => {
       if (b.students) {
         b.students.forEach(s => {
           if (s.role !== 'Student') return;
@@ -594,54 +599,36 @@ export const getTrainerDashboardStats = async (req, res) => {
     });
     const studentsInBatches = Object.values(studentMap);
     const studentIds = Object.keys(studentMap);
+    const studentNameMap = new Map(studentsInBatches.map(s => [String(s._id), s.name]));
 
     // Total counts
     const totalStudents = studentsInBatches.length;
     const totalBatches = batches.length;
 
-    // Attendance stats
-    const attendanceRecords = await Attendance.find({ 
-      batch: { $in: targetBatchIds },
-      student: { $in: studentIds }
-    }).lean();
-
-    const totalAttendanceCount = attendanceRecords.length;
-    // Consistent dynamic calculation: average across trainer's active students in bulk
-    let totalAttendancePercent = 0;
-    let validStudentsCount = 0;
-    if (studentIds.length > 0) {
-      let dept = 'Technical';
-      if (req.user.role === 'Communication Trainer') dept = 'Communication';
-      else if (req.user.role === 'Aptitude Trainer') dept = 'Aptitude';
-
-      const bulkStats = await calculateBulkStudentsAttendance(studentIds, dept);
-      for (const sid of studentIds) {
-        const p = bulkStats.get(String(sid))?.attendancePercent ?? 100;
-        totalAttendancePercent += p;
-        validStudentsCount++;
-      }
-    }
-    const attendancePercentage = validStudentsCount > 0 
-      ? Math.round(totalAttendancePercent / validStudentsCount) 
-      : 100;
-
-    // Present / Absent Today
-    // Match both IST and legacy UTC-midnight records for today's calendar day.
+    // Attendance stats - fetch in parallel with lean projection
     const today = attendanceDayStart(new Date());
 
-    const todayRecords = await Attendance.find({
-      batch: { $in: targetBatchIds },
-      student: { $in: studentIds },
-      date: attendanceDayRange(today)
-    })
-    .populate('student', 'name email')
-    .populate('batch', 'name')
-    .populate('markedBy', 'name')
-    .lean();
+    const [attendanceRecords, todayRecords] = await Promise.all([
+      Attendance.find({ 
+        batch: { $in: targetBatchIds },
+        student: { $in: studentIds }
+      }).select('batch student date status createdAt').lean(),
+      Attendance.find({
+        batch: { $in: targetBatchIds },
+        student: { $in: studentIds },
+        date: attendanceDayRange(today)
+      }).select('batch student status createdAt remarks').lean()
+    ]);
 
-    const presentToday = todayRecords.filter(a => a.status === 'Present').length;
-    const absentToday = todayRecords.filter(a => a.status === 'Absent').length;
-    const lateToday = todayRecords.filter(a => a.status === 'Late').length;
+    const totalAttendanceCount = attendanceRecords.length;
+    const presentRecordsCount = attendanceRecords.filter(r => ['Present', 'Late', 'PRESENT', 'LATE'].includes(r.status)).length;
+    const attendancePercentage = totalAttendanceCount > 0 
+      ? Math.round((presentRecordsCount / totalAttendanceCount) * 100) 
+      : 100;
+
+    const presentToday = todayRecords.filter(a => ['Present', 'PRESENT'].includes(a.status)).length;
+    const absentToday = todayRecords.filter(a => ['Absent', 'ABSENT'].includes(a.status)).length;
+    const lateToday = todayRecords.filter(a => ['Late', 'LATE'].includes(a.status)).length;
 
     // Weekly Attendance (last 7 days counts)
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -709,17 +696,17 @@ export const getTrainerDashboardStats = async (req, res) => {
       Absent: b.Absent,
     }));
 
-    // Today's detailed records for the Recent Attendance table
+    // Today's detailed records for the Recent Attendance table (instant in-memory map)
     const recentAttendance = todayRecords.map(rec => ({
       _id: rec._id,
-      studentId: rec.student?._id || '—',
-      studentName: rec.student?.name || '—',
-      batchName: rec.batch?.name || '—',
+      studentId: rec.student || '—',
+      studentName: studentNameMap.get(String(rec.student)) || '—',
+      batchName: batchNameMap.get(String(rec.batch)) || '—',
       attendanceStatus: rec.status,
       checkInTime: rec.createdAt 
         ? new Date(rec.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
         : '—',
-      trainer: rec.markedBy?.name || '—',
+      trainer: req.user.name || '—',
       remarks: rec.remarks || '—',
     }));
 

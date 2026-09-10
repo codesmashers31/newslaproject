@@ -354,16 +354,20 @@ const TrainerDashboard = () => {
     setLoading(true);
     try {
       const activeBatchId = bIdOverride !== undefined ? bIdOverride : selectedBatchId;
+      const targetBatchId = activeBatchId || 'all';
+      const statsUrl = (targetBatchId && targetBatchId !== 'all') ? `/trainer/dashboard-stats?batchId=${targetBatchId}` : '/trainer/dashboard-stats';
 
-      const [studentRes, batchRes, attRes] = await Promise.all([
+      const [studentRes, batchRes, attRes, statsRes] = await Promise.all([
         API.get(`/trainer/students?date=${attendanceDate}`),
         API.get('/trainer/batches'),
-        API.get(`/trainer/attendance?date=${attendanceDate}`)
+        API.get(`/trainer/attendance?date=${attendanceDate}`),
+        isCommunicationTrainer ? API.get(statsUrl).catch(() => ({ data: null })) : Promise.resolve({ data: null })
       ]);
 
       const data = studentRes.data || [];
       const batchData = batchRes.data || [];
       const attData = attRes.data || [];
+      if (statsRes?.data) setStats(statsRes.data);
 
       setAllBatches(batchData);
       setStudents(data);
@@ -414,15 +418,6 @@ const TrainerDashboard = () => {
       });
 
       setBatches(relevantBatches);
-
-      let targetBatchId = activeBatchId || 'all';
-
-      // Fetch dashboard stats for communication trainer
-      if (isCommunicationTrainer) {
-        const statsUrl = (targetBatchId && targetBatchId !== 'all') ? `/trainer/dashboard-stats?batchId=${targetBatchId}` : '/trainer/dashboard-stats';
-        const { data: statsData } = await API.get(statsUrl);
-        setStats(statsData);
-      }
     } catch (error) {
       console.error('Error loading trainer data:', error);
       toast.error('Failed to load students data');

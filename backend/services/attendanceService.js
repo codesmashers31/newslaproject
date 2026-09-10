@@ -5,6 +5,7 @@ import Enrollment from '../models/Enrollment.js';
 import Attendance from '../models/Attendance.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import Holiday from '../models/Holiday.js';
+import { calculateTechnicalAttendance } from './technicalAttendanceService.js';
 
 /**
  * Calculates dynamic attendance for multiple students in bulk based on batch-conducted class dates.
@@ -16,9 +17,10 @@ import Holiday from '../models/Holiday.js';
  * @param {string} department 'Communication' | 'Aptitude' | 'Technical'
  * @returns {Promise<Map<string, Object>>} Map of studentId.toString() -> attendanceStats
  */
-export const calculateBulkStudentsAttendance = async (studentIds, department) => {
+export const calculateBulkStudentsAttendance = async (studentIds, department, options = {}) => {
   const statsMap = new Map();
   if (!studentIds || studentIds.length === 0) return statsMap;
+  if (!department || department === 'Technical') return calculateTechnicalAttendance(studentIds, options);
 
   const objectStudentIds = studentIds.map(id => new mongoose.Types.ObjectId(id));
   const dept = department || 'Technical';
@@ -69,7 +71,7 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
         { course: domainSubjectRegex },
         { batch: { $in: batchIdList } }
       ]
-    }).lean(),
+    }).select('student date status subject course batch createdAt').lean(),
     User.find({ _id: { $in: objectStudentIds } }).select('attendanceStartDate').lean()
   ]);
   const baselineMap = new Map(studentBaselines.map(student => [String(student._id), student.attendanceStartDate]));
@@ -140,99 +142,120 @@ export const calculateBulkStudentsAttendance = async (studentIds, department) =>
       ? batchConductedDatesMap.get(batchIdStr)
       : domainConductedDates;
 
-    // Filter conducted dates that fall between student's startDate and today (and <= batch endDate)
-    const relevantConductedDates = Array.from(batchDatesSet).filter(dStr => {
-      if (dStr < startDateISO) return false;
-      if (dStr > todayStr) return false;
-      if (rawEndDate && dStr > endDateISO) return false;
-      if (holidaySet.has(dStr)) return false;
-      
-      const dObj = new Date(dStr);
-      const dayOfWeek = attendanceWeekday(dObj);
-      if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Exclude weekends
-      return true;
-    });
-
-    const logs = studentLogsMap.get(sId) || [];
-    
-    // Set of dates this student was logged Present / Late
-    const studentPresentDates = new Set();
-    const studentAbsentDates = new Set();
-
-    logs.forEach(log => {
+    // Student's personal attendance map
+    const studentLogs = studentLogsMap.get(sId) || [];
+    const studentDayStatusMap = new Map();
+    studentLogs.forEach(log => {
       const dStr = formatDateISO(log.date);
-      if (dStr && dStr >= startDateISO && dStr <= todayStr) {
-        if (log.status === 'Present' || log.status === 'Late') {
-          studentPresentDates.add(dStr);
-        } else if (log.status === 'Absent') {
-          studentAbsentDates.add(dStr);
-        }
+      if (dStr) {
+        studentDayStatusMap.set(dStr, log.status);
       }
     });
 
-    // Only completed conducted days or explicit student records affect statistics.
-    // A session/check-in by another student must not create an early absence.
-    const applicableDates = new Set(relevantConductedDates.filter(d => isAttendanceDayClosed(d, now)));
-    const studentLeaveDates = new Set(logs.filter(log => log.status === 'Leave' || log.status === 'Excused').map(log => formatDateISO(log.date)));
-    for (const d of [...studentPresentDates, ...studentAbsentDates, ...studentLeaveDates]) {
-      if (d >= startDateISO && d <= endDateISO && d <= todayStr) applicableDates.add(d);
-    }
-    const trainingDayCount = applicableDates.size;
     let presentCount = 0;
     let absentCount = 0;
-    for (const d of applicableDates) {
-      if (studentPresentDates.has(d)) presentCount++;
-      else if (!studentLeaveDates.has(d)) absentCount++;
+    let leaveCount = 0;
+    let pendingCount = 0;
+    let eligibleTrainingDays = 0;
+
+    const presentDates = [];
+    const absentDates = [];
+    const leaveDates = [];
+
+    // Filter conducted dates that fall within the student's active enrollment window
+    const eligibleConductedDates = Array.from(batchDatesSet).filter(dStr => {
+      if (dStr < startDateISO) return false;
+      if (dStr > endDateISO) return false;
+      if (dStr > todayStr) return false;
+      if (holidaySet.has(dStr)) return false;
+      const dayOfWeek = attendanceWeekday(dStr);
+      if (dayOfWeek === 0 || dayOfWeek === 6) return false; // Exclude Sat/Sun
+      return true;
+    }).sort();
+
+    for (const dStr of eligibleConductedDates) {
+      const isToday = (dStr === todayStr);
+      const isClosed = isAttendanceDayClosed(dStr, now);
+      const status = studentDayStatusMap.get(dStr);
+
+      if (status === 'Present' || status === 'Late') {
+        presentCount++;
+        eligibleTrainingDays++;
+        presentDates.push(dStr);
+      } else if (status === 'Leave' || status === 'Excused') {
+        leaveCount++;
+        eligibleTrainingDays++;
+        leaveDates.push(dStr);
+      } else if (status === 'Absent') {
+        absentCount++;
+        eligibleTrainingDays++;
+        absentDates.push(dStr);
+      } else {
+        // No log found for this conducted date
+        if (isToday && !isClosed) {
+          // Today's class is ongoing / pending check-in
+          pendingCount++;
+        } else {
+          // Class is closed and student was absent
+          absentCount++;
+          eligibleTrainingDays++;
+          absentDates.push(dStr);
+        }
+      }
     }
 
-    const remainingDays = Math.max(0, fixedTotalDays - trainingDayCount);
-    // Real-world Attendance % = (presentCount / trainingDayCount) * 100
-    // If no training days held yet for student, default to 100%
-    const attendancePercent = trainingDayCount > 0
-      ? parseFloat(((presentCount / trainingDayCount) * 100).toFixed(2))
+    const trainingDay = eligibleTrainingDays;
+    const attendancePercent = trainingDay > 0 
+      ? Math.round((presentCount / trainingDay) * 100) 
       : 100;
-    const progressPercent = parseFloat(Math.min(100, (trainingDayCount / fixedTotalDays) * 100).toFixed(2));
 
-    const startDateFormatted = rawStartDate ? new Date(rawStartDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+    const progressPercent = fixedTotalDays > 0 
+      ? Math.min(100, Math.round((trainingDay / fixedTotalDays) * 100)) 
+      : 0;
+
+    const remainingDays = Math.max(0, fixedTotalDays - trainingDay);
 
     statsMap.set(sId, {
       department: dept,
       batchName,
-      startDate: startDateFormatted,
-      rawStartDate,
-      trainingDay: trainingDayCount,
+      startDate: startDateISO,
+      endDate: endDateISO,
+      trainingDay,
+      totalClasses: trainingDay,
+      totalApplicableClasses: trainingDay,
       totalTrainingDays: fixedTotalDays,
       presentCount,
       absentCount,
+      leaveCount,
+      pendingCount,
       remainingDays,
       attendancePercent,
+      attendancePercentage: attendancePercent,
       progressPercent,
-      eligibleSessionsCount: fixedTotalDays,
-      percentage: attendancePercent
+      presentDates,
+      absentDates,
+      leaveDates,
+      eligibleSessionsCount: trainingDay
     });
   }
 
   return statsMap;
 };
 
-/**
- * Calculates dynamic attendance stats for a single student
- */
-export const calculateSingleStudentAttendance = async (studentId, department) => {
+export const calculateStudentAttendanceStats = async (studentId, department) => {
   const statsMap = await calculateBulkStudentsAttendance([studentId], department);
   return statsMap.get(studentId.toString()) || {
-    department: department || 'Technical',
-    batchName: 'N/A',
-    startDate: 'N/A',
-    rawStartDate: new Date(),
-    trainingDay: 0,
+    department,
+    trainingDay: 1,
     totalTrainingDays: department === 'Aptitude' ? 120 : 80,
     presentCount: 0,
     absentCount: 0,
-    remainingDays: department === 'Aptitude' ? 120 : 80,
+    leaveCount: 0,
     attendancePercent: 100,
+    attendancePercentage: 100,
     progressPercent: 0,
-    eligibleSessionsCount: department === 'Aptitude' ? 120 : 80,
-    percentage: 100
+    remainingDays: department === 'Aptitude' ? 120 : 80
   };
 };
+
+export const calculateSingleStudentAttendance = calculateStudentAttendanceStats;

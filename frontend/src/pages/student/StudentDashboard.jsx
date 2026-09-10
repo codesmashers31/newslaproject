@@ -303,9 +303,10 @@ const StudentDashboard = () => {
                   
                   {b.attendanceStats && (
                     <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                      {b.attendanceStats.configurationRequired && <p className="text-xs text-amber-700">Batch start and end dates are required.</p>}
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-slate-400 font-semibold">Start: <strong className="text-slate-700">{b.attendanceStats.startDate || 'N/A'}</strong></span>
-                        <span className="text-slate-400 font-semibold">Day <strong className="text-indigo-600">{b.attendanceStats.trainingDay || 0} / {b.attendanceStats.totalTrainingDays || 80}</strong></span>
+                        <span className="text-slate-400 font-semibold">Day <strong className="text-indigo-600">{b.attendanceStats.trainingDay || 0} / {b.attendanceStats.totalTrainingDays ?? 0}</strong></span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

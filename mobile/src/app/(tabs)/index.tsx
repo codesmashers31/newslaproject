@@ -481,7 +481,7 @@ export default function DashboardScreen() {
                             Start: <Text className="text-slate-700 font-bold">{b.attendanceStats.startDate || 'N/A'}</Text>
                           </Text>
                           <Text className="text-[9px] text-slate-400 font-semibold">
-                            Day <Text className="text-indigo-600 font-bold">{b.attendanceStats.trainingDay || 0} / {b.attendanceStats.totalTrainingDays || 80}</Text>
+                            {b.attendanceStats.configurationRequired ? 'Batch dates required' : <>Day <Text className="text-indigo-600 font-bold">{b.attendanceStats.trainingDay || 0} / {b.attendanceStats.totalTrainingDays ?? 0}</Text></>}
                           </Text>
                         </View>
                         <View className="flex-row items-center justify-between mt-0.5">

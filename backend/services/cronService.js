@@ -5,6 +5,38 @@ import Enrollment from '../models/Enrollment.js';
 import Attendance from '../models/Attendance.js';
 import AttendanceSession from '../models/AttendanceSession.js';
 import Holiday from '../models/Holiday.js';
+import { technicalWindow } from './technicalAttendanceService.js';
+
+export const closeTechnicalAttendanceDay = async (dateISO, markedBy) => {
+  const enrollments = await Enrollment.find({ department: 'Technical', status: 'Active' })
+    .populate('batchId', 'startDate endDate').lean();
+  const eligible = enrollments.filter(e => {
+    const window = technicalWindow(e.batchId, e);
+    return window && dateISO >= window.start && dateISO <= window.end;
+  });
+  const batchIds = eligible.map(e => e.batchId._id);
+  const [scans, records] = await Promise.all([
+    Attendance.find({ batch: { $in: batchIds }, date: attendanceDayRange(dateISO),
+      attendanceMode: { $in: ['SCAN', 'Scan'] }, status: { $in: ['Present', 'Late', 'PRESENT'] } }).lean(),
+    Attendance.find({ batch: { $in: batchIds }, date: attendanceDayRange(dateISO) }).lean()
+  ]);
+  const conducted = new Set(scans.map(r => String(r.batch)));
+  const recorded = new Set(records.map(r => `${r.student}:${r.batch}`));
+  const ops = [];
+  for (const e of eligible) {
+    const recordKey = `${e.studentId}:${e.batchId._id}`;
+    if (!conducted.has(String(e.batchId._id)) || recorded.has(recordKey)) continue;
+    recorded.add(recordKey);
+    ops.push({ updateOne: {
+      filter: { student: e.studentId, batch: e.batchId._id, date: attendanceDayRange(dateISO) },
+      update: { $setOnInsert: { date: attendanceDayStart(dateISO), subject: 'Technical', course: 'Technical',
+        attendanceMode: 'MANUAL', status: 'Absent', markedBy, remarks: 'Auto-closed at 6:00 PM IST' } }, upsert: true
+    } });
+  }
+  if (!ops.length) return 0;
+  const result = await Attendance.bulkWrite(ops, { ordered: false });
+  return result.upsertedCount || 0;
+};
 
 // Get current date string (YYYY-MM-DD) and time in Asia/Kolkata timezone
 export const getKolkataDateAndTime = (now = new Date()) => {
@@ -61,6 +93,10 @@ export const autoCloseAttendanceForToday = async () => {
     let autoAbsentCount = 0;
 
     for (const dept of departments) {
+      if (dept === 'Technical') {
+        autoAbsentCount += await closeTechnicalAttendanceDay(dateISO, systemUserId);
+        continue;
+      }
       const subjectRegex = new RegExp(dept, 'i');
 
       // Rule 3: No-Training-Day Protection

@@ -57,3 +57,11 @@ The web and mobile training screens now use backend-provided dates instead of ha
 The pre-existing weekday fallback still calculates an unmarked current day as Absent; that calculated value is not an old attendance record. Attendance policy was not changed by this reset.
 
 Validation: 72 backend tests, frontend build, and mobile TypeScript check passed. The reset script defaults to a read-only preview and is never invoked by application startup or deployment.
+
+## Technical batch attendance policy (subsequently authorized)
+
+Technical attendance now uses the exact batch's start/end dates, narrowed by the student's enrollment and attendance baseline. Saturdays, Sundays, declared holidays, and elapsed days with no successful Present/Late QR scan in that batch are excluded. Starting a session or entering manual attendance alone does not establish a conducted class. Manual corrections are respected on days with successful scans.
+
+Unrecorded attendance stays pending until 6 PM IST. The automatic close job uses the same batch and date restrictions and preserves existing records. A student enrolled in multiple Technical batches receives separate statistics and can scan each batch; totals combine batch-days, not unrelated department activity.
+
+Technical percentage is (Present + Late) / applicable conducted batch-days. There is no fixed 80-day Technical target. Future scheduled weekdays remain provisional in total/remaining days and are removed when they pass without scans. Missing or invalid batch dates are flagged rather than replaced with an invented target. Communication and Aptitude retain their existing calculations and targets.

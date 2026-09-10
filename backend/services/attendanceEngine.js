@@ -6,6 +6,7 @@ import Enrollment from '../models/Enrollment.js';
 import User from '../models/User.js';
 import Holiday from '../models/Holiday.js';
 import AttendanceSession from '../models/AttendanceSession.js';
+import { calculateTechnicalAttendance, isTechnicalBatch } from './technicalAttendanceService.js';
 
 // Configuration: Determine whether Leave days are excluded from the attendance denominator
 export const ATTENDANCE_POLICY = {
@@ -114,6 +115,23 @@ export const calculateStudentAttendanceEngine = async (studentId, options = {}) 
     .populate('updatedBy', 'name role')
     .sort({ date: -1 })
     .lean();
+
+  const technicalOnly = (batchId && isTechnicalBatch(targetBatch)) ||
+    (course && (/technical/i.test(course) || (course === targetBatch?.course && isTechnicalBatch(targetBatch)))) ||
+    (!batchId && !course && enrollments.length > 0 && enrollments.every(e => e.department === 'Technical'));
+  if (technicalOnly) {
+    const stats = (await calculateTechnicalAttendance([studentId], { batchId, startDate, endDate })).get(String(studentId));
+    const recordMap = new Map(attendanceRecords.map(r => [String(r._id), r]));
+    const records = stats.records.map(raw => {
+      const r = recordMap.get(String(raw._id)) || raw;
+      return { _id: r._id, date: formatDateISO(r.date), displayDate: formatDateDisplay(r.date),
+        status: standardizeStatus(r.status), attendanceMode: standardizeMode(r.attendanceMode),
+        course: r.course || r.subject || '', batchName: r.batch?.name || '', timeIn: r.timeIn || '',
+        remarks: r.remarks || '', markedBy: r.markedBy?.name || 'System', updatedBy: r.updatedBy?.name || null, updatedAt: r.updatedAt };
+    }).sort((a, b) => b.date.localeCompare(a.date));
+    return { ...stats, student: studentUser, batch: batchId ? targetBatch : null, records,
+      lastAttendanceDate: records[0]?.displayDate || 'N/A', currentAttendanceStatus: records[0]?.status || 'Unrecorded' };
+  }
 
   // 3. Aggregate Present, Absent, Leave counts and date lists
   const presentDates = [];
@@ -329,6 +347,7 @@ export const calculateBatchAttendanceSummary = async (batchId) => {
   }
 
   const studentIds = enrollments.map(e => e.studentId?._id || e.studentId).filter(Boolean);
+  const technicalStats = isTechnicalBatch(batch) ? await calculateTechnicalAttendance(studentIds, { batchId }) : null;
   
   // Aggregate all attendance for this batch
   const attendanceRecords = await Attendance.find({ batch: bObjectId }).lean();
@@ -360,10 +379,12 @@ export const calculateBatchAttendanceSummary = async (batchId) => {
     const stu = enroll.studentId;
     if (!stu) return;
     const sId = String(stu._id);
-    const counts = studentAttendanceMap.get(sId) || { present: 0, absent: 0, leave: 0 };
+    const tech = technicalStats?.get(sId);
+    const counts = tech ? { present: tech.presentCount, absent: tech.absentCount, leave: tech.leaveCount }
+      : studentAttendanceMap.get(sId) || { present: 0, absent: 0, leave: 0 };
     const total = counts.present + counts.absent + counts.leave;
     const denom = ATTENDANCE_POLICY.EXCLUDE_LEAVE_FROM_PERCENTAGE ? Math.max(0, total - counts.leave) : total;
-    const pct = denom > 0 ? parseFloat(((counts.present / denom) * 100).toFixed(2)) : 100;
+    const pct = tech ? tech.attendancePercent : denom > 0 ? parseFloat(((counts.present / denom) * 100).toFixed(2)) : 100;
 
     totalPercentageSum += pct;
 
