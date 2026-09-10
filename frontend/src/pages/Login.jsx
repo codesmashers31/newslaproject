@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import API from '../services/api';
 import logoSla from '../assets/logo.png';
+import './Login.css';
 
 const Login = () => {
   const { login } = useAuth();
@@ -123,107 +124,92 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-800 selection:bg-violet-500 selection:text-white p-4 relative overflow-y-auto">
+    <div className="login-page">
       
       <AnimatePresence mode="wait">
         {/* VIEW 1: NORMAL LOGIN SCREEN */}
         {viewState === 'login' && (
           <motion.div
             key="login"
-            initial={{ opacity: 0, y: 30, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20, scale: 0.98 }}
             transition={{ duration: 0.4 }}
-            className="m-auto w-full max-w-md px-6 py-10"
+            className="login-card"
           >
-            {/* Logo & titles — mirrors mobile/src/app/login.tsx */}
-            <div className="flex flex-col items-center text-center mb-6">
-              <img
-                src={logoSla}
-                alt="Softlogic Logo"
-                className="w-[120px] h-[120px] object-contain rounded-3xl mb-6"
-              />
-              <h2 className="text-3xl font-extrabold tracking-tight text-[#0F172A]">Welcome back</h2>
-              <p className="text-xs text-[#64748B] mt-1.5 font-semibold">
-                Log in to continue your progress
-              </p>
-            </div>
+            <header className="login-header">
+              <img src={logoSla} alt="SLA BuildX" className="login-logo" />
+              <span className="login-eyebrow">LEARNING & CAREER PORTAL</span>
+              <h1>Welcome back</h1>
+              <p>Sign in to continue your learning journey.</p>
+            </header>
 
-            {/* Login Form */}
-            <form onSubmit={handleLoginSubmit}>
-              {/* Email Address */}
-              <div className="mb-4">
-                <div className="flex items-center border border-slate-200 rounded-2xl bg-white px-4 h-14 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-600/10 shadow-xs transition-all">
-                  <Mail size={19} className="text-slate-400 shrink-0 mr-3.5" />
+            <form onSubmit={handleLoginSubmit} className="login-form">
+              <div className="login-field-group">
+                <label htmlFor="login-identifier">Email or SLA ID</label>
+                <div className="login-field">
+                  <Mail size={19} aria-hidden="true" />
                   <input
+                    id="login-identifier"
+                    name="username"
                     type="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@lcp.edu"
-                    className="w-full bg-transparent border-0 outline-none text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] placeholder:font-normal focus:ring-0 focus:outline-none p-0"
+                    placeholder="Email or SLA ID"
                   />
                 </div>
               </div>
 
-              {/* Password */}
-              <div className="mb-2">
-                <div className="flex items-center border border-slate-200 rounded-2xl bg-white px-4 h-14 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-600/10 shadow-xs transition-all">
-                  <Lock size={19} className="text-slate-400 shrink-0 mr-3.5" />
+              <div className="login-field-group">
+                <label htmlFor="login-password">Password</label>
+                <div className="login-field">
+                  <Lock size={19} aria-hidden="true" />
                   <input
+                    id="login-password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••"
-                    className="w-full bg-transparent border-0 outline-none text-sm font-semibold text-[#0F172A] placeholder:text-[#94A3B8] placeholder:font-normal focus:ring-0 focus:outline-none p-0 tracking-wider"
+                    placeholder="Password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="p-1.5 ml-2 text-[#94A3B8] hover:text-[#64748B] rounded-lg hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                    className="login-password-toggle"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                    aria-controls="login-password"
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                   </button>
                 </div>
               </div>
 
-              {/* Forgot password */}
-              <div className="flex justify-end mb-6">
-                <button 
-                  type="button" 
-                  onClick={() => toast('Please contact your SLA Administrator to reset your password.')}
-                  className="text-indigo-600 hover:text-indigo-700 text-xs font-black cursor-pointer"
-                >
+              <div className="login-recovery">
+                <button type="button" onClick={() => toast('Please contact your SLA Administrator to reset your password.')}>
                   Forgot password?
                 </button>
               </div>
 
-              {/* Login Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl h-14 flex items-center justify-center gap-2 mb-6 shadow-md shadow-indigo-600/20 disabled:opacity-50 transition-all cursor-pointer active:scale-[0.99]"
-              >
+              <button type="submit" disabled={loading} className="login-submit" aria-busy={loading}>
                 {loading ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <><span className="login-spinner" aria-hidden="true" /><span>Signing in…</span></>
                 ) : (
-                  <>
-                    <span className="text-white text-base font-black">Login to Portal</span>
-                    <ArrowRight size={18} />
-                  </>
+                  <><span>Sign in</span><ArrowRight size={19} aria-hidden="true" /></>
                 )}
               </button>
             </form>
 
-            {/* Single-device notice */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-xs">
-              <p className="text-xs font-black text-[#0F172A]">Before you continue</p>
-              <p className="text-[10.5px] text-[#64748B] mt-1.5 leading-4 font-semibold">
-                Protected by BuildX Single Device Authentication. Each student profile is restricted to
-                one hardware setup.
-              </p>
-            </div>
+            <footer className="login-help">
+              <ShieldCheck size={19} aria-hidden="true" />
+              <p>Need help accessing your account?<br /><span>Contact your trainer or SLA administrator.</span></p>
+            </footer>
           </motion.div>
         )}
 
@@ -235,11 +221,11 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-lg p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6"
+            className="m-auto w-full max-w-lg p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[16px] shadow-2xl space-y-6"
           >
             {/* Visual Header */}
             <div className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-3xl flex items-center justify-center text-rose-600 dark:text-rose-450 animate-pulse">
+              <div className="mx-auto w-16 h-16 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-[12px] flex items-center justify-center text-rose-600 dark:text-rose-450 animate-pulse">
                 <ShieldAlert size={36} />
               </div>
               <div>
@@ -251,7 +237,7 @@ const Login = () => {
             {/* Device Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Registered device */}
-              <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex items-start space-x-3">
+              <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-4 rounded-[10px] flex items-start space-x-3">
                 <div className="p-2 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-400 rounded-xl shrink-0 mt-0.5">
                   <Laptop size={18} />
                 </div>
@@ -263,7 +249,7 @@ const Login = () => {
               </div>
 
               {/* Current Device blocked */}
-              <div className="bg-rose-50/20 dark:bg-rose-950/5 border border-rose-200/30 p-4 rounded-2xl flex items-start space-x-3">
+              <div className="bg-rose-50/20 dark:bg-rose-950/5 border border-rose-200/30 p-4 rounded-[10px] flex items-start space-x-3">
                 <div className="p-2 bg-rose-50 dark:bg-rose-950/20 text-rose-500 rounded-xl shrink-0 mt-0.5">
                   <Smartphone size={18} />
                 </div>
@@ -275,7 +261,7 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="text-xs text-slate-600 dark:text-gray-400 space-y-2 leading-relaxed bg-slate-50 dark:bg-[#0c0d12]/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-850">
+            <div className="text-xs text-slate-600 dark:text-gray-400 space-y-2 leading-relaxed bg-slate-50 dark:bg-[#0c0d12]/50 p-4 rounded-[10px] border border-slate-200 dark:border-slate-850">
               <p className="font-extrabold text-slate-800 dark:text-white mb-1 flex items-center gap-1.5">
                 <AlertCircle size={14} className="text-violet-500" /> Why is my login blocked?
               </p>
@@ -318,9 +304,9 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6 text-center"
+            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[16px] shadow-2xl space-y-6 text-center"
           >
-            <div className="mx-auto w-16 h-16 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-3xl flex items-center justify-center text-rose-650 shrink-0 animate-pulse">
+            <div className="mx-auto w-16 h-16 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 rounded-[12px] flex items-center justify-center text-rose-650 shrink-0 animate-pulse">
               <ShieldAlert size={36} />
             </div>
 
@@ -333,7 +319,7 @@ const Login = () => {
               Your device authentication credentials have been locked by security protocols due to multiple unrecognized registration attempts or coordinator policies.
             </p>
 
-            <div className="bg-slate-50 dark:bg-[#0c0d12]/50 border border-slate-200 dark:border-slate-850 p-4 rounded-2xl text-xs font-bold text-slate-600 dark:text-gray-300">
+            <div className="bg-slate-50 dark:bg-[#0c0d12]/50 border border-slate-200 dark:border-slate-850 p-4 rounded-[10px] text-xs font-bold text-slate-600 dark:text-gray-300">
               Please contact the SLA operations coordinators or coordinate via your trainer to unlock your session credentials.
             </div>
 
@@ -353,7 +339,7 @@ const Login = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6"
+            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[16px] shadow-2xl space-y-6"
           >
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white">Request Device Access Reset</h2>
@@ -431,9 +417,9 @@ const Login = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-2xl space-y-6 text-center"
+            className="m-auto w-full max-w-md p-8 bg-white dark:bg-[#12131a] border border-slate-200 dark:border-slate-800 rounded-[16px] shadow-2xl space-y-6 text-center"
           >
-            <div className="mx-auto w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 rounded-3xl flex items-center justify-center text-emerald-600 shrink-0">
+            <div className="mx-auto w-16 h-16 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900 rounded-[12px] flex items-center justify-center text-emerald-600 shrink-0">
               <CheckCircle2 size={36} />
             </div>
 
