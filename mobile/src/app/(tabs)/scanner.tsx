@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,9 @@ import {
   ActivityIndicator,
   ScrollView,
   StatusBar,
+  AppState,
+  Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -28,7 +31,13 @@ export default function QRScannerScreen() {
   const isDark = colorScheme === 'dark';
   const primary = '#7C3AED';
 
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission, getPermission] = useCameraPermissions();
+  const [focused, setFocused] = useState(false);
+  const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
+  const scanLock = useRef(false);
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [cameraActive, setCameraActive] = useState(true);
@@ -50,18 +59,57 @@ export default function QRScannerScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setFocused(true);
+      getPermission().catch(() => setCameraError('Could not check camera permission. Please retry.'));
       loadDashboardData();
-    }, [])
+      return () => { setFocused(false); setCameraReady(false); setTorch(false); };
+    }, [getPermission])
   );
 
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', state => {
+      setForeground(state === 'active');
+      if (state === 'active') {
+        getPermission().catch(() => setCameraError('Could not refresh camera permission. Please retry.'));
+      } else {
+        setCameraReady(false);
+        setTorch(false);
+      }
+    });
+    return () => subscription.remove();
+  }, [getPermission]);
+
+  const retryCamera = async () => {
+    setCameraError(null);
+    setCameraReady(false);
+    setTorch(false);
+    try {
+      const current = await getPermission();
+      if (!current.granted) {
+        if (!current.canAskAgain && Platform.OS !== 'web') {
+          await Linking.openSettings();
+          return;
+        }
+        await requestPermission();
+      }
+      setCameraKey(key => key + 1);
+      setCameraActive(true);
+    } catch {
+      setCameraError('Unable to open the camera. Check camera access in device settings and retry.');
+    }
+  };
+
   const handleMarkAttendance = async (tokenString: string) => {
-    if (!tokenString) return;
+    if (!tokenString || scanLock.current) return;
+    scanLock.current = true;
+    let token = tokenString.trim();
+    try { const parsed = JSON.parse(token); token = parsed.token || parsed.jwt || parsed.code || token; } catch {}
     setLoading(true);
     setScanResult(null);
     setCameraActive(false);
 
     try {
-      const { data } = await API.post('/student/attendance/scan', { token: tokenString });
+      const { data } = await API.post('/student/attendance/scan', { token });
       setScanResult({
         success: true,
         message: data.message || 'Attendance marked successfully!',
@@ -103,11 +151,13 @@ export default function QRScannerScreen() {
         <Text className="text-xs text-[#64748B] text-center mb-6 leading-[18px]">
           We need your permission to use the camera. This is required to scan the class session QR codes projected by your trainer.
         </Text>
+        {cameraError && <Text className="text-red-600 text-center mb-4">{cameraError}</Text>}
+        {!permission.canAskAgain && <Text className="text-xs text-slate-600 text-center mb-4">Enable Camera in your device or browser site settings, then return here.</Text>}
         <TouchableOpacity
-          onPress={requestPermission}
+          onPress={retryCamera}
           className="px-6 py-3.5 bg-[#6366F1] rounded-xl shadow-sm"
         >
-          <Text className="text-white font-bold text-xs uppercase tracking-wider">Grant Permission</Text>
+          <Text className="text-white font-bold text-xs uppercase tracking-wider">{permission.canAskAgain || Platform.OS === 'web' ? 'Allow Camera / Retry' : 'Open Settings'}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -135,9 +185,17 @@ export default function QRScannerScreen() {
 
           {/* 1. Camera Viewport Panel */}
           <View className="items-center justify-center my-4">
-            {cameraActive && !scanResult && !loading ? (
-              <View className="w-80 h-80 bg-[#0F0C20] rounded-[32px] overflow-hidden relative shadow-lg shadow-purple-500/5 border border-slate-200">
+            {cameraActive && focused && foreground && !cameraError && !scanResult && !loading ? (
+              <View style={{ width: '100%', maxWidth: 320, aspectRatio: 1 }} className=" bg-[#0F0C20] rounded-[32px] overflow-hidden relative shadow-lg shadow-purple-500/5 border border-slate-200">
                 <CameraView
+                  key={cameraKey}
+                  facing="back"
+                  onCameraReady={() => setCameraReady(true)}
+                  onMountError={({ message }) => {
+                    setCameraReady(false);
+                    setCameraError(`Camera could not start. Close other camera apps and retry. ${message}`);
+                    setCameraActive(false);
+                  }}
                   onBarcodeScanned={handleBarCodeScanned}
                   barcodeScannerSettings={{
                     barcodeTypes: ['qr'],
@@ -166,7 +224,7 @@ export default function QRScannerScreen() {
                 <View className="absolute top-1/2 left-4 right-4 h-1 bg-[#7C3AED] opacity-80 shadow-md shadow-purple-500" />
               </View>
             ) : (
-              <View className="w-80 h-80 bg-white border border-slate-200 rounded-[32px] items-center justify-center p-6 shadow-sm">
+              <View style={{ width: '100%', maxWidth: 320, aspectRatio: 1 }} className=" bg-white border border-slate-200 rounded-[32px] items-center justify-center p-6 shadow-sm">
                 {loading ? (
                   <View className="items-center">
                     <ActivityIndicator size="large" color={primary} />
@@ -190,6 +248,7 @@ export default function QRScannerScreen() {
 
                     <TouchableOpacity
                       onPress={() => {
+                        scanLock.current = false;
                         setScanResult(null);
                         setCameraActive(true);
                       }}
@@ -201,17 +260,18 @@ export default function QRScannerScreen() {
                 ) : (
                   <View className="items-center w-full">
                     <TouchableOpacity
-                      onPress={() => setCameraActive(true)}
+                      onPress={retryCamera}
                       className="w-16 h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl items-center justify-center mb-4"
                     >
                       <CameraIcon size={24} color={primary} />
                     </TouchableOpacity>
-                    <Text className="text-sm font-bold text-[#0F172A]">Camera Idle</Text>
+                    <Text className="text-sm font-bold text-[#0F172A]">{cameraError ? 'Camera unavailable' : 'Camera ready to start'}</Text>
+                    {cameraError && <Text className="text-xs text-red-600 text-center mt-2">{cameraError}</Text>}
                     <TouchableOpacity
-                      onPress={() => setCameraActive(true)}
+                      onPress={retryCamera}
                       className="px-5 py-2.5 bg-[#7C3AED] rounded-xl mt-3"
                     >
-                      <Text className="text-white font-bold text-xs">Start Camera</Text>
+                      <Text className="text-white font-bold text-xs">Retry Camera</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -270,7 +330,7 @@ export default function QRScannerScreen() {
             {/* Scanning Status Pill */}
             <View className="bg-[#F3E8FF] px-6 py-2.5 rounded-full mt-4 shadow-sm border border-[#E9D5FF]/30">
               <Text className="text-[#6B21A8] text-[11px] font-black tracking-wide">
-                {loading ? 'Verifying QR code...' : scanResult ? 'Ready for next scan' : 'Scanning for QR code...'}
+                {loading ? 'Verifying QR code...' : scanResult ? 'Ready for next scan' : cameraError ? 'Camera unavailable' : cameraReady && focused && foreground ? 'Scanning for QR code...' : 'Starting camera...'}
               </Text>
             </View>
           </View>

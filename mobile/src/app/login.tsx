@@ -162,11 +162,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-[#F4F6FA]">
       <StatusBar barStyle="dark-content" />
       <KeyboardAwareScrollView
-        className="flex-1 bg-white"
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 24, justifyContent: 'center' }}
+        className="flex-1 bg-[#F4F6FA]"
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24, justifyContent: 'center' }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -175,28 +175,35 @@ export default function LoginScreen() {
 
           {/* VIEW 1: LOGIN FORM */}
           {viewState === 'login' && (
-            <View className="w-full">
+            <View className="w-full bg-white border border-[#E1E6EF] rounded-xl p-6" style={{ maxWidth: 460, alignSelf: 'center' }}>
               
               {/* Real Logo Image matching screenshot */}
               <View className="items-center mb-6">
                 <Image
                   source={require('../../assets/images/logo.png')}
-                  style={{ width: 120, height: 120, borderRadius: 24, marginBottom: 24 }}
+                  style={{ width: 80, height: 80, marginBottom: 18 }}
                   contentFit="contain"
                 />
                 
+                <Text className="text-[10px] font-bold text-[#64748B] tracking-widest mb-2">SLA STUDENT PORTAL</Text>
                 {/* Titles */}
                 <Text className="text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</Text>
                 <Text className="text-xs text-[#64748B] mt-1.5 font-semibold">Log in to continue your progress</Text>
               </View>
 
               {/* Email Input Field with Icon */}
-              <View className="mb-4">
-                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14">
+              <View className="mb-5">
+                <Text className="text-sm font-semibold text-[#334155] mb-2">Email address</Text>
+                <View className="flex-row items-center border border-[#CBD5E1] rounded-lg bg-white px-3.5 min-h-14">
                   <Mail size={20} color="#94A3B8" style={{ marginRight: 12 }} />
                   <TextInput
-                    className="flex-1 text-base font-semibold text-[#0F172A]"
-                    placeholder="student@lcp.edu"
+                    className="flex-1 text-base text-[#17243A]"
+                    style={{ minWidth: 0, minHeight: 54, paddingVertical: 10, paddingHorizontal: 0 }}
+                    autoCorrect={false}
+                    underlineColorAndroid="transparent"
+                    placeholder="student@slainstitute.com"
+                    accessibilityLabel="Email address"
+                    autoComplete="email"
                     placeholderTextColor="#94A3B8"
                     value={email}
                     onChangeText={setEmail}
@@ -207,12 +214,18 @@ export default function LoginScreen() {
               </View>
 
               {/* Password Input Field with Icon & Eye Toggle */}
-              <View className="mb-2">
-                <View className="flex-row items-center border border-[#E2E8F0] rounded-2xl bg-white px-4 h-14">
+              <View className="mb-3">
+                <Text className="text-sm font-semibold text-[#334155] mb-2">Password</Text>
+                <View className="flex-row items-center border border-[#CBD5E1] rounded-lg bg-white px-3.5 min-h-14">
                   <Lock size={20} color="#94A3B8" style={{ marginRight: 12 }} />
                   <TextInput
-                    className="flex-1 text-base font-semibold text-[#0F172A]"
-                    placeholder="••••••••••"
+                    className="flex-1 text-base text-[#17243A]"
+                    style={{ minWidth: 0, minHeight: 54, paddingVertical: 10, paddingHorizontal: 0 }}
+                    autoCorrect={false}
+                    underlineColorAndroid="transparent"
+                    placeholder="Password"
+                    accessibilityLabel="Password"
+                    autoComplete="current-password"
                     placeholderTextColor="#94A3B8"
                     value={password}
                     onChangeText={setPassword}
@@ -222,7 +235,9 @@ export default function LoginScreen() {
                   <TouchableOpacity 
                     onPress={() => setShowPassword(!showPassword)}
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    className="p-1"
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                    className="w-10 h-11 items-center justify-center"
                   >
                     {showPassword ? (
                       <EyeOff size={20} color="#94A3B8" />
@@ -243,7 +258,7 @@ export default function LoginScreen() {
 
               {/* Login Action Button */}
               <TouchableOpacity
-                className="bg-[#5B21B6] rounded-2xl h-14 items-center justify-center mb-6 shadow-sm"
+                className="bg-[#4F46E5] rounded-lg h-14 items-center justify-center mb-6 shadow-sm"
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.85}
@@ -252,14 +267,14 @@ export default function LoginScreen() {
                   <ActivityIndicator color="#ffffff" />
                 ) : (
                   <View className="flex-row items-center justify-center">
-                    <Text className="text-white text-base font-black mr-2.5">Login to Portal</Text>
+                    <Text className="text-white text-base font-black mr-2.5">Sign in</Text>
                     <ArrowRight size={18} color="#ffffff" />
                   </View>
                 )}
               </TouchableOpacity>
 
               {/* Policy Disclaimer Card */}
-              <View className="bg-white border border-[#E2E8F0] rounded-3xl p-4">
+              <View className="bg-white border-t border-[#EDF0F5] pt-5">
                 <Text className="text-xs font-black text-[#0F172A]">Before you continue</Text>
                 <Text className="text-[10.5px] text-[#64748B] mt-1.5 leading-[16px] font-semibold">
                   By logging in you agree to mark attendance honestly via session QR codes, keep your profile info accurate, and follow your institute's code of conduct. Contact your trainer for login issues.

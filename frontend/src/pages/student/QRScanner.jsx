@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import API from '../../services/api';
+import { cameraErrorMessage, startCompatibleCamera } from '../../utils/cameraAccess';
 import toast from 'react-hot-toast';
 import { Camera, AlertCircle, CheckCircle2, BookOpen, Video, VideoOff, HelpCircle, Zap, ZapOff } from 'lucide-react';
 
@@ -18,6 +19,10 @@ const QRScanner = () => {
   const [statusText, setStatusText] = useState('Scanning for QR code...');
 
   const html5QrCode = useRef(null);
+  const startingRef = useRef(false);
+  const mountedRef = useRef(false);
+  const generationRef = useRef(0);
+  const [cameraStarting, setCameraStarting] = useState(false);
   const videoTrackRef = useRef(null);
   const isScanningLocked = useRef(false);
   const [manualCode, setManualCode] = useState('');
@@ -33,13 +38,24 @@ const QRScanner = () => {
   };
 
   useEffect(() => {
+    mountedRef.current = true;
     loadDashboardData();
     // Slight delay to ensure DOM element #reader is mounted
     const timer = setTimeout(() => {
       startScanning();
     }, 150);
 
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        generationRef.current += 1;
+        stopScanning();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      mountedRef.current = false;
+      generationRef.current += 1;
       clearTimeout(timer);
       stopScanning();
     };
@@ -63,12 +79,7 @@ const QRScanner = () => {
     setStatusText('Processing QR code...');
     
     try {
-      // Pause scanner while verifying with server
-      if (html5QrCode.current && html5QrCode.current.isScanning) {
-        try {
-          await html5QrCode.current.pause(true);
-        } catch (e) {}
-      }
+      await stopScanning();
 
       const response = await API.post('/student/attendance/scan', { token: cleanToken });
       const msg = response.data?.message || 'Attendance marked successfully!';
@@ -84,16 +95,7 @@ const QRScanner = () => {
       setStatusText('Scan failed');
     } finally {
       setLoading(false);
-      // Allow re-scanning after 3 seconds
-      setTimeout(() => {
-        isScanningLocked.current = false;
-        if (html5QrCode.current && html5QrCode.current.isScanning) {
-          try {
-            html5QrCode.current.resume();
-            setStatusText('Scanning for QR code...');
-          } catch (e) {}
-        }
-      }, 3000);
+      isScanningLocked.current = false;
     }
   };
 
@@ -103,7 +105,7 @@ const QRScanner = () => {
         if (html5QrCode.current.isScanning) {
           await html5QrCode.current.stop();
         }
-        html5QrCode.current.clear();
+        if (!startingRef.current) html5QrCode.current.clear();
       } catch (err) {
         console.warn('Failed to stop scanner cleanly.', err);
       } finally {
@@ -117,97 +119,52 @@ const QRScanner = () => {
   };
 
   const startScanning = async () => {
+    if (startingRef.current || !mountedRef.current) return;
+    startingRef.current = true;
+    const generation = ++generationRef.current;
+    setCameraStarting(true);
     setCameraPermissionError(null);
     setScanResult(null);
-    setLoading(false);
     setStatusText('Starting camera...');
     isScanningLocked.current = false;
-
-    const readerElem = document.getElementById('reader');
-    if (!readerElem) {
-      console.warn('Reader element not yet available in DOM.');
-      return;
-    }
-
+    let scanner;
     try {
-      if (html5QrCode.current && html5QrCode.current.isScanning) {
-        try {
-          await html5QrCode.current.stop();
-        } catch (e) {}
-      }
-
-      if (!html5QrCode.current) {
-        html5QrCode.current = new Html5Qrcode("reader");
-      }
-
-      const config = {
-        fps: 30, // 30 FPS for ultra-rapid instant capture
-        qrbox: (viewfinderWidth, viewfinderHeight) => {
-          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const edge = Math.max(220, Math.floor(minEdge * 0.92));
+      if (!window.isSecureContext) throw { name: 'InsecureContextError' };
+      if (!navigator.mediaDevices?.getUserMedia) throw { name: 'UnsupportedCameraError' };
+      await stopScanning();
+      if (!mountedRef.current || generation !== generationRef.current) return;
+      scanner = new Html5Qrcode('reader');
+      html5QrCode.current = scanner;
+      await startCompatibleCamera(scanner, {
+        fps: 15,
+        qrbox: (width, height) => {
+          const edge = Math.floor(Math.min(width, height) * 0.8);
           return { width: edge, height: edge };
         },
-        aspectRatio: 1.0,
         disableFlip: false,
-        videoConstraints: {
-          facingMode: "environment",
-          width: { ideal: 1920, min: 1280 },
-          height: { ideal: 1080, min: 720 },
-          advanced: [{ focusMode: "continuous" }]
-        },
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true // Native hardware-accelerated scanning
-        }
-      };
-
-      // 1. First try back/environment camera with HD constraints
-      try {
-        const cameras = await Html5Qrcode.getCameras();
-        if (cameras && cameras.length > 0) {
-          const backCam = cameras.find(c => /back|rear|environment/i.test(c.label));
-          const selectedCamId = backCam ? backCam.id : cameras[0].id;
-          
-          await html5QrCode.current.start(
-            selectedCamId,
-            config,
-            (decodedText) => handleMarkAttendance(decodedText),
-            (errorMessage) => {}
-          );
-        } else {
-          await html5QrCode.current.start(
-            { facingMode: "environment" },
-            config,
-            (decodedText) => handleMarkAttendance(decodedText),
-            (errorMessage) => {}
-          );
-        }
-      } catch (camEnumErr) {
-        // Fallback to default user-facing camera if environment fails
-        await html5QrCode.current.start(
-          { facingMode: "user" },
-          config,
-          (decodedText) => handleMarkAttendance(decodedText),
-          (errorMessage) => {}
-        );
+      }, (text) => {
+        if (mountedRef.current && generation === generationRef.current) handleMarkAttendance(text);
+      });
+      if (!mountedRef.current || generation !== generationRef.current) {
+        if (scanner.isScanning) await scanner.stop();
+        scanner.clear();
+        return;
       }
-      
       setCameraActive(true);
       setStatusText('Scanning for QR code...');
-
-      // Extract capabilities for Zoom/Torch
-      try {
-        if (html5QrCode.current.getRunningTrackCapabilities) {
-          const track = html5QrCode.current.getRunningTrackCapabilities();
-          if (track) setCapabilities(track);
-        }
-      } catch (e) {
-        console.warn('Capabilities error', e);
-      }
+      setTorch(false);
+      setDisplayZoom(1);
+      try { setCapabilities(scanner.getRunningTrackCapabilities()); } catch {}
     } catch (err) {
-      console.error('Camera Start Error:', err);
-      setCameraPermissionError('Could not start camera. Please ensure camera permissions are allowed in your browser settings.');
-      setCameraActive(false);
-      setStatusText('Camera Error');
+      if (scanner?.isScanning) { try { await scanner.stop(); } catch {} }
+      if (mountedRef.current && generation === generationRef.current) {
+        setCameraPermissionError(cameraErrorMessage(err));
+        setCameraActive(false);
+        setStatusText('Camera unavailable');
+      }
+    } finally {
+      startingRef.current = false;
+      if (mountedRef.current) setCameraStarting(false);
     }
   };
 
@@ -419,16 +376,18 @@ const QRScanner = () => {
                   <div className="flex flex-col items-center w-full">
                     <button
                       onClick={startScanning}
+                      disabled={cameraStarting}
                       className="w-16 h-16 bg-[#F8FAFC] border border-slate-100 rounded-2xl flex items-center justify-center mb-4"
                     >
                       <Camera size={24} color="#7C3AED" />
                     </button>
-                    <p className="text-sm font-bold text-[#0F172A]">Camera Idle</p>
+                    <p className="text-sm font-bold text-[#0F172A]">{cameraStarting ? 'Starting camera...' : 'Camera ready to start'}</p>
                     <button
                       onClick={startScanning}
+                      disabled={cameraStarting}
                       className="px-5 py-2.5 bg-[#7C3AED] text-white rounded-xl mt-3 font-bold text-xs"
                     >
-                      Start Camera
+                      {cameraStarting ? 'Starting...' : 'Start / Retry Camera'}
                     </button>
                   </div>
                 )}
